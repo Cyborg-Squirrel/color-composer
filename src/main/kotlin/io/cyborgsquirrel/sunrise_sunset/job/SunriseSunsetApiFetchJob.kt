@@ -59,7 +59,7 @@ class SunriseSunsetApiFetchJob(
                     )
                 )
             } else {
-                logger.info("$ymdString has already been fetched for the configured location. Skipping api fetch.")
+                logger.info("$ymdString (ymd) has already been saved for the configured location. Skipping api fetch.")
             }
         } catch (ex: Exception) {
             ex.printStackTrace()
