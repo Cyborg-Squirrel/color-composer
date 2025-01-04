@@ -1,6 +1,6 @@
-package io.cyborgsquirrel.client
+package io.cyborgsquirrel.sunrise_sunset.client
 
-import io.cyborgsquirrel.model.responses.sunrise_sunset.SunriseSunsetModel
+import io.cyborgsquirrel.sunrise_sunset.model.SunriseSunsetModel
 import io.micronaut.core.async.annotation.SingleResult
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.client.annotation.Client

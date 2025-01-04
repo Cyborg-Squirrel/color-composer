@@ -1,7 +1,8 @@
 package io.cyborgsquirrel.controller
 
 import io.cyborgsquirrel.entity.LedStripClientEntity
-import io.cyborgsquirrel.job.ClientDiscoveryJob
+import io.cyborgsquirrel.client_discovery.job.ClientDiscoveryJob
+import io.cyborgsquirrel.client_discovery.model.DiscoveredClientsResponseList
 import io.cyborgsquirrel.job.enums.DiscoveryJobStatus
 import io.cyborgsquirrel.model.requests.discovery.SelectClientsRequest
 import io.cyborgsquirrel.model.responses.discovery.DiscoveryStatusResponse
@@ -41,7 +42,7 @@ class ClientDiscoveryController(
         val status = discoveryJob.getStatus()
 
         return when (status) {
-            DiscoveryJobStatus.complete, DiscoveryJobStatus.inProgress -> HttpResponse.ok(discoveryJob.getDiscoveryResponses())
+            DiscoveryJobStatus.complete, DiscoveryJobStatus.inProgress -> HttpResponse.ok(DiscoveredClientsResponseList(discoveryJob.getDiscoveryResponses()))
             DiscoveryJobStatus.error -> HttpResponse.badRequest("Client discovery encountered an error. Please try again.")
             DiscoveryJobStatus.idle -> HttpResponse.badRequest("Client discovery not started. Please start discovery before querying discovered clients.")
         }

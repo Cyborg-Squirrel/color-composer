@@ -1,6 +1,6 @@
-package io.cyborgsquirrel.net
+package io.cyborgsquirrel.client_discovery.udp
 
-import io.cyborgsquirrel.model.client.DiscoveryResponse
+import io.cyborgsquirrel.client_discovery.model.ClientDiscoveryResponse
 import io.micronaut.serde.ObjectMapper
 import org.slf4j.LoggerFactory
 import java.net.DatagramPacket
@@ -9,11 +9,11 @@ import java.net.SocketTimeoutException
 
 class UdpBroadcastReceiver(private val objectMapper: ObjectMapper) {
 
-    private val discoveryResponses = mutableSetOf<DiscoveryResponse>()
+    private val discoveryResponses = mutableSetOf<ClientDiscoveryResponse>()
 
     private var cancelled = false
 
-    fun getDiscoveryResponses(): Set<DiscoveryResponse> {
+    fun getDiscoveryResponses(): Set<ClientDiscoveryResponse> {
         return discoveryResponses
     }
 
@@ -44,7 +44,7 @@ class UdpBroadcastReceiver(private val objectMapper: ObjectMapper) {
 
                             logger.info("Received response from $senderAddress:$senderPort - $receivedMessage")
 
-                            val response = objectMapper.readValue(receivedMessage, DiscoveryResponse::class.java)
+                            val response = objectMapper.readValue(receivedMessage, ClientDiscoveryResponse::class.java)
                             response.address = packet.address.hostAddress
                             discoveryResponses.add(response)
                         }

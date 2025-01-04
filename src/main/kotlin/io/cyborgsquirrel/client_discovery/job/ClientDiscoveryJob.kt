@@ -1,9 +1,9 @@
-package io.cyborgsquirrel.job
+package io.cyborgsquirrel.client_discovery.job
 
 import io.cyborgsquirrel.job.enums.DiscoveryJobStatus
-import io.cyborgsquirrel.model.client.DiscoveryResponse
-import io.cyborgsquirrel.net.UdpBroadcastReceiver
-import io.cyborgsquirrel.net.UdpBroadcastSender
+import io.cyborgsquirrel.client_discovery.model.ClientDiscoveryResponse
+import io.cyborgsquirrel.client_discovery.udp.UdpBroadcastReceiver
+import io.cyborgsquirrel.client_discovery.udp.UdpBroadcastSender
 import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
@@ -20,7 +20,7 @@ class ClientDiscoveryJob(objectMapper: ObjectMapper) : Runnable {
         return status
     }
 
-    fun getDiscoveryResponses(): Set<DiscoveryResponse> {
+    fun getDiscoveryResponses(): Set<ClientDiscoveryResponse> {
         return receiver.getDiscoveryResponses()
     }
 
@@ -46,7 +46,6 @@ class ClientDiscoveryJob(objectMapper: ObjectMapper) : Runnable {
             receiver.receiveResponses(port)
             logger.info("Responses: ${getDiscoveryResponses().size}")
             status = DiscoveryJobStatus.complete
-//            configList.add(WebSocketJobConfig(receiver.getDiscoveredClientIPs().first(), 8765, listOf("test2")))
         } catch (e: Exception) {
             status = DiscoveryJobStatus.error
             logger.error(e.toString())

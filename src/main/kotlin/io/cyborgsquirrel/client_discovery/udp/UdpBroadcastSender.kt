@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.net
+package io.cyborgsquirrel.client_discovery.udp
 
 import org.slf4j.LoggerFactory
 import java.net.DatagramPacket

@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.job
+package io.cyborgsquirrel.sunrise_sunset.job
 
 class SunriseSunsetApiTestData {
 

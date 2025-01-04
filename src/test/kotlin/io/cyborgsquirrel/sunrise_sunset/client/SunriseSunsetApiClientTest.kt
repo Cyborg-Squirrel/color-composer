@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.client
+package io.cyborgsquirrel.sunrise_sunset.client
 
 import io.kotest.core.annotation.Ignored
 import io.kotest.core.spec.style.StringSpec

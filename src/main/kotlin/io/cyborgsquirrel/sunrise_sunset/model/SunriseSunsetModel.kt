@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.model.responses.sunrise_sunset
+package io.cyborgsquirrel.sunrise_sunset.model
 
 import io.micronaut.serde.annotation.Serdeable
 
