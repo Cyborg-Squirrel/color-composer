@@ -29,3 +29,6 @@ replay_pid*
 
 # Mac files
 .DS_Store
+
+# Project files
+.gradle/

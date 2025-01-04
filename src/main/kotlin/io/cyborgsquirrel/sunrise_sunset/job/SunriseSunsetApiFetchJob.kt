@@ -58,6 +58,8 @@ class SunriseSunsetApiFetchJob(
                         location = location
                     )
                 )
+            } else {
+                logger.info("$ymdString has already been fetched for the configured location. Skipping api fetch.")
             }
         } catch (ex: Exception) {
             ex.printStackTrace()
