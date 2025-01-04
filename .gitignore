@@ -1,5 +1,6 @@
 # Compiled class file
 *.class
+build/
 
 # Log file
 *.log
@@ -25,3 +26,6 @@ replay_pid*
 
 # Kotlin Gradle plugin data, see https://kotlinlang.org/docs/whatsnew20.html#new-directory-for-kotlin-data-in-gradle-projects
 .kotlin/
+
+# Mac files
+.DS_Store

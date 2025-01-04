@@ -1,0 +1,16 @@
+micronaut:
+  application:
+    name: color-composer
+datasources:
+  default:
+    driver-class-name: org.h2.Driver
+    dialect: H2
+    url: jdbc:h2:mem:devDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=TRUE
+    username: sa
+    password: ""
+jpa:
+  default:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: create-drop

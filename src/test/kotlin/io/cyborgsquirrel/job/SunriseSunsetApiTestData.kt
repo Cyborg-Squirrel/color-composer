@@ -1,0 +1,9 @@
+package io.cyborgsquirrel.job
+
+class SunriseSunsetApiTestData {
+
+    companion object {
+        const val apiResponse2025Jan2Json = "{\"results\":{\"sunrise\":\"2025-01-02T07:32:43+00:00\",\"sunset\":\"2025-01-02T15:36:26+00:00\",\"solar_noon\":\"2025-01-02T11:34:34+00:00\",\"day_length\":29023,\"civil_twilight_begin\":\"2025-01-02T06:55:17+00:00\",\"civil_twilight_end\":\"2025-01-02T16:13:52+00:00\",\"nautical_twilight_begin\":\"2025-01-02T06:12:41+00:00\",\"nautical_twilight_end\":\"2025-01-02T16:56:28+00:00\",\"astronomical_twilight_begin\":\"2025-01-02T05:32:17+00:00\",\"astronomical_twilight_end\":\"2025-01-02T17:36:52+00:00\"},\"status\":\"OK\",\"tzid\":\"UTC\"}"
+        const val apiResponse2025Jan3Json = "{\"results\":{\"sunrise\":\"2025-01-03T07:32:31+00:00\",\"sunset\":\"2025-01-03T15:37:33+00:00\",\"solar_noon\":\"2025-01-03T11:35:02+00:00\",\"day_length\":29102,\"civil_twilight_begin\":\"2025-01-03T06:55:10+00:00\",\"civil_twilight_end\":\"2025-01-03T16:14:54+00:00\",\"nautical_twilight_begin\":\"2025-01-03T06:12:37+00:00\",\"nautical_twilight_end\":\"2025-01-03T16:57:27+00:00\",\"astronomical_twilight_begin\":\"2025-01-03T05:32:15+00:00\",\"astronomical_twilight_end\":\"2025-01-03T17:37:49+00:00\"},\"status\":\"OK\",\"tzid\":\"UTC\"}"
+    }
+}

@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: io.cyborgsquirrel
+testFramework: kotest
+sourceLanguage: kotlin
+buildTool: gradle_kotlin
+features: [app-name, data, data-jpa, gradle, http-client, jdbc-hikari, kotest, kotlin, kotlin-application, ksp, logback, micronaut-aot, micronaut-build, micronaut-http-validation, netty-server, postgres, readme, serialization-jackson, shade, static-resources, test-resources, validation, websocket, yaml, yaml-build]
