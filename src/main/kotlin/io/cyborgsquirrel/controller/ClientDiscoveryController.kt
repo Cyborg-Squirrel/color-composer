@@ -3,7 +3,7 @@ package io.cyborgsquirrel.controller
 import io.cyborgsquirrel.entity.LedStripClientEntity
 import io.cyborgsquirrel.client_discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.client_discovery.model.DiscoveredClientsResponseList
-import io.cyborgsquirrel.job.enums.DiscoveryJobStatus
+import io.cyborgsquirrel.client_discovery.enums.DiscoveryJobStatus
 import io.cyborgsquirrel.model.requests.discovery.SelectClientsRequest
 import io.cyborgsquirrel.model.responses.discovery.DiscoveryStatusResponse
 import io.cyborgsquirrel.repository.H2LedStripClientRepository

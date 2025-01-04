@@ -2,7 +2,7 @@ package io.cyborgsquirrel
 
 import io.cyborgsquirrel.client_discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiFetchJob
-import io.cyborgsquirrel.job.WebSocketJob
+import io.cyborgsquirrel.lighting.job.WebSocketJob
 import io.cyborgsquirrel.util.H2WebServer
 import io.micronaut.context.event.ApplicationEventListener
 import io.micronaut.runtime.Micronaut.run
