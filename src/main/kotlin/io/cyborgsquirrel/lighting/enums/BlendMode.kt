@@ -1,15 +1,14 @@
 package io.cyborgsquirrel.lighting.enums
 
 /**
- * Enum instructing the [io.cyborgsquirrel.engine.rendering.LedStripRenderer]
+ * Enum instructing the [io.cyborgsquirrel.lighting.rendering.LedStripRenderer]
  * how to render multiple effects on the same LED strip
  */
 enum class BlendMode {
     // Average the RGB values when effects light the same LED
     Average,
 
-    // Only the RGB values from the effect with higher priority is shown when
-    // effects light the same LED
+    // Only display the RGB values from the effect with higher priority
     Priority,
 
     // Similar to average but takes priority into effect which means RGB
