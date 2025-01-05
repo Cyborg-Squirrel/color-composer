@@ -24,7 +24,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
-@MicronautTest
+@MicronautTest(startApplication = false, transactional = false)
 class SunriseSunsetApiFetchJobTest(
     private val job: SunriseSunsetApiFetchJob,
     private val locationConfigRepository: H2LocationConfigRepository,
