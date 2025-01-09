@@ -57,11 +57,11 @@ class LedStripRendererImpl : LedStripRenderer {
         return RenderedFrameModel(0, lightUuid, renderedEffectRgbData.first(), -1)
     }
 
-    override fun getRenderFps(effectInstanceUuid: String) {
+    override fun getRenderFps(lightUuid: String): Int {
         TODO("Implement this")
     }
 
-    override fun setRenderFps(effectInstanceUuid: String, fps: Int) {
+    override fun setRenderFps(lightUuid: String, fps: Int) {
         TODO("Implement this")
     }
 

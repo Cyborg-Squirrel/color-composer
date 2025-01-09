@@ -11,9 +11,9 @@ interface LedStripRenderer {
 
     fun renderFrame(lightUuid: String, sequenceNumber: Short): RenderedFrame
 
-    fun getRenderFps(effectInstanceUuid: String)
+    fun getRenderFps(lightUuid: String): Int
 
-    fun setRenderFps(effectInstanceUuid: String, fps: Int)
+    fun setRenderFps(lightUuid: String, fps: Int)
 
     fun setBlendMode(lightUuid: String, blendMode: BlendMode)
 
