@@ -43,7 +43,7 @@ class SunriseSunsetApiFetchJob(
 
             if (sunriseSunsetTime.isEmpty) {
                 val sunriseSunsetModel =
-                    api.getSunriseSunsetTimes(lat, long, ymdString).get(2, TimeUnit.SECONDS)
+                    api.getSunriseSunsetTimes(lat, long, ymdString).get(10, TimeUnit.SECONDS)
                 val sunriseTime = sunriseSunsetTimeHelper.utcTimestampToZoneDateTime(sunriseSunsetModel.results.sunrise)
                 val sunsetTime = sunriseSunsetTimeHelper.utcTimestampToZoneDateTime(sunriseSunsetModel.results.sunset)
 
@@ -63,7 +63,7 @@ class SunriseSunsetApiFetchJob(
             }
         } catch (ex: Exception) {
             ex.printStackTrace()
-            logger.error(ex.toString())
+            logger.error(ex.message)
         }
     }
 
