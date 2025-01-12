@@ -4,6 +4,23 @@ package io.cyborgsquirrel.model.color
  * A single RGB value
  */
 data class RgbColor(val red: UByte, val green: UByte, val blue: UByte) {
+
+    fun interpolate(otherColor: RgbColor, interpolation: Float): RgbColor {
+        val interpolatedRed = interpolate(red.toInt(), otherColor.red.toInt(), interpolation)
+        val interpolatedGreen = interpolate(green.toInt(), otherColor.green.toInt(), interpolation)
+        val interpolatedBlue = interpolate(blue.toInt(), otherColor.blue.toInt(), interpolation)
+
+        return RgbColor(
+            interpolatedRed.toUInt().toUByte(),
+            interpolatedGreen.toUInt().toUByte(),
+            interpolatedBlue.toUInt().toUByte(),
+        )
+    }
+
+    private fun interpolate(a: Int, b: Int, interpolation: Float): Int {
+        return (a - (a - b) * interpolation).toInt()
+    }
+
     companion object {
         val Red = RgbColor(255u, 0u, 0u)
         val Orange = RgbColor(255u, 50u, 0u)

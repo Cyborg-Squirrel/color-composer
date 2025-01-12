@@ -10,7 +10,6 @@ class NightriderLightEffect(
     numberOfLeds: Int,
     private val colors: List<RgbColor>,
     private val colorScaleFactor: Float = 1.0f,
-    private val pointerColorScaleFactor: Float = 1.0f
 ) :
     LightEffect(UUID, NAME, numberOfLeds) {
 
@@ -98,7 +97,7 @@ class NightriderLightEffect(
 
     companion object {
         // Randomly generated UUID
-        const val UUID = "0E9B4727-3F0B-4D4D-8052-F9996333F21F"
-        const val NAME = "Nightrider"
+        private const val UUID = "0E9B4727-3F0B-4D4D-8052-F9996333F21F"
+        private const val NAME = "Nightrider"
     }
 }
