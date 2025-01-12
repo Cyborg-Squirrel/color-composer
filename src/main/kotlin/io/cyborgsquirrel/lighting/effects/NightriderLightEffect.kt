@@ -7,17 +7,24 @@ import io.cyborgsquirrel.model.color.RgbColor
  * changing the color behind it to the next color.
  */
 class NightriderLightEffect(
-    numberOfLeds: Int,
+    private val numberOfLeds: Int,
     private val colors: List<RgbColor>,
     private val colorScaleFactor: Float = 1.0f,
-) :
-    LightEffect(UUID, NAME, numberOfLeds) {
+) : LightEffect {
 
     private var frame: Long = 0
     private var reflect = false
     private var previousLocation = 0
     private var location = 0
     private var iterations = 0
+
+    override fun getUuid(): String {
+        return UUID
+    }
+
+    override fun getName(): String {
+        return NAME
+    }
 
     override fun getNextStep(): List<RgbColor> {
         val reflectBefore = reflect

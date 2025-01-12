@@ -3,13 +3,12 @@ package io.cyborgsquirrel.lighting.effects
 import io.cyborgsquirrel.model.color.RgbColor
 import kotlin.math.ceil
 
-class RainbowLightEffect(
-    numberOfLeds: Int,
+class SpectrumLightEffect(
+    private val numberOfLeds: Int,
     colorPixelWidth: Int,
     colors: List<RgbColor>,
-) : LightEffect(UUID, NAME, numberOfLeds) {
+) : AnimatedSpectrumLightEffect(numberOfLeds, colorPixelWidth, colors) {
 
-    private var frame: Long = 0
     private var iterations = 0
     private var colorList = colors.ifEmpty {
         // Default color list
@@ -18,11 +17,19 @@ class RainbowLightEffect(
     private var colorWidth = if (colorPixelWidth == 0) colorList.size else colorPixelWidth
     private var referenceFrame = listOf<RgbColor>()
 
+    override fun getUuid(): String {
+        return UUID
+    }
+
+    override fun getName(): String {
+        return NAME
+    }
+
     override fun getNextStep(): List<RgbColor> {
         val rgbList = mutableListOf<RgbColor>()
         val repeatOfColorsCount = ceil((numberOfLeds.toFloat() / colorWidth)).toInt()
 
-        if (frame == 0L) {
+        if (iterations == 0) {
             for (i in 0..<repeatOfColorsCount) {
                 val color = colorList[i % colorList.size]
                 val nextColor = colorList[(i + 1) % colorList.size]
@@ -42,24 +49,8 @@ class RainbowLightEffect(
             rgbList.addAll(referenceFrame)
         }
 
-        if (frame.toInt() % numberOfLeds != 0) {
-            val shiftedFrame = shift(rgbList, (frame.toInt() % rgbList.size))
-            frame++
-            return shiftedFrame
-        }
-
         iterations++
-        frame++
         return rgbList
-    }
-
-    private fun <T> shift(list: List<T>, amount: Int): List<T> {
-        val newList = mutableListOf<T>()
-        for (i in list.indices) {
-            newList.add(list[(i + amount) % list.size])
-        }
-
-        return newList
     }
 
     override fun getIterations(): Int {
@@ -69,7 +60,7 @@ class RainbowLightEffect(
     companion object {
         // Randomly generated UUID
         private const val UUID = "67C64D65-159E-4F9C-9B43-60AFFF6C185B"
-        private const val NAME = "Rainbow"
+        private const val NAME = "Spectrum"
         private val RAINBOW =
             listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow, RgbColor.Green, RgbColor.Blue, RgbColor.Purple)
     }
