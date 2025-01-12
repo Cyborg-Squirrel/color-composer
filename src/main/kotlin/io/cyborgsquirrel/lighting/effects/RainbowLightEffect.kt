@@ -5,6 +5,7 @@ import kotlin.math.ceil
 
 class RainbowLightEffect(
     numberOfLeds: Int,
+    colorPixelWidth: Int,
     colors: List<RgbColor>,
 ) : LightEffect(UUID, NAME, numberOfLeds) {
 
@@ -14,18 +15,19 @@ class RainbowLightEffect(
         // Default color list
         RAINBOW
     }
+    private var colorWidth = if (colorPixelWidth == 0) colorList.size else colorPixelWidth
     private var referenceFrame = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
         val rgbList = mutableListOf<RgbColor>()
-        val repeatOfColorsCount = ceil((numberOfLeds.toFloat() / colorList.size)).toInt()
+        val repeatOfColorsCount = ceil((numberOfLeds.toFloat() / colorWidth)).toInt()
 
         if (frame == 0L) {
             for (i in 0..<repeatOfColorsCount) {
                 val color = colorList[i % colorList.size]
                 val nextColor = colorList[(i + 1) % colorList.size]
-                for (j in colorList.indices) {
-                    val interpolationFactor = j.toFloat() / colorList.size
+                for (j in 0..<colorWidth) {
+                    val interpolationFactor = j.toFloat() / colorWidth
                     val interpolatedColor = color.interpolate(nextColor, interpolationFactor)
                     rgbList.add(interpolatedColor)
 
