@@ -20,6 +20,11 @@ interface LightEffect {
     fun getNextStep(): List<RgbColor>
 
     /**
+     * Informs the light effect it should fade to black or
+     */
+//    fun complete()
+
+    /**
      * Returns the number of times the effect has played
      */
     fun getIterations(): Int
