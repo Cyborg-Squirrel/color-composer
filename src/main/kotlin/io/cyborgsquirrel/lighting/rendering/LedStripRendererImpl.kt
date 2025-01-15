@@ -71,7 +71,7 @@ class LedStripRendererImpl : LedStripRenderer {
     }
 
     override fun pauseEffect(lightUuid: String, effectUuid: String) {
-        effectList.filter { it.strip.getUuid() == lightUuid && it.effect.getUuid() == effectUuid }
+        effectList.filter { it.strip.getUuid() == lightUuid && it.uuid == effectUuid }
             .forEach { it.status = LightEffectStatus.Paused }
     }
 }

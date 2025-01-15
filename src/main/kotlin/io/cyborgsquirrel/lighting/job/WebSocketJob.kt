@@ -1,8 +1,9 @@
 package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
-import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
 import io.cyborgsquirrel.lighting.config.WebSocketJobConfig
+import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
+import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
 import io.cyborgsquirrel.model.color.RgbFrameData
 import io.cyborgsquirrel.model.color.RgbColor
 import io.cyborgsquirrel.serialization.RgbFrameDataSerializer
@@ -35,22 +36,23 @@ class WebSocketJob(private val taskScheduler: TaskScheduler, private val webSock
             setupWebSocket()
             val timestamp = Timestamp.from(Instant.now().plusMillis(250))
             var timestampMillis = timestamp.time
-            val effect = NightriderLightEffect(
-                60,
-                mutableListOf(
-                    RgbColor.Red,
-                    RgbColor.Orange,
-                    RgbColor.Yellow,
-                    RgbColor.Green,
-                    RgbColor.Blue,
-                    RgbColor.Purple,
-                    RgbColor.Blank
-                ),
-                colorScaleFactor = 0.2f
-            )
+//            val effect = NightriderLightEffect(
+//                60,
+//                mutableListOf(
+//                    RgbColor.Red,
+//                    RgbColor.Orange,
+//                    RgbColor.Yellow,
+//                    RgbColor.Green,
+//                    RgbColor.Blue,
+//                    RgbColor.Purple,
+//                ),
+//            )
+//            effect.setBrightness(0.2f)
+            val effect = AnimatedSpectrumLightEffect(60, 9, listOf())
+            effect.setBrightness(0.334f)
 
-            while (effect.getIterations() < 7) {
-                timestampMillis += 1000/50
+            while (effect.getIterations() < 20) {
+                timestampMillis += 1000 / 15
                 val rgbData = effect.getNextStep()
                 val frameData = RgbFrameData(timestampMillis, rgbData)
                 val frame = serializer.encode(frameData)
@@ -77,7 +79,7 @@ class WebSocketJob(private val taskScheduler: TaskScheduler, private val webSock
     }
 
     private fun setupWebSocket() {
-        val uri = UriBuilder.of("ws://192.168.50.219")
+        val uri = UriBuilder.of("ws://192.168.1.10")
             .port(8765)
             .path("test2")
             .build()
