@@ -20,9 +20,15 @@ interface LightEffect {
     fun getNextStep(): List<RgbColor>
 
     /**
-     * Informs the light effect it should fade to black or
+     * Informs the light effect it should fade to black or stop repeating after completing the next iteration
      */
 //    fun complete()
+
+    /**
+     * Boolean getter which returns true if the light effect has done after calling complete()
+     * If complete() is not called, this will always be false.
+     */
+//    fun done(): Boolean
 
     /**
      * Returns the number of times the effect has played
