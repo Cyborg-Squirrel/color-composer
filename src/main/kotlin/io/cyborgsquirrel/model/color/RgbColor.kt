@@ -6,8 +6,8 @@ package io.cyborgsquirrel.model.color
 data class RgbColor(val red: UByte, val green: UByte, val blue: UByte) {
 
     /**
-     * Scales the rgb values of this [RgbColor] by [scaleFactor]. A negative [scaleFactor] will reduce all rgb values
-     * positive values will increase all values, zero will set the rgb values to zero.
+     * Scales the rgb values of this [RgbColor] by [scaleFactor]. A [scaleFactor] less than 1.0 will reduce all rgb values
+     * a [scaleFactor] over 1.0 will increase all rgb values, a [scaleFactor] of zero will set the rgb values to zero.
      */
     fun scale(scaleFactor: Float): RgbColor {
         val newRed = red.toShort() * scaleFactor
