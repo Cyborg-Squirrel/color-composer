@@ -5,6 +5,24 @@ package io.cyborgsquirrel.model.color
  */
 data class RgbColor(val red: UByte, val green: UByte, val blue: UByte) {
 
+    /**
+     * Scales the rgb values of this [RgbColor] by [scaleFactor]. A negative [scaleFactor] will reduce all rgb values
+     * positive values will increase all values, zero will set the rgb values to zero.
+     */
+    fun scale(scaleFactor: Float): RgbColor {
+        val newRed = red.toShort() * scaleFactor
+        val newGreen = green.toShort() * scaleFactor
+        val newBlue = blue.toShort() * scaleFactor
+
+        return RgbColor(newRed.toUInt().toUByte(), newGreen.toUInt().toUByte(), newBlue.toUInt().toUByte())
+    }
+
+    /**
+     * Creates a new [RgbColor] between this color and [otherColor].
+     * [interpolation] is a value between 0 and 1 which determines how close the new color should be to this color or
+     * the other color. A value of 0 will return an exact copy of this color and 1 will return an exact copy of the
+     * [otherColor].
+     */
     fun interpolate(otherColor: RgbColor, interpolation: Float): RgbColor {
         val interpolatedRed = interpolate(red.toInt(), otherColor.red.toInt(), interpolation)
         val interpolatedGreen = interpolate(green.toInt(), otherColor.green.toInt(), interpolation)
