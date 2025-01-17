@@ -17,7 +17,6 @@ open class AnimatedSpectrumLightEffect(
     }
     private var colorWidth = if (colorPixelWidth == 0) colorList.size else colorPixelWidth
     protected var referenceFrame = mutableListOf<RgbColor>()
-    private var brightness = 1.0f
 
     override fun getName(): String {
         return NAME
@@ -29,8 +28,8 @@ open class AnimatedSpectrumLightEffect(
 
         if (referenceFrame.isEmpty()) {
             for (i in 0..<repeatOfColorsCount) {
-                val color = colorList[i % colorList.size].scale(brightness)
-                val nextColor = colorList[(i + 1) % colorList.size].scale(brightness)
+                val color = colorList[i % colorList.size]
+                val nextColor = colorList[(i + 1) % colorList.size]
                 for (j in 0..<colorWidth) {
                     val interpolationFactor = j.toFloat() / colorWidth
                     val interpolatedColor = color.interpolate(nextColor, interpolationFactor)
@@ -79,11 +78,6 @@ open class AnimatedSpectrumLightEffect(
 
     override fun getIterations(): Int {
         return iterations
-    }
-
-    override fun setBrightness(brightness: Float) {
-        this.brightness = brightness
-        referenceFrame.clear()
     }
 
     companion object {

@@ -6,6 +6,4 @@ interface LedStrip {
     fun getUuid(): String
 
     fun getLength(): Int
-
-    fun isReversed(): Boolean
 }

@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.serialization
+package io.cyborgsquirrel.lighting.serialization
 
 import io.cyborgsquirrel.model.color.RgbFrameData
 

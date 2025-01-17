@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.serialization
 
+import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
 import io.cyborgsquirrel.model.color.RgbFrameData
 import io.cyborgsquirrel.model.color.RgbColor
 import io.kotest.core.spec.style.AnnotationSpec

@@ -1,7 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.model.color.RgbColor
-import kotlin.math.ceil
 
 class SpectrumLightEffect(
     private val numberOfLeds: Int,

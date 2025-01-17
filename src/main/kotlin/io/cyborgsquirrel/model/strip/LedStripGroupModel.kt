@@ -27,10 +27,6 @@ data class LedStripGroupModel(
         return len
     }
 
-    override fun isReversed(): Boolean {
-        return false
-    }
-
     fun getStartingIndexOf(lightUuid: String): Int {
         var index = 0
         for (strip in strips) {

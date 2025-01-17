@@ -2,11 +2,19 @@ package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.config.WebSocketJobConfig
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
+import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.lighting.enums.ReflectionType
+import io.cyborgsquirrel.lighting.rendering.LightEffectRendererImpl
+import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFilter
+import io.cyborgsquirrel.lighting.rendering.filters.ReflectionFilter
+import io.cyborgsquirrel.lighting.rendering.filters.ReverseFilter
 import io.cyborgsquirrel.model.color.RgbFrameData
 import io.cyborgsquirrel.model.color.RgbColor
-import io.cyborgsquirrel.serialization.RgbFrameDataSerializer
+import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
+import io.cyborgsquirrel.model.strip.LedStripModel
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.scheduling.TaskScheduler
 import io.micronaut.websocket.WebSocketClient
@@ -17,6 +25,7 @@ import org.slf4j.LoggerFactory
 import java.lang.Thread.sleep
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
@@ -34,8 +43,9 @@ class WebSocketJob(private val taskScheduler: TaskScheduler, private val webSock
         logger.info("Start")
         try {
             setupWebSocket()
-            val timestamp = Timestamp.from(Instant.now().plusMillis(250))
+            val timestamp = Timestamp.from(Instant.now().plusMillis(50))
             var timestampMillis = timestamp.time
+            val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60)
 //            val effect = NightriderLightEffect(
 //                60,
 //                mutableListOf(
@@ -47,13 +57,17 @@ class WebSocketJob(private val taskScheduler: TaskScheduler, private val webSock
 //                    RgbColor.Purple,
 //                ),
 //            )
-//            effect.setBrightness(0.2f)
             val effect = AnimatedSpectrumLightEffect(60, 9, listOf())
-            effect.setBrightness(0.334f)
+            val filters = listOf(BrightnessFilter(0.334f), ReverseFilter(), ReflectionFilter(ReflectionType.LowToHigh))
+            val activeEffect = ActiveLightEffect(
+                UUID.randomUUID().toString(), 1, LightEffectStatus.Active, effect, strip, filters
+            )
+            val renderer = LightEffectRendererImpl()
+            renderer.addEffect(activeEffect)
 
-            while (effect.getIterations() < 20) {
-                timestampMillis += 1000 / 15
-                val rgbData = effect.getNextStep()
+            while (effect.getIterations() < 10) {
+                timestampMillis += 1000 / 35
+                val rgbData = renderer.renderFrame(strip.getUuid(), 0).frameData
                 val frameData = RgbFrameData(timestampMillis, rgbData)
                 val frame = serializer.encode(frameData)
                 client?.send(frame)?.get(1, TimeUnit.SECONDS)

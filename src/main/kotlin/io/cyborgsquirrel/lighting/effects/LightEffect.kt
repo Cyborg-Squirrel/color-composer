@@ -29,9 +29,4 @@ interface LightEffect {
      * Returns the number of times the effect has played
      */
     fun getIterations(): Int
-
-    /**
-     * Sets the brightness of the light effect on a scale of 0.0 (blank/dark) to 1.0 (brightest)
-     */
-    fun setBrightness(brightness: Float)
 }

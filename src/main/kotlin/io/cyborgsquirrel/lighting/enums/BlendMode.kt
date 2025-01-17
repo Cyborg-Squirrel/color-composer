@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.enums
 
 /**
- * Enum instructing the [io.cyborgsquirrel.lighting.rendering.LedStripRenderer]
+ * Enum instructing the [io.cyborgsquirrel.lighting.rendering.LightEffectRenderer]
  * how to render multiple effects on the same LED strip
  */
 enum class BlendMode {

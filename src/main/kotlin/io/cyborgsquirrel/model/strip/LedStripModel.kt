@@ -10,8 +10,7 @@ package io.cyborgsquirrel.model.strip
 data class LedStripModel(
     private val name: String,
     private val uuid: String,
-    private val length: Int,
-    private val reversed: Boolean = false
+    private val length: Int
 ) : LedStrip {
 
     override fun getName(): String {
@@ -24,9 +23,5 @@ data class LedStripModel(
 
     override fun getLength(): Int {
         return length
-    }
-
-    override fun isReversed(): Boolean {
-        return reversed
     }
 }

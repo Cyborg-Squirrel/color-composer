@@ -16,7 +16,6 @@ class NightriderLightEffect(
     private var previousLocation = 0
     private var location = 0
     private var iterations = 0
-    private var brightness = 1.0f
 
     override fun getName(): String {
         return NAME
@@ -36,7 +35,7 @@ class NightriderLightEffect(
         val upperBound = if (reflect) location else previousLocation
         for (i in 0..<upperBound) {
             val color = if (reflect) getColor(iterations - 1) else getColor(iterations)
-            rgbList.add(color.scale(brightness))
+            rgbList.add(color)
         }
 
         // Location and previous location
@@ -48,7 +47,7 @@ class NightriderLightEffect(
             val lowerBound = if (reflect) previousLocation + 1 else location + 1
             for (i in lowerBound..<numberOfLeds) {
                 val color = if (reflect) getColor(iterations) else getColor(iterations - 1)
-                rgbList.add(color.scale(brightness))
+                rgbList.add(color)
             }
         } else {
             for (i in location + 1..<numberOfLeds) {
@@ -71,10 +70,6 @@ class NightriderLightEffect(
 
     override fun getIterations(): Int {
         return iterations
-    }
-
-    override fun setBrightness(brightness: Float) {
-        this.brightness = brightness
     }
 
     private fun getColor(iteration: Int): RgbColor {

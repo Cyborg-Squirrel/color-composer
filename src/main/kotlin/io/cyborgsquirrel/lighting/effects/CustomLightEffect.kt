@@ -26,8 +26,4 @@ class CustomLightEffect(uuid: String, name: String, numberOfLeds: Int) : LightEf
     override fun getIterations(): Int {
         TODO("Not yet implemented")
     }
-
-    override fun setBrightness(brightness: Float) {
-        TODO("Not yet implemented")
-    }
 }
