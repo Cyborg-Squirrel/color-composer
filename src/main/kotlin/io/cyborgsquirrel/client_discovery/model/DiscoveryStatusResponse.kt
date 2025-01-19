@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.model.responses.discovery
+package io.cyborgsquirrel.client_discovery.model
 
 import io.cyborgsquirrel.client_discovery.enums.DiscoveryJobStatus
 import io.micronaut.serde.annotation.Serdeable

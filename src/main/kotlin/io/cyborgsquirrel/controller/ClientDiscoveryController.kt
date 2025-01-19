@@ -5,7 +5,7 @@ import io.cyborgsquirrel.client_discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.client_discovery.model.DiscoveredClientsResponseList
 import io.cyborgsquirrel.client_discovery.enums.DiscoveryJobStatus
 import io.cyborgsquirrel.model.requests.discovery.SelectClientsRequest
-import io.cyborgsquirrel.model.responses.discovery.DiscoveryStatusResponse
+import io.cyborgsquirrel.client_discovery.model.DiscoveryStatusResponse
 import io.cyborgsquirrel.repository.H2LedStripClientRepository
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
