@@ -22,7 +22,17 @@ class LightEffectRendererImpl : LightEffectRenderer {
     private var effectList = mutableListOf<ActiveLightEffect>()
 
     override fun addEffect(lightEffect: ActiveLightEffect) {
-        effectList.add(lightEffect)
+        if (effectList.none { it.uuid == lightEffect.uuid }) {
+            effectList.add(lightEffect)
+        }
+    }
+
+    override fun updateEffect(lightEffect: ActiveLightEffect) {
+        if (effectList.none { it.uuid == lightEffect.uuid }) {
+            addEffect(lightEffect)
+        } else {
+            effectList.replaceAll { if (it.uuid == lightEffect.uuid) lightEffect else it }
+        }
     }
 
     override fun getEffectsWithStatus(status: LightEffectStatus): List<ActiveLightEffect> {
@@ -48,6 +58,7 @@ class LightEffectRendererImpl : LightEffectRenderer {
                     }
                     renderedEffectRgbData.add(rgbData)
                 }
+
                 is LedStripGroupModel -> {
                     // TODO strip group rendering
                 }
@@ -58,24 +69,5 @@ class LightEffectRendererImpl : LightEffectRenderer {
 
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame groups
         return RenderedFrameModel(0, lightUuid, renderedEffectRgbData.first(), -1)
-    }
-
-    override fun getRenderFps(lightUuid: String): Int {
-        TODO("Implement this")
-    }
-
-    override fun setRenderFps(lightUuid: String, fps: Int) {
-        TODO("Implement this")
-    }
-
-    override fun setBlendMode(lightUuid: String, blendMode: BlendMode) {
-        TODO("Effect blend mode refactor")
-//        getEffectsWithStatus(LightEffectStatus.Active).filter { it.strip.getUuid() == lightUuid }
-//            .forEach { it.blendMode = blendMode }
-    }
-
-    override fun pauseEffect(lightUuid: String, effectUuid: String) {
-        effectList.filter { it.strip.getUuid() == lightUuid && it.uuid == effectUuid }
-            .forEach { it.status = LightEffectStatus.Paused }
     }
 }
