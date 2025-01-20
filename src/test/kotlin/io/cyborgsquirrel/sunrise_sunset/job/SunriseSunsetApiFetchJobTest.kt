@@ -6,8 +6,8 @@ import io.cyborgsquirrel.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.sunrise_sunset.client.SunriseSunsetApiClient
 import io.cyborgsquirrel.sunrise_sunset.model.SunriseSunsetModel
-import io.cyborgsquirrel.sunrise_sunset.time.SunriseSunsetTimeHelper
-import io.cyborgsquirrel.sunrise_sunset.time.SunriseSunsetTimeHelperImpl
+import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
+import io.cyborgsquirrel.sunrise_sunset.time.TimeHelperImpl
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.data.model.Pageable
@@ -31,7 +31,7 @@ class SunriseSunsetApiFetchJobTest(
     private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
     private val client: SunriseSunsetApiClient,
     private val objectMapper: ObjectMapper,
-    private val sunriseSunsetTimeHelper: SunriseSunsetTimeHelper,
+    private val timeHelper: TimeHelper,
 ) : StringSpec({
 
     // London
@@ -46,7 +46,7 @@ class SunriseSunsetApiFetchJobTest(
 
     beforeTest {
         // Mock out time
-        val mockSunriseSunsetTimeHelper = getMock(sunriseSunsetTimeHelper)
+        val mockSunriseSunsetTimeHelper = getMock(timeHelper)
         every {
             mockSunriseSunsetTimeHelper.today()
         } answers {
@@ -205,8 +205,8 @@ class SunriseSunsetApiFetchJobTest(
         return mockk()
     }
 
-    @MockBean(SunriseSunsetTimeHelperImpl::class)
-    fun sunriseSunsetTimeHelper(): SunriseSunsetTimeHelper {
+    @MockBean(TimeHelperImpl::class)
+    fun sunriseSunsetTimeHelper(): TimeHelper {
         return mockk()
     }
 }

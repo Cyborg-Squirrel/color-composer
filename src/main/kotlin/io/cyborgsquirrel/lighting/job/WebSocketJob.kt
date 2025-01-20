@@ -7,6 +7,7 @@ import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
+import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.lighting.rendering.LightEffectRendererImpl
 import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReflectionFilter
@@ -33,7 +34,11 @@ import java.util.concurrent.TimeUnit
  * Background job for streaming RgbFrameData with clients
  */
 @Singleton
-class WebSocketJob(private val taskScheduler: TaskScheduler, private val webSocketClient: WebSocketClient) : Runnable {
+class WebSocketJob(
+    private val taskScheduler: TaskScheduler,
+    private val webSocketClient: WebSocketClient,
+    private val renderer: LightEffectRenderer
+) : Runnable {
 
     private val configList = mutableListOf<WebSocketJobConfig>()
     private val serializer = RgbFrameDataSerializer()
@@ -58,14 +63,25 @@ class WebSocketJob(private val taskScheduler: TaskScheduler, private val webSock
 //                ),
 //            )
             val effect = AnimatedSpectrumLightEffect(60, 9, listOf())
-            val filters = listOf(BrightnessFilter(0.334f), ReverseFilter(), ReflectionFilter(ReflectionType.LowToHigh))
+            val filters = listOf(BrightnessFilter(0.25f), ReverseFilter(), ReflectionFilter(ReflectionType.HighToLow))
             val activeEffect = ActiveLightEffect(
                 UUID.randomUUID().toString(), 1, LightEffectStatus.Active, effect, strip, filters
             )
-            val renderer = LightEffectRendererImpl()
             renderer.addEffect(activeEffect)
 
-            while (effect.getIterations() < 10) {
+            while (effect.getIterations() < 80) {
+                if (effect.getIterations() == 20) {
+                    renderer.updateEffect(activeEffect.copy(filters = filters.map {
+                        if (it is ReflectionFilter) ReflectionFilter(
+                            ReflectionType.LowToHigh
+                        ) else it
+                    }))
+                } else if (effect.getIterations() == 40) {
+                    renderer.updateEffect(activeEffect.copy(filters = filters.filter { it is ReverseFilter || it is BrightnessFilter }))
+                } else if (effect.getIterations() == 60) {
+                    renderer.updateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
+                }
+
                 timestampMillis += 1000 / 35
                 val rgbData = renderer.renderFrame(strip.getUuid(), 0).frameData
                 val frameData = RgbFrameData(timestampMillis, rgbData)

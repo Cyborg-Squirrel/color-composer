@@ -1,12 +1,19 @@
 package io.cyborgsquirrel.sunrise_sunset.time
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
-interface SunriseSunsetTimeHelper {
+/**
+ * Interface for getting the current time. Provides a layer between service classes and LocalDate/LocalDateTime for
+ * easier mocking and testing.
+ */
+interface TimeHelper {
     fun today(): LocalDate
 
     fun tomorrow(): LocalDate
+
+    fun now(): LocalDateTime
 
     fun utcTimestampToZoneDateTime(utcDateTimeString: String): ZonedDateTime
 }

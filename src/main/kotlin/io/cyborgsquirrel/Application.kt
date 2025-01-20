@@ -33,7 +33,7 @@ class StartupListener(
             // Run background task
 //            taskScheduler.schedule(Duration.ofMillis(0), wsJob)
 //            taskScheduler.schedule(Duration.ofMillis(0), discoveryService)
-            taskScheduler.schedule("1 0 * * ?", sunriseSunsetJob)
+//            taskScheduler.schedule("1 0 * * ?", sunriseSunsetJob)
             taskScheduler.schedule(Duration.ofMillis(0), sunriseSunsetJob)
             h2WebServer.start()
         } catch (e: InterruptedException) {

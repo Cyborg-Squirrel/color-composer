@@ -5,7 +5,8 @@ import io.cyborgsquirrel.entity.SunriseSunsetTimeEntity
 import io.cyborgsquirrel.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.sunrise_sunset.client.SunriseSunsetApiClient
-import io.cyborgsquirrel.sunrise_sunset.time.SunriseSunsetTimeHelper
+import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
+import io.cyborgsquirrel.util.ymd
 import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
@@ -18,7 +19,7 @@ class SunriseSunsetApiFetchJob(
     private val locationRepository: H2LocationConfigRepository,
     private val sunriseSunsetRepository: H2SunriseSunsetTimeRepository,
     private val objectMapper: ObjectMapper,
-    private val sunriseSunsetTimeHelper: SunriseSunsetTimeHelper,
+    private val timeHelper: TimeHelper,
 ) : Runnable {
 
     override fun run() {
@@ -27,8 +28,8 @@ class SunriseSunsetApiFetchJob(
 
         if (activeLocation.isPresent) {
             val location = activeLocation.get()
-            val today = sunriseSunsetTimeHelper.today()
-            val tomorrow = sunriseSunsetTimeHelper.tomorrow()
+            val today = timeHelper.today()
+            val tomorrow = timeHelper.tomorrow()
             fetchSunriseSunsetTimesForDate(location, today)
             fetchSunriseSunsetTimesForDate(location, tomorrow)
         }
@@ -36,7 +37,7 @@ class SunriseSunsetApiFetchJob(
 
     private fun fetchSunriseSunsetTimesForDate(location: LocationConfigEntity, date: LocalDate) {
         try {
-            val ymdString = getYmdString(date)
+            val ymdString = date.ymd()
             val lat = location.latitude!!
             val long = location.longitude!!
             val sunriseSunsetTime = sunriseSunsetRepository.findByYmdEqualsAndLocationEquals(ymdString, location)
@@ -44,8 +45,8 @@ class SunriseSunsetApiFetchJob(
             if (sunriseSunsetTime.isEmpty) {
                 val sunriseSunsetModel =
                     api.getSunriseSunsetTimes(lat, long, ymdString).get(10, TimeUnit.SECONDS)
-                val sunriseTime = sunriseSunsetTimeHelper.utcTimestampToZoneDateTime(sunriseSunsetModel.results.sunrise)
-                val sunsetTime = sunriseSunsetTimeHelper.utcTimestampToZoneDateTime(sunriseSunsetModel.results.sunset)
+                val sunriseTime = timeHelper.utcTimestampToZoneDateTime(sunriseSunsetModel.results.sunrise)
+                val sunsetTime = timeHelper.utcTimestampToZoneDateTime(sunriseSunsetModel.results.sunset)
 
                 logger.info("Received sunrise/sunset times for $ymdString (ymd)")
                 logger.info("Location: $lat $long | Sunrise: ${sunriseTime.toLocalTime()} | Sunset: ${sunsetTime.toLocalTime()}")
@@ -65,13 +66,6 @@ class SunriseSunsetApiFetchJob(
             ex.printStackTrace()
             logger.error(ex.message)
         }
-    }
-
-    private fun getYmdString(date: LocalDate): String {
-        val year = date.year
-        val month = if (date.monthValue < 10) "0${date.monthValue}" else date.monthValue.toString()
-        val day = if (date.dayOfMonth < 10) "0${date.dayOfMonth}" else date.dayOfMonth
-        return "$year-$month-$day"
     }
 
     companion object {
