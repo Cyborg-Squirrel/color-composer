@@ -1,17 +1,18 @@
-package io.cyborgsquirrel.lighting.triggers
+package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
 import io.cyborgsquirrel.entity.LocationConfigEntity
 import io.cyborgsquirrel.entity.SunriseSunsetTimeEntity
-import io.cyborgsquirrel.lighting.enums.TriggerType
+import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
+import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
+import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
 import io.cyborgsquirrel.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.sunrise_sunset.model.SunriseSunsetModel
 import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
-import java.time.LocalDateTime
-import java.util.*
 import io.cyborgsquirrel.util.ymd
 import io.micronaut.serde.ObjectMapper
-import java.time.Duration
+import java.time.LocalDateTime
+import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
 class SunriseSunsetTrigger(
@@ -19,33 +20,52 @@ class SunriseSunsetTrigger(
     private val locationConfigRepository: H2LocationConfigRepository,
     private val objectMapper: ObjectMapper,
     private val timeHelper: TimeHelper,
-    triggerType: TriggerType,
-) : LightEffectTrigger(triggerType) {
+    settings: SunriseSunsetTriggerSettings,
+) : LightEffectTrigger(settings) {
 
     private var todayEntity: SunriseSunsetTimeEntity? = null
     private var locationEntity: LocationConfigEntity? = null
+    private var sequenceNumber = 0
+    private var lastActivation: LocalDateTime? = null
 
-    override fun init() {
-        refresh()
-    }
-
-    // TODO Replace placeholder logic after refresh() with configurable logic (x minutes before/after sunrise, sunset, etc)
-    override fun lastActivation(): Optional<LocalDateTime> {
+    override fun lastActivation(): Optional<TriggerActivation> {
         refresh()
 
         if (todayEntity != null) {
             val todaySunriseSunsetData = objectMapper.readValue(todayEntity!!.json, SunriseSunsetModel::class.java)
-            val todaySunriseTime =
-                timeHelper.utcTimestampToZoneDateTime(todaySunriseSunsetData.results.sunrise)
-                    .toLocalDateTime()
-            return Optional.of(todaySunriseTime)
+            val triggerTime = getTimestampForOption(todaySunriseSunsetData, getSunriseSunsetOption())
+            val now = timeHelper.now()
+
+            if (triggerTime.toLocalDate() != lastActivation?.toLocalDate() && now.isAfter(triggerTime)) {
+                sequenceNumber++
+                lastActivation = triggerTime
+            }
         }
 
-        return Optional.empty()
+        return if (lastActivation == null) Optional.empty() else Optional.of(
+            TriggerActivation(
+                lastActivation!!,
+                settings,
+                sequenceNumber,
+            )
+        )
     }
 
-    override fun triggerThreshold(): Duration {
-        return Duration.ofMinutes(5)
+    private fun getSunriseSunsetOption(): SunriseSunsetOption {
+        return (settings as SunriseSunsetTriggerSettings).sunriseSunsetOption
+    }
+
+    private fun getTimestampForOption(
+        todaySunriseSunsetData: SunriseSunsetModel,
+        sunriseSunsetOption: SunriseSunsetOption
+    ): LocalDateTime {
+        val timestampString = when (sunriseSunsetOption) {
+            SunriseSunsetOption.Sunrise -> todaySunriseSunsetData.results.sunrise
+            SunriseSunsetOption.Sunset -> todaySunriseSunsetData.results.sunset
+        }
+
+        return timeHelper.utcTimestampToZoneDateTime(timestampString)
+            .toLocalDateTime()
     }
 
     private fun refresh() {

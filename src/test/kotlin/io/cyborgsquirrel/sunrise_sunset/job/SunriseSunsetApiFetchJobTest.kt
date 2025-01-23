@@ -46,19 +46,19 @@ class SunriseSunsetApiFetchJobTest(
 
     beforeTest {
         // Mock out time
-        val mockSunriseSunsetTimeHelper = getMock(timeHelper)
+        val mockTimeHelper = getMock(timeHelper)
         every {
-            mockSunriseSunsetTimeHelper.today()
+            mockTimeHelper.today()
         } answers {
             demoTodayDate
         }
         every {
-            mockSunriseSunsetTimeHelper.tomorrow()
+            mockTimeHelper.tomorrow()
         } answers {
             demoTomorrowDate
         }
         every {
-            mockSunriseSunsetTimeHelper.utcTimestampToZoneDateTime(any())
+            mockTimeHelper.utcTimestampToZoneDateTime(any())
         } answers {
             ZonedDateTime.parse(it.invocation.args.first() as String, DateTimeFormatter.ISO_DATE_TIME)
                 .withZoneSameInstant(
@@ -206,7 +206,7 @@ class SunriseSunsetApiFetchJobTest(
     }
 
     @MockBean(TimeHelperImpl::class)
-    fun sunriseSunsetTimeHelper(): TimeHelper {
+    fun timeHelper(): TimeHelper {
         return mockk()
     }
 }
