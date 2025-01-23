@@ -21,15 +21,9 @@ class LightEffectRendererImpl : LightEffectRenderer {
 
     private var effectList = mutableListOf<ActiveLightEffect>()
 
-    override fun addEffect(lightEffect: ActiveLightEffect) {
+    override fun addOrUpdateEffect(lightEffect: ActiveLightEffect) {
         if (effectList.none { it.uuid == lightEffect.uuid }) {
             effectList.add(lightEffect)
-        }
-    }
-
-    override fun updateEffect(lightEffect: ActiveLightEffect) {
-        if (effectList.none { it.uuid == lightEffect.uuid }) {
-            addEffect(lightEffect)
         } else {
             effectList.replaceAll { if (it.uuid == lightEffect.uuid) lightEffect else it }
         }

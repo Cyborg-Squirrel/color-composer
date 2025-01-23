@@ -4,11 +4,9 @@ import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.config.WebSocketJobConfig
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
-import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
-import io.cyborgsquirrel.lighting.rendering.LightEffectRendererImpl
 import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReverseFilter
@@ -67,19 +65,19 @@ class WebSocketJob(
             val activeEffect = ActiveLightEffect(
                 UUID.randomUUID().toString(), 1, LightEffectStatus.Active, effect, strip, filters
             )
-            renderer.addEffect(activeEffect)
+            renderer.addOrUpdateEffect(activeEffect)
 
             while (effect.getIterations() < 80) {
                 if (effect.getIterations() == 20) {
-                    renderer.updateEffect(activeEffect.copy(filters = filters.map {
+                    renderer.addOrUpdateEffect(activeEffect.copy(filters = filters.map {
                         if (it is ReflectionFilter) ReflectionFilter(
                             ReflectionType.LowToHigh
                         ) else it
                     }))
                 } else if (effect.getIterations() == 40) {
-                    renderer.updateEffect(activeEffect.copy(filters = filters.filter { it is ReverseFilter || it is BrightnessFilter }))
+                    renderer.addOrUpdateEffect(activeEffect.copy(filters = filters.filter { it is ReverseFilter || it is BrightnessFilter }))
                 } else if (effect.getIterations() == 60) {
-                    renderer.updateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
+                    renderer.addOrUpdateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
                 }
 
                 timestampMillis += 1000 / 35
