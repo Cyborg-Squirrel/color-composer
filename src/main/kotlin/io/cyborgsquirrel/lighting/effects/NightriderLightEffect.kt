@@ -8,7 +8,7 @@ import io.cyborgsquirrel.model.color.RgbColor
  */
 class NightriderLightEffect(
     private val numberOfLeds: Int,
-    private val colors: List<RgbColor>,
+    private val colorList: List<RgbColor> = RgbColor.Rainbow,
 ) : LightEffect {
 
     private var frame: Long = 0
@@ -39,8 +39,8 @@ class NightriderLightEffect(
         }
 
         // Location and previous location
-        rgbList.add(getColor(iterations))
-        rgbList.add(getColor(iterations))
+        rgbList.add(getColor(iterations).scale(1.5f))
+        rgbList.add(getColor(iterations).scale(1.5f))
 
         // After pointer
         if (iterations >= 1) {
@@ -73,7 +73,7 @@ class NightriderLightEffect(
     }
 
     private fun getColor(iteration: Int): RgbColor {
-        return colors[iteration % colors.size]
+        return colorList[iteration % colorList.size]
     }
 
     private fun updatePointerLocation() {

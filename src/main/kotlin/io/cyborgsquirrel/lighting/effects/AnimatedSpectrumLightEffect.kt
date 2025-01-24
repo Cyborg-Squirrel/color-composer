@@ -6,15 +6,11 @@ import kotlin.math.ceil
 open class AnimatedSpectrumLightEffect(
     private val numberOfLeds: Int,
     colorPixelWidth: Int,
-    colors: List<RgbColor>,
+    private val colorList: List<RgbColor> = RgbColor.Rainbow,
 ) : LightEffect {
 
     protected var frame: Long = 0
     private var iterations = 0
-    private var colorList = colors.ifEmpty {
-        // Default color list
-        RAINBOW
-    }
     private var colorWidth = if (colorPixelWidth == 0) colorList.size else colorPixelWidth
     protected var referenceFrame = mutableListOf<RgbColor>()
 
@@ -82,7 +78,5 @@ open class AnimatedSpectrumLightEffect(
 
     companion object {
         private const val NAME = "Animated Spectrum"
-        private val RAINBOW =
-            listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow, RgbColor.Green, RgbColor.Blue, RgbColor.Purple)
     }
 }

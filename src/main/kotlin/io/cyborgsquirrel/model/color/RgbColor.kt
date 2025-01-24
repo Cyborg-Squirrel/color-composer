@@ -50,5 +50,6 @@ data class RgbColor(val red: UByte, val green: UByte, val blue: UByte) {
         val Pink = RgbColor(255u, 0u, 150u)
         val White = RgbColor(255u, 255u, 255u)
         val Blank = RgbColor(0u, 0u, 0u)
+        val Rainbow = listOf(Red, Orange, Yellow, Green, Blue, Purple)
     }
 }
