@@ -2,8 +2,8 @@ package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
 import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
 import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
-import io.cyborgsquirrel.lighting.effect_trigger.settings.TriggerSettings
 import io.cyborgsquirrel.lighting.effects.LightEffect
+import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
 import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
 import java.time.LocalDateTime
 import java.util.*
@@ -13,31 +13,39 @@ import java.util.*
  * This trigger is best used when the effect is playing and is configured to deactivate after a specified number of iterations
  */
 class EffectIterationTrigger(
-    private val effect: LightEffect,
     private val timeHelper: TimeHelper,
-    settings: EffectIterationTriggerSettings
+    private val effectRepository: ActiveLightEffectRepository,
+    settings: EffectIterationTriggerSettings,
+    activeEffectUuid: String,
 ) :
-    LightEffectTrigger(settings) {
+    LightEffectTrigger(settings, activeEffectUuid) {
 
     private var lastActivation: LocalDateTime? = null
     private var sequenceNumber = 0
 
     override fun lastActivation(): Optional<TriggerActivation> {
-        if (effect.getIterations() > getMaxIterations() && lastActivation == null) {
-            sequenceNumber++
-            lastActivation = timeHelper.now()
-        }
+        val effectOptional = effectRepository.findEffectWithUuid(activeEffectUuid)
+        if (effectOptional.isPresent) {
+            val activeEffect = effectOptional.get()
+            if (activeEffect.effect.getIterations() > getMaxIterations() && lastActivation == null) {
+                sequenceNumber++
+                lastActivation = timeHelper.now()
+            }
 
-        return if (lastActivation == null) Optional.empty() else Optional.of(
-            TriggerActivation(
-                lastActivation!!,
-                settings,
-                sequenceNumber,
+            return if (lastActivation == null) Optional.empty() else Optional.of(
+                TriggerActivation(
+                    lastActivation!!,
+                    settings,
+                    sequenceNumber,
+                )
             )
-        )
+        } else {
+            // Couldn't find the light effect - trigger is desynced from active light effects
+            return Optional.empty()
+        }
     }
 
-    private fun getMaxIterations() : Int {
+    private fun getMaxIterations(): Int {
         return (settings as EffectIterationTriggerSettings).maxActivations!!
     }
 }

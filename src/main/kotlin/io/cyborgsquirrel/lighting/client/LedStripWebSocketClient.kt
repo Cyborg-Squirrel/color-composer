@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.client
 import io.micronaut.websocket.CloseReason
 import io.micronaut.websocket.WebSocketSession
 import io.micronaut.websocket.annotation.*
+import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -38,12 +39,14 @@ abstract class LedStripWebSocketClient : AutoCloseable {
 
     @OnClose
     fun onClose(closeReason: CloseReason) {
+        logger.info("WebSocket closed - cause: $closeReason")
         session = null
     }
 
     @OnError
     fun onError(error: Throwable) {
-
+        logger.error("WebSocket error! ${error.javaClass} ${error.message}")
+        session = null
     }
 
     fun send(message: ByteArray): CompletableFuture<ByteArray> {
@@ -54,5 +57,9 @@ abstract class LedStripWebSocketClient : AutoCloseable {
 
     private fun waitForSend() {
         future?.get(5, TimeUnit.SECONDS)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(LedStripWebSocketClient::class.java)
     }
 }

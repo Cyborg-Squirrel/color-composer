@@ -7,8 +7,8 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
 
-class TimeTrigger(private val timeHelper: TimeHelper, settings: TimeTriggerSettings) :
-    LightEffectTrigger(settings) {
+class TimeTrigger(private val timeHelper: TimeHelper, settings: TimeTriggerSettings, activeEffectUuid: String) :
+    LightEffectTrigger(settings, activeEffectUuid) {
 
     private var sequenceNumber = 0
     private var lastActivation: LocalDateTime? = null

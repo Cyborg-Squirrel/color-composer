@@ -6,8 +6,8 @@ import java.time.LocalTime
 
 class TimeTriggerSettings(
     val triggerTime: LocalTime,
-    validDuration: Duration?,
+    activationDuration: Duration,
     maxActivations: Int?,
     type: TriggerType
 ) :
-    TriggerSettings(validDuration, maxActivations, type)
+    TriggerSettings(activationDuration, maxActivations, type)

@@ -1,0 +1,71 @@
+package io.cyborgsquirrel.lighting.effects.repository
+
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import jakarta.inject.Singleton
+import java.util.*
+import java.util.concurrent.Semaphore
+
+@Singleton
+class ActiveLightEffectRepositoryImpl : ActiveLightEffectRepository {
+    private var effectList = mutableListOf<ActiveLightEffect>()
+    private val lock = Semaphore(1)
+
+    override fun addOrUpdateEffect(lightEffect: ActiveLightEffect) {
+        try {
+            lock.acquire()
+            if (effectList.none { it.uuid == lightEffect.uuid }) {
+                effectList.add(lightEffect)
+            } else {
+                effectList.replaceAll { if (it.uuid == lightEffect.uuid) lightEffect else it }
+            }
+        } finally {
+            lock.release()
+        }
+    }
+
+    override fun removeEffect(lightEffect: ActiveLightEffect) {
+        try {
+            lock.acquire()
+            effectList.remove(lightEffect)
+        } finally {
+            lock.release()
+        }
+    }
+
+    override fun findEffectsWithStatus(status: LightEffectStatus): List<ActiveLightEffect> {
+        val matchingEffects = mutableListOf<ActiveLightEffect>()
+        try {
+            lock.acquire()
+            matchingEffects.addAll(effectList.filter { it.status == status })
+        } finally {
+            lock.release()
+        }
+
+        return matchingEffects
+    }
+
+    override fun findEffectWithUuid(uuid: String): Optional<ActiveLightEffect> {
+        var effect: ActiveLightEffect? = null
+        try {
+            lock.acquire()
+            effect = effectList.first { it.uuid == uuid }
+        } finally {
+            lock.release()
+        }
+
+        return if (effect == null) Optional.empty() else Optional.of(effect)
+    }
+
+    override fun findAllEffects(): List<ActiveLightEffect> {
+        val effects = mutableListOf<ActiveLightEffect>()
+        try {
+            lock.acquire()
+            effects.addAll(effectList)
+        } finally {
+            lock.release()
+        }
+
+        return effects
+    }
+}

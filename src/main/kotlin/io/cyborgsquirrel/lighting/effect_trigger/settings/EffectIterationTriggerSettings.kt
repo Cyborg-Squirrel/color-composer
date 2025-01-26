@@ -4,9 +4,4 @@ import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import java.time.Duration
 import java.time.LocalTime
 
-class EffectIterationTriggerSettings(
-    validDuration: Duration?,
-    maxActivations: Int,
-    type: TriggerType
-) :
-    TriggerSettings(validDuration, maxActivations, type)
+class EffectIterationTriggerSettings : TriggerSettings(Duration.ofSeconds(0), 1, TriggerType.StopEffect)

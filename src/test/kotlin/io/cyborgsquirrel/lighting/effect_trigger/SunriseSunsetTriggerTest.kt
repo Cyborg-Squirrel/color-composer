@@ -6,6 +6,12 @@ import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.SunriseSunsetTrigger
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
+import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
+import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepositoryImpl
+import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.model.strip.LedStripModel
 import io.cyborgsquirrel.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiTestData.Companion.apiResponse2025Jan21Json
@@ -22,6 +28,7 @@ import io.micronaut.test.extensions.kotest5.MicronautKotest5Extension.getMock
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -33,10 +40,13 @@ class SunriseSunsetTriggerTest(
     private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
     private val objectMapper: ObjectMapper,
     private val timeHelper: TimeHelper,
+    private val activeLightEffectRepository: ActiveLightEffectRepository,
 ) : StringSpec({
     lateinit var mockTimeHelper: TimeHelper
     lateinit var mockLocationConfigRepository: H2LocationConfigRepository
     lateinit var mockSunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository
+    lateinit var mockActiveLightEffectRepository: ActiveLightEffectRepository
+
     // Location option 1
     val duluthMnLocation = LocationConfigEntity(1, "46.465978", "-92.062368", true)
     val cst = ZoneId.of("America/Chicago")
@@ -44,10 +54,26 @@ class SunriseSunsetTriggerTest(
     val londonGbLocation = LocationConfigEntity(2, "51.3026", "7.39", active = true)
     val utc = ZoneId.of("UTC")
 
+    lateinit var activeEffect: ActiveLightEffect
+
     beforeTest {
         mockTimeHelper = getMock(timeHelper)
         mockLocationConfigRepository = getMock(locationConfigRepository)
         mockSunriseSunsetTimeRepository = getMock(sunriseSunsetTimeRepository)
+        mockActiveLightEffectRepository = getMock(activeLightEffectRepository)
+
+        val mockStrip = mockk<LedStripModel>()
+        val effect = AnimatedSpectrumLightEffect(60, 9)
+        activeEffect = ActiveLightEffect(
+            UUID.randomUUID().toString(), 1, LightEffectStatus.Created, effect, mockStrip, listOf()
+        )
+
+        every {
+            mockActiveLightEffectRepository.findEffectsWithStatus(LightEffectStatus.Active)
+        } returns listOf(activeEffect)
+        every {
+            mockActiveLightEffectRepository.findEffectWithUuid(activeEffect.uuid)
+        } returns Optional.of(activeEffect)
     }
 
     fun mockTime(date: LocalDate, time: LocalTime) {
@@ -86,6 +112,7 @@ class SunriseSunsetTriggerTest(
         mockTime(date, time)
         mockLocation(date, apiResponse2025Jan21Json, duluthMnLocation)
         mockTimestampParse(cst)
+
         val settings = SunriseSunsetTriggerSettings(
             SunriseSunsetOption.Sunrise,
             Duration.ofMinutes(30),
@@ -99,6 +126,7 @@ class SunriseSunsetTriggerTest(
                 objectMapper,
                 mockTimeHelper,
                 settings,
+                activeEffect.uuid
             )
 
         val activationOptional = trigger.lastActivation()
@@ -143,6 +171,7 @@ class SunriseSunsetTriggerTest(
                 objectMapper,
                 mockTimeHelper,
                 settings,
+                activeEffect.uuid
             )
         val activationOptionalA = trigger.lastActivation()
         val activationOptionalB = trigger.lastActivation()
@@ -172,6 +201,7 @@ class SunriseSunsetTriggerTest(
                 objectMapper,
                 mockTimeHelper,
                 settings,
+                activeEffect.uuid
             )
         val activationOptional = trigger.lastActivation()
         activationOptional.isEmpty shouldBe true
@@ -204,6 +234,7 @@ class SunriseSunsetTriggerTest(
                 objectMapper,
                 mockTimeHelper,
                 settings,
+                activeEffect.uuid
             )
         val activationOptional = trigger.lastActivation()
         activationOptional.isEmpty shouldBe true
@@ -221,6 +252,11 @@ class SunriseSunsetTriggerTest(
 
     @MockBean(TimeHelperImpl::class)
     fun timeHelper(): TimeHelper {
+        return mockk()
+    }
+
+    @MockBean(ActiveLightEffectRepositoryImpl::class)
+    fun activeEffectRepository(): ActiveLightEffectRepository {
         return mockk()
     }
 }

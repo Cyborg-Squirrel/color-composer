@@ -1,7 +1,6 @@
 package io.cyborgsquirrel.lighting.rendering
 
-import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.enums.BlendMode
+import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.rendering.frame.BlankFrameModel
 import io.cyborgsquirrel.lighting.rendering.frame.RenderedFrame
@@ -12,31 +11,17 @@ import io.cyborgsquirrel.model.strip.LedStripModel
 import jakarta.inject.Singleton
 
 @Singleton
-class LightEffectRendererImpl : LightEffectRenderer {
+class LightEffectRendererImpl(private val effectRepository: ActiveLightEffectRepository) : LightEffectRenderer {
 
     // LED strip groups get rendered if the provided LED strip uuid
     // is a member of the group. To avoid re-rendering effects, buffer
     // the frame for other LED strips.
     private var stripGroupFrameBuffer = mutableListOf<RenderedFrameModel>()
 
-    private var effectList = mutableListOf<ActiveLightEffect>()
-
-    override fun addOrUpdateEffect(lightEffect: ActiveLightEffect) {
-        if (effectList.none { it.uuid == lightEffect.uuid }) {
-            effectList.add(lightEffect)
-        } else {
-            effectList.replaceAll { if (it.uuid == lightEffect.uuid) lightEffect else it }
-        }
-    }
-
-    override fun getEffectsWithStatus(status: LightEffectStatus): List<ActiveLightEffect> {
-        return effectList.filter { it.status == status }
-    }
-
     override fun renderFrame(lightUuid: String, sequenceNumber: Short): RenderedFrame {
-        val activeEffects = getEffectsWithStatus(LightEffectStatus.Active)
-            .filter { it.strip.getUuid() == lightUuid }
-            .sortedBy { it.priority }
+        val activeEffects =
+            effectRepository.findEffectsWithStatus(LightEffectStatus.Active).filter { it.strip.getUuid() == lightUuid }
+                .sortedBy { it.priority }
         if (activeEffects.isEmpty()) {
             // No active effects for the specified LED strip
             return BlankFrameModel(lightUuid)

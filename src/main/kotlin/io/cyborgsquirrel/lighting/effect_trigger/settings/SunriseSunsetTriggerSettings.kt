@@ -6,8 +6,8 @@ import java.time.Duration
 
 class SunriseSunsetTriggerSettings(
     val sunriseSunsetOption: SunriseSunsetOption,
-    validDuration: Duration?,
+    activationDuration: Duration,
     maxActivations: Int?,
     type: TriggerType
 ) :
-    TriggerSettings(validDuration, maxActivations, type)
+    TriggerSettings(activationDuration, maxActivations, type)
