@@ -1,6 +1,8 @@
 package io.cyborgsquirrel.sunrise_sunset.time
 
 import jakarta.inject.Singleton
+import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
@@ -21,6 +23,10 @@ class TimeHelperImpl : TimeHelper {
 
     override fun now(): LocalDateTime {
         return LocalDateTime.now()
+    }
+
+    override fun millisSinceEpoch(): Long {
+        return Timestamp.from(Instant.now()).time
     }
 
     override fun utcTimestampToZoneDateTime(utcDateTimeString: String): ZonedDateTime {

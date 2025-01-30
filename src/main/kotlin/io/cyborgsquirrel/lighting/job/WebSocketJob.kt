@@ -3,15 +3,20 @@ package io.cyborgsquirrel.lighting.job
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.config.WebSocketJobConfig
 import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
+import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
+import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
+import io.cyborgsquirrel.lighting.effect_trigger.triggers.SunriseSunsetTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
+import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
+import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFadeFilter
 import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReverseFilter
@@ -67,21 +72,24 @@ class WebSocketJob(
         try {
             setupWebSocket()
             val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60)
-//            val effect = NightriderLightEffect(60)
             val effect = AnimatedSpectrumLightEffect(60, 9)
-            val filters = listOf(BrightnessFilter(0.2f), ReverseFilter(), ReflectionFilter(ReflectionType.HighToLow))
+            val filters = listOf(
+                BrightnessFadeFilter(0.01f, 0.33f, Duration.ofSeconds(30), timeHelper),
+                ReverseFilter(),
+                ReflectionFilter(ReflectionType.HighToLow)
+            )
             var activeEffect = ActiveLightEffect(
                 UUID.randomUUID().toString(), 1, LightEffectStatus.Created, effect, strip, filters
             )
             effectRepository.addOrUpdateEffect(activeEffect)
-            val triggerTime = LocalDateTime.now().plusMinutes(5)
+            val triggerTime = LocalDateTime.now().plusSeconds(1)
             val triggerSettings =
-                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofMinutes(15), null, TriggerType.StartEffect)
+                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(45), null, TriggerType.StartEffect)
             val trigger = TimeTrigger(timeHelper, triggerSettings, activeEffect.uuid)
 //            val triggerSettings =
 //                SunriseSunsetTriggerSettings(
-//                    SunriseSunsetOption.Sunset,
-//                    Duration.ofMinutes(15),
+//                    SunriseSunsetOption.Sunrise,
+//                    Duration.ofMinutes(10),
 //                    null,
 //                    TriggerType.StartEffect
 //                )
@@ -95,6 +103,7 @@ class WebSocketJob(
 //            )
             triggerManager.addTrigger(trigger)
 
+            val fps = 35
             var lastFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
             var timestampMillis = 0L
             var isBlankFrame = false
@@ -112,7 +121,7 @@ class WebSocketJob(
                         effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters))
                     }
 
-                    25 -> {
+                    16 -> {
                         effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.map {
                             if (it is ReflectionFilter) ReflectionFilter(
                                 ReflectionType.LowToHigh
@@ -120,11 +129,11 @@ class WebSocketJob(
                         }))
                     }
 
-                    50 -> {
+                    33 -> {
                         effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filter { it is ReverseFilter || it is BrightnessFilter }))
                     }
 
-                    75 -> {
+                    66 -> {
                         effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
                     }
                 }
@@ -145,7 +154,7 @@ class WebSocketJob(
                     if (timestampMillis == 0L) {
                         timestampMillis = Timestamp.from(Instant.now()).time
                     }
-                    timestampMillis += 1000 / 35
+                    timestampMillis += 1000 / fps
                     val rgbData = frame.frameData
                     val frameData = RgbFrameData(timestampMillis, rgbData)
                     val encodedFrame = serializer.encode(frameData)

@@ -5,7 +5,7 @@ import io.cyborgsquirrel.model.color.RgbColor
 /**
  * Transforms a list of [RgbColor] to increase or decrease the brightness
  */
-class BrightnessFilter(var brightness: Float = 1.0f) : LightEffectFilter {
+open class BrightnessFilter(val brightness: Float = 1.0f) : LightEffectFilter {
 
     /**
      * Scales the list of [RgbColor] by the [brightness] value.
