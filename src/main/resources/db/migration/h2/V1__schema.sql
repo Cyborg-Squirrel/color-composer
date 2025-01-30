@@ -19,7 +19,8 @@ CREATE TABLE led_strips
     id         int auto_increment PRIMARY KEY NOT NULL,
     name       varchar(255) NOT NULL,
     uuid       varchar(255) NOT NULL,
-    length     smallint NOT NULL,
+    length     int NOT NULL,
+    height     int NOT NULL,
     client_id  int,
     CONSTRAINT strip_client_fk FOREIGN KEY (client_id) REFERENCES led_strip_clients
 );

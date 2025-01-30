@@ -27,6 +27,11 @@ data class LedStripGroupModel(
         return len
     }
 
+    override fun getHeight(): Int {
+        // If a matrix LED is combined with a strip what should the height be? Should these two be allowed in the same group?
+        TODO("Not yet implemented")
+    }
+
     fun getStartingIndexOf(lightUuid: String): Int {
         var index = 0
         for (strip in strips) {

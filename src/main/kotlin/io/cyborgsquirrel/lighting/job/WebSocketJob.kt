@@ -71,7 +71,7 @@ class WebSocketJob(
         logger.info("Start")
         try {
             setupWebSocket()
-            val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60)
+            val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1)
             val effect = AnimatedSpectrumLightEffect(60, 9)
             val filters = listOf(
                 BrightnessFadeFilter(0.01f, 0.33f, Duration.ofSeconds(30), timeHelper),
