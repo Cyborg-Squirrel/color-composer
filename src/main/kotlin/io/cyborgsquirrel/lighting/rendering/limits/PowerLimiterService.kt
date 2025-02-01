@@ -4,9 +4,9 @@ import io.cyborgsquirrel.model.color.RgbColor
 
 interface PowerLimiterService {
 
-    fun setLimit(milliamps: Int)
+    fun setLimit(stripUuid: String, milliamps: Int)
 
-    fun getLimit(): Int
+    fun getLimit(stripUuid: String): Int?
 
-    fun applyLimit(rgbList: List<RgbColor>): List<RgbColor>
+    fun applyLimit(rgbList: List<RgbColor>, stripUuid: String): List<RgbColor>
 }

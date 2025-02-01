@@ -39,7 +39,7 @@ class LightEffectRendererImpl(
                     for (filter in activeEffect.filters) {
                         rgbData = filter.apply(rgbData)
                     }
-                    rgbData = powerLimiterService.applyLimit(rgbData)
+                    rgbData = powerLimiterService.applyLimit(rgbData, activeEffect.strip.getUuid())
                     renderedEffectRgbData.add(rgbData)
                 }
 

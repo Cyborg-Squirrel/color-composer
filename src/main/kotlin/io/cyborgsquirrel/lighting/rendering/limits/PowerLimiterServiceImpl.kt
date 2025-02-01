@@ -6,17 +6,18 @@ import org.slf4j.LoggerFactory
 
 @Singleton
 class PowerLimiterServiceImpl : PowerLimiterService {
-    private var powerLimit = 0
+    private var powerLimits = mutableMapOf<String, Int>()
 
-    override fun setLimit(milliamps: Int) {
-        this.powerLimit = milliamps
+    override fun setLimit(stripUuid: String, milliamps: Int) {
+        powerLimits[stripUuid] = milliamps
     }
 
-    override fun getLimit(): Int {
-        return this.powerLimit
+    override fun getLimit(stripUuid: String): Int? {
+        return powerLimits[stripUuid]
     }
 
-    override fun applyLimit(rgbList: List<RgbColor>): List<RgbColor> {
+    override fun applyLimit(rgbList: List<RgbColor>, stripUuid: String): List<RgbColor> {
+        val powerLimit = powerLimits[stripUuid] ?: 0
         if (powerLimit > 0) {
             logger.debug("Applying ${powerLimit}mA limit")
             var powerUsageMilliamps = 0f

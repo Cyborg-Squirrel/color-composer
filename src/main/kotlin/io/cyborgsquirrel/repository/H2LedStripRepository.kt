@@ -11,4 +11,7 @@ import java.util.*
 interface H2LedStripRepository : CrudRepository<LedStripEntity, Long> {
      @Join(value = "client", type = Join.Type.RIGHT_FETCH)
      fun findByName(name: String): Optional<LedStripEntity>
+
+     @Join(value = "client", type = Join.Type.RIGHT_FETCH)
+     fun findByUuid(uuid: String): Optional<LedStripEntity>
 }
