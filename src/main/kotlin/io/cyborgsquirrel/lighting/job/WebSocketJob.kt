@@ -3,27 +3,21 @@ package io.cyborgsquirrel.lighting.job
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.config.WebSocketJobConfig
 import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
-import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
-import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
-import io.cyborgsquirrel.lighting.effect_trigger.triggers.SunriseSunsetTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
-import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
-import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFadeFilter
-import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFilter
-import io.cyborgsquirrel.lighting.rendering.filters.ReflectionFilter
-import io.cyborgsquirrel.lighting.rendering.filters.ReverseFilter
+import io.cyborgsquirrel.lighting.rendering.filters.*
 import io.cyborgsquirrel.lighting.rendering.frame.BlankFrameModel
-import io.cyborgsquirrel.model.color.RgbFrameData
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
+import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.model.color.RgbFrameData
 import io.cyborgsquirrel.model.strip.LedStripModel
 import io.cyborgsquirrel.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.repository.H2SunriseSunsetTimeRepository
@@ -41,7 +35,7 @@ import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
@@ -52,15 +46,12 @@ import kotlin.math.min
  */
 @Singleton
 class WebSocketJob(
-    private val taskScheduler: TaskScheduler,
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
     private val triggerManager: TriggerManager,
     private val effectRepository: ActiveLightEffectRepository,
     private val timeHelper: TimeHelper,
-    private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
-    private val locationConfigRepository: H2LocationConfigRepository,
-    private val objectMapper: ObjectMapper,
+    private val powerLimiterService: PowerLimiterService,
 ) : Runnable {
 
     private val configList = mutableListOf<WebSocketJobConfig>()
@@ -71,20 +62,22 @@ class WebSocketJob(
         logger.info("Start")
         try {
             setupWebSocket()
+            // Power supply is 4A
+            powerLimiterService.setLimit(4000)
             val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1)
             val effect = AnimatedSpectrumLightEffect(60, 9)
             val filters = listOf(
                 BrightnessFadeFilter(0.01f, 0.33f, Duration.ofSeconds(30), timeHelper),
                 ReverseFilter(),
-                ReflectionFilter(ReflectionType.HighToLow)
+                ReflectionFilter(ReflectionType.HighToLow),
             )
             var activeEffect = ActiveLightEffect(
                 UUID.randomUUID().toString(), 1, LightEffectStatus.Created, effect, strip, filters
             )
             effectRepository.addOrUpdateEffect(activeEffect)
-            val triggerTime = LocalDateTime.now().plusSeconds(1)
+            val triggerTime = LocalDateTime.now()
             val triggerSettings =
-                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(45), null, TriggerType.StartEffect)
+                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(61), null, TriggerType.StartEffect)
             val trigger = TimeTrigger(timeHelper, triggerSettings, activeEffect.uuid)
 //            val triggerSettings =
 //                SunriseSunsetTriggerSettings(

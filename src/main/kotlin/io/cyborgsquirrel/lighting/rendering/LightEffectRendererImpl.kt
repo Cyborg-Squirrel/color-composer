@@ -5,13 +5,17 @@ import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.rendering.frame.BlankFrameModel
 import io.cyborgsquirrel.lighting.rendering.frame.RenderedFrame
 import io.cyborgsquirrel.lighting.rendering.frame.RenderedFrameModel
+import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
 import io.cyborgsquirrel.model.color.RgbColor
 import io.cyborgsquirrel.model.strip.LedStripGroupModel
 import io.cyborgsquirrel.model.strip.LedStripModel
 import jakarta.inject.Singleton
 
 @Singleton
-class LightEffectRendererImpl(private val effectRepository: ActiveLightEffectRepository) : LightEffectRenderer {
+class LightEffectRendererImpl(
+    private val effectRepository: ActiveLightEffectRepository,
+    private val powerLimiterService: PowerLimiterService,
+) : LightEffectRenderer {
 
     // LED strip groups get rendered if the provided LED strip uuid
     // is a member of the group. To avoid re-rendering effects, buffer
@@ -35,6 +39,7 @@ class LightEffectRendererImpl(private val effectRepository: ActiveLightEffectRep
                     for (filter in activeEffect.filters) {
                         rgbData = filter.apply(rgbData)
                     }
+                    rgbData = powerLimiterService.applyLimit(rgbData)
                     renderedEffectRgbData.add(rgbData)
                 }
 
