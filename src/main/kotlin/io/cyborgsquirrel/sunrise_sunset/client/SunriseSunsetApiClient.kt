@@ -6,6 +6,7 @@ import io.micronaut.http.annotation.Get
 import io.micronaut.http.client.annotation.Client
 import java.util.concurrent.Future
 
+// Api readme: https://sunrise-sunset.org/api
 @Client("https://api.sunrise-sunset.org")
 interface SunriseSunsetApiClient {
 
