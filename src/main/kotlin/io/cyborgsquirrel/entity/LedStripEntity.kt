@@ -28,4 +28,8 @@ data class LedStripEntity(
 
     // Always 1 for strips, can be greater than 1 for matrices
     var height: Int = 1,
+
+    // Limit in mA
+    @MappedEntity("power_limit")
+    var powerLimit: Int? = null
 )

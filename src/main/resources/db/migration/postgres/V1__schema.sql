@@ -17,12 +17,13 @@ CREATE TABLE led_strip_clients
 
 CREATE TABLE led_strips
 (
-    id         serial primary key NOT NULL,
-    name       varchar(255) NOT NULL,
-    uuid       varchar(255) NOT NULL,
-    length     int NOT NULL,
-    height     int NOT NULL,
-    client_id  int,
+    id          serial primary key NOT NULL,
+    name        varchar(255) NOT NULL,
+    uuid        varchar(255) NOT NULL,
+    length      int NOT NULL,
+    height      int NOT NULL,
+    power_limit int,
+    client_id   int,
     CONSTRAINT strip_client_fk FOREIGN KEY (client_id) REFERENCES led_strip_clients
 );
 
