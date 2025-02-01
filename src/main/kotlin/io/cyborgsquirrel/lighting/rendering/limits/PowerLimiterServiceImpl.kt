@@ -19,7 +19,7 @@ class PowerLimiterServiceImpl : PowerLimiterService {
     override fun applyLimit(rgbList: List<RgbColor>, stripUuid: String): List<RgbColor> {
         val powerLimit = powerLimits[stripUuid] ?: 0
         if (powerLimit > 0) {
-            logger.debug("Applying ${powerLimit}mA limit")
+            logger.debug("Applying ${powerLimit}mA limit to strip $stripUuid")
             var powerUsageMilliamps = 0f
             val powerPerRgbLed = POWER_PER_LED * 3
             for (rgb in rgbList) {
@@ -28,6 +28,7 @@ class PowerLimiterServiceImpl : PowerLimiterService {
                 powerUsageMilliamps += ledPower
             }
 
+            logger.debug("Power usage of frame being sent to strip $stripUuid - ${powerUsageMilliamps}mA")
             if (powerUsageMilliamps > powerLimit) {
                 val scaleFactor = (powerLimit / powerUsageMilliamps)
                 logger.debug("Dimming LEDs to ${scaleFactor * 100}%")

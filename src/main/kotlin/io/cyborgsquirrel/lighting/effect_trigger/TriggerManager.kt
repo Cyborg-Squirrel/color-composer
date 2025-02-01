@@ -1,8 +1,6 @@
 package io.cyborgsquirrel.lighting.effect_trigger
 
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.LightEffectTrigger
-import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
-import java.util.*
 
 interface TriggerManager {
     /**
@@ -26,5 +24,5 @@ interface TriggerManager {
      * This will update the associated light effect in the
      * [io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository] depending on the trigger's output
      */
-    fun checkTriggerActivation()
+    fun checkTriggerActivations()
 }

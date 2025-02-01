@@ -19,12 +19,8 @@ import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
 import io.cyborgsquirrel.model.color.RgbColor
 import io.cyborgsquirrel.model.color.RgbFrameData
 import io.cyborgsquirrel.model.strip.LedStripModel
-import io.cyborgsquirrel.repository.H2LocationConfigRepository
-import io.cyborgsquirrel.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
-import io.micronaut.scheduling.TaskScheduler
-import io.micronaut.serde.ObjectMapper
 import io.micronaut.websocket.WebSocketClient
 import jakarta.inject.Singleton
 import org.reactivestreams.Subscriber
@@ -103,7 +99,7 @@ class WebSocketJob(
             var hasHadNonBlankFrame = false
 
             while (!isBlankFrame || !hasHadNonBlankFrame) {
-                triggerManager.checkTriggerActivation()
+                triggerManager.checkTriggerActivations()
                 val iterationsString = effect.getIterations().toString()
                 val numberLength = min(iterationsString.length, 2)
                 val startIndex = max(iterationsString.length - numberLength, 0)

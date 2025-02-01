@@ -36,7 +36,7 @@ class TriggerManagerImpl(
         triggers.remove(trigger)
     }
 
-    override fun checkTriggerActivation() {
+    override fun checkTriggerActivations() {
         val effects = effectRepository.findAllEffects()
 
         for (effect in effects) {
