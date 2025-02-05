@@ -2,12 +2,14 @@ package io.cyborgsquirrel.lighting.effect_trigger.settings
 
 import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
+import io.micronaut.serde.annotation.Serdeable
 import java.time.Duration
 
+@Serdeable
 class SunriseSunsetTriggerSettings(
     val sunriseSunsetOption: SunriseSunsetOption,
     activationDuration: Duration,
     maxActivations: Int?,
-    type: TriggerType
+    triggerType: TriggerType
 ) :
-    TriggerSettings(activationDuration, maxActivations, type)
+    TriggerSettings(activationDuration, maxActivations, triggerType)

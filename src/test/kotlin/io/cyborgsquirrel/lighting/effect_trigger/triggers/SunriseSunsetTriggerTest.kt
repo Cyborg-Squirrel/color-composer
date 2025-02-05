@@ -1,11 +1,10 @@
-package io.cyborgsquirrel.lighting.effect_trigger
+package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
 import io.cyborgsquirrel.entity.LocationConfigEntity
 import io.cyborgsquirrel.entity.SunriseSunsetTimeEntity
 import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
-import io.cyborgsquirrel.lighting.effect_trigger.triggers.SunriseSunsetTrigger
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
@@ -28,7 +27,6 @@ import io.micronaut.test.extensions.kotest5.MicronautKotest5Extension.getMock
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.*

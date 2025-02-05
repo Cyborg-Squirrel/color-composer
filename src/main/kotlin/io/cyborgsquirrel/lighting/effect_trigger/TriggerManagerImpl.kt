@@ -46,7 +46,6 @@ class TriggerManagerImpl(
 
                 if (activationOptional.isPresent) {
                     val activation = activationOptional.get()
-                    val settings = trigger.settings
                     when (trigger) {
                         is EffectIterationTrigger -> {
                             // EffectIterationTrigger activation means the effect is running and should be paused.
