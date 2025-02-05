@@ -12,10 +12,8 @@ class UdpBroadcastSender {
                 socket.broadcast = true
 
                 val buffer = message.toByteArray()
-                val broadcastAddress =
-                    InetAddress.getByName(BROADCAST_IP)
-                val packet =
-                    DatagramPacket(buffer, buffer.size, broadcastAddress, PORT)
+                val broadcastAddress = InetAddress.getByName(BROADCAST_IP)
+                val packet = DatagramPacket(buffer, buffer.size, broadcastAddress, PORT)
 
                 socket.send(packet)
                 logger.info("Broadcast message sent: $message")
