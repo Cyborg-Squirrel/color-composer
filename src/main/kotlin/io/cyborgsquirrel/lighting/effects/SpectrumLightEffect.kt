@@ -1,12 +1,12 @@
 package io.cyborgsquirrel.lighting.effects
 
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.model.color.RgbColor
 
 class SpectrumLightEffect(
-    private val numberOfLeds: Int,
-    colorPixelWidth: Int,
-    colors: List<RgbColor>,
-) : AnimatedSpectrumLightEffect(numberOfLeds, colorPixelWidth, colors) {
+    numberOfLeds: Int,
+    settings: SpectrumLightEffectSettings
+) : AnimatedSpectrumLightEffect(numberOfLeds, settings) {
 
     override fun getName(): String {
         return NAME

@@ -1,17 +1,18 @@
 package io.cyborgsquirrel.lighting.effects
 
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.model.color.RgbColor
 import kotlin.math.ceil
 
 open class AnimatedSpectrumLightEffect(
-    private val numberOfLeds: Int,
-    colorPixelWidth: Int,
-    private val colorList: List<RgbColor> = RgbColor.Rainbow,
-) : LightEffect {
+    numberOfLeds: Int,
+    settings: SpectrumLightEffectSettings
+) : LightEffect(numberOfLeds, settings) {
 
     protected var frame: Long = 0
     private var iterations = 0
-    private var colorWidth = if (colorPixelWidth == 0) colorList.size else colorPixelWidth
+    private var colorWidth = if (settings.colorPixelWidth == 0) settings.colorList.size else settings.colorPixelWidth
+    private val colorList = settings.colorList
     protected var referenceFrame = mutableListOf<RgbColor>()
 
     override fun getName(): String {

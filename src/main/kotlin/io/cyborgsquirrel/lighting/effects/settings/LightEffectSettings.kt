@@ -1,0 +1,3 @@
+package io.cyborgsquirrel.lighting.effects.settings
+
+interface LightEffectSettings

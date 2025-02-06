@@ -6,6 +6,7 @@ import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
 import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepositoryImpl
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.model.strip.LedStripModel
 import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
@@ -36,7 +37,7 @@ class TimeTriggerTest(
         mockActiveLightEffectRepository = getMock(activeLightEffectRepository)
 
         val mockStrip = mockk<LedStripModel>()
-        val effect = AnimatedSpectrumLightEffect(60, 9)
+        val effect = AnimatedSpectrumLightEffect(60, SpectrumLightEffectSettings(9))
         activeEffect = ActiveLightEffect(
             UUID.randomUUID().toString(), 1, LightEffectStatus.Created, effect, mockStrip, listOf()
         )

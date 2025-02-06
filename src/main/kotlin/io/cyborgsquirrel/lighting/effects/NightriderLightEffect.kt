@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
+import io.cyborgsquirrel.lighting.effects.settings.NightriderLightEffectSettings
 import io.cyborgsquirrel.model.color.RgbColor
 
 /**
@@ -7,15 +8,16 @@ import io.cyborgsquirrel.model.color.RgbColor
  * changing the color behind it to the next color.
  */
 class NightriderLightEffect(
-    private val numberOfLeds: Int,
-    private val colorList: List<RgbColor> = RgbColor.Rainbow,
-) : LightEffect {
+    numberOfLeds: Int,
+    settings: NightriderLightEffectSettings
+) : LightEffect(numberOfLeds, settings) {
 
     private var frame: Long = 0
     private var reflect = false
     private var previousLocation = 0
     private var location = 0
     private var iterations = 0
+    private val colorList = settings.colorList
 
     override fun getName(): String {
         return NAME

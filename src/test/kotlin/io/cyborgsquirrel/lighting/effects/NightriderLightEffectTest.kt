@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
+import io.cyborgsquirrel.lighting.effects.settings.NightriderLightEffectSettings
 import io.cyborgsquirrel.model.color.RgbColor
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.StringSpec
@@ -10,7 +11,7 @@ class NightriderLightEffectTest : StringSpec({
     "Render nightrider effect" {
         val colors = listOf(RgbColor.Red, RgbColor.Blue)
         val length = 6
-        val effect = NightriderLightEffect(length, colors)
+        val effect = NightriderLightEffect(length, NightriderLightEffectSettings(colors))
         assert(effect.getIterations() == 0)
 
         var frame = effect.getNextStep()

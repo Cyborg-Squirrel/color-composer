@@ -9,6 +9,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
@@ -61,7 +62,7 @@ class WebSocketJob(
             val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1)
             // Power supply is 4A
             powerLimiterService.setLimit(strip.getUuid(), 4000)
-            val effect = AnimatedSpectrumLightEffect(60, 9)
+            val effect = AnimatedSpectrumLightEffect(60, SpectrumLightEffectSettings(9))
             val filters = listOf(
                 BrightnessFadeFilter(0.01f, 0.33f, Duration.ofSeconds(30), timeHelper),
                 ReverseFilter(),
