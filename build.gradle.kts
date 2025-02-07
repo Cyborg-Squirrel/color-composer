@@ -11,7 +11,7 @@ plugins {
 version = "0.1"
 group = "io.cyborgsquirrel"
 
-val kotlinVersion=project.properties.get("kotlinVersion")
+val kotlinVersion = project.properties["kotlinVersion"]
 repositories {
     mavenCentral()
 }
@@ -28,14 +28,12 @@ dependencies {
     implementation("io.micronaut.serde:micronaut-serde-jackson")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
     implementation("io.micronaut.validation:micronaut-validation")
-    implementation("jakarta.validation:jakarta.validation-api")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
     implementation("com.h2database:h2")
     implementation("io.micronaut.flyway:micronaut-flyway")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("ch.qos.logback:logback-classic")
-    runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("org.yaml:snakeyaml")
     testImplementation("io.mockk:mockk")
@@ -78,4 +76,14 @@ tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative"
     jdkVersion = "21"
 }
 
+tasks.register<Jar>("uberJar") {
+    archiveClassifier = "uber"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
+    from(sourceSets.main.get().output)
+
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
+}

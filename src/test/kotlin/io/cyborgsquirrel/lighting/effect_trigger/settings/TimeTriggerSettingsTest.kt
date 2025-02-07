@@ -1,6 +1,5 @@
 package io.cyborgsquirrel.lighting.effect_trigger.settings
 
-import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
