@@ -14,12 +14,12 @@ data class GroupMemberLedStripEntity(
     var id: Long = -1,
 
     @Relation(value = Relation.Kind.MANY_TO_ONE)
-    var group: LedStripGroupEntity? = null,
+    var group: LedStripGroupEntity?,
 
     @Relation(value = Relation.Kind.MANY_TO_ONE)
-    var strip: LedStripEntity? = null,
+    var strip: LedStripEntity?,
 
-    var inverted: Boolean? = null,
+    var inverted: Boolean?,
 
-    var groupIndex: Int? = null,
+    var groupIndex: Int?,
 )
