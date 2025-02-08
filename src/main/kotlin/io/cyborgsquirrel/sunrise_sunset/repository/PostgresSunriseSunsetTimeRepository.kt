@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.repository
+package io.cyborgsquirrel.sunrise_sunset.repository
 
 import io.micronaut.context.annotation.Replaces
 import io.micronaut.context.annotation.Requires

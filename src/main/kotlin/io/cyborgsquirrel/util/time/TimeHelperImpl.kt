@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.sunrise_sunset.time
+package io.cyborgsquirrel.util.time
 
 import jakarta.inject.Singleton
 import java.sql.Timestamp

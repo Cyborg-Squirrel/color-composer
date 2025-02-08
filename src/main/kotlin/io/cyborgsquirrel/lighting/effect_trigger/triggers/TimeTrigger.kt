@@ -2,7 +2,7 @@ package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
 import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
-import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
+import io.cyborgsquirrel.util.time.TimeHelper
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*

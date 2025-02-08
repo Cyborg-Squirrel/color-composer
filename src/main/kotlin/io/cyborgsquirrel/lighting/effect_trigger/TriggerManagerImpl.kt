@@ -2,21 +2,20 @@ package io.cyborgsquirrel.lighting.effect_trigger
 
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
-import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.LightEffectTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.SunriseSunsetTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
+import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
+import io.cyborgsquirrel.util.time.TimeHelper
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 
 @Singleton
 class TriggerManagerImpl(
-    private val effectRepository: ActiveLightEffectRepository,
+    private val effectRepository: ActiveLightEffectRegistry,
     private val timeHelper: TimeHelper
 ) : TriggerManager {
 
@@ -93,7 +92,7 @@ class TriggerManagerImpl(
 
     private fun updateLightEffect(effect: ActiveLightEffect, triggerType: TriggerType) {
         val newStatus = when (triggerType) {
-            TriggerType.StartEffect -> LightEffectStatus.Active
+            TriggerType.StartEffect -> LightEffectStatus.Playing
             TriggerType.StopEffect -> LightEffectStatus.Stopping
         }
 

@@ -22,7 +22,7 @@ interface TriggerManager {
      * Checks the next trigger activation.
      *
      * This will update the associated light effect in the
-     * [io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository] depending on the trigger's output
+     * [io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry] depending on the trigger's output
      */
     fun checkTriggerActivations()
 }

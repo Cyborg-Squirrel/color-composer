@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.repository
+package io.cyborgsquirrel.sunrise_sunset.repository
 
 import io.cyborgsquirrel.entity.LocationConfigEntity
 import io.cyborgsquirrel.entity.SunriseSunsetTimeEntity

@@ -4,13 +4,13 @@ import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
-import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
-import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepositoryImpl
+import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistryImpl
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.model.strip.LedStripModel
-import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
-import io.cyborgsquirrel.sunrise_sunset.time.TimeHelperImpl
+import io.cyborgsquirrel.util.time.TimeHelper
+import io.cyborgsquirrel.util.time.TimeHelperImpl
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -19,22 +19,25 @@ import io.micronaut.test.extensions.kotest5.MicronautKotest5Extension.getMock
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import io.mockk.every
 import io.mockk.mockk
-import java.time.*
+import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
 @MicronautTest(startApplication = false, transactional = false)
 class TimeTriggerTest(
     private val timeHelper: TimeHelper,
-    private val activeLightEffectRepository: ActiveLightEffectRepository,
+    private val activeLightEffectRegistry: ActiveLightEffectRegistry,
 ) : BehaviorSpec({
     lateinit var mockTimeHelper: TimeHelper
     lateinit var activeEffect: ActiveLightEffect
-    lateinit var mockActiveLightEffectRepository: ActiveLightEffectRepository
+    lateinit var mockActiveLightEffectRegistry: ActiveLightEffectRegistry
 
     beforeTest {
         mockTimeHelper = getMock(timeHelper)
-        mockActiveLightEffectRepository = getMock(activeLightEffectRepository)
+        mockActiveLightEffectRegistry = getMock(activeLightEffectRegistry)
 
         val mockStrip = mockk<LedStripModel>()
         val effect = AnimatedSpectrumLightEffect(60, SpectrumLightEffectSettings(9))
@@ -43,10 +46,10 @@ class TimeTriggerTest(
         )
 
         every {
-            mockActiveLightEffectRepository.findEffectsWithStatus(LightEffectStatus.Active)
+            mockActiveLightEffectRegistry.findEffectsWithStatus(LightEffectStatus.Playing)
         } returns listOf(activeEffect)
         every {
-            mockActiveLightEffectRepository.findEffectWithUuid(activeEffect.uuid)
+            mockActiveLightEffectRegistry.findEffectWithUuid(activeEffect.uuid)
         } returns Optional.of(activeEffect)
     }
 
@@ -87,8 +90,8 @@ class TimeTriggerTest(
         return mockk()
     }
 
-    @MockBean(ActiveLightEffectRepositoryImpl::class)
-    fun activeEffectRepository(): ActiveLightEffectRepository {
+    @MockBean(ActiveLightEffectRegistryImpl::class)
+    fun activeEffectRepository(): ActiveLightEffectRegistry {
         return mockk()
     }
 }

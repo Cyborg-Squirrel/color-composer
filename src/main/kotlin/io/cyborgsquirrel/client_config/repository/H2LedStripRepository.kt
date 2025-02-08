@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.repository
+package io.cyborgsquirrel.client_config.repository
 
 import io.cyborgsquirrel.entity.LedStripEntity
 import io.micronaut.data.annotation.Join

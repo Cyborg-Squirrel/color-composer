@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.repository
+package io.cyborgsquirrel.lighting.repository
 
 import io.micronaut.context.annotation.Replaces
 import io.micronaut.context.annotation.Requires
@@ -7,5 +7,5 @@ import io.micronaut.data.model.query.builder.sql.Dialect
 
 @JdbcRepository(dialect = Dialect.POSTGRES)
 @Requires(property = "datasources.default.dialect", value = "POSTGRES")
-@Replaces(value = H2LedStripClientRepository::class)
-interface PostgresLedStripClientRepository : H2LedStripClientRepository
+@Replaces(value = H2LightEffectRepository::class)
+interface PostgresLightEffectRepository : H2LightEffectRepository

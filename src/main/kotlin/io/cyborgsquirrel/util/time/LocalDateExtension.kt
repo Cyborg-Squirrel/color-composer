@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.util
+package io.cyborgsquirrel.util.time
 
 import java.time.LocalDate
 

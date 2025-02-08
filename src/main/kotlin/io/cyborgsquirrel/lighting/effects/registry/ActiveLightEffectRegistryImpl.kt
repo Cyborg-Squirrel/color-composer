@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.effects.repository
+package io.cyborgsquirrel.lighting.effects.registry
 
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
@@ -7,7 +7,7 @@ import java.util.*
 import java.util.concurrent.Semaphore
 
 @Singleton
-class ActiveLightEffectRepositoryImpl : ActiveLightEffectRepository {
+class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
     private var effectList = mutableListOf<ActiveLightEffect>()
     private val lock = Semaphore(1)
 

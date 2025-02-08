@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.repository
+package io.cyborgsquirrel.sunrise_sunset.repository
 
 import io.cyborgsquirrel.entity.LocationConfigEntity
 import io.cyborgsquirrel.entity.SunriseSunsetTimeEntity
@@ -7,7 +7,7 @@ import io.micronaut.data.jdbc.annotation.JdbcRepository
 import io.micronaut.data.model.Pageable
 import io.micronaut.data.model.query.builder.sql.Dialect
 import io.micronaut.data.repository.CrudRepository
-import java.util.Optional
+import java.util.*
 
 @JdbcRepository(dialect = Dialect.H2)
 interface H2SunriseSunsetTimeRepository : CrudRepository<SunriseSunsetTimeEntity, Long> {

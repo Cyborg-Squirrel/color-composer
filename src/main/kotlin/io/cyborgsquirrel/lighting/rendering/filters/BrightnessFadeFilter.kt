@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.rendering.filters
 
 import io.cyborgsquirrel.model.color.RgbColor
-import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
+import io.cyborgsquirrel.util.time.TimeHelper
 import java.time.Duration
 
 /**

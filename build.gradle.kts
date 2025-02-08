@@ -32,6 +32,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
     implementation("com.h2database:h2")
     implementation("io.micronaut.flyway:micronaut-flyway")
+    implementation("jakarta.persistence:jakarta.persistence-api")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("org.postgresql:postgresql")

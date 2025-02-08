@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.sunrise_sunset.time
+package io.cyborgsquirrel.util.time
 
 import java.time.LocalDate
 import java.time.LocalDateTime

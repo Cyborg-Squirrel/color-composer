@@ -1,10 +1,10 @@
-package io.cyborgsquirrel.lighting.effects.repository
+package io.cyborgsquirrel.lighting.effects.registry
 
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import java.util.*
 
-interface ActiveLightEffectRepository {
+interface ActiveLightEffectRegistry {
 
     fun addOrUpdateEffect(lightEffect: ActiveLightEffect)
 

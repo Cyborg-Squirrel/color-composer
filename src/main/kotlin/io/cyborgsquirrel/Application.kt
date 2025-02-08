@@ -1,8 +1,8 @@
 package io.cyborgsquirrel
 
 import io.cyborgsquirrel.client_discovery.job.ClientDiscoveryJob
-import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiFetchJob
 import io.cyborgsquirrel.lighting.job.WebSocketJob
+import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiFetchJob
 import io.cyborgsquirrel.util.H2WebServer
 import io.micronaut.context.event.ApplicationEventListener
 import io.micronaut.runtime.Micronaut.run
@@ -31,7 +31,7 @@ class StartupListener(
         logger.info("Application started")
         try {
             // Run background task
-            taskScheduler.schedule(Duration.ofMillis(0), wsJob)
+//            taskScheduler.schedule(Duration.ofMillis(0), wsJob)
 //            taskScheduler.schedule(Duration.ofMillis(0), discoveryService)
 //            taskScheduler.schedule("1 0 * * ?", sunriseSunsetJob)
             taskScheduler.schedule(Duration.ofMillis(0), sunriseSunsetJob)

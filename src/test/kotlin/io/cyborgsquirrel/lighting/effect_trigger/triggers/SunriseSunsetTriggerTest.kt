@@ -7,18 +7,18 @@ import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
-import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
-import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepositoryImpl
+import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistryImpl
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.model.strip.LedStripModel
-import io.cyborgsquirrel.repository.H2LocationConfigRepository
-import io.cyborgsquirrel.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiTestData.Companion.apiResponse2025Jan21Json
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiTestData.Companion.apiResponse2025Jan2Json
-import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
-import io.cyborgsquirrel.sunrise_sunset.time.TimeHelperImpl
-import io.cyborgsquirrel.util.ymd
+import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
+import io.cyborgsquirrel.util.time.TimeHelper
+import io.cyborgsquirrel.util.time.TimeHelperImpl
+import io.cyborgsquirrel.util.time.ymd
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -39,12 +39,12 @@ class SunriseSunsetTriggerTest(
     private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
     private val objectMapper: ObjectMapper,
     private val timeHelper: TimeHelper,
-    private val activeLightEffectRepository: ActiveLightEffectRepository,
+    private val activeLightEffectRegistry: ActiveLightEffectRegistry,
 ) : StringSpec({
     lateinit var mockTimeHelper: TimeHelper
     lateinit var mockLocationConfigRepository: H2LocationConfigRepository
     lateinit var mockSunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository
-    lateinit var mockActiveLightEffectRepository: ActiveLightEffectRepository
+    lateinit var mockActiveLightEffectRegistry: ActiveLightEffectRegistry
 
     // Location option 1
     val duluthMnLocation = LocationConfigEntity(1, "46.465978", "-92.062368", true)
@@ -59,7 +59,7 @@ class SunriseSunsetTriggerTest(
         mockTimeHelper = getMock(timeHelper)
         mockLocationConfigRepository = getMock(locationConfigRepository)
         mockSunriseSunsetTimeRepository = getMock(sunriseSunsetTimeRepository)
-        mockActiveLightEffectRepository = getMock(activeLightEffectRepository)
+        mockActiveLightEffectRegistry = getMock(activeLightEffectRegistry)
 
         val mockStrip = mockk<LedStripModel>()
         val effect = AnimatedSpectrumLightEffect(60, SpectrumLightEffectSettings(9))
@@ -68,10 +68,10 @@ class SunriseSunsetTriggerTest(
         )
 
         every {
-            mockActiveLightEffectRepository.findEffectsWithStatus(LightEffectStatus.Active)
+            mockActiveLightEffectRegistry.findEffectsWithStatus(LightEffectStatus.Playing)
         } returns listOf(activeEffect)
         every {
-            mockActiveLightEffectRepository.findEffectWithUuid(activeEffect.uuid)
+            mockActiveLightEffectRegistry.findEffectWithUuid(activeEffect.uuid)
         } returns Optional.of(activeEffect)
     }
 
@@ -254,8 +254,8 @@ class SunriseSunsetTriggerTest(
         return mockk()
     }
 
-    @MockBean(ActiveLightEffectRepositoryImpl::class)
-    fun activeEffectRepository(): ActiveLightEffectRepository {
+    @MockBean(ActiveLightEffectRegistryImpl::class)
+    fun activeEffectRepository(): ActiveLightEffectRegistry {
         return mockk()
     }
 }

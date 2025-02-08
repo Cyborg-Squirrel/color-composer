@@ -8,19 +8,22 @@ import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
-import io.cyborgsquirrel.lighting.effects.repository.ActiveLightEffectRepository
+import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
-import io.cyborgsquirrel.lighting.rendering.filters.*
+import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFadeFilter
+import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFilter
+import io.cyborgsquirrel.lighting.rendering.filters.ReflectionFilter
+import io.cyborgsquirrel.lighting.rendering.filters.ReverseFilter
 import io.cyborgsquirrel.lighting.rendering.frame.BlankFrameModel
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
 import io.cyborgsquirrel.model.color.RgbColor
 import io.cyborgsquirrel.model.color.RgbFrameData
 import io.cyborgsquirrel.model.strip.LedStripModel
-import io.cyborgsquirrel.sunrise_sunset.time.TimeHelper
+import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
 import jakarta.inject.Singleton
@@ -46,7 +49,7 @@ class WebSocketJob(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
     private val triggerManager: TriggerManager,
-    private val effectRepository: ActiveLightEffectRepository,
+    private val effectRepository: ActiveLightEffectRegistry,
     private val timeHelper: TimeHelper,
     private val powerLimiterService: PowerLimiterService,
 ) : Runnable {
