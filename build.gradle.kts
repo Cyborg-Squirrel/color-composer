@@ -53,6 +53,7 @@ graalvmNative.toolchainDetection = false
 micronaut {
     runtime("netty")
     testRuntime("kotest5")
+
     processing {
         incremental(true)
         annotations("io.cyborgsquirrel.*")
@@ -74,16 +75,4 @@ micronaut {
 
 tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative") {
     jdkVersion = "21"
-}
-
-tasks.register<Jar>("uberJar") {
-    archiveClassifier = "uber"
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    from(sourceSets.main.get().output)
-
-    dependsOn(configurations.runtimeClasspath)
-    from({
-        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
-    })
 }
