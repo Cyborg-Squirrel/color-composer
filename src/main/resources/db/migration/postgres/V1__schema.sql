@@ -1,4 +1,6 @@
 DELETE FROM flyway_schema_history;
+DROP TABLE IF EXISTS light_effect_led_strip_associations;
+DROP TABLE IF EXISTS light_effects;
 DROP TABLE IF EXISTS group_member_led_strips;
 DROP TABLE IF EXISTS led_strip_groups;
 DROP TABLE IF EXISTS led_strips;
@@ -46,11 +48,26 @@ CREATE TABLE group_member_led_strips
     CONSTRAINT led_strip_group_fk FOREIGN KEY (led_strip_group_id) REFERENCES led_strip_groups
 );
 
-CREATE TABLE light_effect (
+CREATE TABLE light_effects
+(
     id         SERIAL PRIMARY KEY,
     settings   JSONB NOT NULL,
     status     VARCHAR(50) NOT NULL,
     name       VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE light_effect_led_strip_associations
+(
+    id                  SERIAL PRIMARY KEY,
+    led_strip_id        INT,
+    led_strip_group_id  INT,
+    light_effect_id     INT NOT NULL,
+    CONSTRAINT led_strip_group_assoc_fk FOREIGN KEY (led_strip_group_id) REFERENCES led_strip_groups,
+    CONSTRAINT led_strip_assoc_fk FOREIGN KEY (led_strip_id) REFERENCES led_strips,
+    CONSTRAINT light_effect_assoc_fk FOREIGN KEY (light_effect_id) REFERENCES light_effects,
+    CONSTRAINT strip_or_strip_group_not_null CHECK (
+        led_strip_id IS NOT NULL OR led_strip_group_id IS NOT NULL
+    )
 );
 
 CREATE TABLE location_configs

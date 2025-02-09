@@ -11,7 +11,7 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 
 @Serdeable
-@MappedEntity("light_effect")
+@MappedEntity("light_effects")
 data class LightEffectEntity(
 
     @Id
