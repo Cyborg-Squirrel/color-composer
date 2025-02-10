@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.repository
 
 import io.cyborgsquirrel.entity.LedStripEntity
 import io.cyborgsquirrel.entity.LedStripGroupEntity
+import io.cyborgsquirrel.entity.LightEffectEntity
 import io.cyborgsquirrel.entity.LightEffectLedStripAssociationEntity
 import io.micronaut.data.jdbc.annotation.JdbcRepository
 import io.micronaut.data.model.query.builder.sql.Dialect
@@ -13,4 +14,6 @@ interface H2LightEffectLedStripAssociationRepository : CrudRepository<LightEffec
     fun findByStrip(strip: LedStripEntity): Optional<LightEffectLedStripAssociationEntity>
 
     fun findByGroup(group: LedStripGroupEntity): Optional<LightEffectLedStripAssociationEntity>
+
+    fun findByEffect(effect: LightEffectEntity): Optional<LightEffectLedStripAssociationEntity>
 }
