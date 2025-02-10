@@ -1,6 +1,11 @@
 package io.cyborgsquirrel.lighting.repository
 
+import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
+import io.cyborgsquirrel.entity.LedStripClientEntity
+import io.cyborgsquirrel.entity.LedStripEntity
 import io.cyborgsquirrel.entity.LightEffectEntity
+import io.cyborgsquirrel.entity.LightEffectLedStripAssociationEntity
 import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
@@ -12,17 +17,24 @@ import io.micronaut.json.tree.JsonNode
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import java.time.Duration
+import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
 class LightEffectRepositoryTest(
     private val objectMapper: ObjectMapper,
     private val lightEffectRepository: H2LightEffectRepository,
+    private val clientRepository: H2LedStripClientRepository,
+    private val ledStripRepository: H2LedStripRepository,
+    private val associationRepository: H2LightEffectLedStripAssociationRepository,
 ) : StringSpec({
 
     val settings =
         SunriseSunsetTriggerSettings(SunriseSunsetOption.Sunset, Duration.ofMinutes(15), null, TriggerType.StartEffect)
     var settingsJson: Map<String, Any>? = null
     lateinit var lightEffectEntity: LightEffectEntity
+    lateinit var ledStripClientEntity: LedStripClientEntity
+    lateinit var ledStripEntity: LedStripEntity
+    lateinit var associationEntity: LightEffectLedStripAssociationEntity
 
     beforeTest {
         if (settingsJson == null) {
@@ -34,7 +46,10 @@ class LightEffectRepositoryTest(
     }
 
     afterTest {
+        associationRepository.deleteAll()
         lightEffectRepository.deleteAll()
+        ledStripRepository.deleteAll()
+        clientRepository.deleteAll()
     }
 
     "Create a light effect entity" {
@@ -64,5 +79,29 @@ class LightEffectRepositoryTest(
         retrievedSettings.activationDuration shouldBe settings.activationDuration
         retrievedSettings.triggerType shouldBe settings.triggerType
         retrievedSettings.maxActivations shouldBe settings.maxActivations
+    }
+
+    "Join with associations" {
+        lightEffectEntity = lightEffectRepository.save(lightEffectEntity)
+        ledStripClientEntity =
+            LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
+        ledStripClientEntity = clientRepository.save(ledStripClientEntity)
+        ledStripEntity = LedStripEntity(
+            client = ledStripClientEntity,
+            uuid = UUID.randomUUID().toString(),
+            name = "Strip A",
+            length = 60
+        )
+        ledStripEntity = ledStripRepository.save(ledStripEntity)
+        associationEntity = LightEffectLedStripAssociationEntity(strip = ledStripEntity, effect = lightEffectEntity)
+        associationEntity = associationRepository.save(associationEntity)
+
+        val newLightEffectEntityOptional = lightEffectRepository.findByName(lightEffectEntity.name!!)
+
+        newLightEffectEntityOptional.isPresent shouldBe true
+
+        val newLightEffectEntity = newLightEffectEntityOptional.get()
+        newLightEffectEntity.associations.size shouldBe 1
+        newLightEffectEntity.associations.first().id shouldBe associationEntity.id
     }
 })

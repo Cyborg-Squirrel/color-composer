@@ -3,7 +3,7 @@ package io.cyborgsquirrel.sunrise_sunset.repository
 import io.cyborgsquirrel.entity.LocationConfigEntity
 import io.cyborgsquirrel.entity.SunriseSunsetTimeEntity
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 

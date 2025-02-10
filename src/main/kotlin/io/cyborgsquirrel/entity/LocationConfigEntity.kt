@@ -8,7 +8,7 @@ import io.micronaut.serde.annotation.Serdeable
 data class LocationConfigEntity (
     @Id
     @GeneratedValue
-    var id: Long = -1,
+    var id: Int = -1,
 
     @MappedProperty("lat")
     var latitude: String? = null,

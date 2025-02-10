@@ -58,15 +58,15 @@ CREATE TABLE light_effects
 
 CREATE TABLE light_effect_led_strip_associations
 (
-    id                  SERIAL PRIMARY KEY,
-    led_strip_id        INT,
-    led_strip_group_id  INT,
-    light_effect_id     INT NOT NULL,
-    CONSTRAINT led_strip_group_assoc_fk FOREIGN KEY (led_strip_group_id) REFERENCES led_strip_groups,
-    CONSTRAINT led_strip_assoc_fk FOREIGN KEY (led_strip_id) REFERENCES led_strips,
-    CONSTRAINT light_effect_assoc_fk FOREIGN KEY (light_effect_id) REFERENCES light_effects,
+    id         SERIAL PRIMARY KEY,
+    strip_id   INT,
+    group_id   INT,
+    effect_id  INT NOT NULL,
+    CONSTRAINT led_strip_group_assoc_fk FOREIGN KEY (group_id) REFERENCES led_strip_groups,
+    CONSTRAINT led_strip_assoc_fk FOREIGN KEY (strip_id) REFERENCES led_strips,
+    CONSTRAINT light_effect_assoc_fk FOREIGN KEY (effect_id) REFERENCES light_effects,
     CONSTRAINT strip_or_strip_group_not_null CHECK (
-        led_strip_id IS NOT NULL OR led_strip_group_id IS NOT NULL
+        strip_id IS NOT NULL OR group_id IS NOT NULL
     )
 );
 

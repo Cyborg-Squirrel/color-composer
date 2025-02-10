@@ -3,7 +3,7 @@ package io.cyborgsquirrel.client_config.repository
 import io.cyborgsquirrel.entity.LedStripClientEntity
 import io.cyborgsquirrel.entity.LedStripEntity
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.longs.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import java.util.*

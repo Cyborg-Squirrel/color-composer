@@ -1,10 +1,7 @@
 package io.cyborgsquirrel.entity
 
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.micronaut.data.annotation.GeneratedValue
-import io.micronaut.data.annotation.Id
-import io.micronaut.data.annotation.MappedEntity
-import io.micronaut.data.annotation.TypeDef
+import io.micronaut.data.annotation.*
 import io.micronaut.data.model.DataType
 import io.micronaut.serde.annotation.Serdeable
 import jakarta.persistence.EnumType
@@ -16,7 +13,7 @@ data class LightEffectEntity(
 
     @Id
     @GeneratedValue
-    var id: Long = -1,
+    var id: Int = -1,
 
     @TypeDef(type = DataType.JSON)
     var settings: Map<String, Any>?,
@@ -24,5 +21,8 @@ data class LightEffectEntity(
     @Enumerated(EnumType.STRING)
     var status: LightEffectStatus?,
 
-    var name: String?
+    var name: String?,
+
+    @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
+    var associations: Set<LightEffectLedStripAssociationEntity> = setOf(),
 )

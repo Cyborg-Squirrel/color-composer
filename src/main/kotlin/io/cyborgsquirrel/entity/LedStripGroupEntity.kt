@@ -11,10 +11,13 @@ import io.micronaut.serde.annotation.Serdeable
 data class LedStripGroupEntity(
     @Id
     @GeneratedValue
-    var id: Long = -1,
+    var id: Int = -1,
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "group")
     var strips: Set<GroupMemberLedStripEntity> = setOf(),
+
+    @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "group")
+    var associations: Set<LightEffectLedStripAssociationEntity> = setOf(),
 
     var uuid: String? = null,
 
