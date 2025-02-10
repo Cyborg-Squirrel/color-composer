@@ -61,7 +61,7 @@ class LightEffectRepositoryTest(
 
     "Query a light effect entity by name" {
         lightEffectRepository.save(lightEffectEntity)
-        val retrievedEntityOptional = lightEffectRepository.findByName(lightEffectEntity.name!!)
+        val retrievedEntityOptional = lightEffectRepository.findByStatus(lightEffectEntity.status!!)
 
         retrievedEntityOptional.isPresent shouldBe true
 
@@ -96,7 +96,7 @@ class LightEffectRepositoryTest(
         associationEntity = LightEffectLedStripAssociationEntity(strip = ledStripEntity, effect = lightEffectEntity)
         associationEntity = associationRepository.save(associationEntity)
 
-        val newLightEffectEntityOptional = lightEffectRepository.findByName(lightEffectEntity.name!!)
+        val newLightEffectEntityOptional = lightEffectRepository.findByStatus(lightEffectEntity.status!!)
 
         newLightEffectEntityOptional.isPresent shouldBe true
 
