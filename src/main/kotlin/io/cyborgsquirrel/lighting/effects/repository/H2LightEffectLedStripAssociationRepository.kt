@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.repository
+package io.cyborgsquirrel.lighting.effects.repository
 
 import io.cyborgsquirrel.entity.LedStripEntity
 import io.cyborgsquirrel.entity.LedStripGroupEntity

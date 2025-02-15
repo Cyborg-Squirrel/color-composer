@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.repository
+package io.cyborgsquirrel.lighting.effects.repository
 
 import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
