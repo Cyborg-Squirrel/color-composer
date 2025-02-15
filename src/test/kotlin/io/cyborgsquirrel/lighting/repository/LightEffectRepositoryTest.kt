@@ -93,7 +93,11 @@ class LightEffectRepositoryTest(
             length = 60
         )
         ledStripEntity = ledStripRepository.save(ledStripEntity)
-        associationEntity = LightEffectLedStripAssociationEntity(strip = ledStripEntity, effect = lightEffectEntity)
+        associationEntity = LightEffectLedStripAssociationEntity(
+            strip = ledStripEntity,
+            effect = lightEffectEntity,
+            uuid = UUID.randomUUID().toString()
+        )
         associationEntity = associationRepository.save(associationEntity)
 
         val newLightEffectEntityOptional = lightEffectRepository.findByStatus(lightEffectEntity.status!!)
@@ -103,5 +107,6 @@ class LightEffectRepositoryTest(
         val newLightEffectEntity = newLightEffectEntityOptional.get()
         newLightEffectEntity.associations.size shouldBe 1
         newLightEffectEntity.associations.first().id shouldBe associationEntity.id
+        newLightEffectEntity.associations.first().uuid shouldBe associationEntity.uuid
     }
 })
