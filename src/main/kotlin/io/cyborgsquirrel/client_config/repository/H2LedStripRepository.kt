@@ -9,9 +9,13 @@ import java.util.*
 
 @JdbcRepository(dialect = Dialect.H2)
 interface H2LedStripRepository : CrudRepository<LedStripEntity, Long> {
-     @Join(value = "client", type = Join.Type.RIGHT_FETCH)
-     fun findByName(name: String): Optional<LedStripEntity>
+    @Join(value = "client", type = Join.Type.LEFT_FETCH)
+    @Join(value = "associations", type = Join.Type.LEFT_FETCH)
+    @Join(value = "members", type = Join.Type.LEFT_FETCH)
+    fun findByName(name: String): Optional<LedStripEntity>
 
-     @Join(value = "client", type = Join.Type.RIGHT_FETCH)
-     fun findByUuid(uuid: String): Optional<LedStripEntity>
+    @Join(value = "client", type = Join.Type.LEFT_FETCH)
+    @Join(value = "associations", type = Join.Type.LEFT_FETCH)
+    @Join(value = "members", type = Join.Type.LEFT_FETCH)
+    fun findByUuid(uuid: String): Optional<LedStripEntity>
 }

@@ -12,7 +12,7 @@ data class LedStripClientEntity(
 
     @Id
     @GeneratedValue
-    var id: Int = -1,
+    var id: Long = -1,
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "client")
     var strips: Set<LedStripEntity> = setOf(),

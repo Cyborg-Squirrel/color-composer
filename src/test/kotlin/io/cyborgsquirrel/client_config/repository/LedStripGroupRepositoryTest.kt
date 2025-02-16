@@ -62,6 +62,17 @@ class LedStripGroupRepositoryTest(
                 uuid = UUID.randomUUID().toString()
             )
         )
+        val groupEntityOptional = ledStripGroupRepository.findById(groupEntity.id)
+        groupEntityOptional.isPresent shouldBe true
+    }
+
+    "Query a group with a join" {
+        val groupEntity = ledStripGroupRepository.save(
+            LedStripGroupEntity(
+                name = "Hallway Group",
+                uuid = UUID.randomUUID().toString()
+            )
+        )
         var i = 0
         val groupMembers = listOf(ledStripEntityA, ledStripEntityB).map { entity ->
             GroupMemberLedStripEntity(group = groupEntity, strip = entity, inverted = false, groupIndex = i++)

@@ -11,7 +11,7 @@ import io.micronaut.serde.annotation.Serdeable
 data class LedStripGroupEntity(
     @Id
     @GeneratedValue
-    var id: Int = -1,
+    var id: Long = -1,
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "group")
     var strips: Set<GroupMemberLedStripEntity> = setOf(),

@@ -11,7 +11,7 @@ import io.micronaut.serde.annotation.Serdeable
 data class SunriseSunsetTimeEntity(
     @Id
     @GeneratedValue
-    var id: Int = -1,
+    var id: Long = -1,
 
     var ymd: String? = null,
 
@@ -35,7 +35,7 @@ data class SunriseSunsetTimeEntity(
     override fun hashCode(): Int {
         var result = (ymd + json).hashCode()
         result = 31 * result + location?.id.hashCode()
-        result = 31 * result + id
+        result = 31 * result + id.hashCode()
         return result
     }
 

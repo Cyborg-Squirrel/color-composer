@@ -13,7 +13,7 @@ data class LightEffectEntity(
 
     @Id
     @GeneratedValue
-    var id: Int = -1,
+    var id: Long = -1,
 
     @TypeDef(type = DataType.JSON)
     var settings: Map<String, Any>?,

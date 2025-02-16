@@ -11,7 +11,7 @@ import io.micronaut.serde.annotation.Serdeable
 data class LightEffectLedStripAssociationEntity(
     @Id
     @GeneratedValue
-    var id: Int = -1,
+    var id: Long = -1,
 
     @Relation(value = Relation.Kind.MANY_TO_ONE)
     var strip: LedStripEntity? = null,
