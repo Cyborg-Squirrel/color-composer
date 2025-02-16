@@ -14,21 +14,25 @@ class LedStripClientRepositoryTest(
     private val ledStripRepository: H2LedStripRepository
 ) : StringSpec({
 
-    val demoClientEntity =
-        LedStripClientEntity(name = "Living Room", address = "192.168.50.200", wsPort = 8888, apiPort = 80)
-    val demoLedStripEntity =
-        LedStripEntity(
-            name = "Living Room Vertical Strip A",
-            client = demoClientEntity,
-            length = 60,
-            uuid = UUID.randomUUID().toString()
-        )
+    val demoClientEntity = LedStripClientEntity(
+        name = "Living Room",
+        address = "192.168.50.200",
+        wsPort = 8888,
+        apiPort = 80
+    )
 
-    fun verifyClientsAreEqual(retrievedEntity: LedStripClientEntity) {
-        retrievedEntity.name shouldBe demoClientEntity.name
-        retrievedEntity.address shouldBe demoClientEntity.address
-        retrievedEntity.wsPort shouldBe demoClientEntity.wsPort
-        retrievedEntity.apiPort shouldBe demoClientEntity.apiPort
+    val demoLedStripEntity = LedStripEntity(
+        name = "Living Room Vertical Strip A",
+        client = demoClientEntity,
+        length = 60,
+        uuid = UUID.randomUUID().toString()
+    )
+
+    fun assertClientsAreEqual(expected: LedStripClientEntity, actual: LedStripClientEntity) {
+        actual.name shouldBe expected.name
+        actual.address shouldBe expected.address
+        actual.wsPort shouldBe expected.wsPort
+        actual.apiPort shouldBe expected.apiPort
     }
 
     afterTest {
@@ -36,48 +40,42 @@ class LedStripClientRepositoryTest(
         ledStripClientRepository.deleteAll()
     }
 
-    "Create a client entity" {
+    "should create a client entity with a valid auto-generated id" {
         val savedEntity = ledStripClientRepository.save(demoClientEntity)
-        // Default id value is -1 because it is not valid in SQL
-        // If this saved successfully we should have an auto-generated id greater than 0
         savedEntity.id shouldBeGreaterThan 0
     }
 
-    "Query a client entity by name" {
+    "should query a client entity by name" {
         ledStripClientRepository.save(demoClientEntity)
-        val retrievedEntityOptional = ledStripClientRepository.findByName(demoClientEntity.name!!)
-
-        retrievedEntityOptional.isPresent shouldBe true
-
-        val retrievedEntity = retrievedEntityOptional.get()
-        verifyClientsAreEqual(retrievedEntity)
+        val retrievedEntity =
+            ledStripClientRepository.findByName(demoClientEntity.name.orEmpty())
+        retrievedEntity.isPresent shouldBe true
+        assertClientsAreEqual(demoClientEntity, retrievedEntity.get())
     }
 
-    "Query a client entity find all with join" {
+    "should find all client entities with ID greater than 0 and verify relations" {
         ledStripClientRepository.save(demoClientEntity)
         ledStripRepository.save(demoLedStripEntity)
         val retrievedEntities = ledStripClientRepository.findAllByIdGreaterThan()
-
-        assert(retrievedEntities.isNotEmpty())
         retrievedEntities.size shouldBe 1
-
         val retrievedEntity = retrievedEntities.first()
-        verifyClientsAreEqual(retrievedEntity)
+        assertClientsAreEqual(demoClientEntity, retrievedEntity)
         retrievedEntity.strips.size shouldBe 1
     }
 
-    "Query a client entity with associated led strips" {
+    "should query a client entity with associated LED strips and verify data" {
         ledStripClientRepository.save(demoClientEntity)
         ledStripRepository.save(demoLedStripEntity)
-        val retrievedEntityOptional = ledStripClientRepository.findByName(demoClientEntity.name!!)
-
-        retrievedEntityOptional.isPresent shouldBe true
-
-        val retrievedEntity = retrievedEntityOptional.get()
-        verifyClientsAreEqual(retrievedEntity)
-        retrievedEntity.strips.size shouldBe 1
-        retrievedEntity.strips.first().name shouldBe demoLedStripEntity.name
-        retrievedEntity.strips.first().uuid shouldBe demoLedStripEntity.uuid
-        retrievedEntity.strips.first().length shouldBe demoLedStripEntity.length
+        val retrievedEntity = ledStripClientRepository.findByName(demoClientEntity.name.orEmpty())
+        retrievedEntity.isPresent shouldBe true
+        retrievedEntity.get().apply {
+            assertClientsAreEqual(demoClientEntity, this)
+            strips.size shouldBe 1
+            strips.first().let { strip ->
+                strip.name shouldBe demoLedStripEntity.name
+                strip.uuid shouldBe demoLedStripEntity.uuid
+                strip.length shouldBe demoLedStripEntity.length
+            }
+        }
     }
 })

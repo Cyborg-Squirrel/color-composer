@@ -16,36 +16,61 @@ class LedStripGroupRepositoryTest(
     private val ledStripGroupRepository: H2LedStripGroupRepository,
     private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
 ) : StringSpec({
+    lateinit var ledStripA: LedStripEntity
+    lateinit var ledStripB: LedStripEntity
 
-    lateinit var ledStripEntityA: LedStripEntity
-    lateinit var ledStripEntityB: LedStripEntity
+    fun createLedStripClientEntity(
+        name: String,
+        address: String,
+        wsPort: Int,
+        apiPort: Int
+    ): LedStripClientEntity = clientRepository.save(
+        LedStripClientEntity(name = name, address = address, wsPort = wsPort, apiPort = apiPort)
+    )
 
-    beforeTest {
-        val ledStripClientEntity =
-            clientRepository.save(
-                LedStripClientEntity(
-                    name = "Hallway client",
-                    address = "192.168.50.210",
-                    wsPort = 8888,
-                    apiPort = 7777
+    fun saveLedStrips(client: LedStripClientEntity, strips: List<Pair<String, Int>>): List<LedStripEntity> =
+        strips.map { (name, length) ->
+            ledStripRepository.save(
+                LedStripEntity(
+                    client = client,
+                    name = name,
+                    uuid = UUID.randomUUID().toString(),
+                    length = length
                 )
             )
-        ledStripEntityA = ledStripRepository.save(
-            LedStripEntity(
-                client = ledStripClientEntity,
-                name = "Hallway lights A",
-                uuid = UUID.randomUUID().toString(),
-                length = 120
+        }
+
+    fun createLedStripGroupEntity(name: String): LedStripGroupEntity =
+        ledStripGroupRepository.save(
+            LedStripGroupEntity(
+                name = name,
+                uuid = UUID.randomUUID().toString()
             )
         )
-        ledStripEntityB = ledStripRepository.save(
-            LedStripEntity(
-                client = ledStripClientEntity,
-                name = "Hallway lights B",
-                uuid = UUID.randomUUID().toString(),
-                length = 60
-            )
-        )
+
+    fun createGroupMember(
+        group: LedStripGroupEntity,
+        strip: LedStripEntity,
+        groupIndex: Int,
+        inverted: Boolean
+    ): GroupMemberLedStripEntity = GroupMemberLedStripEntity(
+        group = group,
+        strip = strip,
+        inverted = inverted,
+        groupIndex = groupIndex
+    )
+
+    fun GroupMemberLedStripEntity.matches(other: GroupMemberLedStripEntity) {
+        id shouldBe other.id
+        groupIndex shouldBe other.groupIndex
+        inverted shouldBe other.inverted
+    }
+
+    beforeTest {
+        val client = createLedStripClientEntity("Hallway client", "192.168.50.210", 8888, 7777)
+        val savedStrips = saveLedStrips(client, listOf("Hallway lights A" to 120, "Hallway lights B" to 60))
+        ledStripA = savedStrips[0]
+        ledStripB = savedStrips[1]
     }
 
     afterTest {
@@ -56,42 +81,29 @@ class LedStripGroupRepositoryTest(
     }
 
     "Create a led strip group entity" {
-        val groupEntity = ledStripGroupRepository.save(
-            LedStripGroupEntity(
-                name = "Hallway Group",
-                uuid = UUID.randomUUID().toString()
-            )
-        )
-        val groupEntityOptional = ledStripGroupRepository.findById(groupEntity.id)
-        groupEntityOptional.isPresent shouldBe true
+        val group = createLedStripGroupEntity("Hallway Group")
+        val groupFetched = ledStripGroupRepository.findById(group.id)
+        groupFetched.isPresent shouldBe true
     }
 
     "Query a group with a join" {
-        val groupEntity = ledStripGroupRepository.save(
-            LedStripGroupEntity(
-                name = "Hallway Group",
-                uuid = UUID.randomUUID().toString()
-            )
+        val group = createLedStripGroupEntity("Hallway Group")
+        val groupMembers = listOf(
+            createGroupMember(group, ledStripA, 0, false),
+            createGroupMember(group, ledStripB, 1, false)
         )
-        var i = 0
-        val groupMembers = listOf(ledStripEntityA, ledStripEntityB).map { entity ->
-            GroupMemberLedStripEntity(group = groupEntity, strip = entity, inverted = false, groupIndex = i++)
+        val savedMembers = groupMemberLedStripRepository.saveAll(groupMembers)
+
+        val fetchedGroup = ledStripGroupRepository.findByName(group.name!!)
+        fetchedGroup.isPresent shouldBe true
+
+        val groupEntity = fetchedGroup.get()
+        groupEntity.apply {
+            uuid shouldBe group.uuid
+            name shouldBe group.name
+            strips.size shouldBe 2
+            strips.first().matches(savedMembers.first())
+            strips.last().matches(savedMembers.last())
         }
-        val savedGroupMembers = groupMemberLedStripRepository.saveAll(groupMembers)
-
-        val groupEntityOptional = ledStripGroupRepository.findByName(groupEntity.name!!)
-
-        groupEntityOptional.isPresent shouldBe true
-
-        val newGroupEntity = groupEntityOptional.get()
-        newGroupEntity.uuid shouldBe groupEntity.uuid
-        newGroupEntity.name shouldBe groupEntity.name
-        newGroupEntity.strips.size shouldBe 2
-        newGroupEntity.strips.first().id shouldBe savedGroupMembers.first().id
-        newGroupEntity.strips.first().inverted shouldBe savedGroupMembers.first().inverted
-        newGroupEntity.strips.first().groupIndex shouldBe savedGroupMembers.first().groupIndex
-        newGroupEntity.strips.last().id shouldBe savedGroupMembers.last().id
-        newGroupEntity.strips.last().inverted shouldBe savedGroupMembers.last().inverted
-        newGroupEntity.strips.last().groupIndex shouldBe savedGroupMembers.last().groupIndex
     }
 })

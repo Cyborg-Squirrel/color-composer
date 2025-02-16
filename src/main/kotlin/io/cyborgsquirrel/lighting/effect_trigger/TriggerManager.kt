@@ -2,6 +2,14 @@ package io.cyborgsquirrel.lighting.effect_trigger
 
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.LightEffectTrigger
 
+/**
+ * Interface for managing and tracking light effect triggers.
+ *
+ * A `TriggerManager` is responsible for managing a collection of `LightEffectTrigger` objects,
+ * which define the conditions for triggering changes to light effects. It provides methods to
+ * add and remove triggers, retrieve the current list of triggers, and execute logic to check
+ * if any triggers should activate based on their conditions.
+ */
 interface TriggerManager {
     /**
      * Adds a [LightEffectTrigger] for tracking
@@ -19,10 +27,10 @@ interface TriggerManager {
     fun removeTrigger(trigger: LightEffectTrigger)
 
     /**
-     * Checks the next trigger activation.
+     * Processes any registered triggers.
      *
      * This will update the associated light effect in the
      * [io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry] depending on the trigger's output
      */
-    fun checkTriggerActivations()
+    fun processTriggers()
 }

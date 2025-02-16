@@ -103,7 +103,7 @@ class WebSocketJob(
             var hasHadNonBlankFrame = false
 
             while (!isBlankFrame || !hasHadNonBlankFrame) {
-                triggerManager.checkTriggerActivations()
+                triggerManager.processTriggers()
                 val iterationsString = effect.getIterations().toString()
                 val numberLength = min(iterationsString.length, 2)
                 val startIndex = max(iterationsString.length - numberLength, 0)
