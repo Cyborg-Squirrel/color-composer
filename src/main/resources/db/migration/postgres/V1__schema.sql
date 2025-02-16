@@ -40,14 +40,13 @@ CREATE TABLE led_strip_groups
 
 CREATE TABLE group_member_led_strips
 (
-    id                 SERIAL primary key NOT NULL,
-    inverted           BOOLEAN NOT NULL,
-    group_index        SMALLINT NOT NULL,
-    uuid               VARCHAR(255) NOT NULL,
-    led_strip_id       INT NOT NULL,
-    led_strip_group_id INT NOT NULL,
-    CONSTRAINT led_strip_fk FOREIGN KEY (led_strip_id) REFERENCES led_strips,
-    CONSTRAINT led_strip_group_fk FOREIGN KEY (led_strip_group_id) REFERENCES led_strip_groups
+    id           SERIAL primary key NOT NULL,
+    inverted     BOOLEAN NOT NULL,
+    group_index  SMALLINT NOT NULL,
+    strip_id     INT NOT NULL,
+    group_id     INT NOT NULL,
+    CONSTRAINT led_strip_fk FOREIGN KEY (strip_id) REFERENCES led_strips,
+    CONSTRAINT led_strip_group_fk FOREIGN KEY (group_id) REFERENCES led_strip_groups
 );
 
 CREATE TABLE light_effects
