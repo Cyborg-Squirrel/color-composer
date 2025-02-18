@@ -16,6 +16,8 @@ repositories {
     mavenCentral()
 }
 
+val testAgent by configurations.creating
+
 dependencies {
     ksp("io.micronaut.data:micronaut-data-processor")
     ksp("io.micronaut:micronaut-http-validation")
@@ -38,8 +40,17 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("org.yaml:snakeyaml")
     testImplementation("io.mockk:mockk")
+    testAgent("net.bytebuddy:byte-buddy-agent")
 }
 
+// Add Java agent
+// Dynamic loading currently warns during test runs, but will probably break in future JDK releases.
+tasks.test {
+    val testAgentFiles = testAgent.incoming.files
+    jvmArgumentProviders.add {
+        testAgentFiles.map { "-javaagent:${it.absolutePath}" }
+    }
+}
 
 application {
     mainClass = "io.cyborgsquirrel.ApplicationKt"
