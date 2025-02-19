@@ -63,7 +63,7 @@ CREATE TABLE light_effects
     )
 );
 
-CREATE TABLE light_effect_trigger_associations
+CREATE TABLE light_effect_triggers
 (
     id          IDENTITY PRIMARY KEY NOT NULL,
     effect_id   INT NOT NULL,
