@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.job
 
+import io.cyborgsquirrel.client_config.repository.H2GroupMemberLedStripRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
 import io.cyborgsquirrel.entity.LightEffectEntity
@@ -20,8 +21,7 @@ import java.util.concurrent.Semaphore
 @Singleton
 class LightEffectInitJob(
     private val lightEffectRepository: H2LightEffectRepository,
-    private val ledStripRepository: H2LedStripRepository,
-    private val ledStripGroupRepository: H2LedStripGroupRepository,
+    private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val objectMapper: ObjectMapper,
 ) : Runnable {
@@ -63,14 +63,14 @@ class LightEffectInitJob(
 
     private fun getLedStrip(effectEntity: LightEffectEntity): LedStrip {
         val stripEntity = effectEntity.strip
-        var groupEntity = effectEntity.group
+        val groupEntity = effectEntity.group
 
         if (stripEntity != null) {
             return LedStripModel(stripEntity.name!!, stripEntity.uuid!!, stripEntity.length!!, stripEntity.height)
         } else if (groupEntity != null) {
-            // Query to do JOIN on from group table (effect association entity JOIN doesn't capture led strips)
-            groupEntity = ledStripGroupRepository.queryById(groupEntity.id).get()
-            val stripEntities = ledStripRepository.findByMembersIn(groupEntity.members)
+            // Query to do JOIN (effect entity JOIN doesn't capture led strips if it points to a group)
+            val stripMemberEntities = groupMemberLedStripRepository.findByGroup(groupEntity)
+            val stripEntities = stripMemberEntities.map { it.strip }.filterNotNull()
             val stripModels = stripEntities.map {
                 LedStripModel(it.name!!, it.uuid!!, it.length!!, it.height)
             }

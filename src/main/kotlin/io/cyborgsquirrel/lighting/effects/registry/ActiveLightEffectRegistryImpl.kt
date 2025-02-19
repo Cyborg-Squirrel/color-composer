@@ -68,4 +68,13 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
 
         return effects
     }
+
+    override fun reset() {
+        try {
+            lock.acquire()
+            effectList.clear()
+        } finally {
+            lock.release()
+        }
+    }
 }

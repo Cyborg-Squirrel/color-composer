@@ -19,10 +19,5 @@ interface H2LedStripRepository : CrudRepository<LedStripEntity, Long> {
     @Join(value = "client", type = Join.Type.LEFT_FETCH)
     @Join(value = "effects", type = Join.Type.LEFT_FETCH)
     @Join(value = "members", type = Join.Type.LEFT_FETCH)
-    fun findByMembersIn(members: Set<GroupMemberLedStripEntity>): List<LedStripEntity>
-
-    @Join(value = "client", type = Join.Type.LEFT_FETCH)
-    @Join(value = "effects", type = Join.Type.LEFT_FETCH)
-    @Join(value = "members", type = Join.Type.LEFT_FETCH)
     fun findByUuid(uuid: String): Optional<LedStripEntity>
 }
