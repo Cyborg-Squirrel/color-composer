@@ -12,7 +12,7 @@ import java.util.*
 @Requires(property = "datasources.default.dialect", value = "H2")
 interface H2LocationConfigRepository : CrudRepository<LocationConfigEntity, Long> {
     @Join(value = "sunriseSunsetTimes", type = Join.Type.LEFT_FETCH)
-    fun findByIdGreaterThan(id: Int = 0): List<LocationConfigEntity>
+    fun queryAll(): List<LocationConfigEntity>
 
     @Join(value = "sunriseSunsetTimes", type = Join.Type.LEFT_FETCH)
     fun findByActiveTrue(): Optional<LocationConfigEntity>

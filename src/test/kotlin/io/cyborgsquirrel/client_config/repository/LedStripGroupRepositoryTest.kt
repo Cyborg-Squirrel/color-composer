@@ -94,16 +94,16 @@ class LedStripGroupRepositoryTest(
         )
         val savedMembers = groupMemberLedStripRepository.saveAll(groupMembers)
 
-        val fetchedGroup = ledStripGroupRepository.findByName(group.name!!)
+        val fetchedGroup = ledStripGroupRepository.queryById(group.id)
         fetchedGroup.isPresent shouldBe true
 
         val groupEntity = fetchedGroup.get()
         groupEntity.apply {
             uuid shouldBe group.uuid
             name shouldBe group.name
-            strips.size shouldBe 2
-            strips.first().matches(savedMembers.first())
-            strips.last().matches(savedMembers.last())
+            members.size shouldBe 2
+            members.first().matches(savedMembers.first())
+            members.last().matches(savedMembers.last())
         }
     }
 })

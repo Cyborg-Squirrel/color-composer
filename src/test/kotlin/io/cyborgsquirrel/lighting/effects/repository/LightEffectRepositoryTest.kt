@@ -1,19 +1,16 @@
 package io.cyborgsquirrel.lighting.effects.repository
 
+import io.cyborgsquirrel.client_config.repository.H2GroupMemberLedStripRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.client_config.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
-import io.cyborgsquirrel.entity.LedStripClientEntity
-import io.cyborgsquirrel.entity.LedStripEntity
-import io.cyborgsquirrel.entity.LightEffectEntity
-import io.cyborgsquirrel.entity.LightEffectLedStripAssociationEntity
+import io.cyborgsquirrel.entity.*
 import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import io.micronaut.json.tree.JsonNode
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import java.time.Duration
@@ -25,88 +22,96 @@ class LightEffectRepositoryTest(
     private val lightEffectRepository: H2LightEffectRepository,
     private val clientRepository: H2LedStripClientRepository,
     private val ledStripRepository: H2LedStripRepository,
-    private val associationRepository: H2LightEffectLedStripAssociationRepository,
+    private val ledStripGroupRepository: H2LedStripGroupRepository,
+    private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
 ) : StringSpec({
 
     val settings =
         SunriseSunsetTriggerSettings(SunriseSunsetOption.Sunset, Duration.ofMinutes(15), null, TriggerType.StartEffect)
-    var settingsJson: Map<String, Any>? = null
-    lateinit var lightEffectEntity: LightEffectEntity
-    lateinit var ledStripClientEntity: LedStripClientEntity
-    lateinit var ledStripEntity: LedStripEntity
-    lateinit var associationEntity: LightEffectLedStripAssociationEntity
 
-    beforeTest {
-        if (settingsJson == null) {
-            val jsonNode = objectMapper.writeValueToTree(settings)
-            settingsJson = jsonNode.entries().associate { it.key to it.value.value }
-            lightEffectEntity =
-                LightEffectEntity(settings = settingsJson, status = LightEffectStatus.Created, name = "Nightrider")
-        }
+    fun settingsObjectToMap(settings: SunriseSunsetTriggerSettings): Map<String, Any> {
+        val jsonNode = objectMapper.writeValueToTree(settings)
+        return jsonNode.entries().associate { it.key to it.value.value }
+    }
+
+    fun verifyLightEffectEntity(
+        newEntity: LightEffectEntity,
+        expectedEntity: LightEffectEntity,
+    ) {
+        newEntity.strip?.id shouldBe expectedEntity.strip?.id
+        newEntity.group?.id shouldBe expectedEntity.group?.id
+        newEntity.uuid shouldBe expectedEntity.uuid
+        newEntity.name shouldBe expectedEntity.name
+        newEntity.settings shouldBe expectedEntity.settings
     }
 
     afterTest {
-        associationRepository.deleteAll()
+        groupMemberLedStripRepository.deleteAll()
         lightEffectRepository.deleteAll()
+        ledStripGroupRepository.deleteAll()
         ledStripRepository.deleteAll()
         clientRepository.deleteAll()
     }
 
-    "Create a light effect entity" {
-        val savedEntity = lightEffectRepository.save(lightEffectEntity)
-        // Default id value is -1 because it is not valid in SQL
-        // If this saved successfully we should have an auto-generated id greater than 0
-        savedEntity.id shouldBeGreaterThan 0
-    }
-
-    "Query a light effect entity by name" {
-        lightEffectRepository.save(lightEffectEntity)
-        val retrievedEntityOptional = lightEffectRepository.findByStatus(lightEffectEntity.status!!)
-
-        retrievedEntityOptional.isPresent shouldBe true
-
-        val retrievedEntity = retrievedEntityOptional.get()
-        retrievedEntity.name shouldBe retrievedEntity.name
-        retrievedEntity.status shouldBe retrievedEntity.status
-
-        val retrievedSettings =
-            objectMapper.readValueFromTree(
-                JsonNode.from(retrievedEntity.settings),
-                SunriseSunsetTriggerSettings::class.java
-            )
-
-        retrievedSettings.sunriseSunsetOption shouldBe settings.sunriseSunsetOption
-        retrievedSettings.activationDuration shouldBe settings.activationDuration
-        retrievedSettings.triggerType shouldBe settings.triggerType
-        retrievedSettings.maxActivations shouldBe settings.maxActivations
-    }
-
-    "Join with associations" {
-        lightEffectEntity = lightEffectRepository.save(lightEffectEntity)
-        ledStripClientEntity =
+    "Create a light effect association entity" {
+        val client = clientRepository.save(
             LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
-        ledStripClientEntity = clientRepository.save(ledStripClientEntity)
-        ledStripEntity = LedStripEntity(
-            client = ledStripClientEntity,
-            uuid = UUID.randomUUID().toString(),
-            name = "Strip A",
-            length = 60
         )
-        ledStripEntity = ledStripRepository.save(ledStripEntity)
-        associationEntity = LightEffectLedStripAssociationEntity(
-            strip = ledStripEntity,
-            effect = lightEffectEntity,
-            uuid = UUID.randomUUID().toString()
+        val strip = ledStripRepository.save(
+            LedStripEntity(client = client, uuid = UUID.randomUUID().toString(), name = "Strip A", length = 60)
         )
-        associationEntity = associationRepository.save(associationEntity)
+        val settingsJson = settingsObjectToMap(settings)
+        val lightEffect = lightEffectRepository.save(
+            LightEffectEntity(
+                settings = settingsJson,
+                name = "Nightrider",
+                strip = strip,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Created,
+            )
+        )
 
-        val newLightEffectEntityOptional = lightEffectRepository.findByStatus(lightEffectEntity.status!!)
+        val newEntities = lightEffectRepository.queryAll()
+        newEntities.size shouldBe 1
+        verifyLightEffectEntity(newEntities.first(), lightEffect)
+    }
 
-        newLightEffectEntityOptional.isPresent shouldBe true
+    "Create a light effect association entity for a group" {
+        val client = clientRepository.save(
+            LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
+        )
+        val strip = ledStripRepository.save(
+            LedStripEntity(client = client, uuid = UUID.randomUUID().toString(), name = "Strip A", length = 60)
+        )
+        val group = ledStripGroupRepository.save(
+            LedStripGroupEntity(
+                name = "Living Room",
+                uuid = UUID.randomUUID().toString()
+            )
+        )
+        val groupMember = groupMemberLedStripRepository.save(
+            GroupMemberLedStripEntity(
+                group = group,
+                strip = strip,
+                inverted = false,
+                groupIndex = 1
+            )
+        )
 
-        val newLightEffectEntity = newLightEffectEntityOptional.get()
-        newLightEffectEntity.associations.size shouldBe 1
-        newLightEffectEntity.associations.first().id shouldBe associationEntity.id
-        newLightEffectEntity.associations.first().uuid shouldBe associationEntity.uuid
+        val settingsJson = settingsObjectToMap(settings)
+        val lightEffect = lightEffectRepository.save(
+            LightEffectEntity(
+                settings = settingsJson,
+                name = "Nightrider",
+                group = group,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Created,
+            )
+        )
+
+        val newEntities = lightEffectRepository.queryAll()
+        newEntities.size shouldBe 1
+        verifyLightEffectEntity(newEntities.first(), lightEffect)
+        newEntities.first().group?.members?.first()?.id shouldBe groupMember.id
     }
 })

@@ -18,5 +18,5 @@ interface H2LedStripClientRepository : CrudRepository<LedStripClientEntity, Long
     fun findByAddress(name: String): Optional<LedStripClientEntity>
 
     @Join(value = "strips", type = Join.Type.LEFT_FETCH)
-    fun findAllByIdGreaterThan(id: Int = 0): List<LedStripClientEntity>
+    fun queryAll(): List<LedStripClientEntity>
 }

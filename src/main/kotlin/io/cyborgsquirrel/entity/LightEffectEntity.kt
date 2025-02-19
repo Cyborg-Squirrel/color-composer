@@ -10,19 +10,55 @@ import jakarta.persistence.Enumerated
 @Serdeable
 @MappedEntity("light_effects")
 data class LightEffectEntity(
-
     @Id
     @GeneratedValue
     var id: Long = -1,
 
+    @Relation(value = Relation.Kind.MANY_TO_ONE)
+    var strip: LedStripEntity? = null,
+
+    @Relation(value = Relation.Kind.MANY_TO_ONE)
+    var group: LedStripGroupEntity? = null,
+
+    var uuid: String? = null,
+
     @TypeDef(type = DataType.JSON)
     var settings: Map<String, Any>?,
 
-    @Enumerated(EnumType.STRING)
-    var status: LightEffectStatus?,
-
     var name: String?,
 
-    @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
-    var associations: Set<LightEffectLedStripAssociationEntity> = setOf(),
-)
+    @Enumerated(EnumType.STRING)
+    var status: LightEffectStatus?,
+) {
+    // Overrides to prevent infinite looping
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is LightEffectEntity) return false
+
+        if (id != other.id) return false
+        if (strip?.id != other.strip?.id) return false
+        if (group?.id != other.group?.id) return false
+        if (uuid != other.uuid) return false
+        if (name != other.name) return false
+        if (settings != other.settings) return false
+        if (status != other.status) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = uuid.hashCode()
+        result = 31 * result + id.hashCode()
+        result = 31 * result + (strip?.id ?: 0).hashCode()
+        result = 31 * result + (group?.id ?: 0).hashCode()
+        result = 31 * result + status.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + settings.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "LightEffectLedStripAssociationEntity(strip=${strip?.id}, group=${group?.id}, name=$name, id=$id, uuid=$uuid, status=$status, settings=$settings)"
+    }
+}

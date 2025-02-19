@@ -7,7 +7,7 @@ package io.cyborgsquirrel.model.strip
 data class LedStripGroupModel(
     private val name: String,
     private val uuid: String,
-    private val strips: MutableList<LedStripModel>
+    private val strips: List<LedStripModel>
 ) : LedStrip {
 
     override fun getName(): String {

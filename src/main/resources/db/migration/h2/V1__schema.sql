@@ -1,6 +1,5 @@
 DROP TABLE IF EXISTS light_effect_trigger_associations;
 DROP TABLE IF EXISTS effect_triggers;
-DROP TABLE IF EXISTS light_effect_led_strip_associations;
 DROP TABLE IF EXISTS light_effects;
 DROP TABLE IF EXISTS group_member_led_strips;
 DROP TABLE IF EXISTS led_strip_groups;
@@ -51,23 +50,17 @@ CREATE TABLE group_member_led_strips
 CREATE TABLE light_effects
 (
     id         IDENTITY PRIMARY KEY NOT NULL,
-    settings   JSON NOT NULL,
-    status     VARCHAR(50) NOT NULL,
-    name       VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE light_effect_led_strip_associations
-(
-    id         IDENTITY PRIMARY KEY NOT NULL,
     strip_id   INT,
     group_id   INT,
-    effect_id  INT NOT NULL,
     uuid       VARCHAR(255) NOT NULL,
+    settings   JSON NOT NULL,
+    name       VARCHAR(255) NOT NULL,
+    status     VARCHAR(50) NOT NULL,
     CONSTRAINT led_strip_group_assoc_fk FOREIGN KEY (group_id) REFERENCES led_strip_groups,
     CONSTRAINT led_strip_assoc_fk FOREIGN KEY (strip_id) REFERENCES led_strips,
-    CONSTRAINT light_effect_assoc_fk FOREIGN KEY (effect_id) REFERENCES light_effects,
     CONSTRAINT strip_or_strip_group_not_null CHECK (
-        strip_id IS NOT NULL OR group_id IS NOT NULL
+        (strip_id IS NOT NULL AND group_id IS NULL) OR
+                (strip_id IS NULL AND group_id IS NOT NULL)
     )
 );
 
@@ -80,12 +73,12 @@ CREATE TABLE effect_triggers
 
 CREATE TABLE light_effect_trigger_associations
 (
-    id                     IDENTITY PRIMARY KEY NOT NULL,
-    trigger_id             INT,
-    effect_association_id  INT NOT NULL,
-    uuid                   VARCHAR(255) NOT NULL,
+    id          IDENTITY PRIMARY KEY NOT NULL,
+    trigger_id  INT,
+    effect_id   INT NOT NULL,
+    uuid        VARCHAR(255) NOT NULL,
     CONSTRAINT trigger_assoc_fk FOREIGN KEY (trigger_id) REFERENCES effect_triggers,
-    CONSTRAINT trigger_effect_assoc_fk FOREIGN KEY (effect_association_id) REFERENCES light_effect_led_strip_associations
+    CONSTRAINT trigger_effect_fk FOREIGN KEY (effect_id) REFERENCES light_effects
 );
 
 CREATE TABLE location_configs

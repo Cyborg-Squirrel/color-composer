@@ -21,7 +21,7 @@ data class LedStripEntity(
     var members: Set<GroupMemberLedStripEntity> = setOf(),
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "strip")
-    var associations: Set<LightEffectLedStripAssociationEntity> = setOf(),
+    var effects: Set<LightEffectEntity> = setOf(),
 
     var uuid: String? = null,
 

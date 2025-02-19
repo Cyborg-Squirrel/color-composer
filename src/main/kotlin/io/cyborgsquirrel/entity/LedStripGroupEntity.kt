@@ -14,10 +14,10 @@ data class LedStripGroupEntity(
     var id: Long = -1,
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "group")
-    var strips: Set<GroupMemberLedStripEntity> = setOf(),
+    var members: Set<GroupMemberLedStripEntity> = setOf(),
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "group")
-    var associations: Set<LightEffectLedStripAssociationEntity> = setOf(),
+    var effects: Set<LightEffectEntity> = setOf(),
 
     var uuid: String? = null,
 

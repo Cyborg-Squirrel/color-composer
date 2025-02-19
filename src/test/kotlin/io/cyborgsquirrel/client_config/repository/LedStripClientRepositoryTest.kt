@@ -56,7 +56,7 @@ class LedStripClientRepositoryTest(
     "should find all client entities with ID greater than 0 and verify relations" {
         ledStripClientRepository.save(demoClientEntity)
         ledStripRepository.save(demoLedStripEntity)
-        val retrievedEntities = ledStripClientRepository.findAllByIdGreaterThan()
+        val retrievedEntities = ledStripClientRepository.queryAll()
         retrievedEntities.size shouldBe 1
         val retrievedEntity = retrievedEntities.first()
         assertClientsAreEqual(demoClientEntity, retrievedEntity)

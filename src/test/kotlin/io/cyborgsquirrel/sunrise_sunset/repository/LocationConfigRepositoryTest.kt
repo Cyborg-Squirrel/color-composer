@@ -44,7 +44,7 @@ class LocationConfigRepositoryTest(
 
     "Query all config entities" {
         locationConfigRepository.save(demoLocationConfigEntity)
-        val retrievedEntities = locationConfigRepository.findByIdGreaterThan()
+        val retrievedEntities = locationConfigRepository.queryAll()
 
         retrievedEntities.isEmpty() shouldBe false
         retrievedEntities.size shouldBe 1

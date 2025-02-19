@@ -11,7 +11,7 @@ import io.micronaut.data.repository.CrudRepository
 interface H2GroupMemberLedStripRepository : CrudRepository<GroupMemberLedStripEntity, Long> {
     @Join(value = "group", type = Join.Type.LEFT_FETCH)
     @Join(value = "strip", type = Join.Type.LEFT_FETCH)
-    fun findAllByIdGreaterThan(id: Int = 0): List<GroupMemberLedStripEntity>
+    fun queryAll(): List<GroupMemberLedStripEntity>
 
     @Join(value = "group", type = Join.Type.LEFT_FETCH)
     @Join(value = "strip", type = Join.Type.LEFT_FETCH)
