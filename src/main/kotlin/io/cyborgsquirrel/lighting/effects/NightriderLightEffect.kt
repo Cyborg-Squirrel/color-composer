@@ -101,6 +101,6 @@ class NightriderLightEffect(
     }
 
     companion object {
-        private const val NAME = NIGHTRIDER_NAME
+        private const val NAME = LightEffectConstants.NIGHTRIDER_NAME
     }
 }

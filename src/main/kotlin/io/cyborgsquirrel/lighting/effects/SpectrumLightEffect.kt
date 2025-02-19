@@ -32,6 +32,6 @@ class SpectrumLightEffect(
     }
 
     companion object {
-        private const val NAME = SPECTRUM_NAME
+        private const val NAME = LightEffectConstants.SPECTRUM_NAME
     }
 }

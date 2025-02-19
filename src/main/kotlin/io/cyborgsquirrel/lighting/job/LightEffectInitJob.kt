@@ -82,7 +82,7 @@ class LightEffectInitJob(
 
     private fun getEffectWithName(effectEntity: LightEffectEntity, strip: LedStrip): LightEffect {
         return when (effectEntity.name!!) {
-            NIGHTRIDER_NAME -> NightriderLightEffect(
+            LightEffectConstants.NIGHTRIDER_NAME -> NightriderLightEffect(
                 numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(effectEntity.settings),
@@ -90,7 +90,7 @@ class LightEffectInitJob(
                 )
             )
 
-            ANIMATED_SPECTRUM_NAME -> AnimatedSpectrumLightEffect(
+            LightEffectConstants.ANIMATED_SPECTRUM_NAME -> AnimatedSpectrumLightEffect(
                 numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(effectEntity.settings),
@@ -98,7 +98,7 @@ class LightEffectInitJob(
                 )
             )
 
-            SPECTRUM_NAME -> SpectrumLightEffect(
+            LightEffectConstants.SPECTRUM_NAME -> SpectrumLightEffect(
                 numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(effectEntity.settings),

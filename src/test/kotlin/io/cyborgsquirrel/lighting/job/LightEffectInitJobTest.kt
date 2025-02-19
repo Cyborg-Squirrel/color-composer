@@ -1,15 +1,28 @@
 package io.cyborgsquirrel.lighting.job
 
+import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
+import io.cyborgsquirrel.entity.LedStripClientEntity
+import io.cyborgsquirrel.entity.LedStripEntity
+import io.cyborgsquirrel.entity.LightEffectEntity
+import io.cyborgsquirrel.lighting.effects.LightEffectConstants
+import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
+import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.model.color.RgbColor
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
+import io.micronaut.json.tree.JsonNode
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
+import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
 class LightEffectInitJobTest(
+    private val clientRepository: H2LedStripClientRepository,
     private val lightEffectRepository: H2LightEffectRepository,
     private val ledStripRepository: H2LedStripRepository,
     private val ledStripGroupRepository: H2LedStripGroupRepository,
@@ -17,17 +30,49 @@ class LightEffectInitJobTest(
     private val objectMapper: ObjectMapper,
 ) : StringSpec({
 
-    "Init light effects - happy path" {
-//        val job = LightEffectInitJob(
-//            lightEffectRepository,
-//            lightEffectLedStripAssociationRepository,
-//            ledStripRepository,
-//            ledStripGroupRepository,
-//            activeLightEffectRegistry,
-//            objectMapper,
-//        )
-//
-//        lightEffectRepository.save(LightEffectEntity())
-//        job.run()
+    val settings = SpectrumLightEffectSettings(10, listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
+
+    fun settingsObjectToMap(settings: Any): Map<String, Any> {
+        val jsonNode = objectMapper.writeValueToTree(settings)
+        return jsonNode.entries().associate { it.key to it.value.value }
+    }
+
+    "Init light effect - happy path" {
+        val job = LightEffectInitJob(
+            lightEffectRepository,
+            ledStripRepository,
+            ledStripGroupRepository,
+            activeLightEffectRegistry,
+            objectMapper,
+        )
+
+        val client = clientRepository.save(
+            LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
+        )
+        val strip = ledStripRepository.save(
+            LedStripEntity(client = client, uuid = UUID.randomUUID().toString(), name = "Strip A", length = 60)
+        )
+        val settingsJson = settingsObjectToMap(settings)
+        val lightEffect = lightEffectRepository.save(
+            LightEffectEntity(
+                settings = settingsJson,
+                name = LightEffectConstants.SPECTRUM_NAME,
+                strip = strip,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Created,
+            )
+        )
+
+        job.run()
+
+        val activeEffectList = activeLightEffectRegistry.findAllEffects()
+
+        activeEffectList.size shouldBe 1
+        activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
+        activeEffectList.first().effect.settings shouldBe settings
+        activeEffectList.first().strip.getUuid() shouldBe strip.uuid
+        activeEffectList.first().strip.getName() shouldBe strip.name
+        activeEffectList.first().status shouldBe lightEffect.status
+        activeEffectList.first().uuid shouldBe lightEffect.uuid
     }
 })

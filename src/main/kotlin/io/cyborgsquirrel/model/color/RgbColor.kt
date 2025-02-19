@@ -1,8 +1,11 @@
 package io.cyborgsquirrel.model.color
 
+import io.micronaut.serde.annotation.Serdeable
+
 /**
  * A single RGB value
  */
+@Serdeable
 data class RgbColor(val red: UByte, val green: UByte, val blue: UByte) {
 
     /**

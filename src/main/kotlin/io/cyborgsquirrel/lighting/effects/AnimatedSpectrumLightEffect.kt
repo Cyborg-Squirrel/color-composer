@@ -78,6 +78,6 @@ open class AnimatedSpectrumLightEffect(
     }
 
     companion object {
-        private const val NAME = ANIMATED_SPECTRUM_NAME
+        private const val NAME = LightEffectConstants.ANIMATED_SPECTRUM_NAME
     }
 }

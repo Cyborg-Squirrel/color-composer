@@ -5,15 +5,14 @@ import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
 import io.cyborgsquirrel.entity.*
-import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
-import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
-import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
+import io.cyborgsquirrel.lighting.effects.LightEffectConstants
+import io.cyborgsquirrel.lighting.effects.settings.NightriderLightEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.model.color.RgbColor
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
-import java.time.Duration
 import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
@@ -26,10 +25,9 @@ class LightEffectRepositoryTest(
     private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
 ) : StringSpec({
 
-    val settings =
-        SunriseSunsetTriggerSettings(SunriseSunsetOption.Sunset, Duration.ofMinutes(15), null, TriggerType.StartEffect)
+    val settings = NightriderLightEffectSettings(listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
 
-    fun settingsObjectToMap(settings: SunriseSunsetTriggerSettings): Map<String, Any> {
+    fun settingsObjectToMap(settings: Any): Map<String, Any> {
         val jsonNode = objectMapper.writeValueToTree(settings)
         return jsonNode.entries().associate { it.key to it.value.value }
     }
@@ -64,7 +62,7 @@ class LightEffectRepositoryTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
-                name = "Nightrider",
+                name = LightEffectConstants.NIGHTRIDER_NAME,
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Created,
@@ -102,7 +100,7 @@ class LightEffectRepositoryTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
-                name = "Nightrider",
+                name = LightEffectConstants.NIGHTRIDER_NAME,
                 group = group,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Created,
