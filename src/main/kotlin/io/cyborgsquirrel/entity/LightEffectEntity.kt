@@ -20,6 +20,9 @@ data class LightEffectEntity(
     @Relation(value = Relation.Kind.MANY_TO_ONE)
     var group: LedStripGroupEntity? = null,
 
+    @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
+    var triggers: Set<LightEffectTriggerEntity> = setOf(),
+
     var uuid: String? = null,
 
     @TypeDef(type = DataType.JSON)
