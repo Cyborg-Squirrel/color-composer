@@ -70,7 +70,7 @@ class LightEffectInitJob(
         } else if (groupEntity != null) {
             // Query to do JOIN (effect entity JOIN doesn't capture led strips if it points to a group)
             val stripMemberEntities = groupMemberLedStripRepository.findByGroup(groupEntity)
-            val stripEntities = stripMemberEntities.map { it.strip }.filterNotNull()
+            val stripEntities = stripMemberEntities.mapNotNull { it.strip }
             val stripModels = stripEntities.map {
                 LedStripModel(it.name!!, it.uuid!!, it.length!!, it.height)
             }
