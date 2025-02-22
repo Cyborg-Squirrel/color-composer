@@ -1,9 +1,16 @@
 package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.client_config.repository.H2GroupMemberLedStripRepository
-import io.cyborgsquirrel.client_config.repository.H2LedStripGroupRepository
-import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
 import io.cyborgsquirrel.entity.LightEffectEntity
+import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
+import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
+import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
+import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
+import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
+import io.cyborgsquirrel.lighting.effect_trigger.triggers.LightEffectTrigger
+import io.cyborgsquirrel.lighting.effect_trigger.triggers.SunriseSunsetTrigger
+import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
@@ -12,6 +19,9 @@ import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.model.strip.LedStrip
 import io.cyborgsquirrel.model.strip.LedStripGroupModel
 import io.cyborgsquirrel.model.strip.LedStripModel
+import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
+import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.json.tree.JsonNode
 import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
@@ -23,7 +33,11 @@ class LightEffectInitJob(
     private val lightEffectRepository: H2LightEffectRepository,
     private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
+    private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
+    private val locationConfigRepository: H2LocationConfigRepository,
+    private val triggerManager: TriggerManager,
     private val objectMapper: ObjectMapper,
+    private val timeHelper: TimeHelper,
 ) : Runnable {
 
     // Flag tracking if this init job has run.
@@ -38,7 +52,7 @@ class LightEffectInitJob(
                 val effectEntities = lightEffectRepository.queryAll()
                 for (effectEntity in effectEntities) {
                     val strip = getLedStrip(effectEntity)
-                    val effectInstance = getEffectWithName(effectEntity, strip)
+                    val effectInstance = getEffect(effectEntity, strip)
                     val activeEffect = ActiveLightEffect(
                         uuid = effectEntity.uuid!!,
                         priority = 0,
@@ -48,8 +62,12 @@ class LightEffectInitJob(
                         filters = listOf()
                     )
 
-                    logger.info("New light effect ${effectInstance.getName()} on strip ${strip.getUuid()}")
                     activeLightEffectRegistry.addOrUpdateEffect(activeEffect)
+
+                    val trigger = getTrigger(effectEntity)
+                    if (trigger != null) {
+                        triggerManager.addTrigger(trigger)
+                    }
                 }
 
                 completed = true
@@ -80,7 +98,7 @@ class LightEffectInitJob(
         }
     }
 
-    private fun getEffectWithName(effectEntity: LightEffectEntity, strip: LedStrip): LightEffect {
+    private fun getEffect(effectEntity: LightEffectEntity, strip: LedStrip): LightEffect {
         return when (effectEntity.name!!) {
             LightEffectConstants.NIGHTRIDER_NAME -> NightriderLightEffect(
                 numberOfLeds = strip.getLength(),
@@ -107,6 +125,58 @@ class LightEffectInitJob(
             )
 
             else -> throw IllegalArgumentException("Unknown LightEffect name: ${effectEntity.name}")
+        }
+    }
+
+    // TODO: one effect multiple triggers support
+    private fun getTrigger(effectEntity: LightEffectEntity): LightEffectTrigger? {
+        return if (effectEntity.triggers.isEmpty()) {
+            null
+        } else {
+            val trigger = effectEntity.triggers.first()
+            when (trigger.name) {
+                LightEffectTriggerConstants.ITERATION_TRIGGER_NAME -> {
+                    EffectIterationTrigger(
+                        timeHelper = timeHelper,
+                        effectRegistry = activeLightEffectRegistry,
+                        settings = objectMapper.readValueFromTree(
+                            JsonNode.from(trigger.settings),
+                            EffectIterationTriggerSettings::class.java
+                        ),
+                        uuid = trigger.uuid!!,
+                        effectUuid = effectEntity.uuid!!,
+                    )
+                }
+
+                LightEffectTriggerConstants.TIME_TRIGGER_NAME -> {
+                    TimeTrigger(
+                        timeHelper = timeHelper,
+                        settings = objectMapper.readValueFromTree(
+                            JsonNode.from(trigger.settings),
+                            TimeTriggerSettings::class.java
+                        ),
+                        uuid = trigger.uuid!!,
+                        effectUuid = effectEntity.uuid!!,
+                    )
+                }
+
+                LightEffectTriggerConstants.SUNRISE_SUNSET_TRIGGER_NAME -> {
+                    SunriseSunsetTrigger(
+                        sunriseSunsetTimeRepository = sunriseSunsetTimeRepository,
+                        locationConfigRepository = locationConfigRepository,
+                        objectMapper = objectMapper,
+                        timeHelper = timeHelper,
+                        settings = objectMapper.readValueFromTree(
+                            JsonNode.from(trigger.settings),
+                            SunriseSunsetTriggerSettings::class.java
+                        ),
+                        uuid = trigger.uuid!!,
+                        effectUuid = effectEntity.uuid!!,
+                    )
+                }
+
+                else -> throw IllegalArgumentException("Unknown LightEffectTrigger name: ${trigger.name}")
+            }
         }
     }
 

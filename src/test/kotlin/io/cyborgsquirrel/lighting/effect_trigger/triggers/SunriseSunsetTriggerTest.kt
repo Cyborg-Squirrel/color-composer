@@ -125,6 +125,7 @@ class SunriseSunsetTriggerTest(
                 objectMapper,
                 mockTimeHelper,
                 settings,
+                UUID.randomUUID().toString(),
                 activeEffect.uuid
             )
 
@@ -170,6 +171,7 @@ class SunriseSunsetTriggerTest(
                 objectMapper,
                 mockTimeHelper,
                 settings,
+                UUID.randomUUID().toString(),
                 activeEffect.uuid
             )
         val activationOptionalA = trigger.lastActivation()
@@ -200,6 +202,7 @@ class SunriseSunsetTriggerTest(
                 objectMapper,
                 mockTimeHelper,
                 settings,
+                UUID.randomUUID().toString(),
                 activeEffect.uuid
             )
         val activationOptional = trigger.lastActivation()
@@ -233,6 +236,7 @@ class SunriseSunsetTriggerTest(
                 objectMapper,
                 mockTimeHelper,
                 settings,
+                UUID.randomUUID().toString(),
                 activeEffect.uuid
             )
         val activationOptional = trigger.lastActivation()

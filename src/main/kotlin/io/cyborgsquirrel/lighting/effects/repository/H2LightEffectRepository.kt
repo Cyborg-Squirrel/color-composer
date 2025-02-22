@@ -14,20 +14,24 @@ interface H2LightEffectRepository : CrudRepository<LightEffectEntity, Long> {
     @Join(value = "strip", type = Join.Type.LEFT_FETCH)
     @Join(value = "group", type = Join.Type.LEFT_FETCH)
     @Join(value = "group.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
     fun queryAll(): List<LightEffectEntity>
 
     @Join(value = "strip", type = Join.Type.LEFT_FETCH)
     @Join(value = "group", type = Join.Type.LEFT_FETCH)
     @Join(value = "group.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
     fun findByStrip(strip: LedStripEntity): List<LightEffectEntity>
 
     @Join(value = "strip", type = Join.Type.LEFT_FETCH)
     @Join(value = "group", type = Join.Type.LEFT_FETCH)
     @Join(value = "group.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
     fun findByGroup(group: LedStripGroupEntity): List<LightEffectEntity>
 
     @Join(value = "strip", type = Join.Type.LEFT_FETCH)
     @Join(value = "group", type = Join.Type.LEFT_FETCH)
     @Join(value = "group.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
     fun findByStatus(status: LightEffectStatus): List<LightEffectEntity>
 }

@@ -14,17 +14,18 @@ import java.util.*
  */
 class EffectIterationTrigger(
     private val timeHelper: TimeHelper,
-    private val effectRepository: ActiveLightEffectRegistry,
+    private val effectRegistry: ActiveLightEffectRegistry,
     settings: EffectIterationTriggerSettings,
-    activeEffectUuid: String,
+    uuid: String,
+    effectUuid: String,
 ) :
-    LightEffectTrigger(settings, activeEffectUuid) {
+    LightEffectTrigger(settings, uuid, effectUuid) {
 
     private var lastActivation: LocalDateTime? = null
     private var sequenceNumber = 0
 
     override fun lastActivation(): Optional<TriggerActivation> {
-        val effectOptional = effectRepository.findEffectWithUuid(activeEffectUuid)
+        val effectOptional = effectRegistry.findEffectWithUuid(effectUuid)
         if (effectOptional.isPresent) {
             val activeEffect = effectOptional.get()
             if (activeEffect.effect.getIterations() > getMaxIterations() && lastActivation == null) {

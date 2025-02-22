@@ -21,8 +21,9 @@ class SunriseSunsetTrigger(
     private val objectMapper: ObjectMapper,
     private val timeHelper: TimeHelper,
     settings: SunriseSunsetTriggerSettings,
-    activeEffectUuid: String,
-) : LightEffectTrigger(settings, activeEffectUuid) {
+    uuid: String,
+    effectUuid: String,
+) : LightEffectTrigger(settings, uuid, effectUuid) {
 
     private var todayEntity: SunriseSunsetTimeEntity? = null
     private var locationEntity: LocationConfigEntity? = null

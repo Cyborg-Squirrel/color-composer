@@ -69,7 +69,7 @@ class TimeTriggerTest(
             Int.MAX_VALUE,
             TriggerType.StartEffect
         )
-        val trigger = TimeTrigger(mockTimeHelper, settings, activeEffect.uuid)
+        val trigger = TimeTrigger(mockTimeHelper, settings, UUID.randomUUID().toString(), activeEffect.uuid)
         and("The trigger condition is met") {
             `when`("The latest trigger activation is requested") {
                 val activationOptional = trigger.lastActivation()

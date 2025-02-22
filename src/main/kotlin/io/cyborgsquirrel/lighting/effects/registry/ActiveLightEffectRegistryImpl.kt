@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.effects.registry
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Semaphore
 
@@ -15,8 +16,10 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
         try {
             lock.acquire()
             if (effectList.none { it.uuid == lightEffect.uuid }) {
+                logger.info("New light effect ${lightEffect.effect.getName()}")
                 effectList.add(lightEffect)
             } else {
+                logger.info("Updating light effect ${lightEffect.effect.getName()}")
                 effectList.replaceAll { if (it.uuid == lightEffect.uuid) lightEffect else it }
             }
         } finally {
@@ -76,5 +79,9 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
         } finally {
             lock.release()
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ActiveLightEffectRegistryImpl::class.java)
     }
 }

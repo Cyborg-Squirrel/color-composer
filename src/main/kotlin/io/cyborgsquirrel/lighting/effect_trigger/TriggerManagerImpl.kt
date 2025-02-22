@@ -22,7 +22,8 @@ class TriggerManagerImpl(
     private val triggers = mutableListOf<LightEffectTrigger>()
 
     override fun addTrigger(trigger: LightEffectTrigger) {
-        if (!triggers.contains(trigger)) {
+        if (!triggers.map { it.uuid }.contains(trigger.uuid)) {
+            logger.info("Adding light effect trigger ${trigger.uuid} for effect ${trigger.effectUuid}")
             triggers.add(trigger)
         }
     }
@@ -32,6 +33,7 @@ class TriggerManagerImpl(
     }
 
     override fun removeTrigger(trigger: LightEffectTrigger) {
+        logger.info("Removing light effect trigger ${trigger.uuid}")
         triggers.remove(trigger)
     }
 
@@ -39,7 +41,7 @@ class TriggerManagerImpl(
         val effects = effectRepository.findAllEffects()
 
         for (effect in effects) {
-            val trigger = triggers.find { it.activeEffectUuid == effect.uuid }
+            val trigger = triggers.find { it.effectUuid == effect.uuid }
             if (trigger != null) {
                 val activationOptional = trigger.lastActivation()
 
@@ -102,7 +104,7 @@ class TriggerManagerImpl(
             return
         }
 
-        logger.info("Updating effect ${effect.effect.getName()} to $newStatus")
+        logger.info("Updating effect ${effect.uuid} status to $newStatus")
         val newEffect = effect.copy(status = newStatus)
         effectRepository.addOrUpdateEffect(newEffect)
     }
