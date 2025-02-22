@@ -14,7 +14,6 @@ import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.model.color.RgbColor
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import io.micronaut.json.tree.JsonNode
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import java.util.*
