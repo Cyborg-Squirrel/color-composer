@@ -2,14 +2,13 @@ package io.cyborgsquirrel.lighting.rendering
 
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.rendering.frame.BlankFrameModel
-import io.cyborgsquirrel.lighting.rendering.frame.RenderedFrame
-import io.cyborgsquirrel.lighting.rendering.frame.RenderedFrameModel
+import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
 import io.cyborgsquirrel.model.color.RgbColor
 import io.cyborgsquirrel.model.strip.LedStripGroupModel
 import io.cyborgsquirrel.model.strip.LedStripModel
 import jakarta.inject.Singleton
+import java.util.*
 
 @Singleton
 class LightEffectRendererImpl(
@@ -22,13 +21,13 @@ class LightEffectRendererImpl(
     // the frame for other LED strips.
     private var stripGroupFrameBuffer = mutableListOf<RenderedFrameModel>()
 
-    override fun renderFrame(lightUuid: String, sequenceNumber: Short): RenderedFrame {
+    override fun renderFrame(lightUuid: String, sequenceNumber: Short): Optional<RenderedFrameModel> {
         val activeEffects =
             effectRepository.findEffectsWithStatus(LightEffectStatus.Playing).filter { it.strip.getUuid() == lightUuid }
                 .sortedBy { it.priority }
         if (activeEffects.isEmpty()) {
             // No active effects for the specified LED strip
-            return BlankFrameModel(lightUuid)
+            return Optional.empty()
         }
 
         val renderedEffectRgbData = mutableListOf<List<RgbColor>>()
@@ -52,6 +51,6 @@ class LightEffectRendererImpl(
         }
 
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame groups
-        return RenderedFrameModel(0, lightUuid, renderedEffectRgbData.first(), -1)
+        return Optional.of(RenderedFrameModel(0, lightUuid, renderedEffectRgbData.first(), -1))
     }
 }

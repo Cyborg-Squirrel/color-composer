@@ -4,20 +4,11 @@ import io.micronaut.websocket.CloseReason
 import io.micronaut.websocket.WebSocketSession
 import io.micronaut.websocket.annotation.*
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.TimeUnit
 
 @ClientWebSocket
 abstract class LedStripWebSocketClient : AutoCloseable {
-    private val messageHistory: Deque<ByteArray> = ConcurrentLinkedDeque()
-
-    val latestMessage: ByteArray
-        get() = messageHistory.peekLast()
-
-    val messagesChronologically: List<ByteArray>
-        get() = ArrayList(messageHistory)
 
     private var session: WebSocketSession? = null
 
@@ -26,10 +17,6 @@ abstract class LedStripWebSocketClient : AutoCloseable {
     @OnMessage
     fun onMessage(message: ByteArray) {
         future?.complete(Unit)
-        messageHistory.add(message)
-        if (messageHistory.size > 5) {
-            messageHistory.removeFirst()
-        }
     }
 
     @OnOpen

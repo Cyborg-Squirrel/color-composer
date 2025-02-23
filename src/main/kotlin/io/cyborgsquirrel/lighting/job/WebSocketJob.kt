@@ -17,7 +17,6 @@ import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFadeFilter
 import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReverseFilter
-import io.cyborgsquirrel.lighting.rendering.frame.BlankFrameModel
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
 import io.cyborgsquirrel.model.color.RgbColor
@@ -101,6 +100,7 @@ class WebSocketJob(
             var timestampMillis = 0L
             var isBlankFrame = false
             var hasHadNonBlankFrame = false
+            var lastUpdateIteration = -1
 
             while (!isBlankFrame || !hasHadNonBlankFrame) {
                 triggerManager.processTriggers()
@@ -109,30 +109,39 @@ class WebSocketJob(
                 val startIndex = max(iterationsString.length - numberLength, 0)
                 val iterationTwoDigits = iterationsString.substring(startIndex, startIndex + numberLength).toInt()
                 activeEffect = effectRepository.findEffectWithUuid(activeEffect.uuid).get()
-                when (iterationTwoDigits) {
-                    0 -> {
-                        effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters))
-                    }
 
-                    16 -> {
-                        effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.map {
-                            if (it is ReflectionFilter) ReflectionFilter(
-                                ReflectionType.LowToHigh
-                            ) else it
-                        }))
-                    }
+                // Once we reach the specified iteration count update the effect in the repository
+                // Set lastUpdateIteration to prevent duplicate updates in the registry
+                if (lastUpdateIteration != iterationTwoDigits) {
+                    when (iterationTwoDigits) {
+                        0 -> {
+                            lastUpdateIteration = iterationTwoDigits
+                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters))
+                        }
 
-                    33 -> {
-                        effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filter { it is ReverseFilter || it is BrightnessFilter }))
-                    }
+                        16 -> {
+                            lastUpdateIteration = iterationTwoDigits
+                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.map {
+                                if (it is ReflectionFilter) ReflectionFilter(
+                                    ReflectionType.LowToHigh
+                                ) else it
+                            }))
+                        }
 
-                    66 -> {
-                        effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
+                        33 -> {
+                            lastUpdateIteration = iterationTwoDigits
+                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filter { it is ReverseFilter || it is BrightnessFilter }))
+                        }
+
+                        66 -> {
+                            lastUpdateIteration = iterationTwoDigits
+                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
+                        }
                     }
                 }
 
                 val frame = renderer.renderFrame(strip.getUuid(), 0)
-                isBlankFrame = frame is BlankFrameModel
+                isBlankFrame = frame.isEmpty || (frame.isPresent && frame.get().frameData.isEmpty())
                 hasHadNonBlankFrame = hasHadNonBlankFrame || !isBlankFrame
                 if (isBlankFrame) {
                     if (lastFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
@@ -140,15 +149,15 @@ class WebSocketJob(
                         val timestamp = Timestamp.from(Instant.now()).time
                         sendBlankFrame(timestamp)
                         lastFrameTimestamp = LocalDateTime.now()
+                    } else {
+                        sleep(250)
                     }
-
-                    sleep(250)
                 } else {
                     if (timestampMillis == 0L) {
                         timestampMillis = Timestamp.from(Instant.now()).time
                     }
                     timestampMillis += 1000 / fps
-                    val rgbData = frame.frameData
+                    val rgbData = frame.get().frameData
                     val frameData = RgbFrameData(timestampMillis, rgbData)
                     val encodedFrame = serializer.encode(frameData)
                     client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
@@ -191,10 +200,6 @@ class WebSocketJob(
             .port(8765)
             .path("test2")
             .build()
-//        val uri = UriBuilder.of("${WebSocketClient.SCHEME_WS}://${config.ipAddress}")
-//            .port(config.port)
-//            .path(config.lightStripIds.first())
-//            .build()
         val future = CompletableFuture<LedStripWebSocketClient>()
         val clientPublisher = webSocketClient.connect(LedStripWebSocketClient::class.java, uri)
         clientPublisher.subscribe(object : Subscriber<LedStripWebSocketClient> {

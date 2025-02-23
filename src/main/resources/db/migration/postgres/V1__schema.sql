@@ -21,7 +21,7 @@ CREATE TABLE led_strips
 (
     id          SERIAL primary key NOT NULL,
     name        VARCHAR(255) NOT NULL,
-    uuid        VARCHAR(255) NOT NULL,
+    uuid        VARCHAR(50) NOT NULL,
     length      INT NOT NULL,
     height      INT NOT NULL,
     power_limit INT,
@@ -33,7 +33,7 @@ CREATE TABLE led_strip_groups
 (
     id    SERIAL primary key NOT NULL,
     name  VARCHAR(255) NOT NULL,
-    uuid  VARCHAR(255) NOT NULL
+    uuid  VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE group_member_led_strips
@@ -52,7 +52,7 @@ CREATE TABLE light_effects
     id         SERIAL PRIMARY KEY,
     strip_id   INT,
     group_id   INT,
-    uuid       VARCHAR(255) NOT NULL,
+    uuid       VARCHAR(50) NOT NULL,
     settings   JSONB NOT NULL,
     name       VARCHAR(255) NOT NULL,
     status     VARCHAR(50) NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE light_effect_triggers
 (
     id          SERIAL PRIMARY KEY,
     effect_id   INT NOT NULL,
-    uuid        VARCHAR(255) NOT NULL,
+    uuid        VARCHAR(50) NOT NULL,
     settings    JSONB NOT NULL,
     name        VARCHAR(255) NOT NULL,
     CONSTRAINT trigger_effect_assoc_fk FOREIGN KEY (effect_id) REFERENCES light_effects

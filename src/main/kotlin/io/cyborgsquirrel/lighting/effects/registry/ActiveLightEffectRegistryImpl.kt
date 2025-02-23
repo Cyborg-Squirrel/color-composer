@@ -16,10 +16,10 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
         try {
             lock.acquire()
             if (effectList.none { it.uuid == lightEffect.uuid }) {
-                logger.info("New light effect ${lightEffect.effect.getName()}")
+                logger.info("New light effect $lightEffect")
                 effectList.add(lightEffect)
             } else {
-                logger.info("Updating light effect ${lightEffect.effect.getName()}")
+                logger.info("Updating light effect $lightEffect")
                 effectList.replaceAll { if (it.uuid == lightEffect.uuid) lightEffect else it }
             }
         } finally {
