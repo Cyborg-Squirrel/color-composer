@@ -55,6 +55,7 @@ class LightEffectInitJob(
                     val effectInstance = getEffect(effectEntity, strip)
                     val activeEffect = ActiveLightEffect(
                         uuid = effectEntity.uuid!!,
+                        // TODO add priority to persistence layer
                         priority = 0,
                         status = effectEntity.status!!,
                         strip = strip,
