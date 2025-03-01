@@ -27,7 +27,7 @@ class SpectrumLightEffect(
         TODO("Not yet implemented")
     }
 
-    override fun done(): Boolean {
+    override fun isDone(): Boolean {
         TODO("Not yet implemented")
     }
 

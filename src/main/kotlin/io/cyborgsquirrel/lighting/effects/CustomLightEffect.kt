@@ -6,7 +6,7 @@ import io.cyborgsquirrel.model.color.RgbColor
 /**
  * Class for user generated custom lighting effects
  */
-class CustomLightEffect : LightEffect(0, TODO()) {
+class CustomLightEffect : LightEffect {
 
     override fun getName(): String {
         TODO("Not yet implemented")
@@ -16,11 +16,15 @@ class CustomLightEffect : LightEffect(0, TODO()) {
         TODO("Not yet implemented")
     }
 
+    override fun getSettings(): Any {
+        TODO("Not yet implemented")
+    }
+
     override fun complete() {
         TODO("Not yet implemented")
     }
 
-    override fun done(): Boolean {
+    override fun isDone(): Boolean {
         TODO("Not yet implemented")
     }
 

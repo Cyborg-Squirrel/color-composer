@@ -8,9 +8,9 @@ import io.cyborgsquirrel.model.color.RgbColor
  * changing the color behind it to the next color.
  */
 class NightriderLightEffect(
-    numberOfLeds: Int,
-    settings: NightriderLightEffectSettings
-) : LightEffect(numberOfLeds, settings) {
+    private val numberOfLeds: Int,
+    private val settings: NightriderLightEffectSettings
+) : LightEffect {
 
     private var frame: Long = 0
     private var reflect = false
@@ -62,11 +62,15 @@ class NightriderLightEffect(
         return rgbList
     }
 
+    override fun getSettings(): NightriderLightEffectSettings {
+        return settings
+    }
+
     override fun complete() {
         TODO("Not yet implemented")
     }
 
-    override fun done(): Boolean {
+    override fun isDone(): Boolean {
         TODO("Not yet implemented")
     }
 

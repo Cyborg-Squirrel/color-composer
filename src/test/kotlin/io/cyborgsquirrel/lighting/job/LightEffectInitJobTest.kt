@@ -95,7 +95,7 @@ class LightEffectInitJobTest(
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
-        activeEffectList.first().effect.settings shouldBe lightEffectSettings
+        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumLightEffectSettings::class
         activeEffectList.first().strip.getUuid() shouldBe strip.uuid
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
@@ -146,7 +146,7 @@ class LightEffectInitJobTest(
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
-        activeEffectList.first().effect.settings shouldBe lightEffectSettings
+        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumLightEffectSettings::class
         activeEffectList.first().strip.getUuid() shouldBe strip.uuid
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
@@ -204,7 +204,7 @@ class LightEffectInitJobTest(
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
-        activeEffectList.first().effect.settings shouldBe lightEffectSettings
+        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumLightEffectSettings::class
         activeEffectList.first().strip.getUuid() shouldBe group.uuid
         activeEffectList.first().strip.getName() shouldBe group.name
         activeEffectList.first().status shouldBe lightEffect.status

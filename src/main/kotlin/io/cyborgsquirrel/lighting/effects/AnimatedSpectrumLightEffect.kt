@@ -5,9 +5,9 @@ import io.cyborgsquirrel.model.color.RgbColor
 import kotlin.math.ceil
 
 open class AnimatedSpectrumLightEffect(
-    numberOfLeds: Int,
-    settings: SpectrumLightEffectSettings
-) : LightEffect(numberOfLeds, settings) {
+    private val numberOfLeds: Int,
+    private val settings: SpectrumLightEffectSettings
+) : LightEffect {
 
     protected var frame: Long = 0
     private var iterations = 0
@@ -56,11 +56,15 @@ open class AnimatedSpectrumLightEffect(
         return rgbList
     }
 
+    override fun getSettings(): SpectrumLightEffectSettings {
+        return settings
+    }
+
     override fun complete() {
         TODO("Not yet implemented")
     }
 
-    override fun done(): Boolean {
+    override fun isDone(): Boolean {
         TODO("Not yet implemented")
     }
 
