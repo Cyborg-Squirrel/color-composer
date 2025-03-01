@@ -4,7 +4,7 @@ import io.cyborgsquirrel.model.color.RgbColor
 import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
-data class ColorFillNightriderEffectSettings(
+data class NightriderColorFillEffectSettings(
     val colorList: List<RgbColor>
 ) : NightriderEffectSettings {
     override fun getColors(): List<RgbColor> {

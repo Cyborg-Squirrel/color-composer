@@ -71,7 +71,7 @@ class WebSocketJob(
                 NightriderCometEffectSettings(RgbColor.Rainbow, trailLength = 10)
             )
             val filters = listOf(
-                BrightnessFadeFilter(0.01f, 0.33f, Duration.ofSeconds(30), timeHelper),
+                BrightnessFadeFilter(0.01f, 0.99f, Duration.ofSeconds(30), timeHelper),
                 ReverseFilter(),
                 ReflectionFilter(ReflectionType.HighToLow),
             )

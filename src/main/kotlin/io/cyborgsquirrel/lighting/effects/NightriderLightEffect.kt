@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
-import io.cyborgsquirrel.lighting.effects.settings.ColorFillNightriderEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.model.color.RgbColor
@@ -23,13 +23,16 @@ class NightriderLightEffect(
     private var iterations = 0
 
     override fun getName(): String {
-        return NAME
+        return when (settings) {
+            is NightriderColorFillEffectSettings -> LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME
+            is NightriderCometEffectSettings -> LightEffectConstants.NIGHTRIDER_COMET_NAME
+        }
     }
 
     override fun getNextStep(): List<RgbColor> {
         onNextStep()
         return when (settings) {
-            is ColorFillNightriderEffectSettings -> renderNightriderDefault()
+            is NightriderColorFillEffectSettings -> renderNightriderDefault()
             is NightriderCometEffectSettings -> renderNightriderComet()
         }
     }
@@ -123,7 +126,7 @@ class NightriderLightEffect(
 
     private fun updatePointerLocation() {
         when (settings) {
-            is ColorFillNightriderEffectSettings -> {
+            is NightriderColorFillEffectSettings -> {
                 if (reflect && location > 0) {
                     location--
                 }
@@ -143,7 +146,7 @@ class NightriderLightEffect(
 
     private fun shouldReflect(): Boolean {
         when (settings) {
-            is ColorFillNightriderEffectSettings -> {
+            is NightriderColorFillEffectSettings -> {
                 if (reflect && location == 0) {
                     return false
                 }
@@ -198,7 +201,6 @@ class NightriderLightEffect(
     }
 
     companion object {
-        private const val NAME = LightEffectConstants.NIGHTRIDER_NAME
         private val logger = LoggerFactory.getLogger(NightriderLightEffect::class.java)
     }
 }

@@ -14,7 +14,8 @@ import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.settings.ColorFillNightriderEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.model.strip.LedStrip
 import io.cyborgsquirrel.model.strip.LedStripGroupModel
@@ -101,11 +102,19 @@ class LightEffectInitJob(
 
     private fun getEffect(effectEntity: LightEffectEntity, strip: LedStrip): LightEffect {
         return when (effectEntity.name!!) {
-            LightEffectConstants.NIGHTRIDER_NAME -> NightriderLightEffect(
+            LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME -> NightriderLightEffect(
                 numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(effectEntity.settings),
-                    ColorFillNightriderEffectSettings::class.java
+                    NightriderColorFillEffectSettings::class.java
+                )
+            )
+
+            LightEffectConstants.NIGHTRIDER_COMET_NAME -> NightriderLightEffect(
+                numberOfLeds = strip.getLength(),
+                settings = objectMapper.readValueFromTree(
+                    JsonNode.from(effectEntity.settings),
+                    NightriderCometEffectSettings::class.java
                 )
             )
 
