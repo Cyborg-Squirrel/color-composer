@@ -13,7 +13,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.settings.NightriderLightEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.model.color.RgbColor
 import io.kotest.core.spec.style.StringSpec
@@ -36,7 +36,7 @@ class LightEffectTriggerRepositoryTest(
 ) : StringSpec({
 
     val nightriderLightEffectSettings =
-        NightriderLightEffectSettings(listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
+        NightriderEffectSettings.default().copy(colorList = listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
     val timeTriggerSettings =
         TimeTriggerSettings(
             LocalTime.of(19, 0), Duration.ofHours(4), maxActivations = null, triggerType = TriggerType.StartEffect

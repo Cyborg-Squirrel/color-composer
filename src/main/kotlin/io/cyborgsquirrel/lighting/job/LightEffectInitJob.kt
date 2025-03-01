@@ -14,7 +14,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.settings.NightriderLightEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.DefaultNightriderEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.model.strip.LedStrip
 import io.cyborgsquirrel.model.strip.LedStripGroupModel
@@ -105,7 +105,7 @@ class LightEffectInitJob(
                 numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(effectEntity.settings),
-                    NightriderLightEffectSettings::class.java
+                    DefaultNightriderEffectSettings::class.java
                 )
             )
 

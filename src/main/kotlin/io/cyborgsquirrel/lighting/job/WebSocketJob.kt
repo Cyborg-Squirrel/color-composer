@@ -8,15 +8,13 @@ import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
+import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
-import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.DefaultNightriderEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
-import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFadeFilter
-import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFilter
-import io.cyborgsquirrel.lighting.rendering.filters.ReflectionFilter
-import io.cyborgsquirrel.lighting.rendering.filters.ReverseFilter
+import io.cyborgsquirrel.lighting.rendering.filters.*
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
 import io.cyborgsquirrel.model.color.RgbColor
@@ -64,12 +62,16 @@ class WebSocketJob(
             val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1)
             // Power supply is 4A
             powerLimiterService.setLimit(strip.getUuid(), 4000)
-            val effect = AnimatedSpectrumLightEffect(60, SpectrumLightEffectSettings(9))
-            val filters = listOf(
-                BrightnessFadeFilter(0.01f, 0.33f, Duration.ofSeconds(30), timeHelper),
-                ReverseFilter(),
-                ReflectionFilter(ReflectionType.HighToLow),
+//            val effect = AnimatedSpectrumLightEffect(60, SpectrumLightEffectSettings(9))
+            val effect = NightriderLightEffect(
+                60,
+                NightriderCometEffectSettings(RgbColor.Rainbow, trailLength = 10)
             )
+            val filters = listOf<LightEffectFilter>()
+//                BrightnessFadeFilter(0.01f, 0.33f, Duration.ofSeconds(30), timeHelper),
+//                ReverseFilter(),
+//                ReflectionFilter(ReflectionType.HighToLow),
+//            )
             var activeEffect = ActiveLightEffect(
                 UUID.randomUUID().toString(), 1, LightEffectStatus.Created, effect, strip, filters
             )
@@ -112,32 +114,32 @@ class WebSocketJob(
 
                 // Once we reach the specified iteration count update the effect in the repository
                 // Set lastUpdateIteration to prevent duplicate updates in the registry
-                if (lastUpdateIteration != iterationTwoDigits) {
-                    when (iterationTwoDigits) {
-                        0 -> {
-                            lastUpdateIteration = iterationTwoDigits
-                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters))
-                        }
-
-                        16 -> {
-                            lastUpdateIteration = iterationTwoDigits
-                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.map {
-                                if (it is ReflectionFilter) ReflectionFilter(
-                                    ReflectionType.LowToHigh
-                                ) else it
-                            }))
-                        }
-
-                        33 -> {
-                            lastUpdateIteration = iterationTwoDigits
-                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filter { it is ReverseFilter || it is BrightnessFilter }))
-                        }
-
-                        66 -> {
-                            lastUpdateIteration = iterationTwoDigits
-                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
-                        }
-                    }
+                if (lastUpdateIteration != iterationTwoDigits && activeEffect.effect is AnimatedSpectrumLightEffect) {
+//                    when (iterationTwoDigits) {
+//                        0 -> {
+//                            lastUpdateIteration = iterationTwoDigits
+//                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters))
+//                        }
+//
+//                        16 -> {
+//                            lastUpdateIteration = iterationTwoDigits
+//                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.map {
+//                                if (it is ReflectionFilter) ReflectionFilter(
+//                                    ReflectionType.LowToHigh
+//                                ) else it
+//                            }))
+//                        }
+//
+//                        33 -> {
+//                            lastUpdateIteration = iterationTwoDigits
+//                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filter { it is ReverseFilter || it is BrightnessFilter }))
+//                        }
+//
+//                        66 -> {
+//                            lastUpdateIteration = iterationTwoDigits
+//                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
+//                        }
+//                    }
                 }
 
                 val frame = renderer.renderFrame(strip.getUuid(), 0)

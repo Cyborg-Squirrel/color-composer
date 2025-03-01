@@ -6,7 +6,7 @@ import io.cyborgsquirrel.client_config.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
 import io.cyborgsquirrel.entity.*
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
-import io.cyborgsquirrel.lighting.effects.settings.NightriderLightEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.model.color.RgbColor
 import io.kotest.core.spec.style.StringSpec
@@ -25,7 +25,8 @@ class LightEffectRepositoryTest(
     private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
 ) : StringSpec({
 
-    val settings = NightriderLightEffectSettings(listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
+    val settings =
+        NightriderEffectSettings.default().copy(colorList = listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
 
     fun settingsObjectToMap(settings: Any): Map<String, Any> {
         val jsonNode = objectMapper.writeValueToTree(settings)

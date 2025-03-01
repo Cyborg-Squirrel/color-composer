@@ -1,6 +1,5 @@
 package io.cyborgsquirrel.lighting.effects
 
-import io.cyborgsquirrel.lighting.effects.settings.NightriderLightEffectSettings
 import io.cyborgsquirrel.model.color.RgbColor
 
 /**

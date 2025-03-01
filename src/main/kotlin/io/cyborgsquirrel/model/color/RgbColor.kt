@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.model.color
 
 import io.micronaut.serde.annotation.Serdeable
+import kotlin.math.min
 
 /**
  * A single RGB value
@@ -13,9 +14,9 @@ data class RgbColor(val red: UByte, val green: UByte, val blue: UByte) {
      * a [scaleFactor] over 1.0 will increase all rgb values, a [scaleFactor] of zero will set the rgb values to zero.
      */
     fun scale(scaleFactor: Float): RgbColor {
-        val newRed = red.toShort() * scaleFactor
-        val newGreen = green.toShort() * scaleFactor
-        val newBlue = blue.toShort() * scaleFactor
+        val newRed = min(red.toShort() * scaleFactor, 255f)
+        val newGreen = min(green.toShort() * scaleFactor, 255f)
+        val newBlue = min(blue.toShort() * scaleFactor, 255f)
 
         return RgbColor(newRed.toUInt().toUByte(), newGreen.toUInt().toUByte(), newBlue.toUInt().toUByte())
     }
