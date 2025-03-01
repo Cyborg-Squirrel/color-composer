@@ -42,7 +42,8 @@ class LightEffectInitJobTest(
     private val timeHelper: TimeHelper,
 ) : StringSpec({
 
-    val lightEffectSettings = SpectrumLightEffectSettings(10, listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
+    val lightEffectSettings =
+        SpectrumLightEffectSettings.default(60).copy(10, listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
     val iterationTriggerSettings = EffectIterationTriggerSettings(25)
 
     fun settingsObjectToMap(settings: Any): Map<String, Any> {

@@ -6,6 +6,6 @@ sealed interface NightriderEffectSettings {
     fun getColors(): List<RgbColor>
 
     companion object {
-        fun default() = DefaultNightriderEffectSettings(RgbColor.Rainbow)
+        fun default() = ColorFillNightriderEffectSettings(RgbColor.Rainbow)
     }
 }

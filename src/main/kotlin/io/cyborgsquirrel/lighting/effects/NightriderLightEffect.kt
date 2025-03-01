@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
-import io.cyborgsquirrel.lighting.effects.settings.DefaultNightriderEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.ColorFillNightriderEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.model.color.RgbColor
@@ -29,7 +29,7 @@ class NightriderLightEffect(
     override fun getNextStep(): List<RgbColor> {
         onNextStep()
         return when (settings) {
-            is DefaultNightriderEffectSettings -> renderNightriderDefault()
+            is ColorFillNightriderEffectSettings -> renderNightriderDefault()
             is NightriderCometEffectSettings -> renderNightriderComet()
         }
     }
@@ -123,7 +123,7 @@ class NightriderLightEffect(
 
     private fun updatePointerLocation() {
         when (settings) {
-            is DefaultNightriderEffectSettings -> {
+            is ColorFillNightriderEffectSettings -> {
                 if (reflect && location > 0) {
                     location--
                 }
@@ -143,7 +143,7 @@ class NightriderLightEffect(
 
     private fun shouldReflect(): Boolean {
         when (settings) {
-            is DefaultNightriderEffectSettings -> {
+            is ColorFillNightriderEffectSettings -> {
                 if (reflect && location == 0) {
                     return false
                 }

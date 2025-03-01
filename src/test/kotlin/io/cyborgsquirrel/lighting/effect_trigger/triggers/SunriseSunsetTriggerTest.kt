@@ -6,7 +6,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.AnimatedSpectrumLightEffect
+import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistryImpl
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
@@ -62,7 +62,7 @@ class SunriseSunsetTriggerTest(
         mockActiveLightEffectRegistry = getMock(activeLightEffectRegistry)
 
         val mockStrip = mockk<LedStripModel>()
-        val effect = AnimatedSpectrumLightEffect(60, SpectrumLightEffectSettings(9))
+        val effect = SpectrumLightEffect(60, SpectrumLightEffectSettings.default(60))
         activeEffect = ActiveLightEffect(
             UUID.randomUUID().toString(), 1, LightEffectStatus.Created, effect, mockStrip, listOf()
         )
