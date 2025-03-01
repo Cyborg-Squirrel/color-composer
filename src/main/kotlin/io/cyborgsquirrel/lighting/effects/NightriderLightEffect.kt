@@ -74,8 +74,6 @@ class NightriderLightEffect(
                 rgbList.addAll(cometBuffer)
             }
 
-            previousLocation = location
-            frame++
             completeFrame(rgbList, RgbColor.Blank)
         } else {
             logger.warn("Config mismatch! Expected NightriderCometEffectSettings.")
@@ -100,8 +98,6 @@ class NightriderLightEffect(
         rgbList.add(dotColor)
         rgbList.add(dotColor)
 
-        previousLocation = location
-        frame++
         return completeFrame(rgbList, endingColor)
     }
 
@@ -187,15 +183,17 @@ class NightriderLightEffect(
         return rgbList
     }
 
-    private fun completeFrame(frame: MutableList<RgbColor>, endColor: RgbColor): MutableList<RgbColor> {
-        if (frame.size < numberOfLeds) {
-            for (i in 0..numberOfLeds - frame.size) {
-                frame.add(endColor)
+    private fun completeFrame(frameData: MutableList<RgbColor>, endColor: RgbColor): MutableList<RgbColor> {
+        previousLocation = location
+        frame++
+        if (frameData.size < numberOfLeds) {
+            for (i in 0..numberOfLeds - frameData.size) {
+                frameData.add(endColor)
             }
 
-            return frame
+            return frameData
         } else {
-            return frame.subList(0, numberOfLeds)
+            return frameData.subList(0, numberOfLeds)
         }
     }
 
