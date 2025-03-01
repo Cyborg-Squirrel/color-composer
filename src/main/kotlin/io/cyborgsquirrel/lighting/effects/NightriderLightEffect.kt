@@ -27,6 +27,7 @@ class NightriderLightEffect(
     }
 
     override fun getNextStep(): List<RgbColor> {
+        onNextStep()
         return when (settings) {
             is DefaultNightriderEffectSettings -> renderNightriderDefault()
             is NightriderCometEffectSettings -> renderNightriderComet()
@@ -35,21 +36,11 @@ class NightriderLightEffect(
 
     private fun renderNightriderComet(): List<RgbColor> {
         return if (settings is NightriderCometEffectSettings) {
-            val reflectBefore = reflect
-            reflect = shouldReflect()
-            if (reflectBefore != reflect) {
-                iterations++
-            }
-
-            updatePointerLocation()
-            var rgbList = mutableListOf<RgbColor>()
+            val rgbList = mutableListOf<RgbColor>()
 
             if (location > 0) {
                 // Before comet
-                val upperBound = if (reflect) location else previousLocation
-                for (i in 0..<upperBound) {
-                    rgbList.add(RgbColor.Blank)
-                }
+                rgbList.addAll(getBeginningColors(RgbColor.Blank))
             }
 
             // The comet + trail behind it
@@ -83,18 +74,9 @@ class NightriderLightEffect(
                 rgbList.addAll(cometBuffer)
             }
 
-            // After the comet
-            if (rgbList.size < numberOfLeds) {
-                for (i in 0..<numberOfLeds - rgbList.size) {
-                    rgbList.add(RgbColor.Blank)
-                }
-            } else {
-                rgbList = rgbList.subList(0, numberOfLeds)
-            }
-
             previousLocation = location
             frame++
-            rgbList
+            completeFrame(rgbList, RgbColor.Blank)
         } else {
             logger.warn("Config mismatch! Expected NightriderCometEffectSettings.")
             renderNightriderDefault()
@@ -102,13 +84,6 @@ class NightriderLightEffect(
     }
 
     private fun renderNightriderDefault(): List<RgbColor> {
-        val reflectBefore = reflect
-        reflect = shouldReflect()
-        if (reflectBefore != reflect) {
-            iterations++
-        }
-
-        updatePointerLocation()
         val rgbList = mutableListOf<RgbColor>()
         val startingColor = if (reflect) getColor(iterations - 1) else getColor(iterations)
         val endingColor = if (iterations >= 1) {
@@ -118,31 +93,16 @@ class NightriderLightEffect(
         }
 
         // Before scrolling dot
-        val upperBound = if (reflect) location else previousLocation
-        for (i in 0..<upperBound) {
-            rgbList.add(startingColor)
-        }
+        rgbList.addAll(getBeginningColors(startingColor))
 
         // The scrolling dot + trail behind it
         val dotColor = getColor(iterations).scale(1.5f)
         rgbList.add(dotColor)
         rgbList.add(dotColor)
 
-        // After scrolling dot
-        if (iterations >= 1) {
-            val lowerBound = if (reflect) previousLocation + 1 else location + 1
-            for (i in lowerBound..<numberOfLeds) {
-                rgbList.add(endingColor)
-            }
-        } else {
-            for (i in location + 1..<numberOfLeds) {
-                rgbList.add(endingColor)
-            }
-        }
-
         previousLocation = location
         frame++
-        return rgbList
+        return completeFrame(rgbList, endingColor)
     }
 
     override fun getSettings(): NightriderEffectSettings {
@@ -171,49 +131,71 @@ class NightriderLightEffect(
                 if (reflect && location > 0) {
                     location--
                 }
-
-                if (!reflect && location < numberOfLeds - 1) {
-                    location++
-                }
             }
 
             is NightriderCometEffectSettings -> {
                 if (reflect && location > 0 - settings.trailLength) {
                     location--
                 }
-
-                if (!reflect && location < numberOfLeds - 1) {
-                    location++
-                }
             }
+        }
+
+        if (!reflect && location < numberOfLeds - 1) {
+            location++
         }
     }
 
     private fun shouldReflect(): Boolean {
-        return when (settings) {
+        when (settings) {
             is DefaultNightriderEffectSettings -> {
                 if (reflect && location == 0) {
                     return false
                 }
-
-                if (!reflect && location == numberOfLeds - 1) {
-                    return true
-                }
-
-                reflect
             }
 
             is NightriderCometEffectSettings -> {
                 if (reflect && location == 0 - settings.trailLength) {
                     return false
                 }
-
-                if (!reflect && location == numberOfLeds - 1) {
-                    return true
-                }
-
-                reflect
             }
+        }
+
+        if (!reflect && location == numberOfLeds - 1) {
+            return true
+        }
+
+        return reflect
+    }
+
+    private fun onNextStep() {
+        val reflectBefore = reflect
+        reflect = shouldReflect()
+        if (reflectBefore != reflect) {
+            iterations++
+        }
+
+        updatePointerLocation()
+    }
+
+    private fun getBeginningColors(color: RgbColor): MutableList<RgbColor> {
+        val rgbList = mutableListOf<RgbColor>()
+        val upperBound = if (reflect) location else previousLocation
+        for (i in 0..<upperBound) {
+            rgbList.add(color)
+        }
+
+        return rgbList
+    }
+
+    private fun completeFrame(frame: MutableList<RgbColor>, endColor: RgbColor): MutableList<RgbColor> {
+        if (frame.size < numberOfLeds) {
+            for (i in 0..numberOfLeds - frame.size) {
+                frame.add(endColor)
+            }
+
+            return frame
+        } else {
+            return frame.subList(0, numberOfLeds)
         }
     }
 
