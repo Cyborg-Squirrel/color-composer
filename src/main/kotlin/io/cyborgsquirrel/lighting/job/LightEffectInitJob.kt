@@ -58,6 +58,7 @@ class LightEffectInitJob(
                         uuid = effectEntity.uuid!!,
                         // TODO add priority to persistence layer
                         priority = 0,
+                        skipFramesIfBlank = true,
                         status = effectEntity.status!!,
                         strip = strip,
                         effect = effectInstance,

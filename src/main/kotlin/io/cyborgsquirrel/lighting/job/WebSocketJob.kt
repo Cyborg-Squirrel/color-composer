@@ -76,12 +76,12 @@ class WebSocketJob(
                 ReflectionFilter(ReflectionType.HighToLow),
             )
             var activeEffect = ActiveLightEffect(
-                UUID.randomUUID().toString(), 1, LightEffectStatus.Created, effect, strip, filters
+                UUID.randomUUID().toString(), 1, true, LightEffectStatus.Created, effect, strip, filters
             )
             effectRepository.addOrUpdateEffect(activeEffect)
             val triggerTime = LocalDateTime.now()
             val triggerSettings =
-                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(91), null, TriggerType.StartEffect)
+                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(61), null, TriggerType.StartEffect)
             val trigger = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffect.uuid)
 //            val triggerSettings =
 //                SunriseSunsetTriggerSettings(
@@ -117,7 +117,7 @@ class WebSocketJob(
 
                 // Once we reach the specified iteration count update the effect in the repository
                 // Set lastUpdateIteration to prevent duplicate updates in the registry
-                if (lastUpdateIteration != iterationTwoDigits && activeEffect.effect is SpectrumLightEffect) {
+                if (lastUpdateIteration != iterationTwoDigits) {
                     when (iterationTwoDigits) {
                         0 -> {
                             lastUpdateIteration = iterationTwoDigits

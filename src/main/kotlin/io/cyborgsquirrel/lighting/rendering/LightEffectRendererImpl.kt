@@ -2,12 +2,13 @@ package io.cyborgsquirrel.lighting.rendering
 
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
+import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import io.cyborgsquirrel.model.color.RgbColor
 import io.cyborgsquirrel.model.strip.LedStripGroupModel
 import io.cyborgsquirrel.model.strip.LedStripModel
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
 import java.util.*
 
 @Singleton
@@ -38,6 +39,23 @@ class LightEffectRendererImpl(
                     for (filter in activeEffect.filters) {
                         rgbData = filter.apply(rgbData)
                     }
+
+                    if (activeEffect.skipFramesIfBlank) {
+                        var allBlank = true
+                        while (allBlank) {
+                            for (data in rgbData) {
+                                allBlank = allBlank && data == RgbColor.Blank
+                            }
+
+                            if (allBlank) {
+                                rgbData = activeEffect.effect.getNextStep()
+                                for (filter in activeEffect.filters) {
+                                    rgbData = filter.apply(rgbData)
+                                }
+                            }
+                        }
+                    }
+
                     rgbData = powerLimiterService.applyLimit(rgbData, activeEffect.strip.getUuid())
                     renderedEffectRgbData.add(rgbData)
                 }
@@ -52,5 +70,9 @@ class LightEffectRendererImpl(
 
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame groups
         return Optional.of(RenderedFrameModel(0, lightUuid, renderedEffectRgbData.first(), -1))
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(LightEffectRendererImpl::class.java)
     }
 }

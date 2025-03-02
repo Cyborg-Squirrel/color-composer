@@ -64,7 +64,7 @@ class SunriseSunsetTriggerTest(
         val mockStrip = mockk<LedStripModel>()
         val effect = SpectrumLightEffect(60, SpectrumLightEffectSettings.default(60))
         activeEffect = ActiveLightEffect(
-            UUID.randomUUID().toString(), 1, LightEffectStatus.Created, effect, mockStrip, listOf()
+            UUID.randomUUID().toString(), 1, true, LightEffectStatus.Created, effect, mockStrip, listOf()
         )
 
         every {
