@@ -190,7 +190,7 @@ class NightriderLightEffect(
         previousLocation = location
         frame++
         if (frameData.size < numberOfLeds) {
-            for (i in 0..numberOfLeds - frameData.size) {
+            for (i in 0..<numberOfLeds - frameData.size) {
                 frameData.add(endColor)
             }
 

@@ -25,13 +25,13 @@ class BrightnessFadeFilter(
      */
     override fun apply(rgbList: List<RgbColor>): List<RgbColor> {
         val millisSinceEpoch = timeHelper.millisSinceEpoch()
-        if (startTimeEpochMillis == 0L) {
+        return if (startTimeEpochMillis == 0L) {
             startTimeEpochMillis = millisSinceEpoch
             return rgbList.map {
                 it.scale(startingBrightness)
             }
         } else {
-            return if (startTimeEpochMillis + fadeDuration.toMillis() < millisSinceEpoch) {
+            if (startTimeEpochMillis + fadeDuration.toMillis() < millisSinceEpoch) {
                 super.apply(rgbList)
             } else {
                 val millisSinceStart = millisSinceEpoch - startTimeEpochMillis
@@ -42,11 +42,8 @@ class BrightnessFadeFilter(
                 val endingBrightnessList = rgbList.map {
                     it.scale(endingBrightness)
                 }
-                val currentBrightnessList = mutableListOf<RgbColor>()
-                for (i in startingBrightnessList.indices) {
-                    val interpolatedBrightnessRgb =
-                        startingBrightnessList[i].interpolate(endingBrightnessList[i], percentComplete)
-                    currentBrightnessList.add(interpolatedBrightnessRgb)
+                val currentBrightnessList = startingBrightnessList.mapIndexed { index, rgbColor ->
+                    rgbColor.interpolate(endingBrightnessList[index], percentComplete)
                 }
 
                 currentBrightnessList
