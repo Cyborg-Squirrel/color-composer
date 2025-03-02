@@ -11,6 +11,8 @@ import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
+import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
@@ -65,10 +67,10 @@ class WebSocketJob(
             val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1)
             // Power supply is 4A
             powerLimiterService.setLimit(strip.getUuid(), 4000)
-//            val effect = AnimatedSpectrumLightEffect(60, SpectrumLightEffectSettings(9))
+//            val effect = SpectrumLightEffect(60, SpectrumLightEffectSettings.default(60).copy(colorPixelWidth = 9))
             val effect = NightriderLightEffect(
                 60,
-                NightriderCometEffectSettings(RgbColor.Rainbow, trailLength = 10)
+                NightriderCometEffectSettings(RgbColor.Rainbow, trailLength = 15, FadeCurve.Linear)
             )
             val filters = listOf(
                 BrightnessFadeFilter(0.01f, 0.99f, Duration.ofSeconds(30), timeHelper),

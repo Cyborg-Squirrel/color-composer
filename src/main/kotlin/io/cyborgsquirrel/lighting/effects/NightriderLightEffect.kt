@@ -3,9 +3,12 @@ package io.cyborgsquirrel.lighting.effects
 import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
+import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.model.color.RgbColor
 import org.slf4j.LoggerFactory
 import kotlin.math.abs
+import kotlin.math.log
+import kotlin.math.max
 
 /**
  * Light effect where a light travels from one end of the strip to the other
@@ -57,7 +60,15 @@ class NightriderLightEffect(
             }
 
             for (i in 0..<settings.trailLength) {
-                val interpolationFactor = i.toFloat() / settings.trailLength
+                val interpolationFactor = when (settings.trailFadeCurve) {
+                    FadeCurve.Linear -> i.toFloat() / settings.trailLength
+                    FadeCurve.Logarithmic -> max(
+                        log(
+                            ((i + 1).toFloat() / settings.trailLength) * settings.trailLength,
+                            settings.trailLength.toFloat()
+                        ), 0f
+                    )
+                }
                 val interpolatedColor = if (reflect) dotColor.interpolate(
                     RgbColor.Blank,
                     interpolationFactor
