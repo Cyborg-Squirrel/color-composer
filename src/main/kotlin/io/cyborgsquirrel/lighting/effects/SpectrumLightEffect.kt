@@ -9,11 +9,11 @@ open class SpectrumLightEffect(
     private val settings: SpectrumLightEffectSettings
 ) : LightEffect {
 
-    protected var frame: Long = 0
+    private var frame = 0
     private var iterations = 0
     private var colorWidth = if (settings.colorPixelWidth == 0) settings.colorList.size else settings.colorPixelWidth
     private val colorList = settings.colorList
-    protected var referenceFrame = mutableListOf<RgbColor>()
+    private var referenceFrame = mutableListOf<RgbColor>()
 
     override fun getName(): String {
         return NAME
@@ -43,14 +43,16 @@ open class SpectrumLightEffect(
             return rgbList
         } else {
             if (!settings.animated) {
+                iterations++
+                frame++
                 return referenceFrame
             }
 
             rgbList.addAll(referenceFrame)
         }
 
-        if (frame.toInt() % numberOfLeds != 0) {
-            val shiftedFrame = shift(rgbList, (frame.toInt() % rgbList.size))
+        if (frame % numberOfLeds != 0) {
+            val shiftedFrame = shift(rgbList, (frame % rgbList.size))
             frame++
             return shiftedFrame
         }
