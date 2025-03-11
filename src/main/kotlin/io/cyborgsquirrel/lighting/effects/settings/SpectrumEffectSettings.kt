@@ -4,13 +4,13 @@ import io.cyborgsquirrel.model.color.RgbColor
 import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
-data class SpectrumLightEffectSettings(
+data class SpectrumEffectSettings(
     val colorPixelWidth: Int,
     val colorList: List<RgbColor> = RgbColor.Rainbow,
     val animated: Boolean
 ) {
     companion object {
         fun default(numberOfLeds: Int) =
-            SpectrumLightEffectSettings(numberOfLeds / RgbColor.Rainbow.size, RgbColor.Rainbow, true)
+            SpectrumEffectSettings(numberOfLeds / RgbColor.Rainbow.size, RgbColor.Rainbow, true)
     }
 }

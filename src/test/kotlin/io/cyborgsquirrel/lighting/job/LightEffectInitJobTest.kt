@@ -14,7 +14,7 @@ import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.model.color.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
@@ -43,7 +43,7 @@ class LightEffectInitJobTest(
 ) : StringSpec({
 
     val lightEffectSettings =
-        SpectrumLightEffectSettings.default(60).copy(10, listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
+        SpectrumEffectSettings.default(60).copy(10, listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
     val iterationTriggerSettings = EffectIterationTriggerSettings(25)
 
     fun settingsObjectToMap(settings: Any): Map<String, Any> {
@@ -96,7 +96,7 @@ class LightEffectInitJobTest(
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
-        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumLightEffectSettings::class
+        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumEffectSettings::class
         activeEffectList.first().strip.getUuid() shouldBe strip.uuid
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
@@ -147,7 +147,7 @@ class LightEffectInitJobTest(
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
-        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumLightEffectSettings::class
+        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumEffectSettings::class
         activeEffectList.first().strip.getUuid() shouldBe strip.uuid
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
@@ -205,7 +205,7 @@ class LightEffectInitJobTest(
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
-        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumLightEffectSettings::class
+        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumEffectSettings::class
         activeEffectList.first().strip.getUuid() shouldBe group.uuid
         activeEffectList.first().strip.getName() shouldBe group.name
         activeEffectList.first().status shouldBe lightEffect.status

@@ -16,7 +16,7 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
-import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.model.strip.LedStrip
 import io.cyborgsquirrel.model.strip.LedStripGroupModel
 import io.cyborgsquirrel.model.strip.LedStripModel
@@ -123,7 +123,7 @@ class LightEffectInitJob(
                 numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(effectEntity.settings),
-                    SpectrumLightEffectSettings::class.java
+                    SpectrumEffectSettings::class.java
                 )
             )
 

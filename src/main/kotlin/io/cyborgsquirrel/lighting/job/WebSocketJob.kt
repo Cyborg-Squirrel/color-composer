@@ -7,11 +7,11 @@ import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
+import io.cyborgsquirrel.lighting.effects.FlameLightEffect
 import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.settings.FlameEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
-import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
@@ -68,12 +68,13 @@ class WebSocketJob(
             // Power supply is 4A
             powerLimiterService.setLimit(strip.getUuid(), 4000)
 //            val effect = SpectrumLightEffect(60, SpectrumLightEffectSettings.default(60).copy(colorPixelWidth = 9))
-            val effect = NightriderLightEffect(
-                60,
-                NightriderCometEffectSettings(RgbColor.Rainbow, trailLength = 15, FadeCurve.Linear)
-            )
+//            val effect = NightriderLightEffect(
+//                60,
+//                NightriderCometEffectSettings(RgbColor.Rainbow, trailLength = 15, FadeCurve.Logarithmic)
+//            )
+            val effect = FlameLightEffect(60, FlameEffectSettings(21))
             val filters = listOf(
-                BrightnessFadeFilter(0.01f, 0.99f, Duration.ofSeconds(30), timeHelper),
+                BrightnessFadeFilter(0.1f, .5f, Duration.ofSeconds(30), timeHelper),
                 ReverseFilter(),
                 ReflectionFilter(ReflectionType.HighToLow),
             )
@@ -83,7 +84,7 @@ class WebSocketJob(
             effectRepository.addOrUpdateEffect(activeEffect)
             val triggerTime = LocalDateTime.now()
             val triggerSettings =
-                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(61), null, TriggerType.StartEffect)
+                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(20), null, TriggerType.StartEffect)
             val trigger = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffect.uuid)
 //            val triggerSettings =
 //                SunriseSunsetTriggerSettings(
@@ -123,7 +124,8 @@ class WebSocketJob(
                     when (iterationTwoDigits) {
                         0 -> {
                             lastUpdateIteration = iterationTwoDigits
-                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters))
+                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
+//                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters))
                         }
 
                         16 -> {
@@ -203,7 +205,7 @@ class WebSocketJob(
     }
 
     private fun setupWebSocket() {
-        val uri = UriBuilder.of("ws://192.168.1.10")
+        val uri = UriBuilder.of("ws://192.168.1.15")
             .port(8765)
             .path("test2")
             .build()

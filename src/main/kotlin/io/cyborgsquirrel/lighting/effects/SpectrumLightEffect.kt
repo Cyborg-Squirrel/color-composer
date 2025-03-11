@@ -1,12 +1,12 @@
 package io.cyborgsquirrel.lighting.effects
 
-import io.cyborgsquirrel.lighting.effects.settings.SpectrumLightEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.model.color.RgbColor
 import kotlin.math.ceil
 
 open class SpectrumLightEffect(
     private val numberOfLeds: Int,
-    private val settings: SpectrumLightEffectSettings
+    private val settings: SpectrumEffectSettings
 ) : LightEffect {
 
     private var frame = 0
@@ -62,7 +62,7 @@ open class SpectrumLightEffect(
         return rgbList
     }
 
-    override fun getSettings(): SpectrumLightEffectSettings {
+    override fun getSettings(): SpectrumEffectSettings {
         return settings
     }
 
