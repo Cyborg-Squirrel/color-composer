@@ -9,8 +9,13 @@ data class NightriderCometEffectSettings(
     val colorList: List<RgbColor>,
     val trailLength: Int,
     val trailFadeCurve: FadeCurve,
+    val wrap: Boolean,
 ) : NightriderEffectSettings {
     override fun getColors(): List<RgbColor> {
         return colorList
+    }
+
+    override fun wrap(): Boolean {
+        return wrap
     }
 }

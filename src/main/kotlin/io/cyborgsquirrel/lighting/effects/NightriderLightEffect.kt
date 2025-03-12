@@ -35,7 +35,7 @@ class NightriderLightEffect(
     override fun getNextStep(): List<RgbColor> {
         onNextStep()
         return when (settings) {
-            is NightriderColorFillEffectSettings -> renderNightriderDefault()
+            is NightriderColorFillEffectSettings -> renderNightriderColorFill()
             is NightriderCometEffectSettings -> renderNightriderComet()
         }
     }
@@ -91,14 +91,14 @@ class NightriderLightEffect(
             completeFrame(rgbList, RgbColor.Blank)
         } else {
             logger.warn("Config mismatch! Expected NightriderCometEffectSettings.")
-            renderNightriderDefault()
+            renderNightriderColorFill()
         }
     }
 
-    private fun renderNightriderDefault(): List<RgbColor> {
+    private fun renderNightriderColorFill(): List<RgbColor> {
         val rgbList = mutableListOf<RgbColor>()
         val startingColor = if (reflect) getColor(iterations - 1) else getColor(iterations)
-        val endingColor = if (iterations >= 1) {
+        val endingColor = if (iterations > 0) {
             if (reflect) getColor(iterations) else getColor(iterations - 1)
         } else {
             RgbColor.Blank
@@ -136,6 +136,16 @@ class NightriderLightEffect(
     }
 
     private fun updatePointerLocation() {
+        if (settings.wrap()) {
+            location++
+            if (location >= numberOfLeds) {
+                iterations++
+                location %= numberOfLeds
+                previousLocation = location
+            }
+            return
+        }
+
         when (settings) {
             is NightriderColorFillEffectSettings -> {
                 if (reflect && location > 0) {
@@ -156,6 +166,10 @@ class NightriderLightEffect(
     }
 
     private fun shouldReflect(): Boolean {
+        if (settings.wrap()) {
+            return false
+        }
+
         when (settings) {
             is NightriderColorFillEffectSettings -> {
                 if (reflect && location == 0) {

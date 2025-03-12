@@ -11,6 +11,7 @@ import io.cyborgsquirrel.lighting.effects.FlameLightEffect
 import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.FlameEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
@@ -68,13 +69,18 @@ class WebSocketJob(
             // Power supply is 4A
             powerLimiterService.setLimit(strip.getUuid(), 4000)
 //            val effect = SpectrumLightEffect(60, SpectrumLightEffectSettings.default(60).copy(colorPixelWidth = 9))
-//            val effect = NightriderLightEffect(
-//                60,
-//                NightriderCometEffectSettings(RgbColor.Rainbow, trailLength = 15, FadeCurve.Logarithmic)
-//            )
-            val effect = FlameLightEffect(60, FlameEffectSettings.default())
+            val effect = NightriderLightEffect(
+                60,
+                NightriderCometEffectSettings(
+                    RgbColor.Rainbow,
+                    trailLength = 10,
+                    trailFadeCurve = FadeCurve.Logarithmic,
+                    wrap = false,
+                )
+            )
+//            val effect = FlameLightEffect(60, FlameEffectSettings.default())
             val filters = listOf(
-                BrightnessFadeFilter(0.1f, .5f, Duration.ofSeconds(30), timeHelper),
+                BrightnessFadeFilter(0.1f, .25f, Duration.ofSeconds(30), timeHelper),
                 ReverseFilter(),
                 ReflectionFilter(ReflectionType.HighToLow),
             )
@@ -84,7 +90,7 @@ class WebSocketJob(
             effectRepository.addOrUpdateEffect(activeEffect)
             val triggerTime = LocalDateTime.now()
             val triggerSettings =
-                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(61), null, TriggerType.StartEffect)
+                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(62), null, TriggerType.StartEffect)
             val trigger = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffect.uuid)
 //            val triggerSettings =
 //                SunriseSunsetTriggerSettings(
