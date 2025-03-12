@@ -72,7 +72,7 @@ class WebSocketJob(
 //                60,
 //                NightriderCometEffectSettings(RgbColor.Rainbow, trailLength = 15, FadeCurve.Logarithmic)
 //            )
-            val effect = FlameLightEffect(60, FlameEffectSettings(21))
+            val effect = FlameLightEffect(60, FlameEffectSettings.default())
             val filters = listOf(
                 BrightnessFadeFilter(0.1f, .5f, Duration.ofSeconds(30), timeHelper),
                 ReverseFilter(),

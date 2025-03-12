@@ -14,11 +14,7 @@ import kotlin.random.Random
 class FlameLightEffect(private val numberOfLeds: Int, private val settings: FlameEffectSettings) : LightEffect {
 
     private var iterations = 0
-    private val heat = IntArray(numberOfLeds + 10)
-    private val cooling: Int = 30
-    private val sparking: Int = 140
-    private val sparks: Int = 3
-    private val sparkHeight: Int = 4
+    private val heat = IntArray(numberOfLeds)
 
     override fun getName(): String {
         return LightEffectConstants.FLAME_EFFECT_NAME
@@ -27,7 +23,7 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
     override fun getNextStep(): List<RgbColor> {
         val rgbList = drawFire()
 //        iterations++
-        return rgbList.subList(10, rgbList.size)
+        return rgbList
     }
 
     override fun getSettings(): FlameEffectSettings {
@@ -49,7 +45,7 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
     private fun drawFire(): List<RgbColor> {
         // Cool each cell
         for (i in heat.indices) {
-            heat[i] = max(0, heat[i] - Random.nextInt(0, ((cooling * 10) / heat.size) + 2))
+            heat[i] = max(0, heat[i] - Random.nextInt(0, ((settings.cooling * 10) / heat.size) + 2))
 //            heat[i] = heat[i] % 255
         }
 
@@ -62,12 +58,10 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
         }
 
         // Ignite new sparks
-        for (i in 0 until sparks) {
-            if (Random.nextInt(255) < sparking) {
-                val y = heat.size - 1 - Random.nextInt(sparkHeight)
-                heat[y] = (heat[y] + Random.nextInt(160, 255))
-//                heat[y] = heat[y] % 255
-                heat[y] = min(255, heat[y])
+        for (i in 0 until settings.sparks) {
+            if (Random.nextInt(255) < settings.sparking) {
+                val y = heat.size - 1 - Random.nextInt(settings.sparkHeight)
+                heat[y] = Random.nextInt(200, 255)
             }
         }
 
@@ -88,13 +82,13 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
         val green: UByte
         val blue: UByte
 
-        if (heatVal > 255) {
+        if (heatVal > 170) {
             red = UByte.MAX_VALUE
             green = UByte.MAX_VALUE
-            blue = (((heatVal - 250) / 125.toFloat()) * ubyteMaxAsInt).toInt().toUByte()
-        } else if (heatVal > 120) {
+            blue = (((heatVal - 170) / 170.toFloat()) * ubyteMaxAsInt).toInt().toUByte()
+        } else if (heatVal > 85) {
             red = UByte.MAX_VALUE
-            green = (((heatVal - 120) / 120.toFloat()) * ubyteMaxAsInt).toInt().toUByte()
+            green = (((heatVal - 85) / 85.toFloat()) * ubyteMaxAsInt).toInt().toUByte()
             blue = 0u
         } else {
             red = min(255, heatVal).toUByte()
