@@ -84,7 +84,7 @@ class WebSocketJob(
             effectRepository.addOrUpdateEffect(activeEffect)
             val triggerTime = LocalDateTime.now()
             val triggerSettings =
-                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(20), null, TriggerType.StartEffect)
+                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(61), null, TriggerType.StartEffect)
             val trigger = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffect.uuid)
 //            val triggerSettings =
 //                SunriseSunsetTriggerSettings(

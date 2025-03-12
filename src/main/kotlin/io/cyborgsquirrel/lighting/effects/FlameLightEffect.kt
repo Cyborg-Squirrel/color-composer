@@ -6,20 +6,28 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
+/**
+ * Fire effect inspired by David Plummer's fire effect tutorial
+ *
+ * https://github.com/davepl/DavesGarageLEDSeries/blob/master/LED%20Episode%2011/include/fire.h
+ */
 class FlameLightEffect(private val numberOfLeds: Int, private val settings: FlameEffectSettings) : LightEffect {
 
     private var iterations = 0
-    private val flameBuffer = mutableListOf<RgbColor>()
-    private val fire = FireEffect(numberOfLeds)
+    private val heat = IntArray(numberOfLeds + 10)
+    private val cooling: Int = 30
+    private val sparking: Int = 140
+    private val sparks: Int = 3
+    private val sparkHeight: Int = 4
 
     override fun getName(): String {
         return LightEffectConstants.FLAME_EFFECT_NAME
     }
 
     override fun getNextStep(): List<RgbColor> {
-        val rgbList = fire.drawFire()
+        val rgbList = drawFire()
 //        iterations++
-        return rgbList
+        return rgbList.subList(10, rgbList.size)
     }
 
     override fun getSettings(): FlameEffectSettings {
@@ -37,39 +45,26 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
     override fun getIterations(): Int {
         return iterations
     }
-}
 
-
-class FireEffect(
-    val size: Int,
-    val cooling: Int = 20,
-    val sparking: Int = 100,
-    val sparks: Int = 3,
-    val sparkHeight: Int = 4,
-) {
-    private val heat = IntArray(size)
-
-    fun drawFire(): List<RgbColor> {
-        val rgbList = mutableListOf<RgbColor>()
-
+    private fun drawFire(): List<RgbColor> {
         // Cool each cell
         for (i in heat.indices) {
-            heat[i] = max(0, heat[i] - Random.nextInt(0, ((cooling * 10) / size) + 2))
+            heat[i] = max(0, heat[i] - Random.nextInt(0, ((cooling * 10) / heat.size) + 2))
 //            heat[i] = heat[i] % 255
         }
 
         // Diffuse heat
         for (i in heat.indices) {
             heat[i] = ((heat[i] * BLEND_SELF +
-                    heat[(i + 1) % size] * BLEND_NEIGHBOR_1 +
-                    heat[(i + 2) % size] * BLEND_NEIGHBOR_2 +
-                    heat[(i + 3) % size] * BLEND_NEIGHBOR_3) / BLEND_TOTAL)
+                    heat[(i + 1) % heat.size] * BLEND_NEIGHBOR_1 +
+                    heat[(i + 2) % heat.size] * BLEND_NEIGHBOR_2 +
+                    heat[(i + 3) % heat.size] * BLEND_NEIGHBOR_3) / BLEND_TOTAL)
         }
 
         // Ignite new sparks
         for (i in 0 until sparks) {
             if (Random.nextInt(255) < sparking) {
-                val y = size - 1 - Random.nextInt(sparkHeight)
+                val y = heat.size - 1 - Random.nextInt(sparkHeight)
                 heat[y] = (heat[y] + Random.nextInt(160, 255))
 //                heat[y] = heat[y] % 255
                 heat[y] = min(255, heat[y])
@@ -77,8 +72,9 @@ class FireEffect(
         }
 
         // Convert heat to color
+        val rgbList = mutableListOf<RgbColor>()
         for (i in heat.indices) {
-            val color = colorFromInt(heat[size - 1 - i])
+            val color = colorFromInt(heat[heat.size - 1 - i])
             rgbList.add(color)
         }
 
@@ -92,13 +88,13 @@ class FireEffect(
         val green: UByte
         val blue: UByte
 
-        if (heatVal > 170) {
+        if (heatVal > 255) {
             red = UByte.MAX_VALUE
             green = UByte.MAX_VALUE
-            blue = (((heatVal - 170) / 85.toFloat()) * ubyteMaxAsInt).toInt().toUByte()
-        } else if (heatVal > 85) {
+            blue = (((heatVal - 250) / 125.toFloat()) * ubyteMaxAsInt).toInt().toUByte()
+        } else if (heatVal > 120) {
             red = UByte.MAX_VALUE
-            green = (((heatVal - 85) / 85.toFloat()) * ubyteMaxAsInt).toInt().toUByte()
+            green = (((heatVal - 120) / 120.toFloat()) * ubyteMaxAsInt).toInt().toUByte()
             blue = 0u
         } else {
             red = min(255, heatVal).toUByte()
