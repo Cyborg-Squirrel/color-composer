@@ -124,8 +124,7 @@ class WebSocketJob(
                     when (iterationTwoDigits) {
                         0 -> {
                             lastUpdateIteration = iterationTwoDigits
-                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
-//                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters))
+                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters))
                         }
 
                         16 -> {

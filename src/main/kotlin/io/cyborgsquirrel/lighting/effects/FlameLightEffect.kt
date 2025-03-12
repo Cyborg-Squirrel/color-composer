@@ -13,6 +13,7 @@ import kotlin.random.Random
  */
 class FlameLightEffect(private val numberOfLeds: Int, private val settings: FlameEffectSettings) : LightEffect {
 
+    // TODO how do we count iterations? Do we count iterations for this effect?
     private var iterations = 0
     private val heat = IntArray(numberOfLeds)
 
@@ -22,7 +23,6 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
 
     override fun getNextStep(): List<RgbColor> {
         val rgbList = drawFire()
-//        iterations++
         return rgbList
     }
 
@@ -46,7 +46,6 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
         // Cool each cell
         for (i in heat.indices) {
             heat[i] = max(0, heat[i] - Random.nextInt(0, ((settings.cooling * 10) / heat.size) + 2))
-//            heat[i] = heat[i] % 255
         }
 
         // Diffuse heat
