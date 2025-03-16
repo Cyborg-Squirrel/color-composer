@@ -6,13 +6,9 @@ import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
-import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.FlameLightEffect
-import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
+import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
-import io.cyborgsquirrel.lighting.effects.settings.FlameEffectSettings
-import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
-import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.*
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
@@ -68,21 +64,22 @@ class WebSocketJob(
             val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1)
             // Power supply is 4A
             powerLimiterService.setLimit(strip.getUuid(), 4000)
-//            val effect = SpectrumLightEffect(60, SpectrumLightEffectSettings.default(60).copy(colorPixelWidth = 9))
-            val effect = NightriderLightEffect(
-                60,
-                NightriderCometEffectSettings(
-                    RgbColor.Rainbow,
-                    trailLength = 10,
-                    trailFadeCurve = FadeCurve.Logarithmic,
-                    wrap = false,
-                )
-            )
+//            val effect = SpectrumLightEffect(60, SpectrumEffectSettings.default(60).copy(colorPixelWidth = 9))
+//            val effect = NightriderLightEffect(
+//                60,
+//                NightriderColorFillEffectSettings(
+//                    RgbColor.Rainbow.map { it.scale(0.2f) },
+//                    trailLength = 10,
+//                    trailFadeCurve = FadeCurve.Logarithmic,
+//                    wrap = false,
+//                )
+//            )
 //            val effect = FlameLightEffect(60, FlameEffectSettings.default())
+            val effect = BouncingBallLightEffect(60, timeHelper, BouncingBallEffectSettings.default())
             val filters = listOf(
-                BrightnessFadeFilter(0.1f, .25f, Duration.ofSeconds(30), timeHelper),
+                BrightnessFadeFilter(0.1f, .95f, Duration.ofSeconds(30), timeHelper),
                 ReverseFilter(),
-                ReflectionFilter(ReflectionType.HighToLow),
+                ReflectionFilter(ReflectionType.CopyOverCenter),
             )
             var activeEffect = ActiveLightEffect(
                 UUID.randomUUID().toString(), 1, true, LightEffectStatus.Created, effect, strip, filters
@@ -90,7 +87,7 @@ class WebSocketJob(
             effectRepository.addOrUpdateEffect(activeEffect)
             val triggerTime = LocalDateTime.now()
             val triggerSettings =
-                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(62), null, TriggerType.StartEffect)
+                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(60), null, TriggerType.StartEffect)
             val trigger = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffect.uuid)
 //            val triggerSettings =
 //                SunriseSunsetTriggerSettings(
@@ -212,7 +209,7 @@ class WebSocketJob(
     private fun setupWebSocket() {
         val uri = UriBuilder.of("ws://192.168.1.15")
             .port(8765)
-            .path("test2")
+            .path("test")
             .build()
         val future = CompletableFuture<LedStripWebSocketClient>()
         val clientPublisher = webSocketClient.connect(LedStripWebSocketClient::class.java, uri)

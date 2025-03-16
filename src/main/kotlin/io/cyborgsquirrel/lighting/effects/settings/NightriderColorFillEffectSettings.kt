@@ -6,7 +6,7 @@ import io.micronaut.serde.annotation.Serdeable
 @Serdeable
 data class NightriderColorFillEffectSettings(
     val colorList: List<RgbColor>,
-    val wrap: Boolean,
+    val wrap: Boolean = false,
 ) : NightriderEffectSettings {
     override fun getColors(): List<RgbColor> {
         return colorList

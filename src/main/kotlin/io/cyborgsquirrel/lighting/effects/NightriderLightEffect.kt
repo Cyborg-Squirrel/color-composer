@@ -115,9 +115,7 @@ class NightriderLightEffect(
         return completeFrame(rgbList, endingColor)
     }
 
-    override fun getSettings(): NightriderEffectSettings {
-        return settings
-    }
+    override fun getSettings() = settings
 
     override fun complete() {
         TODO("Not yet implemented")

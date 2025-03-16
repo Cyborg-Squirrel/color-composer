@@ -62,9 +62,7 @@ open class SpectrumLightEffect(
         return rgbList
     }
 
-    override fun getSettings(): SpectrumEffectSettings {
-        return settings
-    }
+    override fun getSettings() = settings
 
     override fun complete() {
         TODO("Not yet implemented")

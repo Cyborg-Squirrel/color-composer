@@ -17,18 +17,14 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
     private var iterations = 0
     private val heat = IntArray(numberOfLeds)
 
-    override fun getName(): String {
-        return LightEffectConstants.FLAME_EFFECT_NAME
-    }
+    override fun getName() = LightEffectConstants.FLAME_EFFECT_NAME
 
     override fun getNextStep(): List<RgbColor> {
         val rgbList = drawFire()
         return rgbList
     }
 
-    override fun getSettings(): FlameEffectSettings {
-        return settings
-    }
+    override fun getSettings() = settings
 
     override fun complete() {
         TODO("Not yet implemented")
@@ -38,9 +34,7 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
         TODO("Not yet implemented")
     }
 
-    override fun getIterations(): Int {
-        return iterations
-    }
+    override fun getIterations() = iterations
 
     private fun drawFire(): List<RgbColor> {
         // Cool each cell
