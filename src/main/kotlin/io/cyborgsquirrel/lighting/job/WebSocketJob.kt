@@ -76,19 +76,21 @@ class WebSocketJob(
 //            )
 //            val effect = FlameLightEffect(60, FlameEffectSettings.default())
             val effect = BouncingBallLightEffect(
-                60,
+                strip.getLength(),
                 timeHelper,
-                BouncingBallEffectSettings.default()
+                BouncingBallEffectSettings.default(strip.getLength())
             )
             val effectB = BouncingBallLightEffect(
-                60,
+                strip.getLength(),
                 timeHelper,
-                BouncingBallEffectSettings.default().copy(speed = 4.5, ballColor = RgbColor.Blue, startingHeight = 10.0)
+                effect.getSettings()
+                    .copy(speed = 4.25, ballColor = RgbColor.Blue, startingHeight = 10.0, maxHeight = 50)
             )
             val effectC = BouncingBallLightEffect(
-                60,
+                strip.getLength(),
                 timeHelper,
-                BouncingBallEffectSettings.default().copy(speed = 5.0, ballColor = RgbColor.Green, startingHeight = 20.0)
+                effect.getSettings()
+                    .copy(speed = 4.5, ballColor = RgbColor.Green, startingHeight = 20.0, maxHeight = 40)
             )
 
             val filters = listOf(

@@ -77,7 +77,7 @@ class BouncingBallLightEffect(
             }
         }
 
-        val position = (height * (numberOfLeds - 1) / settings.startingHeight).toInt()
+        val position = (height * settings.maxHeight / settings.startingHeight).toInt() % numberOfLeds
         return position
     }
 
