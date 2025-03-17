@@ -43,6 +43,10 @@ data class RgbColor(val red: UByte, val green: UByte, val blue: UByte) {
         return red.toInt() == 0 && green.toInt() == 0 && blue.toInt() == 0
     }
 
+    operator fun plus(other: RgbColor): RgbColor {
+        return RgbColor((red + other.red).toUByte(), (green + other.green).toUByte(), (blue + other.blue).toUByte())
+    }
+
     private fun interpolate(a: Int, b: Int, interpolation: Float): Int {
         return (a - (a - b) * interpolation).toInt()
     }

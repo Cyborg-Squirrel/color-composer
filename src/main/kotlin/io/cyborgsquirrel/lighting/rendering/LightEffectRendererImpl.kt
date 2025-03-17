@@ -31,7 +31,7 @@ class LightEffectRendererImpl(
             return Optional.empty()
         }
 
-        val renderedEffectRgbData = mutableListOf<List<RgbColor>>()
+        val allEffectsRgbData = mutableListOf<List<RgbColor>>()
         for (activeEffect in activeEffects) {
             when (activeEffect.strip) {
                 is LedStripModel -> {
@@ -57,7 +57,7 @@ class LightEffectRendererImpl(
                     }
 
                     rgbData = powerLimiterService.applyLimit(rgbData, activeEffect.strip.getUuid())
-                    renderedEffectRgbData.add(rgbData)
+                    allEffectsRgbData.add(rgbData)
                 }
 
                 is LedStripGroupModel -> {
@@ -68,8 +68,30 @@ class LightEffectRendererImpl(
             }
         }
 
+        // If there are multiple effects, layer the RGB output on top of each other.
+        val renderedRgbData = mutableListOf<RgbColor>()
+        val stripLength = activeEffects.first().strip.getLength()
+        for (i in 0..<stripLength) {
+            var didAdd = false
+            for (j in allEffectsRgbData.indices) {
+                val rgbColor = allEffectsRgbData[j][i]
+                if (!rgbColor.isBlank()) {
+                    if (didAdd) {
+                        renderedRgbData[i] += rgbColor
+                    } else {
+                        didAdd = true
+                        renderedRgbData.add(rgbColor)
+                    }
+                }
+            }
+
+            if (!didAdd) {
+                renderedRgbData.add(RgbColor.Blank)
+            }
+        }
+
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame groups
-        return Optional.of(RenderedFrameModel(0, lightUuid, renderedEffectRgbData.first(), -1))
+        return Optional.of(RenderedFrameModel(0, lightUuid, renderedRgbData, -1))
     }
 
     companion object {

@@ -75,20 +75,44 @@ class WebSocketJob(
 //                )
 //            )
 //            val effect = FlameLightEffect(60, FlameEffectSettings.default())
-            val effect = BouncingBallLightEffect(60, timeHelper, BouncingBallEffectSettings.default())
+            val effect = BouncingBallLightEffect(
+                60,
+                timeHelper,
+                BouncingBallEffectSettings.default()
+            )
+            val effectB = BouncingBallLightEffect(
+                60,
+                timeHelper,
+                BouncingBallEffectSettings.default().copy(speed = 4.5, ballColor = RgbColor.Blue, startingHeight = 10.0)
+            )
+            val effectC = BouncingBallLightEffect(
+                60,
+                timeHelper,
+                BouncingBallEffectSettings.default().copy(speed = 5.0, ballColor = RgbColor.Green, startingHeight = 20.0)
+            )
+
             val filters = listOf(
                 BrightnessFadeFilter(0.1f, .95f, Duration.ofSeconds(30), timeHelper),
                 ReverseFilter(),
                 ReflectionFilter(ReflectionType.CopyOverCenter),
             )
+
             var activeEffect = ActiveLightEffect(
                 UUID.randomUUID().toString(), 1, true, LightEffectStatus.Created, effect, strip, filters
             )
+            val activeEffectB = activeEffect.copy(uuid = UUID.randomUUID().toString(), effect = effectB)
+            val activeEffectC = activeEffect.copy(uuid = UUID.randomUUID().toString(), effect = effectC)
+
             effectRepository.addOrUpdateEffect(activeEffect)
+            effectRepository.addOrUpdateEffect(activeEffectB)
+            effectRepository.addOrUpdateEffect(activeEffectC)
+
             val triggerTime = LocalDateTime.now()
             val triggerSettings =
                 TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(60), null, TriggerType.StartEffect)
             val trigger = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffect.uuid)
+            val triggerB = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffectB.uuid)
+            val triggerC = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffectC.uuid)
 //            val triggerSettings =
 //                SunriseSunsetTriggerSettings(
 //                    SunriseSunsetOption.Sunrise,
@@ -105,6 +129,8 @@ class WebSocketJob(
 //                activeEffect.uuid
 //            )
             triggerManager.addTrigger(trigger)
+            triggerManager.addTrigger(triggerB)
+            triggerManager.addTrigger(triggerC)
 
             val fps = 35
             var lastFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
