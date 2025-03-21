@@ -7,6 +7,6 @@ data class FlameEffectSettings(
     val sparkHeight: Int
 ) {
     companion object {
-        fun default() = FlameEffectSettings(12, 140, 1, 3)
+        fun default() = FlameEffectSettings(11, 140, 1, 3)
     }
 }

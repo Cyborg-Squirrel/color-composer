@@ -64,57 +64,63 @@ class WebSocketJob(
             val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1)
             // Power supply is 4A
             powerLimiterService.setLimit(strip.getUuid(), 4000)
-//            val effect = SpectrumLightEffect(60, SpectrumEffectSettings.default(60).copy(colorPixelWidth = 9))
-//            val effect = NightriderLightEffect(
-//                60,
-//                NightriderColorFillEffectSettings(
-//                    RgbColor.Rainbow.map { it.scale(0.2f) },
-//                    trailLength = 10,
-//                    trailFadeCurve = FadeCurve.Logarithmic,
-//                    wrap = false,
+
+            val effects = listOf(
+                BouncingBallLightEffect(
+                    strip.getLength(),
+                    timeHelper,
+                    BouncingBallEffectSettings.default(strip.getLength())
+                ),
+                BouncingBallLightEffect(
+                    strip.getLength(),
+                    timeHelper,
+                    BouncingBallEffectSettings.default(strip.getLength())
+                        .copy(speed = 4.0, ballColor = RgbColor.Blue, startingHeight = 10.0, maxHeight = 50)
+                ),
+                BouncingBallLightEffect(
+                    strip.getLength(),
+                    timeHelper,
+                    BouncingBallEffectSettings.default(strip.getLength())
+                        .copy(speed = 4.0, ballColor = RgbColor.Green, startingHeight = 20.0, maxHeight = 40)
+                ),
+//                NightriderLightEffect(
+//                    strip.getLength(),
+//                    NightriderCometEffectSettings(RgbColor.Rainbow, 10, FadeCurve.Logarithmic, false)
+//                ),
+//                FlameLightEffect(60, FlameEffectSettings.default()),
+//                SpectrumLightEffect(60, SpectrumEffectSettings.default(60).copy(colorPixelWidth = 9)),
+//                NightriderLightEffect(
+//                    60, NightriderColorFillEffectSettings(RgbColor.Rainbow.map { it.scale(0.2f) }, wrap = false)
 //                )
-//            )
-//            val effect = FlameLightEffect(60, FlameEffectSettings.default())
-            val effect = BouncingBallLightEffect(
-                strip.getLength(),
-                timeHelper,
-                BouncingBallEffectSettings.default(strip.getLength())
-            )
-            val effectB = BouncingBallLightEffect(
-                strip.getLength(),
-                timeHelper,
-                effect.getSettings()
-                    .copy(speed = 4.25, ballColor = RgbColor.Blue, startingHeight = 10.0, maxHeight = 50)
-            )
-            val effectC = BouncingBallLightEffect(
-                strip.getLength(),
-                timeHelper,
-                effect.getSettings()
-                    .copy(speed = 4.5, ballColor = RgbColor.Green, startingHeight = 20.0, maxHeight = 40)
             )
 
             val filters = listOf(
-                BrightnessFadeFilter(0.1f, .95f, Duration.ofSeconds(30), timeHelper),
+                BrightnessFadeFilter(0.1f, 1.0f, Duration.ofSeconds(30), timeHelper),
                 ReverseFilter(),
                 ReflectionFilter(ReflectionType.CopyOverCenter),
             )
 
-            var activeEffect = ActiveLightEffect(
-                UUID.randomUUID().toString(), 1, true, LightEffectStatus.Created, effect, strip, filters
-            )
-            val activeEffectB = activeEffect.copy(uuid = UUID.randomUUID().toString(), effect = effectB)
-            val activeEffectC = activeEffect.copy(uuid = UUID.randomUUID().toString(), effect = effectC)
+            val activeEffects = effects.map { e ->
+                ActiveLightEffect(
+                    UUID.randomUUID().toString(), 1, true, LightEffectStatus.Created, e, strip, filters
+                )
+            }
 
-            effectRepository.addOrUpdateEffect(activeEffect)
-            effectRepository.addOrUpdateEffect(activeEffectB)
-            effectRepository.addOrUpdateEffect(activeEffectC)
+            activeEffects.forEach {
+                effectRepository.addOrUpdateEffect(it)
+            }
 
             val triggerTime = LocalDateTime.now()
             val triggerSettings =
-                TimeTriggerSettings(triggerTime.toLocalTime(), Duration.ofSeconds(60), null, TriggerType.StartEffect)
-            val trigger = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffect.uuid)
-            val triggerB = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffectB.uuid)
-            val triggerC = TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), activeEffectC.uuid)
+                TimeTriggerSettings(
+                    triggerTime.toLocalTime(),
+                    Duration.ofSeconds(60 * 5),
+                    null,
+                    TriggerType.StartEffect
+                )
+            val triggers = activeEffects.map { ae ->
+                TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), ae.uuid)
+            }
 //            val triggerSettings =
 //                SunriseSunsetTriggerSettings(
 //                    SunriseSunsetOption.Sunrise,
@@ -130,11 +136,12 @@ class WebSocketJob(
 //                triggerSettings,
 //                activeEffect.uuid
 //            )
-            triggerManager.addTrigger(trigger)
-            triggerManager.addTrigger(triggerB)
-            triggerManager.addTrigger(triggerC)
+            triggers.forEach {
+                triggerManager.addTrigger(it)
+            }
 
             val fps = 35
+            val bufferTimeInSeconds = 1L
             var lastFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
             var timestampMillis = 0L
             var isBlankFrame = false
@@ -143,10 +150,11 @@ class WebSocketJob(
 
             while (!isBlankFrame || !hasHadNonBlankFrame) {
                 triggerManager.processTriggers()
-                val iterationsString = effect.getIterations().toString()
+                val iterationsString = effects.first().getIterations().toString()
                 val numberLength = min(iterationsString.length, 2)
                 val startIndex = max(iterationsString.length - numberLength, 0)
                 val iterationTwoDigits = iterationsString.substring(startIndex, startIndex + numberLength).toInt()
+                /*
                 activeEffect = effectRepository.findEffectWithUuid(activeEffect.uuid).get()
 
                 // Once we reach the specified iteration count update the effect in the repository
@@ -178,6 +186,7 @@ class WebSocketJob(
                         }
                     }
                 }
+                 */
 
                 val frame = renderer.renderFrame(strip.getUuid(), 0)
                 isBlankFrame = frame.isEmpty || (frame.isPresent && frame.get().frameData.isEmpty())
@@ -192,8 +201,10 @@ class WebSocketJob(
                         sleep(250)
                     }
                 } else {
-                    if (timestampMillis == 0L) {
-                        timestampMillis = Timestamp.from(Instant.now()).time
+                    val currentTimeAsMillis = Timestamp.from(Instant.now()).time
+                    if (timestampMillis < currentTimeAsMillis) {
+                        logger.info("Frame timestamp is in the past. Jumping it forward to current time.")
+                        timestampMillis = currentTimeAsMillis
                     }
                     timestampMillis += 1000 / fps
                     val rgbData = frame.get().frameData
@@ -202,11 +213,10 @@ class WebSocketJob(
                     client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
                     lastFrameTimestamp = LocalDateTime.now()
 
-                    // Slow down to ensure we only buffer one second's worth of frames.
-                    // Prevent overloading of the client and improve responsiveness to a request to start/stop the effect.
-                    val nowPlusOneSecond = Timestamp.from(Instant.now().plusSeconds(1)).time
-                    if (nowPlusOneSecond < timestampMillis) {
-                        val diff = timestampMillis - nowPlusOneSecond
+                    // Slow down to ensure we only buffer the specified amount of time into the future.
+                    val nowPlusBufferSeconds = Timestamp.from(Instant.now().plusSeconds(bufferTimeInSeconds)).time
+                    if (nowPlusBufferSeconds < timestampMillis) {
+                        val diff = timestampMillis - nowPlusBufferSeconds
                         sleep(diff)
                     }
                 }
@@ -235,7 +245,7 @@ class WebSocketJob(
     }
 
     private fun setupWebSocket() {
-        val uri = UriBuilder.of("ws://192.168.1.15")
+        val uri = UriBuilder.of("ws://192.168.1.10")
             .port(8765)
             .path("test")
             .build()
