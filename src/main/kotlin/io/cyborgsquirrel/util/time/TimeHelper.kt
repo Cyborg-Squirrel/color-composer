@@ -17,5 +17,7 @@ interface TimeHelper {
 
     fun millisSinceEpoch(): Long
 
+    fun dateTimeFromMillis(millisSinceEpoch: Long): LocalDateTime
+
     fun utcTimestampToZoneDateTime(utcDateTimeString: String): ZonedDateTime
 }

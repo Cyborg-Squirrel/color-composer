@@ -29,6 +29,11 @@ class TimeHelperImpl : TimeHelper {
         return Timestamp.from(Instant.now()).time
     }
 
+    override fun dateTimeFromMillis(millisSinceEpoch: Long): LocalDateTime {
+        val instant = Instant.ofEpochMilli(millisSinceEpoch)
+        return LocalDateTime.ofInstant(instant, TimeZone.getDefault().toZoneId())
+    }
+
     override fun utcTimestampToZoneDateTime(utcDateTimeString: String): ZonedDateTime {
         return ZonedDateTime.parse(utcDateTimeString, formatter).withZoneSameInstant(
             TimeZone.getDefault().toZoneId()

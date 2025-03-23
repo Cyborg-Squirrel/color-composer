@@ -1,20 +1,21 @@
 package io.cyborgsquirrel.lighting.job
 
+import io.cyborgsquirrel.client_config.client.ConfigClient
+import io.cyborgsquirrel.entity.LedStripClientEntity
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.config.WebSocketJobConfig
 import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
-import io.cyborgsquirrel.lighting.effects.*
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.BouncingBallLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
-import io.cyborgsquirrel.lighting.effects.settings.*
-import io.cyborgsquirrel.lighting.enums.FadeCurve
+import io.cyborgsquirrel.lighting.effects.settings.BouncingBallEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFadeFilter
-import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReverseFilter
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
@@ -37,6 +38,7 @@ import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
@@ -51,16 +53,25 @@ class WebSocketJob(
     private val effectRepository: ActiveLightEffectRegistry,
     private val timeHelper: TimeHelper,
     private val powerLimiterService: PowerLimiterService,
+    private val configClient: ConfigClient,
 ) : Runnable {
 
     private val configList = mutableListOf<WebSocketJobConfig>()
     private val serializer = RgbFrameDataSerializer()
     private var client: LedStripWebSocketClient? = null
+    private val clientEntity =
+        LedStripClientEntity(address = "http://192.168.1.10", name = "Pi Client", wsPort = 8765, apiPort = 8000)
+    // Difference in millis between the client and server.
+    // Negative values mean the client's clock is behind the server, positive values mean the client's clock is ahead.
+    private var clientTimeOffset: Long = 0L
+    private val fps = 35
+    private val bufferTimeInSeconds = 1L
 
     override fun run() {
         logger.info("Start")
         try {
             setupWebSocket()
+            syncClientTime()
             val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1)
             // Power supply is 4A
             powerLimiterService.setLimit(strip.getUuid(), 4000)
@@ -114,7 +125,7 @@ class WebSocketJob(
             val triggerSettings =
                 TimeTriggerSettings(
                     triggerTime.toLocalTime(),
-                    Duration.ofSeconds(60 * 5),
+                    Duration.ofSeconds(60 * 15),
                     null,
                     TriggerType.StartEffect
                 )
@@ -140,10 +151,8 @@ class WebSocketJob(
                 triggerManager.addTrigger(it)
             }
 
-            val fps = 35
-            val bufferTimeInSeconds = 1L
             var lastFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
-            var timestampMillis = 0L
+            var timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
             var isBlankFrame = false
             var hasHadNonBlankFrame = false
             var lastUpdateIteration = -1
@@ -194,17 +203,18 @@ class WebSocketJob(
                 if (isBlankFrame) {
                     if (lastFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
                         logger.info("Sending keep-alive frame")
-                        val timestamp = Timestamp.from(Instant.now()).time
+                        val timestamp = timeHelper.millisSinceEpoch()
                         sendBlankFrame(timestamp)
                         lastFrameTimestamp = LocalDateTime.now()
                     } else {
                         sleep(250)
                     }
                 } else {
-                    val currentTimeAsMillis = Timestamp.from(Instant.now()).time
-                    if (timestampMillis < currentTimeAsMillis) {
+                    val currentTimeAsMillis = timeHelper.millisSinceEpoch()
+                    if (timestampMillis < currentTimeAsMillis + clientTimeOffset) {
                         logger.info("Frame timestamp is in the past. Jumping it forward to current time.")
-                        timestampMillis = currentTimeAsMillis
+                        syncClientTime()
+                        timestampMillis = currentTimeAsMillis + clientTimeOffset
                     }
                     timestampMillis += 1000 / fps
                     val rgbData = frame.get().frameData
@@ -242,6 +252,26 @@ class WebSocketJob(
         val frameData = RgbFrameData(timestamp, rgbData)
         val frame = serializer.encode(frameData)
         client?.send(frame)?.get(1, TimeUnit.SECONDS)
+    }
+
+    private fun syncClientTime() {
+        val requestTimestamp = timeHelper.millisSinceEpoch()
+        val clientTime = configClient.getClientTime(clientEntity)
+        val responseTimestamp = timeHelper.millisSinceEpoch()
+
+        // Assume request and response take the same amount of time for the network to transmit
+        // Divide by 2 so we only count the transmission time going one way
+        val requestResponseDuration = (responseTimestamp - requestTimestamp) / 2
+        val adjustedClientTime = clientTime.millisSinceEpoch - requestResponseDuration
+        val offset = adjustedClientTime - responseTimestamp
+
+        // Ignore time offsets less than 10ms
+        clientTimeOffset = if (abs(offset) > 10) {
+            offset
+        } else {
+            0L
+        }
+        logger.info("Client time sync complete. Offset in millis: $clientTimeOffset")
     }
 
     private fun setupWebSocket() {
