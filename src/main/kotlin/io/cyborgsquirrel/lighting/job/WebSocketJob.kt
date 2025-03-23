@@ -61,11 +61,13 @@ class WebSocketJob(
     private var client: LedStripWebSocketClient? = null
     private val clientEntity =
         LedStripClientEntity(address = "http://192.168.1.10", name = "Pi Client", wsPort = 8765, apiPort = 8000)
+
     // Difference in millis between the client and server.
     // Negative values mean the client's clock is behind the server, positive values mean the client's clock is ahead.
     private var clientTimeOffset: Long = 0L
     private val fps = 35
     private val bufferTimeInSeconds = 1L
+    private var lastTimeSyncPerformedAt = 0L
 
     override fun run() {
         logger.info("Start")
@@ -255,23 +257,29 @@ class WebSocketJob(
     }
 
     private fun syncClientTime() {
-        val requestTimestamp = timeHelper.millisSinceEpoch()
-        val clientTime = configClient.getClientTime(clientEntity)
-        val responseTimestamp = timeHelper.millisSinceEpoch()
+        val timeSinceLastSync = timeHelper.millisSinceEpoch() - lastTimeSyncPerformedAt
+        // Don't sync more often than every 60 seconds
+        if (timeSinceLastSync > 1000 * 60) {
+            val requestTimestamp = timeHelper.millisSinceEpoch()
+            val clientTime = configClient.getClientTime(clientEntity)
+            val responseTimestamp = timeHelper.millisSinceEpoch()
 
-        // Assume request and response take the same amount of time for the network to transmit
-        // Divide by 2 so we only count the transmission time going one way
-        val requestResponseDuration = (responseTimestamp - requestTimestamp) / 2
-        val adjustedClientTime = clientTime.millisSinceEpoch - requestResponseDuration
-        val offset = adjustedClientTime - responseTimestamp
+            // Assume request and response take the same amount of time for the network to transmit
+            // Divide by 2 so we only count the transmission time going one way
+            val requestResponseDuration = (responseTimestamp - requestTimestamp) / 2
+            val adjustedClientTime = clientTime.millisSinceEpoch - requestResponseDuration
+            val offset = adjustedClientTime - responseTimestamp
 
-        // Ignore time offsets less than 10ms
-        clientTimeOffset = if (abs(offset) > 10) {
-            offset
-        } else {
-            0L
+            // Ignore time offsets less than 10ms
+            clientTimeOffset = if (abs(offset) > 10) {
+                offset
+            } else {
+                0L
+            }
+
+            lastTimeSyncPerformedAt = responseTimestamp
+            logger.info("Client time sync complete. Offset in millis: $clientTimeOffset")
         }
-        logger.info("Client time sync complete. Offset in millis: $clientTimeOffset")
     }
 
     private fun setupWebSocket() {
