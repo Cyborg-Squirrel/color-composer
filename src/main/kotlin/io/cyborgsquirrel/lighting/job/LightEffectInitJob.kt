@@ -78,9 +78,9 @@ class LightEffectInitJob(
                         }
                     }
 
-                    val filter = getFilter(effectEntity)
-                    if (filter != null) {
-                        activeLightEffectRegistry.addOrUpdateEffect(activeEffect.copy(filters = activeEffect.filters + filter))
+                    val filters = getFilters(effectEntity)
+                    if (filters.isNotEmpty()) {
+                        activeLightEffectRegistry.addOrUpdateEffect(activeEffect.copy(filters = activeEffect.filters + filters))
                     }
                 }
 
@@ -146,8 +146,7 @@ class LightEffectInitJob(
         return if (effectEntity.triggers.isEmpty()) {
             listOf()
         } else {
-            val triggers = effectEntity.triggers
-            return triggers.map { trigger ->
+            effectEntity.triggers.map { trigger ->
                 when (trigger.name) {
                     LightEffectTriggerConstants.ITERATION_TRIGGER_NAME -> {
                         EffectIterationTrigger(
@@ -196,50 +195,51 @@ class LightEffectInitJob(
         }
     }
 
-    // TODO: one effect multiple filters support
-    private fun getFilter(effectEntity: LightEffectEntity): LightEffectFilter? {
+    private fun getFilters(effectEntity: LightEffectEntity): List<LightEffectFilter> {
         return if (effectEntity.filters.isEmpty()) {
-            null
+            listOf()
         } else {
-            val filter = effectEntity.filters.first()
-            when (filter.name) {
-                LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME -> {
-                    BrightnessFadeFilter(
-                        timeHelper = timeHelper,
-                        settings = objectMapper.readValueFromTree(
-                            JsonNode.from(filter.settings),
-                            BrightnessFadeFilterSettings::class.java
-                        ),
-                        uuid = filter.uuid!!
-                    )
-                }
+            effectEntity.filters.map { filter ->
+                when (filter.name) {
+                    LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME -> {
+                        BrightnessFadeFilter(
+                            timeHelper = timeHelper,
+                            settings = objectMapper.readValueFromTree(
+                                JsonNode.from(filter.settings),
+                                BrightnessFadeFilterSettings::class.java
+                            ),
+                            uuid = filter.uuid!!
+                        )
+                    }
 
-                LightEffectFilterConstants.BRIGHTNESS_FILTER_NAME -> {
-                    BrightnessFilter(
-                        settings = objectMapper.readValueFromTree(
-                            JsonNode.from(filter.settings),
-                            BrightnessFilterSettings::class.java
-                        ),
-                        uuid = filter.uuid!!
-                    )
-                }
+                    LightEffectFilterConstants.BRIGHTNESS_FILTER_NAME -> {
+                        BrightnessFilter(
+                            settings = objectMapper.readValueFromTree(
+                                JsonNode.from(filter.settings),
+                                BrightnessFilterSettings::class.java
+                            ),
+                            uuid = filter.uuid!!
+                        )
+                    }
 
-                LightEffectFilterConstants.REFLECTION_FILTER_NAME -> {
-                    ReflectionFilter(
-                        settings = objectMapper.readValueFromTree(
-                            JsonNode.from(filter.settings),
-                            ReflectionFilterSettings::class.java
-                        ),
-                        uuid = filter.uuid!!
-                    )
-                }
+                    LightEffectFilterConstants.REFLECTION_FILTER_NAME -> {
+                        ReflectionFilter(
+                            settings = objectMapper.readValueFromTree(
+                                JsonNode.from(filter.settings),
+                                ReflectionFilterSettings::class.java
+                            ),
+                            uuid = filter.uuid!!
+                        )
+                    }
 
-                LightEffectFilterConstants.REVERSE_FILTER_NAME -> {
-                    // Reverse filter doesn't have settings
-                    ReverseFilter(uuid = filter.uuid!!)
-                }
+                    LightEffectFilterConstants.REVERSE_FILTER_NAME -> {
+                        // Reverse filter doesn't have settings
+                        ReverseFilter(uuid = filter.uuid!!)
+                    }
 
-                else -> throw IllegalArgumentException("Unknown LightEffectFilter name: ${filter.name}")
+                    // TODO throwing an Exception is not ideal. Logger.error instead?
+                    else -> throw IllegalArgumentException("Unknown LightEffectFilter name: ${filter.name}")
+                }
             }
         }
     }
