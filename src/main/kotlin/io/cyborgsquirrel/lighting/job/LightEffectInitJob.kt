@@ -17,7 +17,6 @@ import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
-import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.filters.*
 import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFilterSettings
@@ -72,9 +71,11 @@ class LightEffectInitJob(
 
                     activeLightEffectRegistry.addOrUpdateEffect(activeEffect)
 
-                    val trigger = getTrigger(effectEntity)
-                    if (trigger != null) {
-                        triggerManager.addTrigger(trigger)
+                    val triggers = getTriggers(effectEntity)
+                    if (triggers.isNotEmpty()) {
+                        triggers.forEach {
+                            triggerManager.addTrigger(it)
+                        }
                     }
 
                     val filter = getFilter(effectEntity)
@@ -141,54 +142,56 @@ class LightEffectInitJob(
         }
     }
 
-    // TODO: one effect multiple triggers support
-    private fun getTrigger(effectEntity: LightEffectEntity): LightEffectTrigger? {
+    private fun getTriggers(effectEntity: LightEffectEntity): List<LightEffectTrigger> {
         return if (effectEntity.triggers.isEmpty()) {
-            null
+            listOf()
         } else {
-            val trigger = effectEntity.triggers.first()
-            when (trigger.name) {
-                LightEffectTriggerConstants.ITERATION_TRIGGER_NAME -> {
-                    EffectIterationTrigger(
-                        timeHelper = timeHelper,
-                        effectRegistry = activeLightEffectRegistry,
-                        settings = objectMapper.readValueFromTree(
-                            JsonNode.from(trigger.settings),
-                            EffectIterationTriggerSettings::class.java
-                        ),
-                        uuid = trigger.uuid!!,
-                        effectUuid = effectEntity.uuid!!,
-                    )
-                }
+            val triggers = effectEntity.triggers
+            return triggers.map { trigger ->
+                when (trigger.name) {
+                    LightEffectTriggerConstants.ITERATION_TRIGGER_NAME -> {
+                        EffectIterationTrigger(
+                            timeHelper = timeHelper,
+                            effectRegistry = activeLightEffectRegistry,
+                            settings = objectMapper.readValueFromTree(
+                                JsonNode.from(trigger.settings),
+                                EffectIterationTriggerSettings::class.java
+                            ),
+                            uuid = trigger.uuid!!,
+                            effectUuid = effectEntity.uuid!!,
+                        )
+                    }
 
-                LightEffectTriggerConstants.TIME_TRIGGER_NAME -> {
-                    TimeTrigger(
-                        timeHelper = timeHelper,
-                        settings = objectMapper.readValueFromTree(
-                            JsonNode.from(trigger.settings),
-                            TimeTriggerSettings::class.java
-                        ),
-                        uuid = trigger.uuid!!,
-                        effectUuid = effectEntity.uuid!!,
-                    )
-                }
+                    LightEffectTriggerConstants.TIME_TRIGGER_NAME -> {
+                        TimeTrigger(
+                            timeHelper = timeHelper,
+                            settings = objectMapper.readValueFromTree(
+                                JsonNode.from(trigger.settings),
+                                TimeTriggerSettings::class.java
+                            ),
+                            uuid = trigger.uuid!!,
+                            effectUuid = effectEntity.uuid!!,
+                        )
+                    }
 
-                LightEffectTriggerConstants.SUNRISE_SUNSET_TRIGGER_NAME -> {
-                    SunriseSunsetTrigger(
-                        sunriseSunsetTimeRepository = sunriseSunsetTimeRepository,
-                        locationConfigRepository = locationConfigRepository,
-                        objectMapper = objectMapper,
-                        timeHelper = timeHelper,
-                        settings = objectMapper.readValueFromTree(
-                            JsonNode.from(trigger.settings),
-                            SunriseSunsetTriggerSettings::class.java
-                        ),
-                        uuid = trigger.uuid!!,
-                        effectUuid = effectEntity.uuid!!,
-                    )
-                }
+                    LightEffectTriggerConstants.SUNRISE_SUNSET_TRIGGER_NAME -> {
+                        SunriseSunsetTrigger(
+                            sunriseSunsetTimeRepository = sunriseSunsetTimeRepository,
+                            locationConfigRepository = locationConfigRepository,
+                            objectMapper = objectMapper,
+                            timeHelper = timeHelper,
+                            settings = objectMapper.readValueFromTree(
+                                JsonNode.from(trigger.settings),
+                                SunriseSunsetTriggerSettings::class.java
+                            ),
+                            uuid = trigger.uuid!!,
+                            effectUuid = effectEntity.uuid!!,
+                        )
+                    }
 
-                else -> throw IllegalArgumentException("Unknown LightEffectTrigger name: ${trigger.name}")
+                    // TODO throwing an Exception is not ideal. Logger.error instead?
+                    else -> throw IllegalArgumentException("Unknown LightEffectTrigger name: ${trigger.name}")
+                }
             }
         }
     }
