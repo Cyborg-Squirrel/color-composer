@@ -127,7 +127,7 @@ class WebSocketJob(
             val triggerSettings =
                 TimeTriggerSettings(
                     triggerTime.toLocalTime(),
-                    Duration.ofSeconds(60 * 15),
+                    Duration.ofSeconds(60 * 1),
                     null,
                     TriggerType.StartEffect
                 )

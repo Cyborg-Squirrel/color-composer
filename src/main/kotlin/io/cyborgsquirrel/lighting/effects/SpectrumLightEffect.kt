@@ -4,7 +4,7 @@ import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.model.color.RgbColor
 import kotlin.math.ceil
 
-open class SpectrumLightEffect(
+class SpectrumLightEffect(
     private val numberOfLeds: Int,
     private val settings: SpectrumEffectSettings
 ) : LightEffect {

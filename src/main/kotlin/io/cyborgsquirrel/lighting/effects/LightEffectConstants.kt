@@ -12,5 +12,6 @@ class LightEffectConstants {
         const val NIGHTRIDER_COMET_NAME = "Nightrider Comet"
         const val FLAME_EFFECT_NAME = "Flame"
         const val BOUNCING_BALL_NAME = "Bouncing Ball"
+        const val WAVE_EFFECT_NAME = "Wave"
     }
 }
