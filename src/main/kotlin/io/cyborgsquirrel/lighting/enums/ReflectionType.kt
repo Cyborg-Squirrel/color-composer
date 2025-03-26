@@ -1,8 +1,11 @@
 package io.cyborgsquirrel.lighting.enums
 
+import io.micronaut.serde.annotation.Serdeable
+
 /**
  * Enum for the types of reflection
  */
+@Serdeable
 enum class ReflectionType {
     /**
      * Indicates the lower half should be reflected over the upper half

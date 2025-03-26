@@ -1,11 +1,16 @@
 package io.cyborgsquirrel.lighting.rendering.filters
 
+import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFilterSettings
 import io.cyborgsquirrel.model.color.RgbColor
+import io.micronaut.serde.annotation.Serdeable
 
 /**
  * Transforms a list of [RgbColor] to increase or decrease the brightness
  */
-open class BrightnessFilter(val brightness: Float = 1.0f) : LightEffectFilter {
+@Serdeable
+open class BrightnessFilter(val settings: BrightnessFilterSettings, uuid: String) : LightEffectFilter(uuid) {
+
+    private val brightness = settings.brightness
 
     /**
      * Scales the list of [RgbColor] by the [brightness] value.
@@ -14,7 +19,7 @@ open class BrightnessFilter(val brightness: Float = 1.0f) : LightEffectFilter {
      */
     override fun apply(rgbList: List<RgbColor>): List<RgbColor> {
         return rgbList.map {
-            it.scale(brightness)
+            it.scale(settings.brightness)
         }
     }
 }

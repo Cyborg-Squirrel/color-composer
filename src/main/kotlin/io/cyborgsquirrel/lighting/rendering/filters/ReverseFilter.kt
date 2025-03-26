@@ -1,11 +1,13 @@
 package io.cyborgsquirrel.lighting.rendering.filters
 
 import io.cyborgsquirrel.model.color.RgbColor
+import io.micronaut.serde.annotation.Serdeable
 
 /**
  * Reverses a list of [RgbColor]
  */
-class ReverseFilter : LightEffectFilter {
+@Serdeable
+class ReverseFilter(uuid: String) : LightEffectFilter(uuid) {
 
     /**
      * Returns a reversed instance of the [rgbList]

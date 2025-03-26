@@ -1,9 +1,14 @@
 package io.cyborgsquirrel.lighting.rendering.filters
 
 import io.cyborgsquirrel.lighting.enums.ReflectionType
+import io.cyborgsquirrel.lighting.rendering.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.model.color.RgbColor
+import io.micronaut.serde.annotation.Serdeable
 
-class ReflectionFilter(val reflectionType: ReflectionType) : LightEffectFilter {
+@Serdeable
+class ReflectionFilter(val settings: ReflectionFilterSettings, uuid: String) : LightEffectFilter(uuid) {
+
+    private val reflectionType = settings.reflectionType
 
     override fun apply(rgbList: List<RgbColor>): List<RgbColor> {
         val reflectedList = mutableListOf<RgbColor>()

@@ -17,6 +17,11 @@ import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
+import io.cyborgsquirrel.lighting.enums.ReflectionType
+import io.cyborgsquirrel.lighting.rendering.filters.*
+import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFadeFilterSettings
+import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFilterSettings
+import io.cyborgsquirrel.lighting.rendering.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.model.strip.LedStrip
 import io.cyborgsquirrel.model.strip.LedStripGroupModel
 import io.cyborgsquirrel.model.strip.LedStripModel
@@ -70,6 +75,11 @@ class LightEffectInitJob(
                     val trigger = getTrigger(effectEntity)
                     if (trigger != null) {
                         triggerManager.addTrigger(trigger)
+                    }
+
+                    val filter = getFilter(effectEntity)
+                    if (filter != null) {
+                        activeLightEffectRegistry.addOrUpdateEffect(activeEffect.copy(filters = activeEffect.filters + filter))
                     }
                 }
 
@@ -179,6 +189,54 @@ class LightEffectInitJob(
                 }
 
                 else -> throw IllegalArgumentException("Unknown LightEffectTrigger name: ${trigger.name}")
+            }
+        }
+    }
+
+    // TODO: one effect multiple filters support
+    private fun getFilter(effectEntity: LightEffectEntity): LightEffectFilter? {
+        return if (effectEntity.filters.isEmpty()) {
+            null
+        } else {
+            val filter = effectEntity.filters.first()
+            when (filter.name) {
+                LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME -> {
+                    BrightnessFadeFilter(
+                        timeHelper = timeHelper,
+                        settings = objectMapper.readValueFromTree(
+                            JsonNode.from(filter.settings),
+                            BrightnessFadeFilterSettings::class.java
+                        ),
+                        uuid = filter.uuid!!
+                    )
+                }
+
+                LightEffectFilterConstants.BRIGHTNESS_FILTER_NAME -> {
+                    BrightnessFilter(
+                        settings = objectMapper.readValueFromTree(
+                            JsonNode.from(filter.settings),
+                            BrightnessFilterSettings::class.java
+                        ),
+                        uuid = filter.uuid!!
+                    )
+                }
+
+                LightEffectFilterConstants.REFLECTION_FILTER_NAME -> {
+                    ReflectionFilter(
+                        settings = objectMapper.readValueFromTree(
+                            JsonNode.from(filter.settings),
+                            ReflectionFilterSettings::class.java
+                        ),
+                        uuid = filter.uuid!!
+                    )
+                }
+
+                LightEffectFilterConstants.REVERSE_FILTER_NAME -> {
+                    // Reverse filter doesn't have settings
+                    ReverseFilter(uuid = filter.uuid!!)
+                }
+
+                else -> throw IllegalArgumentException("Unknown LightEffectFilter name: ${filter.name}")
             }
         }
     }

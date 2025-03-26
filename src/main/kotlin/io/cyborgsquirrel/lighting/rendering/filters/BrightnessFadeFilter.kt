@@ -1,7 +1,9 @@
 package io.cyborgsquirrel.lighting.rendering.filters
 
+import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.model.color.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
+import io.micronaut.serde.annotation.Serdeable
 import java.time.Duration
 
 /**
@@ -10,15 +12,17 @@ import java.time.Duration
  * A timestamp is recorded the first time this filter is used and will return the [endingBrightness] after the amount
  * of time specified in [fadeDuration] has passed.
  */
-class BrightnessFadeFilter(
-    val startingBrightness: Float,
-    val endingBrightness: Float,
-    val fadeDuration: Duration,
-    val timeHelper: TimeHelper
-) :
-    BrightnessFilter(endingBrightness) {
+@Serdeable
+open class BrightnessFadeFilter(
+    val settings: BrightnessFadeFilterSettings,
+    val timeHelper: TimeHelper,
+    uuid: String,
+) : LightEffectFilter(uuid) {
 
     private var startTimeEpochMillis = 0L
+    private val startingBrightness = settings.startingBrightness
+    private val endingBrightness = settings.endingBrightness
+    private val fadeDuration = settings.fadeDuration
 
     /**
      * Scales the list of [RgbColor] from [startingBrightness] to the [endingBrightness] value.
@@ -31,8 +35,10 @@ class BrightnessFadeFilter(
                 it.scale(startingBrightness)
             }
         } else {
-            if (startTimeEpochMillis + fadeDuration.toMillis() < millisSinceEpoch) {
-                super.apply(rgbList)
+            if (startTimeEpochMillis + settings.fadeDuration.toMillis() < millisSinceEpoch) {
+                rgbList.map {
+                    it.scale(endingBrightness)
+                }
             } else {
                 val millisSinceStart = millisSinceEpoch - startTimeEpochMillis
                 val percentComplete = millisSinceStart.toFloat() / fadeDuration.toMillis()

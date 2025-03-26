@@ -2,9 +2,9 @@ package io.cyborgsquirrel.lighting.rendering.filters
 
 import io.cyborgsquirrel.model.color.RgbColor
 
-interface LightEffectFilter {
+sealed class LightEffectFilter(val uuid: String) {
     /**
      * Applies the filter to the [rgbList] and returns a new [RgbColor] list
      */
-    fun apply(rgbList: List<RgbColor>): List<RgbColor>
+    abstract fun apply(rgbList: List<RgbColor>): List<RgbColor>
 }

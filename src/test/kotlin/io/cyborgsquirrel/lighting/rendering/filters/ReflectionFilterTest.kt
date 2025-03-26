@@ -1,14 +1,16 @@
 package io.cyborgsquirrel.lighting.rendering.filters
 
 import io.cyborgsquirrel.lighting.enums.ReflectionType
+import io.cyborgsquirrel.lighting.rendering.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.model.color.RgbColor
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import java.util.*
 
 class ReflectionFilterTest : BehaviorSpec({
 
     given("A reflection filter configured with reflection low to high") {
-        val filter = ReflectionFilter(ReflectionType.LowToHigh)
+        val filter = ReflectionFilter(ReflectionFilterSettings(ReflectionType.LowToHigh), UUID.randomUUID().toString())
         and("A list of RgbColors") {
             val rgbList = listOf(RgbColor.Green, RgbColor.Blue, RgbColor.Purple, RgbColor.Blank, RgbColor.Blank)
             `when`("The filter is applied to a list of RgbColors") {
@@ -26,7 +28,7 @@ class ReflectionFilterTest : BehaviorSpec({
     }
 
     given("A reflection filter configured with reflection high to low") {
-        val filter = ReflectionFilter(ReflectionType.HighToLow)
+        val filter = ReflectionFilter(ReflectionFilterSettings(ReflectionType.HighToLow), UUID.randomUUID().toString())
         and("A list of RgbColors") {
             val rgbList = listOf(RgbColor.Blank, RgbColor.Blue, RgbColor.Red, RgbColor.Orange)
             `when`("The filter is applied to a list of RgbColors") {

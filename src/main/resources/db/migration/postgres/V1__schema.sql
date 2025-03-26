@@ -1,5 +1,6 @@
 DELETE FROM flyway_schema_history;
 DROP TABLE IF EXISTS light_effect_triggers;
+DROP TABLE IF EXISTS light_effect_filters;
 DROP TABLE IF EXISTS light_effects;
 DROP TABLE IF EXISTS group_member_led_strips;
 DROP TABLE IF EXISTS led_strip_groups;
@@ -71,7 +72,17 @@ CREATE TABLE light_effect_triggers
     uuid        VARCHAR(50) NOT NULL,
     settings    JSONB NOT NULL,
     name        VARCHAR(255) NOT NULL,
-    CONSTRAINT trigger_effect_assoc_fk FOREIGN KEY (effect_id) REFERENCES light_effects
+    CONSTRAINT trigger_effect_fk FOREIGN KEY (effect_id) REFERENCES light_effects
+);
+
+CREATE TABLE light_effect_filters
+(
+    id          SERIAL PRIMARY KEY,
+    effect_id   INT NOT NULL,
+    uuid        VARCHAR(50) NOT NULL,
+    settings    JSONB NOT NULL,
+    name        VARCHAR(255) NOT NULL,
+    CONSTRAINT trigger_filter_fk FOREIGN KEY (effect_id) REFERENCES light_effects
 );
 
 CREATE TABLE location_configs

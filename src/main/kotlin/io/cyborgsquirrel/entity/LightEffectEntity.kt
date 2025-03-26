@@ -23,6 +23,9 @@ data class LightEffectEntity(
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
     var triggers: Set<LightEffectTriggerEntity> = setOf(),
 
+    @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
+    var filters: Set<LightEffectFilterEntity> = setOf(),
+
     var uuid: String? = null,
 
     @TypeDef(type = DataType.JSON)

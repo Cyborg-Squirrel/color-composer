@@ -18,6 +18,8 @@ import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFadeFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.rendering.filters.ReverseFilter
+import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFadeFilterSettings
+import io.cyborgsquirrel.lighting.rendering.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
 import io.cyborgsquirrel.model.color.RgbColor
@@ -108,9 +110,13 @@ class WebSocketJob(
             )
 
             val filters = listOf(
-                BrightnessFadeFilter(0.1f, 1.0f, Duration.ofSeconds(30), timeHelper),
-                ReverseFilter(),
-                ReflectionFilter(ReflectionType.CopyOverCenter),
+                BrightnessFadeFilter(
+                    BrightnessFadeFilterSettings(0.1f, 1.0f, Duration.ofSeconds(30)),
+                    timeHelper,
+                    UUID.randomUUID().toString()
+                ),
+                ReverseFilter(UUID.randomUUID().toString()),
+                ReflectionFilter(ReflectionFilterSettings(ReflectionType.CopyOverCenter), UUID.randomUUID().toString()),
             )
 
             val activeEffects = effects.map { e ->

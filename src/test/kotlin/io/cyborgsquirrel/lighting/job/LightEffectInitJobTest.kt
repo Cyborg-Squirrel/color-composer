@@ -16,6 +16,10 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFadeFilter
+import io.cyborgsquirrel.lighting.rendering.filters.LightEffectFilterConstants
+import io.cyborgsquirrel.lighting.rendering.filters.repository.H2LightEffectFilterRepository
+import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.model.color.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
@@ -24,6 +28,7 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
+import java.time.Duration
 import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
@@ -37,6 +42,7 @@ class LightEffectInitJobTest(
     private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
     private val locationConfigRepository: H2LocationConfigRepository,
     private val triggerRepository: H2LightEffectTriggerRepository,
+    private val filterRepository: H2LightEffectFilterRepository,
     private val objectMapper: ObjectMapper,
     private val triggerManager: TriggerManager,
     private val timeHelper: TimeHelper,
@@ -45,6 +51,7 @@ class LightEffectInitJobTest(
     val lightEffectSettings =
         SpectrumEffectSettings.default(60).copy(10, listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
     val iterationTriggerSettings = EffectIterationTriggerSettings(25)
+    val fadeFilterSettings = BrightnessFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(20))
 
     fun settingsObjectToMap(settings: Any): Map<String, Any> {
         val jsonNode = objectMapper.writeValueToTree(settings)
@@ -54,6 +61,7 @@ class LightEffectInitJobTest(
     afterTest {
         activeLightEffectRegistry.reset()
         triggerRepository.deleteAll()
+        filterRepository.deleteAll()
         lightEffectRepository.deleteAll()
         groupMemberLedStripRepository.deleteAll()
         ledStripGroupRepository.deleteAll()
@@ -162,6 +170,67 @@ class LightEffectInitJobTest(
         triggers.first().settings.triggerType shouldBe iterationTriggerSettings.triggerType
         triggers.first().settings.activationDuration shouldBe iterationTriggerSettings.activationDuration
         triggers.first().settings.maxActivations shouldBe iterationTriggerSettings.maxActivations
+    }
+
+    "Init light effect with filter - happy path" {
+        val job = LightEffectInitJob(
+            lightEffectRepository,
+            groupMemberLedStripRepository,
+            activeLightEffectRegistry,
+            sunriseSunsetTimeRepository,
+            locationConfigRepository,
+            triggerManager,
+            objectMapper,
+            timeHelper,
+        )
+
+        val client = clientRepository.save(
+            LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
+        )
+        val strip = ledStripRepository.save(
+            LedStripEntity(client = client, uuid = UUID.randomUUID().toString(), name = "Strip A", length = 60)
+        )
+        val lightEffectSettingsJson = settingsObjectToMap(lightEffectSettings)
+        val lightEffect = lightEffectRepository.save(
+            LightEffectEntity(
+                settings = lightEffectSettingsJson,
+                name = LightEffectConstants.SPECTRUM_NAME,
+                strip = strip,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Created,
+            )
+        )
+        val fadeTriggerSettingsJson = settingsObjectToMap(fadeFilterSettings)
+        val filter = filterRepository.save(
+            LightEffectFilterEntity(
+                effect = lightEffect,
+                uuid = UUID.randomUUID().toString(),
+                name = LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME,
+                settings = fadeTriggerSettingsJson,
+            )
+        )
+
+        job.run()
+
+        val activeEffectList = activeLightEffectRegistry.findAllEffects()
+
+        activeEffectList.size shouldBe 1
+        activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
+        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumEffectSettings::class
+        activeEffectList.first().strip.getUuid() shouldBe strip.uuid
+        activeEffectList.first().strip.getName() shouldBe strip.name
+        activeEffectList.first().status shouldBe lightEffect.status
+        activeEffectList.first().uuid shouldBe lightEffect.uuid
+
+        val filters = activeEffectList.first().filters
+
+        filters.size shouldBe 1
+        filters.first()::class shouldBe BrightnessFadeFilter::class
+        filters.first().uuid shouldBe filter.uuid
+        (filters.first() as BrightnessFadeFilter).settings::class shouldBe fadeFilterSettings::class
+        (filters.first() as BrightnessFadeFilter).settings.startingBrightness shouldBe fadeFilterSettings.startingBrightness
+        (filters.first() as BrightnessFadeFilter).settings.endingBrightness shouldBe fadeFilterSettings.endingBrightness
+        (filters.first() as BrightnessFadeFilter).settings.fadeDuration shouldBe fadeFilterSettings.fadeDuration
     }
 
     "Init light effect one group - happy path" {

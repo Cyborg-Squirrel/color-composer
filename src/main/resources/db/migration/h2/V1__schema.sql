@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS light_effect_triggers;
+DROP TABLE IF EXISTS light_effect_filters;
 DROP TABLE IF EXISTS light_effects;
 DROP TABLE IF EXISTS group_member_led_strips;
 DROP TABLE IF EXISTS led_strip_groups;
@@ -71,6 +72,16 @@ CREATE TABLE light_effect_triggers
     settings    JSON NOT NULL,
     name        VARCHAR(255) NOT NULL,
     CONSTRAINT trigger_effect_fk FOREIGN KEY (effect_id) REFERENCES light_effects
+);
+
+CREATE TABLE light_effect_filters
+(
+    id          IDENTITY PRIMARY KEY NOT NULL,
+    effect_id   INT NOT NULL,
+    uuid        VARCHAR(50) NOT NULL,
+    settings    JSON NOT NULL,
+    name        VARCHAR(255) NOT NULL,
+    CONSTRAINT filter_effect_fk FOREIGN KEY (effect_id) REFERENCES light_effects
 );
 
 CREATE TABLE location_configs
