@@ -82,7 +82,7 @@ CREATE TABLE light_effect_filters
     uuid        VARCHAR(50) NOT NULL,
     settings    JSONB NOT NULL,
     name        VARCHAR(255) NOT NULL,
-    CONSTRAINT trigger_filter_fk FOREIGN KEY (effect_id) REFERENCES light_effects
+    CONSTRAINT filter_effect_fk FOREIGN KEY (effect_id) REFERENCES light_effects
 );
 
 CREATE TABLE location_configs
