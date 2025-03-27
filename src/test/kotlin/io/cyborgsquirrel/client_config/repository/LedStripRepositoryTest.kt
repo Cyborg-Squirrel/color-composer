@@ -4,6 +4,7 @@ import io.cyborgsquirrel.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.entity.LedStripClientEntity
 import io.cyborgsquirrel.entity.LedStripEntity
 import io.cyborgsquirrel.entity.LedStripGroupEntity
+import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
@@ -34,7 +35,8 @@ class LedStripRepositoryTest(
                 client = clientEntity,
                 name = name,
                 uuid = uuid,
-                length = length
+                length = length,
+                blendMode = BlendMode.Average,
             )
         )
     }
@@ -98,6 +100,7 @@ class LedStripRepositoryTest(
         with(retrievedLedStrip) {
             uuid shouldBe ledStripUuid
             name shouldBe ledStripEntity.name
+            blendMode shouldBe BlendMode.Average
             client!!.id shouldBe clientEntity!!.id
             client!!.name shouldBe clientEntity!!.name
             members.size shouldBe 1

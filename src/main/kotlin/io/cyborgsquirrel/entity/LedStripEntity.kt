@@ -1,10 +1,13 @@
 package io.cyborgsquirrel.entity
 
+import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity
 import io.micronaut.data.annotation.Relation
 import io.micronaut.serde.annotation.Serdeable
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 
 @Serdeable
 @MappedEntity("led_strips")
@@ -34,5 +37,9 @@ data class LedStripEntity(
 
     // Limit in mA
     @MappedEntity("power_limit")
-    var powerLimit: Int? = null
+    var powerLimit: Int? = null,
+
+    @MappedEntity("blend_mode")
+    @Enumerated(EnumType.STRING)
+    var blendMode: BlendMode? = null,
 )

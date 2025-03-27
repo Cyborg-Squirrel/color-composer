@@ -2,6 +2,7 @@ package io.cyborgsquirrel.client_config.repository
 
 import io.cyborgsquirrel.entity.LedStripClientEntity
 import io.cyborgsquirrel.entity.LedStripEntity
+import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -25,7 +26,8 @@ class LedStripClientRepositoryTest(
         name = "Living Room Vertical Strip A",
         client = demoClientEntity,
         length = 60,
-        uuid = UUID.randomUUID().toString()
+        uuid = UUID.randomUUID().toString(),
+        blendMode = BlendMode.Layer,
     )
 
     fun assertClientsAreEqual(expected: LedStripClientEntity, actual: LedStripClientEntity) {
@@ -75,6 +77,7 @@ class LedStripClientRepositoryTest(
                 strip.name shouldBe demoLedStripEntity.name
                 strip.uuid shouldBe demoLedStripEntity.uuid
                 strip.length shouldBe demoLedStripEntity.length
+                strip.blendMode shouldBe BlendMode.Layer
             }
         }
     }

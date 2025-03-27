@@ -47,6 +47,10 @@ data class RgbColor(val red: UByte, val green: UByte, val blue: UByte) {
         return RgbColor((red + other.red).toUByte(), (green + other.green).toUByte(), (blue + other.blue).toUByte())
     }
 
+    operator fun div(denominator: UInt): RgbColor {
+        return RgbColor((red / denominator).toUByte(), (green / denominator).toUByte(), (blue / denominator).toUByte())
+    }
+
     private fun interpolate(a: Int, b: Int, interpolation: Float): Int {
         return (a - (a - b) * interpolation).toInt()
     }

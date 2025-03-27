@@ -15,6 +15,7 @@ import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
+import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFadeFilter
 import io.cyborgsquirrel.lighting.rendering.filters.LightEffectFilterConstants
@@ -28,6 +29,7 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
+import io.mockk.core.ValueClassSupport.boxedValue
 import java.time.Duration
 import java.util.*
 
@@ -85,7 +87,13 @@ class LightEffectInitJobTest(
             LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
         )
         val strip = ledStripRepository.save(
-            LedStripEntity(client = client, uuid = UUID.randomUUID().toString(), name = "Strip A", length = 60)
+            LedStripEntity(
+                client = client,
+                uuid = UUID.randomUUID().toString(),
+                name = "Strip A",
+                length = 60,
+                blendMode = BlendMode.Average
+            )
         )
         val settingsJson = settingsObjectToMap(lightEffectSettings)
         val lightEffect = lightEffectRepository.save(
@@ -109,6 +117,7 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
         activeEffectList.first().uuid shouldBe lightEffect.uuid
+        activeEffectList.first().strip.getBlendMode() shouldBe strip.blendMode
     }
 
     "Init light effect with trigger - happy path" {
@@ -127,7 +136,13 @@ class LightEffectInitJobTest(
             LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
         )
         val strip = ledStripRepository.save(
-            LedStripEntity(client = client, uuid = UUID.randomUUID().toString(), name = "Strip A", length = 60)
+            LedStripEntity(
+                client = client,
+                uuid = UUID.randomUUID().toString(),
+                name = "Strip A",
+                length = 60,
+                blendMode = BlendMode.Average
+            )
         )
         val lightEffectSettingsJson = settingsObjectToMap(lightEffectSettings)
         val lightEffect = lightEffectRepository.save(
@@ -188,7 +203,13 @@ class LightEffectInitJobTest(
             LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
         )
         val strip = ledStripRepository.save(
-            LedStripEntity(client = client, uuid = UUID.randomUUID().toString(), name = "Strip A", length = 60)
+            LedStripEntity(
+                client = client,
+                uuid = UUID.randomUUID().toString(),
+                name = "Strip A",
+                length = 60,
+                blendMode = BlendMode.Average
+            )
         )
         val lightEffectSettingsJson = settingsObjectToMap(lightEffectSettings)
         val lightEffect = lightEffectRepository.save(
@@ -249,7 +270,13 @@ class LightEffectInitJobTest(
             LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
         )
         val strip = ledStripRepository.save(
-            LedStripEntity(client = client, uuid = UUID.randomUUID().toString(), name = "Strip A", length = 60)
+            LedStripEntity(
+                client = client,
+                uuid = UUID.randomUUID().toString(),
+                name = "Strip A",
+                length = 60,
+                blendMode = BlendMode.Average
+            )
         )
         val group = ledStripGroupRepository.save(
             LedStripGroupEntity(uuid = UUID.randomUUID().toString(), name = "Living Room Group")

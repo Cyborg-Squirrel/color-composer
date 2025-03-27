@@ -98,15 +98,26 @@ class LightEffectInitJob(
         val groupEntity = effectEntity.group
 
         if (stripEntity != null) {
-            return LedStripModel(stripEntity.name!!, stripEntity.uuid!!, stripEntity.length!!, stripEntity.height)
+            return LedStripModel(
+                stripEntity.name!!,
+                stripEntity.uuid!!,
+                stripEntity.length!!,
+                stripEntity.height,
+                stripEntity.blendMode!!
+            )
         } else if (groupEntity != null) {
             // Query to do JOIN (effect entity JOIN doesn't capture led strips if it points to a group)
             val stripMemberEntities = groupMemberLedStripRepository.findByGroup(groupEntity)
             val stripEntities = stripMemberEntities.mapNotNull { it.strip }
             val stripModels = stripEntities.map {
-                LedStripModel(it.name!!, it.uuid!!, it.length!!, it.height)
+                LedStripModel(it.name!!, it.uuid!!, it.length!!, it.height, it.blendMode!!)
             }
-            return LedStripGroupModel(groupEntity.name!!, groupEntity.uuid!!, stripModels)
+            return LedStripGroupModel(
+                groupEntity.name!!,
+                groupEntity.uuid!!,
+                stripModels,
+                stripModels.first().getBlendMode()
+            )
         } else {
             throw Exception("Strip or group must be non-null!")
         }

@@ -1,5 +1,7 @@
 package io.cyborgsquirrel.model.strip
 
+import io.cyborgsquirrel.lighting.enums.BlendMode
+
 /**
  * LED strip model
  * [name] - the name of the LED strip
@@ -11,7 +13,8 @@ data class LedStripModel(
     private val name: String,
     private val uuid: String,
     private val length: Int,
-    private val height: Int
+    private val height: Int,
+    private val blendMode: BlendMode,
 ) : LedStrip {
 
     override fun getName(): String {
@@ -28,5 +31,9 @@ data class LedStripModel(
 
     override fun getHeight(): Int {
         return height
+    }
+
+    override fun getBlendMode(): BlendMode {
+        return blendMode
     }
 }

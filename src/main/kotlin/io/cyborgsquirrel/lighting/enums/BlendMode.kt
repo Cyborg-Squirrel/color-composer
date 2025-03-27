@@ -5,6 +5,9 @@ package io.cyborgsquirrel.lighting.enums
  * how to render multiple effects on the same LED strip
  */
 enum class BlendMode {
+    // Adds the RGB values together (examples: red + blue = purple, red + blue + green = white)
+    Additive,
+
     // Average the RGB values when effects light the same LED
     Average,
 

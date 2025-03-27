@@ -1,5 +1,7 @@
 package io.cyborgsquirrel.model.strip
 
+import io.cyborgsquirrel.lighting.enums.BlendMode
+
 interface LedStrip {
     fun getName(): String
 
@@ -8,4 +10,6 @@ interface LedStrip {
     fun getLength(): Int
 
     fun getHeight(): Int
+
+    fun getBlendMode(): BlendMode
 }

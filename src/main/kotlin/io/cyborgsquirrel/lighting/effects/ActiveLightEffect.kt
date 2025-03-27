@@ -6,9 +6,9 @@ import io.cyborgsquirrel.model.strip.LedStrip
 
 data class ActiveLightEffect(
     val uuid: String,
-    var priority: Int,
-    var skipFramesIfBlank: Boolean,
-    var status: LightEffectStatus,
+    val priority: Int,
+    val skipFramesIfBlank: Boolean,
+    val status: LightEffectStatus,
     val effect: LightEffect,
     val strip: LedStrip,
     val filters: List<LightEffectFilter>

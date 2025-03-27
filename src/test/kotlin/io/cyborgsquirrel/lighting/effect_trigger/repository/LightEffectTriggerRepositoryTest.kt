@@ -14,6 +14,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
+import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.model.color.RgbColor
 import io.kotest.core.spec.style.StringSpec
@@ -71,7 +72,13 @@ class LightEffectTriggerRepositoryTest(
             LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
         )
         val strip = ledStripRepository.save(
-            LedStripEntity(client = client, uuid = UUID.randomUUID().toString(), name = "Strip A", length = 60)
+            LedStripEntity(
+                client = client,
+                uuid = UUID.randomUUID().toString(),
+                name = "Strip A",
+                length = 60,
+                blendMode = BlendMode.Average
+            )
         )
         val lightEffectSettingsJson = settingsObjectToMap(nightriderLightEffectSettings)
         val lightEffect = lightEffectRepository.save(

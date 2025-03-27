@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.lighting.rendering
 
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
@@ -71,22 +72,30 @@ class LightEffectRendererImpl(
         // If there are multiple effects, layer the RGB output on top of each other.
         val renderedRgbData = mutableListOf<RgbColor>()
         val stripLength = activeEffects.first().strip.getLength()
+        val blendMode = activeEffects.first().strip.getBlendMode()
         for (i in 0..<stripLength) {
-            var didAdd = false
-            for (j in allEffectsRgbData.indices) {
-                val rgbColor = allEffectsRgbData[j][i]
-                if (!rgbColor.isBlank()) {
-                    if (didAdd) {
-                        renderedRgbData[i] += rgbColor
-                    } else {
-                        didAdd = true
-                        renderedRgbData.add(rgbColor)
+            when (blendMode) {
+                BlendMode.Additive -> {
+                    var didAdd = false
+                    for (j in allEffectsRgbData.indices) {
+                        val rgbColor = allEffectsRgbData[j][i]
+                        if (!rgbColor.isBlank()) {
+                            if (didAdd) {
+                                renderedRgbData[i] += rgbColor
+                            } else {
+                                didAdd = true
+                                renderedRgbData.add(rgbColor)
+                            }
+                        }
+                    }
+
+                    if (!didAdd) {
+                        renderedRgbData.add(RgbColor.Blank)
                     }
                 }
-            }
 
-            if (!didAdd) {
-                renderedRgbData.add(RgbColor.Blank)
+                BlendMode.Average -> TODO()
+                BlendMode.Layer -> TODO()
             }
         }
 

@@ -12,6 +12,7 @@ import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.BouncingBallLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.BouncingBallEffectSettings
+import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
@@ -76,7 +77,7 @@ class WebSocketJob(
         try {
             setupWebSocket()
             syncClientTime()
-            val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1)
+            val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1, BlendMode.Additive)
             // Power supply is 4A
             powerLimiterService.setLimit(strip.getUuid(), 4000)
 
