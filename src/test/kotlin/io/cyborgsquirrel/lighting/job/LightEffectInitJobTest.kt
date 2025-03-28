@@ -24,12 +24,12 @@ import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFadeFilte
 import io.cyborgsquirrel.model.color.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
+import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
-import io.mockk.core.ValueClassSupport.boxedValue
 import java.time.Duration
 import java.util.*
 
@@ -54,11 +54,6 @@ class LightEffectInitJobTest(
         SpectrumEffectSettings.default(60).copy(10, listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
     val iterationTriggerSettings = EffectIterationTriggerSettings(25)
     val fadeFilterSettings = BrightnessFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(20))
-
-    fun settingsObjectToMap(settings: Any): Map<String, Any> {
-        val jsonNode = objectMapper.writeValueToTree(settings)
-        return jsonNode.entries().associate { it.key to it.value.value }
-    }
 
     afterTest {
         activeLightEffectRegistry.reset()
@@ -95,7 +90,7 @@ class LightEffectInitJobTest(
                 blendMode = BlendMode.Average
             )
         )
-        val settingsJson = settingsObjectToMap(lightEffectSettings)
+        val settingsJson = objectToMap(objectMapper, lightEffectSettings)
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
@@ -144,7 +139,7 @@ class LightEffectInitJobTest(
                 blendMode = BlendMode.Average
             )
         )
-        val lightEffectSettingsJson = settingsObjectToMap(lightEffectSettings)
+        val lightEffectSettingsJson = objectToMap(objectMapper, lightEffectSettings)
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = lightEffectSettingsJson,
@@ -154,7 +149,7 @@ class LightEffectInitJobTest(
                 status = LightEffectStatus.Created,
             )
         )
-        val iterationTriggerSettingsJson = settingsObjectToMap(iterationTriggerSettings)
+        val iterationTriggerSettingsJson = objectToMap(objectMapper, iterationTriggerSettings)
         val trigger = triggerRepository.save(
             LightEffectTriggerEntity(
                 effect = lightEffect,
@@ -211,7 +206,7 @@ class LightEffectInitJobTest(
                 blendMode = BlendMode.Average
             )
         )
-        val lightEffectSettingsJson = settingsObjectToMap(lightEffectSettings)
+        val lightEffectSettingsJson = objectToMap(objectMapper, lightEffectSettings)
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = lightEffectSettingsJson,
@@ -221,7 +216,7 @@ class LightEffectInitJobTest(
                 status = LightEffectStatus.Created,
             )
         )
-        val fadeTriggerSettingsJson = settingsObjectToMap(fadeFilterSettings)
+        val fadeTriggerSettingsJson = objectToMap(objectMapper, fadeFilterSettings)
         val filter = filterRepository.save(
             LightEffectFilterEntity(
                 effect = lightEffect,
@@ -284,7 +279,7 @@ class LightEffectInitJobTest(
         val groupMember = groupMemberLedStripRepository.save(
             GroupMemberLedStripEntity(strip = strip, group = group, groupIndex = 0, inverted = false)
         )
-        val settingsJson = settingsObjectToMap(lightEffectSettings)
+        val settingsJson = objectToMap(objectMapper, lightEffectSettings)
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,

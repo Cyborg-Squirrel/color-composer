@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.controller
+package io.cyborgsquirrel.setup.controller
 
 import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.client_discovery.enums.DiscoveryJobStatus

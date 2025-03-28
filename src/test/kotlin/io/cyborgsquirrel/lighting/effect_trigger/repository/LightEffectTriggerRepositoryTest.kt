@@ -17,6 +17,7 @@ import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.serde.ObjectMapper
@@ -42,11 +43,6 @@ class LightEffectTriggerRepositoryTest(
         TimeTriggerSettings(
             LocalTime.of(19, 0), Duration.ofHours(4), maxActivations = null, triggerType = TriggerType.StartEffect
         )
-
-    fun settingsObjectToMap(settings: Any): Map<String, Any> {
-        val jsonNode = objectMapper.writeValueToTree(settings)
-        return jsonNode.entries().associate { it.key to it.value.value }
-    }
 
     fun verifyLightEffectTriggerEntity(
         newEntity: LightEffectTriggerEntity,
@@ -80,7 +76,7 @@ class LightEffectTriggerRepositoryTest(
                 blendMode = BlendMode.Average
             )
         )
-        val lightEffectSettingsJson = settingsObjectToMap(nightriderLightEffectSettings)
+        val lightEffectSettingsJson = objectToMap(objectMapper, nightriderLightEffectSettings)
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = lightEffectSettingsJson,
@@ -90,7 +86,7 @@ class LightEffectTriggerRepositoryTest(
                 status = LightEffectStatus.Created,
             )
         )
-        val triggerSettingsJson = settingsObjectToMap(timeTriggerSettings)
+        val triggerSettingsJson = objectToMap(objectMapper, timeTriggerSettings)
         val trigger = lightEffectTriggerRepository.save(
             LightEffectTriggerEntity(
                 effect = lightEffect,

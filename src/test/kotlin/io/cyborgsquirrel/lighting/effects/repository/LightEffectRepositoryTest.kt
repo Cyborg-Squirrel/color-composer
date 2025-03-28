@@ -10,6 +10,7 @@ import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.serde.ObjectMapper
@@ -28,11 +29,6 @@ class LightEffectRepositoryTest(
 
     val settings =
         NightriderEffectSettings.default().copy(colorList = listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
-
-    fun settingsObjectToMap(settings: Any): Map<String, Any> {
-        val jsonNode = objectMapper.writeValueToTree(settings)
-        return jsonNode.entries().associate { it.key to it.value.value }
-    }
 
     fun verifyLightEffectEntity(
         newEntity: LightEffectEntity,
@@ -63,7 +59,7 @@ class LightEffectRepositoryTest(
                 blendMode = BlendMode.Average
             )
         )
-        val settingsJson = settingsObjectToMap(settings)
+        val settingsJson = objectToMap(objectMapper, settings)
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
@@ -107,7 +103,7 @@ class LightEffectRepositoryTest(
             )
         )
 
-        val settingsJson = settingsObjectToMap(settings)
+        val settingsJson = objectToMap(objectMapper, settings)
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,

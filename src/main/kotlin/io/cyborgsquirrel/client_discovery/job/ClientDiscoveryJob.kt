@@ -16,13 +16,9 @@ class ClientDiscoveryJob(objectMapper: ObjectMapper) : Runnable {
     private val receiver = UdpBroadcastReceiver(objectMapper)
     private var status = DiscoveryJobStatus.idle
 
-    fun getStatus(): DiscoveryJobStatus {
-        return status
-    }
+    fun getStatus() = status
 
-    fun getDiscoveryResponses(): Set<ClientDiscoveryResponse> {
-        return receiver.getDiscoveryResponses()
-    }
+    fun getDiscoveryResponses() = receiver.getDiscoveryResponses()
 
     fun markIdle() {
         status = DiscoveryJobStatus.idle
@@ -47,8 +43,8 @@ class ClientDiscoveryJob(objectMapper: ObjectMapper) : Runnable {
             logger.info("Responses: ${getDiscoveryResponses().size}")
             status = DiscoveryJobStatus.complete
         } catch (e: Exception) {
+            logger.error("Error while doing client discovery ${e.stackTraceToString()}")
             status = DiscoveryJobStatus.error
-            logger.error(e.toString())
             e.printStackTrace()
         }
     }
