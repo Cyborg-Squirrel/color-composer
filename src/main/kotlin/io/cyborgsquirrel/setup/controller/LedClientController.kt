@@ -7,18 +7,20 @@ import io.cyborgsquirrel.setup.requests.UpdateClientRequest
 import io.cyborgsquirrel.setup.responses.GetClientResponse
 import io.cyborgsquirrel.setup.responses.GetClientsResponse
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
+import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Patch
 import io.micronaut.http.annotation.Put
 import java.util.*
 
-@Controller
+@Controller("/client")
 class LedClientController(private val clientRepository: H2LedStripClientRepository) {
 
-    @Get("client/{clientUuid}")
-    fun getClient(clientUuid: String): HttpResponse<Any> {
-        val clientEntityOptional = clientRepository.findByUuid(clientUuid)
+    @Get("/{uuid}")
+    fun getClient(uuid: String): HttpResponse<Any> {
+        val clientEntityOptional = clientRepository.findByUuid(uuid)
         return if (clientEntityOptional.isPresent) {
             val clientEntity = clientEntityOptional.get()
             val clientResponse = GetClientResponse(
@@ -31,11 +33,11 @@ class LedClientController(private val clientRepository: H2LedStripClientReposito
 
             HttpResponse.ok(clientResponse)
         } else {
-            HttpResponse.badRequest("No client exists with uuid $clientUuid!")
+            HttpResponse.badRequest("No client exists with uuid $uuid!")
         }
     }
 
-    @Get("clients")
+    @Get("/all")
     fun getAllClients(): HttpResponse<Any> {
         val clientEntities = clientRepository.findAll()
         val responseClients = clientEntities.map {
@@ -44,8 +46,8 @@ class LedClientController(private val clientRepository: H2LedStripClientReposito
         return HttpResponse.ok(GetClientsResponse(responseClients))
     }
 
-    @Put("client")
-    fun create(newClient: CreateClientRequest): HttpResponse<Any> {
+    @Put
+    fun create(@Body newClient: CreateClientRequest): HttpResponse<Any> {
         val entityOptional = clientRepository.findByAddress(newClient.address)
         return if (entityOptional.isPresent) {
             HttpResponse.ok(entityOptional.get().uuid)
@@ -64,9 +66,9 @@ class LedClientController(private val clientRepository: H2LedStripClientReposito
         }
     }
 
-    @Patch("client/{clientUuid}")
-    fun update(clientUuid: String, updatedClient: UpdateClientRequest): HttpResponse<Any> {
-        val entityOptional = clientRepository.findByUuid(clientUuid)
+    @Patch("/{uuid}")
+    fun update(uuid: String, @Body updatedClient: UpdateClientRequest): HttpResponse<Any> {
+        val entityOptional = clientRepository.findByUuid(uuid)
 
         // TODO validation and notify WebSocket jobs of port number changes
         return if (entityOptional.isPresent) {
@@ -94,7 +96,24 @@ class LedClientController(private val clientRepository: H2LedStripClientReposito
 
             HttpResponse.noContent()
         } else {
-            HttpResponse.badRequest("Client with uuid $clientUuid does not exist! Please create it first before updating it.")
+            HttpResponse.badRequest("Client with uuid $uuid does not exist! Please create it first before updating it.")
+        }
+    }
+
+    @Delete("/{uuid}")
+    fun deleteClient(uuid: String): HttpResponse<Any> {
+        val entityOptional = clientRepository.findByUuid(uuid)
+        return if (entityOptional.isPresent) {
+            val entity = entityOptional.get()
+            if (entity.strips.isEmpty()) {
+                clientRepository.deleteById(entityOptional.get().id)
+                HttpResponse.ok()
+            } else {
+                // TODO cascading delete? Unassign light effects from client's strips?
+                HttpResponse.badRequest("Could not delete client with uuid $uuid. Please delete its LED strips first.")
+            }
+        } else {
+            HttpResponse.badRequest("Could not delete client with uuid $uuid. It does not exist.")
         }
     }
 }
