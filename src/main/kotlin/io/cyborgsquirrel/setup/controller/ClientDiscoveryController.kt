@@ -6,13 +6,14 @@ import io.cyborgsquirrel.client_discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.client_discovery.model.DiscoveredClientsResponseList
 import io.cyborgsquirrel.client_discovery.model.DiscoveryStatusResponse
 import io.cyborgsquirrel.entity.LedStripClientEntity
-import io.cyborgsquirrel.setup.requests.SelectedClientRequest
+import io.cyborgsquirrel.setup.requests.SelectClientRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Post
 import io.micronaut.scheduling.TaskScheduler
 import java.time.Duration
+import java.util.*
 
 @Controller
 class ClientDiscoveryController(
@@ -58,21 +59,22 @@ class ClientDiscoveryController(
         return HttpResponse.ok(DiscoveryStatusResponse(discoveryJob.getStatus()))
     }
 
-    @Post("/confirm-clients")
-    fun confirm(selectedClient: SelectedClientRequest): HttpResponse<Any> {
+    @Post("/confirm-client")
+    fun confirm(selectedClient: SelectClientRequest): HttpResponse<Any> {
         val discoveredClients = discoveryJob.getDiscoveryResponses()
         val matchingClient =
             discoveredClients.firstOrNull { it.name == selectedClient.name && it.address == selectedClient.address }
         if (matchingClient != null) {
             discoveryJob.markIdle()
             for (client in discoveredClients) {
-                val isNewClient = clientRepository.findByAddress(matchingClient.address).isPresent
-                if (!isNewClient) {
+                val clientExists = clientRepository.findByAddress(matchingClient.address).isPresent
+                if (!clientExists) {
                     val entity = LedStripClientEntity(
                         name = client.name,
                         address = client.address,
                         wsPort = client.wsPort,
                         apiPort = client.apiPort,
+                        uuid = UUID.randomUUID().toString()
                     )
                     clientRepository.save(entity)
                     return HttpResponse.created(matchingClient)

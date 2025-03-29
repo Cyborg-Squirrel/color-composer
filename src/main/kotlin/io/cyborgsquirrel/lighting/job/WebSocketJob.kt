@@ -63,7 +63,13 @@ class WebSocketJob(
     private val serializer = RgbFrameDataSerializer()
     private var client: LedStripWebSocketClient? = null
     private val clientEntity =
-        LedStripClientEntity(address = "http://192.168.1.10", name = "Pi Client", wsPort = 8765, apiPort = 8000)
+        LedStripClientEntity(
+            address = "http://192.168.1.10",
+            name = "Pi Client",
+            uuid = UUID.randomUUID().toString(),
+            wsPort = 8765,
+            apiPort = 8000,
+        )
 
     // Difference in millis between the client and server.
     // Negative values mean the client's clock is behind the server, positive values mean the client's clock is ahead.

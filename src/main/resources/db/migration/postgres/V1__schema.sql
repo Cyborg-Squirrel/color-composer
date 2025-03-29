@@ -13,6 +13,7 @@ CREATE TABLE led_strip_clients
 (
     id       SERIAL primary key NOT NULL,
     name     VARCHAR(255) NOT NULL,
+    uuid     VARCHAR(50) NOT NULL,
     address  VARCHAR(255) NOT NULL,
     ws_port  SMALLINT NOT NULL,
     api_port SMALLINT NOT NULL

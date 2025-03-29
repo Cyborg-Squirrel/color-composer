@@ -12,7 +12,7 @@ import java.util.*
 @Requires(property = "datasources.default.dialect", value = "H2")
 interface H2LedStripClientRepository : CrudRepository<LedStripClientEntity, Long> {
     @Join(value = "strips", type = Join.Type.LEFT_FETCH)
-    fun findByName(name: String): Optional<LedStripClientEntity>
+    fun findByUuid(uuid: String): Optional<LedStripClientEntity>
 
     @Join(value = "strips", type = Join.Type.LEFT_FETCH)
     fun findByAddress(name: String): Optional<LedStripClientEntity>

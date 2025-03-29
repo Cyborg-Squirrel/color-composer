@@ -45,6 +45,8 @@ class ConfigClient(
             .port(client.apiPort!!)
             .path("time")
             .build()
+        // TODO: switch http call to blocking?
+//        val timeObj = httpClient.toBlocking().retrieve(uri.toString())
         val pub = httpClient.retrieve(uri.toString())
         val future = CompletableFuture<ClientTime>()
         pub.subscribe(object : Subscriber<String> {
