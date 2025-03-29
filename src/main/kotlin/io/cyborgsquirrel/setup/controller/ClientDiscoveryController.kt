@@ -6,7 +6,7 @@ import io.cyborgsquirrel.client_discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.client_discovery.model.DiscoveredClientsResponseList
 import io.cyborgsquirrel.client_discovery.model.DiscoveryStatusResponse
 import io.cyborgsquirrel.entity.LedStripClientEntity
-import io.cyborgsquirrel.setup.requests.SelectClientsRequest
+import io.cyborgsquirrel.setup.requests.SelectedClientRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
@@ -42,7 +42,12 @@ class ClientDiscoveryController(
         val status = discoveryJob.getStatus()
 
         return when (status) {
-            DiscoveryJobStatus.complete, DiscoveryJobStatus.inProgress -> HttpResponse.ok(DiscoveredClientsResponseList(discoveryJob.getDiscoveryResponses()))
+            DiscoveryJobStatus.complete, DiscoveryJobStatus.inProgress -> HttpResponse.ok(
+                DiscoveredClientsResponseList(
+                    discoveryJob.getDiscoveryResponses()
+                )
+            )
+
             DiscoveryJobStatus.error -> HttpResponse.badRequest("Client discovery encountered an error. Please try again.")
             DiscoveryJobStatus.idle -> HttpResponse.badRequest("Client discovery not started. Please start discovery before querying discovered clients.")
         }
@@ -54,21 +59,14 @@ class ClientDiscoveryController(
     }
 
     @Post("/confirm-clients")
-    fun confirm(request: SelectClientsRequest): HttpResponse<Any> {
+    fun confirm(selectedClient: SelectedClientRequest): HttpResponse<Any> {
         val discoveredClients = discoveryJob.getDiscoveryResponses()
-        var validRequest = true
-        for (selectedClient in request.clients) {
-            if (discoveredClients.firstOrNull { it.name == selectedClient.name && it.address == selectedClient.address } == null) {
-                validRequest = false
-                break
-            }
-        }
-
-        if (validRequest) {
+        val matchingClient =
+            discoveredClients.firstOrNull { it.name == selectedClient.name && it.address == selectedClient.address }
+        if (matchingClient != null) {
             discoveryJob.markIdle()
-
             for (client in discoveredClients) {
-                val isNewClient = clientRepository.findByAddress(client.address).isPresent
+                val isNewClient = clientRepository.findByAddress(matchingClient.address).isPresent
                 if (!isNewClient) {
                     val entity = LedStripClientEntity(
                         name = client.name,
@@ -77,12 +75,11 @@ class ClientDiscoveryController(
                         apiPort = client.apiPort,
                     )
                     clientRepository.save(entity)
+                    return HttpResponse.created(matchingClient)
                 }
             }
-
-            return HttpResponse.ok()
         }
 
-        return HttpResponse.badRequest("One or more clients in the request did not match the discovered clients.")
+        return HttpResponse.badRequest("${selectedClient.name} did not match any of the discovered clients.")
     }
 }
