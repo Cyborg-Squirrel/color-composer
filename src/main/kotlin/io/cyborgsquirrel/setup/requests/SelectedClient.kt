@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.model.requests.discovery
+package io.cyborgsquirrel.setup.requests
 
 import io.micronaut.serde.annotation.Serdeable
 

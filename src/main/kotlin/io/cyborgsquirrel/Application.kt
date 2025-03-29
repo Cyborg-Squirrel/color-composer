@@ -20,7 +20,6 @@ fun main(args: Array<String>) {
 @Singleton
 class StartupListener(
     private val h2WebServer: H2WebServer,
-    private val discoveryService: ClientDiscoveryJob,
     private val wsJob: WebSocketJob,
     private val sunriseSunsetJob: SunriseSunsetApiFetchJob,
     private val taskScheduler: TaskScheduler,
@@ -32,7 +31,6 @@ class StartupListener(
         try {
             // Run background task
             taskScheduler.schedule(Duration.ofMillis(0), wsJob)
-//            taskScheduler.schedule(Duration.ofMillis(0), discoveryService)
 //            taskScheduler.schedule("1 0 * * ?", sunriseSunsetJob)
             taskScheduler.schedule(Duration.ofMillis(0), sunriseSunsetJob)
             h2WebServer.start()
@@ -49,13 +47,14 @@ class StartupListener(
 @Singleton
 class ShutdownListener(
     private val wsJob: WebSocketJob,
+    private val h2WebServer: H2WebServer,
 ) :
     ApplicationEventListener<ServerShutdownEvent> {
 
     override fun onApplicationEvent(event: ServerShutdownEvent) {
         logger.info("Application shutting down")
         try {
-            // Run background task
+            h2WebServer.stop()
             wsJob.dispose()
         } catch (e: InterruptedException) {
             e.printStackTrace()
