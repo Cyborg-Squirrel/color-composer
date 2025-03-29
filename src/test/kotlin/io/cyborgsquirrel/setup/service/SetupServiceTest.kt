@@ -32,6 +32,7 @@ class SetupServiceTest(
             LedStripClientEntity(
                 name = name,
                 address = address,
+                uuid = UUID.randomUUID().toString(),
                 apiPort = apiPort,
                 wsPort = wsPort
             )

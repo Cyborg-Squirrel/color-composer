@@ -65,7 +65,13 @@ class LightEffectTriggerRepositoryTest(
 
     "Create a light effect trigger entity" {
         val client = clientRepository.save(
-            LedStripClientEntity(name = "Living Room", address = "192.168.1.1", apiPort = 1111, wsPort = 2222)
+            LedStripClientEntity(
+                name = "Living Room",
+                address = "192.168.1.1",
+                uuid = UUID.randomUUID().toString(),
+                apiPort = 1111,
+                wsPort = 2222
+            )
         )
         val strip = ledStripRepository.save(
             LedStripEntity(

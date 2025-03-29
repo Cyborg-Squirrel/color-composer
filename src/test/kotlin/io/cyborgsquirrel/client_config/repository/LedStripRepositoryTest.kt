@@ -24,6 +24,7 @@ class LedStripRepositoryTest(
         LedStripClientEntity(
             name = "Hallway client",
             address = "192.168.50.210",
+            uuid = UUID.randomUUID().toString(),
             wsPort = 8888,
             apiPort = 7777
         )

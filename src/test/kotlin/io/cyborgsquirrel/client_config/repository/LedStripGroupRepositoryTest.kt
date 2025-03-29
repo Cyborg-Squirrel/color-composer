@@ -26,7 +26,13 @@ class LedStripGroupRepositoryTest(
         wsPort: Int,
         apiPort: Int
     ): LedStripClientEntity = clientRepository.save(
-        LedStripClientEntity(name = name, address = address, wsPort = wsPort, apiPort = apiPort)
+        LedStripClientEntity(
+            name = name,
+            address = address,
+            uuid = UUID.randomUUID().toString(),
+            wsPort = wsPort,
+            apiPort = apiPort
+        )
     )
 
     fun saveLedStrips(client: LedStripClientEntity, strips: List<Pair<String, Int>>): List<LedStripEntity> =
