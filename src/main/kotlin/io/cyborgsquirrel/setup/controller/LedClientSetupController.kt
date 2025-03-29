@@ -2,10 +2,10 @@ package io.cyborgsquirrel.setup.controller
 
 import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.entity.LedStripClientEntity
-import io.cyborgsquirrel.setup.requests.CreateClientRequest
-import io.cyborgsquirrel.setup.requests.UpdateClientRequest
-import io.cyborgsquirrel.setup.responses.GetClientResponse
-import io.cyborgsquirrel.setup.responses.GetClientsResponse
+import io.cyborgsquirrel.setup.requests.client.CreateClientRequest
+import io.cyborgsquirrel.setup.requests.client.UpdateClientRequest
+import io.cyborgsquirrel.setup.responses.client.GetClientResponse
+import io.cyborgsquirrel.setup.responses.client.GetClientsResponse
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -16,7 +16,7 @@ import io.micronaut.http.annotation.Put
 import java.util.*
 
 @Controller("/client")
-class LedClientController(private val clientRepository: H2LedStripClientRepository) {
+class LedClientSetupController(private val clientRepository: H2LedStripClientRepository) {
 
     @Get("/{uuid}")
     fun getClient(uuid: String): HttpResponse<Any> {

@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.setup.requests
+package io.cyborgsquirrel.setup.requests.strip
 
 import io.cyborgsquirrel.lighting.enums.BlendMode
 

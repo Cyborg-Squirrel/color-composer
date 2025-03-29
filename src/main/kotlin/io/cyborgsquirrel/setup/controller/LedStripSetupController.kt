@@ -5,14 +5,16 @@ import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
 import io.cyborgsquirrel.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
-import io.cyborgsquirrel.setup.requests.CreateLedStripRequest
-import io.cyborgsquirrel.setup.requests.UpdateLedStripRequest
+import io.cyborgsquirrel.setup.requests.strip.CreateLedStripRequest
+import io.cyborgsquirrel.setup.requests.strip.UpdateLedStripRequest
+import io.cyborgsquirrel.setup.responses.strip.LedStripResponse
+import io.cyborgsquirrel.setup.responses.strip.LedStripsResponse
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 import java.util.*
 
 @Controller("/strip")
-class LightStripSetupController(
+class LedStripSetupController(
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
     private val powerLimiterService: PowerLimiterService
@@ -22,8 +24,19 @@ class LightStripSetupController(
     fun getStripsForClient(@QueryValue clientUuid: String): HttpResponse<Any> {
         val clientEntityOptional = clientRepository.findByUuid(clientUuid)
         return if (clientEntityOptional.isPresent) {
-            // TODO map client's strips to serialized LED strips list object
-            HttpResponse.serverError("Not implemented")
+            val clientEntity = clientEntityOptional.get()
+            val stripResponseList = clientEntity.strips.map { s ->
+                LedStripResponse(
+                    clientUuid = clientUuid,
+                    name = s.name!!,
+                    uuid = s.uuid!!,
+                    length = s.length!!,
+                    height = s.height,
+                    powerLimit = s.powerLimit,
+                    blendMode = s.blendMode!!,
+                )
+            }
+            HttpResponse.ok(LedStripsResponse(stripResponseList))
         } else {
             HttpResponse.badRequest("No client exists with uuid $clientUuid!")
         }
@@ -33,8 +46,19 @@ class LightStripSetupController(
     fun getStrip(uuid: String): HttpResponse<Any> {
         val entityOptional = stripRepository.findByUuid(uuid)
         return if (entityOptional.isPresent) {
-            // TODO map strip to serialized LED strip object
-            HttpResponse.serverError("Not implemented")
+            val entity = entityOptional.get()
+            val response = entity.let { s ->
+                LedStripResponse(
+                    clientUuid = s.client!!.uuid!!,
+                    name = s.name!!,
+                    uuid = s.uuid!!,
+                    length = s.length!!,
+                    height = s.height,
+                    powerLimit = s.powerLimit,
+                    blendMode = s.blendMode!!,
+                )
+            }
+            HttpResponse.ok(response)
         } else {
             HttpResponse.badRequest("No LED strip exists with uuid $uuid!")
         }

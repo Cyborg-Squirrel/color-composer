@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.setup.controller
 
-import io.cyborgsquirrel.setup.responses.SetupStatusResponse
+import io.cyborgsquirrel.setup.responses.status.SetupStatusResponse
 import io.cyborgsquirrel.setup.service.SetupStatusCheckService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller

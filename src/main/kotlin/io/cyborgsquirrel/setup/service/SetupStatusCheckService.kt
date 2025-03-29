@@ -3,7 +3,7 @@ package io.cyborgsquirrel.setup.service
 import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
-import io.cyborgsquirrel.setup.responses.SetupStatus
+import io.cyborgsquirrel.setup.responses.status.SetupStatus
 import jakarta.inject.Singleton
 
 @Singleton

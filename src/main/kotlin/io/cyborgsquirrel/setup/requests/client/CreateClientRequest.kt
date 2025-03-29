@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.setup.requests
+package io.cyborgsquirrel.setup.requests.client
 
 import io.micronaut.serde.annotation.Serdeable
 
