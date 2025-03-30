@@ -25,7 +25,7 @@ import io.cyborgsquirrel.lighting.rendering.filters.BrightnessFadeFilter
 import io.cyborgsquirrel.lighting.rendering.filters.LightEffectFilterConstants
 import io.cyborgsquirrel.lighting.rendering.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFadeFilterSettings
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.test_helpers.objectToMap

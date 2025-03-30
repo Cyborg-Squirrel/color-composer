@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.rendering.model
 
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 
 data class RenderedFrameModel(
     val timestamp: Long,

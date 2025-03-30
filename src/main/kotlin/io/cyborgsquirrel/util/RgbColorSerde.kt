@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.util
 
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 import io.micronaut.core.type.Argument
 import io.micronaut.serde.*
 import jakarta.inject.Singleton

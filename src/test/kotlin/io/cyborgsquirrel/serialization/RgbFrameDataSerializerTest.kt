@@ -1,8 +1,8 @@
 package io.cyborgsquirrel.serialization
 
 import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
-import io.cyborgsquirrel.model.color.RgbColor
-import io.cyborgsquirrel.model.color.RgbFrameData
+import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.StringSpec
 

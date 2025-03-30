@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.model.color
+package io.cyborgsquirrel.lighting.model
 
 /**
  * RGB frame to be streamed to a client over a WebSocket.

@@ -1,10 +1,9 @@
 package io.cyborgsquirrel.lighting.rendering.filters
 
 import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFadeFilterSettings
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.serde.annotation.Serdeable
-import java.time.Duration
 
 /**
  * Transforms a list of [RgbColor] by a specified fade-in/fade-out brightness.

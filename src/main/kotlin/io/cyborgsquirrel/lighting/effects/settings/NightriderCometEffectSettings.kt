@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effects.settings
 
 import io.cyborgsquirrel.lighting.enums.FadeCurve
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable

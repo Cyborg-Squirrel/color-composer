@@ -23,8 +23,8 @@ import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFadeFilte
 import io.cyborgsquirrel.lighting.rendering.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
-import io.cyborgsquirrel.model.color.RgbColor
-import io.cyborgsquirrel.model.color.RgbFrameData
+import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.model.strip.LedStripModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder

@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.rendering.filters
 
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 
 sealed class LightEffectFilter(val uuid: String) {
     /**

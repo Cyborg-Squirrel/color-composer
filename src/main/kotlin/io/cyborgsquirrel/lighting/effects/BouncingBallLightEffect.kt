@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effects.settings.BouncingBallEffectSettings
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlin.math.pow
 import kotlin.math.sqrt

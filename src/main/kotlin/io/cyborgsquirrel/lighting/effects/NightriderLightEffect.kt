@@ -4,7 +4,7 @@ import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSett
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.FadeCurve
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 import org.slf4j.LoggerFactory
 import kotlin.math.abs
 import kotlin.math.log

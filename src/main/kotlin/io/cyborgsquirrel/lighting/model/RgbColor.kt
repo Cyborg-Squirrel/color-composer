@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.model.color
+package io.cyborgsquirrel.lighting.model
 
 import io.micronaut.serde.annotation.Serdeable
 import kotlin.math.min

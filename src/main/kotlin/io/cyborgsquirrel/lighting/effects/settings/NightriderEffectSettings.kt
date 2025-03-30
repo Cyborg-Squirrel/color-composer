@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.effects.settings
 
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 
 sealed interface NightriderEffectSettings {
     fun getColors(): List<RgbColor>

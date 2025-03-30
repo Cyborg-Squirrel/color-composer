@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.serialization
 
-import io.cyborgsquirrel.model.color.RgbFrameData
+import io.cyborgsquirrel.lighting.model.RgbFrameData
 
 class RgbFrameDataSerializer {
 

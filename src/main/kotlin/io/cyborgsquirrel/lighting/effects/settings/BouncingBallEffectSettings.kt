@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effects.settings
 
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 
 data class BouncingBallEffectSettings(
     val startingHeight: Double,

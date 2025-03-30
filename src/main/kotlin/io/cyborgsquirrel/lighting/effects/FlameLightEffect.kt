@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effects.settings.FlameEffectSettings
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random

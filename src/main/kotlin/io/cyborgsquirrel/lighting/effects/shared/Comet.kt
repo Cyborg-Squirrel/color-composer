@@ -2,7 +2,7 @@ package io.cyborgsquirrel.lighting.effects.shared
 
 import io.cyborgsquirrel.lighting.enums.Direction
 import io.cyborgsquirrel.lighting.enums.FadeCurve
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 import kotlin.math.log
 import kotlin.math.max
 

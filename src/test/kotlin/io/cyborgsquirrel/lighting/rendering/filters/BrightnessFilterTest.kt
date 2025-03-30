@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.rendering.filters
 
 import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFilterSettings
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe

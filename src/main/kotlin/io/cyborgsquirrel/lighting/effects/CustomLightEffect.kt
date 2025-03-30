@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
-import io.cyborgsquirrel.model.color.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColor
 
 /**
  * Class for user generated custom lighting effects
