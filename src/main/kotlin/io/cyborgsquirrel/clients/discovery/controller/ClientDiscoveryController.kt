@@ -6,7 +6,7 @@ import io.cyborgsquirrel.clients.discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.clients.discovery.model.DiscoveredClientsResponseList
 import io.cyborgsquirrel.clients.discovery.model.DiscoveryStatusResponse
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
-import io.cyborgsquirrel.clients.controller.requests.SelectClientRequest
+import io.cyborgsquirrel.clients.requests.SelectClientRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get

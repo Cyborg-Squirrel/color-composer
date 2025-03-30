@@ -3,10 +3,10 @@ package io.cyborgsquirrel.clients.controller
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.api.LedClientSetupApi
-import io.cyborgsquirrel.clients.controller.requests.CreateClientRequest
-import io.cyborgsquirrel.clients.controller.requests.UpdateClientRequest
-import io.cyborgsquirrel.clients.controller.responses.GetClientResponse
-import io.cyborgsquirrel.clients.controller.responses.GetClientsResponse
+import io.cyborgsquirrel.clients.requests.CreateClientRequest
+import io.cyborgsquirrel.clients.requests.UpdateClientRequest
+import io.cyborgsquirrel.clients.responses.GetClientResponse
+import io.cyborgsquirrel.clients.responses.GetClientsResponse
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller

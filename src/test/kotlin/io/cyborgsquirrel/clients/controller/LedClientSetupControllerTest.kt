@@ -3,10 +3,10 @@ package io.cyborgsquirrel.clients.controller
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.api.LedClientSetupApi
-import io.cyborgsquirrel.clients.controller.requests.CreateClientRequest
-import io.cyborgsquirrel.clients.controller.requests.UpdateClientRequest
-import io.cyborgsquirrel.clients.controller.responses.GetClientResponse
-import io.cyborgsquirrel.clients.controller.responses.GetClientsResponse
+import io.cyborgsquirrel.clients.requests.CreateClientRequest
+import io.cyborgsquirrel.clients.requests.UpdateClientRequest
+import io.cyborgsquirrel.clients.responses.GetClientResponse
+import io.cyborgsquirrel.clients.responses.GetClientsResponse
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrips
 import io.kotest.core.spec.style.StringSpec

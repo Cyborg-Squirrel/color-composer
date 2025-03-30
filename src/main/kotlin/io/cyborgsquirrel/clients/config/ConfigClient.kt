@@ -46,7 +46,9 @@ class ConfigClient(
             .path("time")
             .build()
         // TODO: switch http call to blocking?
-//        val timeObj = httpClient.toBlocking().retrieve(uri.toString())
+//        val response = httpClient.toBlocking().retrieve(uri.toString())
+//        val timeObj = objectMapper.readValue(response, ClientTime::class.java)
+
         val pub = httpClient.retrieve(uri.toString())
         val future = CompletableFuture<ClientTime>()
         pub.subscribe(object : Subscriber<String> {

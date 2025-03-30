@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.clients.controller.responses
+package io.cyborgsquirrel.clients.responses
 
 import io.micronaut.serde.annotation.Serdeable
 

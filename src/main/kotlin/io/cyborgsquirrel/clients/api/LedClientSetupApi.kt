@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.clients.api
 
-import io.cyborgsquirrel.clients.controller.requests.CreateClientRequest
-import io.cyborgsquirrel.clients.controller.requests.UpdateClientRequest
+import io.cyborgsquirrel.clients.requests.CreateClientRequest
+import io.cyborgsquirrel.clients.requests.UpdateClientRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 
