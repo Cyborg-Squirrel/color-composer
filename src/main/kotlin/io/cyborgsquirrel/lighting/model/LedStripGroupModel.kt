@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.model.strip
+package io.cyborgsquirrel.lighting.model
 
 import io.cyborgsquirrel.lighting.enums.BlendMode
 

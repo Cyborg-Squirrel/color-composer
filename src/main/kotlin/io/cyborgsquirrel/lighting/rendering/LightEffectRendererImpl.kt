@@ -6,8 +6,8 @@ import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import io.cyborgsquirrel.lighting.model.RgbColor
-import io.cyborgsquirrel.model.strip.LedStripGroupModel
-import io.cyborgsquirrel.model.strip.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripGroupModel
+import io.cyborgsquirrel.lighting.model.LedStripModel
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.util.*

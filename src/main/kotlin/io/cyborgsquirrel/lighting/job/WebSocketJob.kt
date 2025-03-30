@@ -25,7 +25,7 @@ import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.RgbFrameData
-import io.cyborgsquirrel.model.strip.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient

@@ -11,7 +11,7 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistryImpl
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.model.strip.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiTestData.Companion.apiResponse2025Jan21Json
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiTestData.Companion.apiResponse2025Jan2Json
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository

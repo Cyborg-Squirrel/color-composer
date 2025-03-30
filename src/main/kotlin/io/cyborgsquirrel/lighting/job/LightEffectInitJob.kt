@@ -21,9 +21,9 @@ import io.cyborgsquirrel.lighting.filters.*
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
-import io.cyborgsquirrel.model.strip.LedStrip
-import io.cyborgsquirrel.model.strip.LedStripGroupModel
-import io.cyborgsquirrel.model.strip.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStrip
+import io.cyborgsquirrel.lighting.model.LedStripGroupModel
+import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.TimeHelper

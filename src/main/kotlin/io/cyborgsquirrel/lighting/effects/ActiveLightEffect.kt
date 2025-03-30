@@ -2,7 +2,7 @@ package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.LightEffectFilter
-import io.cyborgsquirrel.model.strip.LedStrip
+import io.cyborgsquirrel.lighting.model.LedStrip
 
 data class ActiveLightEffect(
     val uuid: String,

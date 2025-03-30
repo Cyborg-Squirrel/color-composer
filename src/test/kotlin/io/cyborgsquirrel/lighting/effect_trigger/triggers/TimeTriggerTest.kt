@@ -8,7 +8,7 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistryImpl
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.model.strip.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.cyborgsquirrel.util.time.TimeHelperImpl
 import io.kotest.core.spec.style.BehaviorSpec
