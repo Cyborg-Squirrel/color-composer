@@ -1,9 +1,10 @@
 package io.cyborgsquirrel.lighting.effects.repository
 
 import io.cyborgsquirrel.client_config.repository.H2GroupMemberLedStripRepository
-import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
+import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.entity.*
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings

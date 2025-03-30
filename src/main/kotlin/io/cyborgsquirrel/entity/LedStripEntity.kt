@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.entity
 
+import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id

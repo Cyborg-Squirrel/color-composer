@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.job
 
-import io.cyborgsquirrel.client_config.client.ConfigClient
-import io.cyborgsquirrel.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.config.ConfigClient
+import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.config.WebSocketJobConfig
 import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager

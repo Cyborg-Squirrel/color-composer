@@ -1,6 +1,6 @@
 package io.cyborgsquirrel
 
-import io.cyborgsquirrel.client_discovery.job.ClientDiscoveryJob
+import io.cyborgsquirrel.clients.discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.lighting.job.WebSocketJob
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiFetchJob
 import io.cyborgsquirrel.util.H2WebServer

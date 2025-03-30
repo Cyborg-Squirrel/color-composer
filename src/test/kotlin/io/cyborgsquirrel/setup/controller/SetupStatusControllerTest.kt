@@ -1,11 +1,11 @@
 package io.cyborgsquirrel.setup.controller
 
-import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.setup.api.SetupStatusApi
-import io.cyborgsquirrel.setup.responses.status.SetupStatus
-import io.cyborgsquirrel.setup.responses.status.SetupStatusResponse
+import io.cyborgsquirrel.setup.responses.SetupStatus
+import io.cyborgsquirrel.setup.responses.SetupStatusResponse
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrips
 import io.cyborgsquirrel.test_helpers.saveLightEffect

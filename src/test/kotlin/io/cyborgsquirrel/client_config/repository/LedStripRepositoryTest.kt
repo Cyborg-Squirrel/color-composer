@@ -1,7 +1,8 @@
 package io.cyborgsquirrel.client_config.repository
 
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.entity.GroupMemberLedStripEntity
-import io.cyborgsquirrel.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.entity.LedStripEntity
 import io.cyborgsquirrel.entity.LedStripGroupEntity
 import io.cyborgsquirrel.lighting.enums.BlendMode
