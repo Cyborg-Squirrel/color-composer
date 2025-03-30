@@ -8,6 +8,7 @@ import io.cyborgsquirrel.setup.requests.client.UpdateClientRequest
 import io.cyborgsquirrel.setup.responses.client.GetClientResponse
 import io.cyborgsquirrel.setup.responses.client.GetClientsResponse
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
+import io.cyborgsquirrel.test_helpers.saveLedStrips
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
@@ -93,5 +94,21 @@ class LedClientSetupControllerTest(
             updatedClientEntity.apiPort shouldBe updatedClientRequest.apiPort
             updatedClientEntity.wsPort shouldBe updatedClientRequest.wsPort
             updatedClientEntity.uuid shouldBe clientEntity.uuid
+        }
+
+        "Delete clients" {
+            val clientEntity = createLedStripClientEntity(clientRepository, "Window lights", "192.168.50.67", 80, 90)
+            val strips = saveLedStrips(stripRepository, clientEntity, listOf("Window light" to 60))
+
+            var deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
+            deleteResponse.status shouldBe HttpStatus.BAD_REQUEST
+
+            stripRepository.delete(strips.first())
+
+            deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
+            deleteResponse.status shouldBe HttpStatus.OK
+
+            deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
+            deleteResponse.status shouldBe HttpStatus.BAD_REQUEST
         }
     })
