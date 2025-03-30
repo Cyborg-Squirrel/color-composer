@@ -1,7 +1,9 @@
-package io.cyborgsquirrel.entity
+package io.cyborgsquirrel.lighting.effects.entity
 
+import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.micronaut.data.annotation.*
 import io.micronaut.data.model.DataType

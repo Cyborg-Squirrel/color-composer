@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.rendering.limits
+package io.cyborgsquirrel.lighting.limits
 
 import io.cyborgsquirrel.lighting.model.RgbColor
 

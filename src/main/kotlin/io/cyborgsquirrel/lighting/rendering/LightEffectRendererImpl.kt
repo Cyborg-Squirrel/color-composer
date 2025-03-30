@@ -3,7 +3,7 @@ package io.cyborgsquirrel.lighting.rendering
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
+import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.model.strip.LedStripGroupModel

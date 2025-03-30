@@ -2,7 +2,7 @@ package io.cyborgsquirrel.lighting.effects.repository
 
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
-import io.cyborgsquirrel.entity.LightEffectEntity
+import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.micronaut.data.annotation.Join
 import io.micronaut.data.jdbc.annotation.JdbcRepository

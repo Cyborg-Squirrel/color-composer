@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effect_trigger.repository
 
-import io.cyborgsquirrel.entity.LightEffectEntity
-import io.cyborgsquirrel.entity.LightEffectTriggerEntity
+import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
+import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.micronaut.data.annotation.Join
 import io.micronaut.data.jdbc.annotation.JdbcRepository
 import io.micronaut.data.model.query.builder.sql.Dialect

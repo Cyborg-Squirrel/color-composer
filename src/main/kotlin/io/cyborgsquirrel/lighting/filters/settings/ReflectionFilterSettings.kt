@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.rendering.filters.settings
+package io.cyborgsquirrel.lighting.filters.settings
 
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.micronaut.serde.annotation.Serdeable

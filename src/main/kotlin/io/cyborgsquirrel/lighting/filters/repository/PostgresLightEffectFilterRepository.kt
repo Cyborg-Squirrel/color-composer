@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.rendering.filters.repository
+package io.cyborgsquirrel.lighting.filters.repository
 
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.micronaut.context.annotation.Replaces

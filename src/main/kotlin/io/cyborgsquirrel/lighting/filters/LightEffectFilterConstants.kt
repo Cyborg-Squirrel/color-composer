@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.rendering.filters
+package io.cyborgsquirrel.lighting.filters
 
 class LightEffectFilterConstants {
     companion object {

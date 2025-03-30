@@ -1,7 +1,7 @@
-package io.cyborgsquirrel.lighting.rendering.filters
+package io.cyborgsquirrel.lighting.filters
 
 import io.cyborgsquirrel.lighting.enums.ReflectionType
-import io.cyborgsquirrel.lighting.rendering.filters.settings.ReflectionFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.micronaut.serde.annotation.Serdeable
 

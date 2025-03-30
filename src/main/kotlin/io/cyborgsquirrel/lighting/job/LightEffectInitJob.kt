@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
-import io.cyborgsquirrel.entity.LightEffectEntity
+import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
@@ -17,10 +17,11 @@ import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
+import io.cyborgsquirrel.lighting.filters.*
 import io.cyborgsquirrel.lighting.rendering.filters.*
-import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFadeFilterSettings
-import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFilterSettings
-import io.cyborgsquirrel.lighting.rendering.filters.settings.ReflectionFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.BrightnessFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.model.strip.LedStrip
 import io.cyborgsquirrel.model.strip.LedStripGroupModel
 import io.cyborgsquirrel.model.strip.LedStripModel

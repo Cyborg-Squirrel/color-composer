@@ -1,6 +1,6 @@
-package io.cyborgsquirrel.lighting.rendering.filters
+package io.cyborgsquirrel.lighting.filters
 
-import io.cyborgsquirrel.lighting.rendering.filters.settings.BrightnessFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.BrightnessFilterSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.micronaut.serde.annotation.Serdeable
 

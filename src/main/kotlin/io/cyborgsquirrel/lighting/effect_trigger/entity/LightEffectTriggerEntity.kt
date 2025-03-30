@@ -1,5 +1,6 @@
-package io.cyborgsquirrel.entity
+package io.cyborgsquirrel.lighting.effect_trigger.entity
 
+import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.micronaut.data.annotation.*
 import io.micronaut.data.model.DataType
 import io.micronaut.serde.annotation.Serdeable

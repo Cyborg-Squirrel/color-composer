@@ -6,8 +6,8 @@ import io.cyborgsquirrel.led_strips.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.cyborgsquirrel.entity.LightEffectEntity
-import io.cyborgsquirrel.entity.LightEffectTriggerEntity
+import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
+import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings

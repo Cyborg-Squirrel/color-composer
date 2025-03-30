@@ -4,7 +4,7 @@ import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.enums.BlendMode
-import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
+import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.led_strips.api.LedStripSetupApi
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest

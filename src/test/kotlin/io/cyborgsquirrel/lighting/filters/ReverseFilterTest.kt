@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.rendering.filters
+package io.cyborgsquirrel.lighting.filters
 
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.kotest.core.spec.style.BehaviorSpec
