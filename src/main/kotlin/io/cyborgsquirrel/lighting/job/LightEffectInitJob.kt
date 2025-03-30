@@ -18,7 +18,6 @@ import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSett
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.filters.*
-import io.cyborgsquirrel.lighting.rendering.filters.*
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
