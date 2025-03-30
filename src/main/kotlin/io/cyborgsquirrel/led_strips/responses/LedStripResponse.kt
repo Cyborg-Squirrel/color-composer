@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.setup.responses.strip
+package io.cyborgsquirrel.led_strips.responses
 
 import io.cyborgsquirrel.lighting.enums.BlendMode
 

@@ -1,7 +1,7 @@
-package io.cyborgsquirrel.setup.api
+package io.cyborgsquirrel.led_strips.api
 
-import io.cyborgsquirrel.setup.requests.strip.CreateLedStripRequest
-import io.cyborgsquirrel.setup.requests.strip.UpdateLedStripRequest
+import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
+import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 

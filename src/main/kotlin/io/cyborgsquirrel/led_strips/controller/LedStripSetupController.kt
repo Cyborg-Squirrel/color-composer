@@ -1,15 +1,15 @@
-package io.cyborgsquirrel.setup.controller
+package io.cyborgsquirrel.led_strips.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
-import io.cyborgsquirrel.setup.api.LedStripSetupApi
-import io.cyborgsquirrel.setup.requests.strip.CreateLedStripRequest
-import io.cyborgsquirrel.setup.requests.strip.UpdateLedStripRequest
-import io.cyborgsquirrel.setup.responses.strip.LedStripResponse
-import io.cyborgsquirrel.setup.responses.strip.LedStripsResponse
+import io.cyborgsquirrel.led_strips.api.LedStripSetupApi
+import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
+import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
+import io.cyborgsquirrel.led_strips.responses.LedStripResponse
+import io.cyborgsquirrel.led_strips.responses.LedStripsResponse
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
