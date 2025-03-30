@@ -29,6 +29,7 @@ class SetupStatusControllerTest(
         afterTest {
             stripRepository.deleteAll()
             clientRepository.deleteAll()
+            effectRepository.deleteAll()
         }
 
         "Setup status - nothing setup" {

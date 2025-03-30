@@ -16,5 +16,5 @@ interface LedStripSetupApi {
     fun createStrip(@QueryValue clientUuid: String, @Body request: CreateLedStripRequest): HttpResponse<Any>
 
     @Patch("/{uuid}")
-    fun updateStrip(uuid: String, @Body request: UpdateLedStripRequest): HttpResponse<Any>
+    fun updateStrip(uuid: String, @Body updatedStrip: UpdateLedStripRequest): HttpResponse<Any>
 }

@@ -13,7 +13,7 @@ import io.micronaut.http.annotation.Controller
 import java.util.*
 
 @Controller("/client")
-class LedClientSetupController(private val clientRepository: H2LedStripClientRepository): LedClientSetupApi {
+class LedClientSetupController(private val clientRepository: H2LedStripClientRepository) : LedClientSetupApi {
 
     override fun getClient(uuid: String): HttpResponse<Any> {
         val clientEntityOptional = clientRepository.findByUuid(uuid)
@@ -51,7 +51,7 @@ class LedClientSetupController(private val clientRepository: H2LedStripClientRep
                     name = newClient.name,
                     address = newClient.address,
                     apiPort = newClient.apiPort,
-                    wsPort = newClient.apiPort,
+                    wsPort = newClient.wsPort,
                     uuid = UUID.randomUUID().toString()
                 )
             )
@@ -66,22 +66,12 @@ class LedClientSetupController(private val clientRepository: H2LedStripClientRep
         // TODO validation and notify WebSocket jobs of port number changes
         return if (entityOptional.isPresent) {
             val entity = entityOptional.get()
-            var newEntity: LedStripClientEntity? = null
-            if (updatedClient.name != null) {
-                newEntity = entity.copy(name = updatedClient.name)
-            }
-
-            if (updatedClient.address != null) {
-                newEntity = entity.copy(address = updatedClient.address)
-            }
-
-            if (updatedClient.apiPort != null) {
-                newEntity = entity.copy(apiPort = updatedClient.apiPort)
-            }
-
-            if (updatedClient.wsPort != null) {
-                newEntity = entity.copy(wsPort = updatedClient.wsPort)
-            }
+            val newEntity = entity.copy(
+                name = updatedClient.name ?: entity.name,
+                address = updatedClient.address ?: entity.address,
+                apiPort = updatedClient.apiPort ?: entity.apiPort,
+                wsPort = updatedClient.wsPort ?: entity.wsPort,
+            )
 
             if (newEntity != entity) {
                 clientRepository.update(newEntity)

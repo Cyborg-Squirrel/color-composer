@@ -11,7 +11,9 @@ import io.cyborgsquirrel.setup.requests.strip.UpdateLedStripRequest
 import io.cyborgsquirrel.setup.responses.strip.LedStripResponse
 import io.cyborgsquirrel.setup.responses.strip.LedStripsResponse
 import io.micronaut.http.HttpResponse
-import io.micronaut.http.annotation.*
+import io.micronaut.http.annotation.Body
+import io.micronaut.http.annotation.Controller
+import io.micronaut.http.annotation.QueryValue
 import java.util.*
 
 @Controller("/strip")
@@ -82,38 +84,23 @@ class LedStripSetupController(
         }
     }
 
-    override fun updateStrip(uuid: String, @Body request: UpdateLedStripRequest): HttpResponse<Any> {
+    override fun updateStrip(uuid: String, @Body updatedStrip: UpdateLedStripRequest): HttpResponse<Any> {
         val entityOptional = stripRepository.findByUuid(uuid)
         return if (entityOptional.isPresent) {
             val entity = entityOptional.get()
-            var newEntity: LedStripEntity? = null
-
-            if (request.name != null) {
-                newEntity = entity.copy(name = request.name)
-            }
-
-            // TODO notify any running effects of the updated length. Force user to restart effects?
-            if (request.length != null) {
-                newEntity = entity.copy(length = request.length)
-            }
-
-            // TODO notify any running effects of the updated height. Force user to restart effects?
-            if (request.height != null) {
-                newEntity = entity.copy(height = request.height)
-            }
-
-            if (request.powerLimit != null) {
-                newEntity = entity.copy(powerLimit = request.powerLimit)
-            }
-
+            // TODO notify any running effects of the updated length or height. Force user to restart effects?
             // TODO notify renderer or active effect registry of blend mode changes.
-            if (request.blendMode != null) {
-                newEntity = entity.copy(blendMode = request.blendMode)
-            }
+            val newEntity = entity.copy(
+                name = updatedStrip.name ?: entity.name,
+                length = updatedStrip.length ?: entity.length,
+                height = updatedStrip.height ?: entity.height,
+                powerLimit = updatedStrip.powerLimit ?: entity.powerLimit,
+                blendMode = updatedStrip.blendMode ?: entity.blendMode
+            )
 
             if (newEntity != entity) {
                 stripRepository.update(newEntity)
-                if (request.powerLimit != null) powerLimiterService.setLimit(uuid, request.powerLimit)
+                if (updatedStrip.powerLimit != null) powerLimiterService.setLimit(uuid, updatedStrip.powerLimit)
             }
 
             HttpResponse.noContent()
