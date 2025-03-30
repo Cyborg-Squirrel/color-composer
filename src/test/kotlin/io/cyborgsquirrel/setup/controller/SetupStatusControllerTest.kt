@@ -1,0 +1,65 @@
+package io.cyborgsquirrel.setup.controller
+
+import io.cyborgsquirrel.client_config.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
+import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.setup.api.SetupStatusApi
+import io.cyborgsquirrel.setup.responses.status.SetupStatus
+import io.cyborgsquirrel.setup.responses.status.SetupStatusResponse
+import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
+import io.cyborgsquirrel.test_helpers.saveLedStrips
+import io.cyborgsquirrel.test_helpers.saveLightEffect
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
+import io.micronaut.http.HttpStatus
+import io.micronaut.http.client.annotation.Client
+import io.micronaut.serde.ObjectMapper
+import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
+
+@MicronautTest
+class SetupStatusControllerTest(
+    @Client("/") private val apiClient: SetupStatusApi,
+    private val clientRepository: H2LedStripClientRepository,
+    private val stripRepository: H2LedStripRepository,
+    private val effectRepository: H2LightEffectRepository,
+    private val objectMapper: ObjectMapper
+) :
+    StringSpec({
+
+        afterTest {
+            stripRepository.deleteAll()
+            clientRepository.deleteAll()
+        }
+
+        "Setup status - nothing setup" {
+            val statusResponse = apiClient.setupStatus()
+            statusResponse.status shouldBe HttpStatus.OK
+            val response = statusResponse.body() as SetupStatusResponse
+            response.status shouldBe SetupStatus.NoClients
+        }
+
+        "Setup status - clients configured, no strips" {
+            createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.1.12", 1111, 2222)
+            val statusResponse = apiClient.setupStatus()
+            statusResponse.status shouldBe HttpStatus.OK
+            val response = statusResponse.body() as SetupStatusResponse
+            response.status shouldBe SetupStatus.NoStrips
+        }
+
+        "Setup status - clients and strips configured, no effects" {
+            val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.1.12", 1111, 2222)
+            saveLedStrips(stripRepository, client, listOf("Hallway lights" to 240))
+            val statusResponse = apiClient.setupStatus()
+            val response = statusResponse.body() as SetupStatusResponse
+            response.status shouldBe SetupStatus.NoEffects
+        }
+
+        "Setup status - everything configured" {
+            val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.1.12", 1111, 2222)
+            val strip = saveLedStrips(stripRepository, client, listOf("Hallway lights" to 240)).first()
+            saveLightEffect(effectRepository, objectMapper, strip)
+            val statusResponse = apiClient.setupStatus()
+            val response = statusResponse.body() as SetupStatusResponse
+            response.status shouldBe SetupStatus.SetupComplete
+        }
+    })

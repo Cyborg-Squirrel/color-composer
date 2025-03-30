@@ -5,6 +5,7 @@ import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
 import io.cyborgsquirrel.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
+import io.cyborgsquirrel.setup.api.LedStripSetupApi
 import io.cyborgsquirrel.setup.requests.strip.CreateLedStripRequest
 import io.cyborgsquirrel.setup.requests.strip.UpdateLedStripRequest
 import io.cyborgsquirrel.setup.responses.strip.LedStripResponse
@@ -18,10 +19,9 @@ class LedStripSetupController(
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
     private val powerLimiterService: PowerLimiterService
-) {
+) : LedStripSetupApi {
 
-    @Get
-    fun getStripsForClient(@QueryValue clientUuid: String): HttpResponse<Any> {
+    override fun getStripsForClient(@QueryValue clientUuid: String): HttpResponse<Any> {
         val clientEntityOptional = clientRepository.findByUuid(clientUuid)
         return if (clientEntityOptional.isPresent) {
             val clientEntity = clientEntityOptional.get()
@@ -42,8 +42,7 @@ class LedStripSetupController(
         }
     }
 
-    @Get("/{uuid}")
-    fun getStrip(uuid: String): HttpResponse<Any> {
+    override fun getStrip(uuid: String): HttpResponse<Any> {
         val entityOptional = stripRepository.findByUuid(uuid)
         return if (entityOptional.isPresent) {
             val entity = entityOptional.get()
@@ -64,10 +63,7 @@ class LedStripSetupController(
         }
     }
 
-    @Put
-    fun createStrip(
-        @QueryValue clientUuid: String, @Body request: CreateLedStripRequest
-    ): HttpResponse<Any> {
+    override fun createStrip(@QueryValue clientUuid: String, @Body request: CreateLedStripRequest): HttpResponse<Any> {
         val clientEntityOptional = clientRepository.findByUuid(clientUuid)
         if (clientEntityOptional.isPresent) {
             val stripEntity = LedStripEntity(
@@ -86,8 +82,7 @@ class LedStripSetupController(
         }
     }
 
-    @Patch("/{uuid}")
-    fun updateStrip(uuid: String, @Body request: UpdateLedStripRequest): HttpResponse<Any> {
+    override fun updateStrip(uuid: String, @Body request: UpdateLedStripRequest): HttpResponse<Any> {
         val entityOptional = stripRepository.findByUuid(uuid)
         return if (entityOptional.isPresent) {
             val entity = entityOptional.get()

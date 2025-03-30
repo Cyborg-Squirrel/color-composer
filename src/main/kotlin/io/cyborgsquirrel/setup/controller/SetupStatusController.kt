@@ -1,17 +1,16 @@
 package io.cyborgsquirrel.setup.controller
 
+import io.cyborgsquirrel.setup.api.SetupStatusApi
 import io.cyborgsquirrel.setup.responses.status.SetupStatusResponse
 import io.cyborgsquirrel.setup.service.SetupStatusCheckService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Get
 import org.slf4j.LoggerFactory
 
 @Controller
-class SetupStatusController(private val setupStatusCheckService: SetupStatusCheckService) {
+class SetupStatusController(private val setupStatusCheckService: SetupStatusCheckService) : SetupStatusApi {
 
-    @Get("/setup-status")
-    fun setupStatus(): HttpResponse<Any> {
+    override fun setupStatus(): HttpResponse<Any> {
         try {
             val setupStatus = setupStatusCheckService.getSetupStatus()
             return HttpResponse.ok(SetupStatusResponse(setupStatus))
