@@ -1,5 +1,6 @@
-package io.cyborgsquirrel.entity
+package io.cyborgsquirrel.led_strips.entity
 
+import io.cyborgsquirrel.entity.LightEffectEntity
 import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity

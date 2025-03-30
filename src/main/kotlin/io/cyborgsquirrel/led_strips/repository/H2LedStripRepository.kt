@@ -1,7 +1,7 @@
-package io.cyborgsquirrel.client_config.repository
+package io.cyborgsquirrel.led_strips.repository
 
-import io.cyborgsquirrel.entity.GroupMemberLedStripEntity
-import io.cyborgsquirrel.entity.LedStripEntity
+import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.micronaut.data.annotation.Join
 import io.micronaut.data.jdbc.annotation.JdbcRepository
 import io.micronaut.data.model.query.builder.sql.Dialect

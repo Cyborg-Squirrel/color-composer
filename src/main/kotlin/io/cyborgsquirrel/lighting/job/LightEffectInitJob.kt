@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.job
 
-import io.cyborgsquirrel.client_config.repository.H2GroupMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
 import io.cyborgsquirrel.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager

@@ -1,8 +1,8 @@
 package io.cyborgsquirrel.clients.repository
 
-import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
-import io.cyborgsquirrel.entity.LedStripEntity
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan

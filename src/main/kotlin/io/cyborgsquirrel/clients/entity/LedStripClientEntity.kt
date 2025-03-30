@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.clients.entity
 
-import io.cyborgsquirrel.entity.LedStripEntity
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity

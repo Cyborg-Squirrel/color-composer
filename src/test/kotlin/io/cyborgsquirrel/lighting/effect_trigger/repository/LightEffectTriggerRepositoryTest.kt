@@ -1,11 +1,11 @@
 package io.cyborgsquirrel.lighting.effect_trigger.repository
 
-import io.cyborgsquirrel.client_config.repository.H2GroupMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.client_config.repository.H2LedStripGroupRepository
-import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.H2LedStripGroupRepository
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
-import io.cyborgsquirrel.entity.LedStripEntity
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.entity.LightEffectEntity
 import io.cyborgsquirrel.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants

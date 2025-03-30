@@ -1,10 +1,10 @@
-package io.cyborgsquirrel.client_config.repository
+package io.cyborgsquirrel.led_strips.repository
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.entity.GroupMemberLedStripEntity
+import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
-import io.cyborgsquirrel.entity.LedStripEntity
-import io.cyborgsquirrel.entity.LedStripGroupEntity
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
+import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

@@ -1,8 +1,8 @@
 package io.cyborgsquirrel.setup.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
-import io.cyborgsquirrel.entity.LedStripEntity
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.rendering.limits.PowerLimiterService
 import io.cyborgsquirrel.setup.api.LedStripSetupApi

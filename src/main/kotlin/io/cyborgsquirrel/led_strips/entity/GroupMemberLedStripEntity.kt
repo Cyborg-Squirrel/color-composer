@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.entity
+package io.cyborgsquirrel.led_strips.entity
 
 import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id

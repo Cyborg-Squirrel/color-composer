@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.clients.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.client_config.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.api.LedClientSetupApi
 import io.cyborgsquirrel.clients.controller.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.controller.requests.UpdateClientRequest
