@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.entity
+package io.cyborgsquirrel.sunrise_sunset.entity
 
 import io.micronaut.data.annotation.*
 import io.micronaut.serde.annotation.Serdeable

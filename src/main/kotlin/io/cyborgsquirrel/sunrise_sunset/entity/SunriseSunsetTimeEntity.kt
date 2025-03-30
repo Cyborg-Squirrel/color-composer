@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.entity
+package io.cyborgsquirrel.sunrise_sunset.entity
 
 import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id

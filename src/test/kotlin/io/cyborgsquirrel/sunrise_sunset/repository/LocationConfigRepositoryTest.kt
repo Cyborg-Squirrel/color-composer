@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.sunrise_sunset.repository
 
-import io.cyborgsquirrel.entity.LocationConfigEntity
-import io.cyborgsquirrel.entity.SunriseSunsetTimeEntity
+import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
+import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe

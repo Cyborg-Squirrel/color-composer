@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
-import io.cyborgsquirrel.entity.LocationConfigEntity
-import io.cyborgsquirrel.entity.SunriseSunsetTimeEntity
+import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
+import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
 import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
