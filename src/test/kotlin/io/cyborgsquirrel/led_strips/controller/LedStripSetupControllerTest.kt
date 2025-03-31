@@ -22,7 +22,7 @@ import java.util.*
 
 @MicronautTest
 class LedStripSetupControllerTest(
-    @Client("/") private val apiClient: LedStripSetupApi,
+    @Client private val apiClient: LedStripSetupApi,
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
     private val effectRepository: H2LightEffectRepository,
