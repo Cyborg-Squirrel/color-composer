@@ -36,21 +36,22 @@ class LedStripSetupControllerTest(
         }
 
         "Requesting LED strips" {
+            // Request strip which doesn't exist - bad request
             var response = apiClient.getStrip(UUID.randomUUID().toString())
             response.status shouldBe HttpStatus.BAD_REQUEST
 
+            // Request strips for a client which doesn't exist - bad request
             response = apiClient.getStripsForClient(UUID.randomUUID().toString())
             response.status shouldBe HttpStatus.BAD_REQUEST
 
+            // Request strips for a client which has no strips
             val client = createLedStripClientEntity(clientRepository, "Lamp lights", "192.168.1.23", 90, 91)
-            response = apiClient.getStrip(client.uuid!!)
-            response.status shouldBe HttpStatus.BAD_REQUEST
-
             response = apiClient.getStripsForClient(client.uuid!!)
             response.status shouldBe HttpStatus.OK
             var getStripsResponse = response.body() as GetLedStripsResponse
             getStripsResponse.strips.isEmpty() shouldBe true
 
+            // Request a single strip
             val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 50)).first()
             response = apiClient.getStrip(strip.uuid!!)
             response.status shouldBe HttpStatus.OK
@@ -62,6 +63,7 @@ class LedStripSetupControllerTest(
             getStripResponse.powerLimit shouldBe strip.powerLimit
             getStripResponse.blendMode shouldBe strip.blendMode
 
+            // Request strips for client
             response = apiClient.getStripsForClient(client.uuid!!)
             response.status shouldBe HttpStatus.OK
             getStripsResponse = response.body() as GetLedStripsResponse
