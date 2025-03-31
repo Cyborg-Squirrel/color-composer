@@ -12,8 +12,10 @@ class PowerLimiterServiceImpl : PowerLimiterService {
         powerLimits[stripUuid] = milliamps
     }
 
-    override fun getLimit(stripUuid: String): Int? {
-        return powerLimits[stripUuid]
+    override fun getLimit(stripUuid: String): Int? = powerLimits[stripUuid]
+
+    override fun removeLimit(stripUuid: String) {
+        powerLimits.remove(stripUuid)
     }
 
     override fun applyLimit(rgbList: List<RgbColor>, stripUuid: String): List<RgbColor> {

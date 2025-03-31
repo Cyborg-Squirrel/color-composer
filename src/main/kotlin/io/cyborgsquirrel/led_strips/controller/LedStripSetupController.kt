@@ -8,8 +8,9 @@ import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.led_strips.responses.GetLedStripResponse
 import io.cyborgsquirrel.led_strips.responses.GetLedStripsResponse
+import io.cyborgsquirrel.led_strips.service.LedStripSetupService
 import io.cyborgsquirrel.lighting.enums.BlendMode
-import io.cyborgsquirrel.lighting.limits.PowerLimiterService
+import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -20,7 +21,7 @@ import java.util.*
 class LedStripSetupController(
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
-    private val powerLimiterService: PowerLimiterService
+    private val stripSetupService: LedStripSetupService,
 ) : LedStripSetupApi {
 
     override fun getStripsForClient(@QueryValue clientUuid: String): HttpResponse<Any> {
@@ -85,43 +86,24 @@ class LedStripSetupController(
     }
 
     override fun updateStrip(uuid: String, @Body updatedStrip: UpdateLedStripRequest): HttpResponse<Any> {
-        val entityOptional = stripRepository.findByUuid(uuid)
-        return if (entityOptional.isPresent) {
-            val entity = entityOptional.get()
-            // TODO notify any running effects of the updated length or height. Force user to restart effects?
-            // TODO notify renderer or active effect registry of blend mode changes.
-            val newEntity = entity.copy(
-                name = updatedStrip.name ?: entity.name,
-                length = updatedStrip.length ?: entity.length,
-                height = updatedStrip.height ?: entity.height,
-                powerLimit = updatedStrip.powerLimit ?: entity.powerLimit,
-                blendMode = updatedStrip.blendMode ?: entity.blendMode
-            )
-
-            if (newEntity != entity) {
-                stripRepository.update(newEntity)
-                if (updatedStrip.powerLimit != null) powerLimiterService.setLimit(uuid, updatedStrip.powerLimit)
-            }
-
+        return try {
+            stripSetupService.onStripUpdate(uuid, updatedStrip)
             HttpResponse.noContent()
-        } else {
-            HttpResponse.badRequest("Client with uuid $uuid does not exist! Please create it first before updating it.")
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError()
         }
     }
 
     override fun deleteStrip(uuid: String): HttpResponse<Any> {
-        val entityOptional = stripRepository.findByUuid(uuid)
-        return if (entityOptional.isPresent) {
-            val entity = entityOptional.get()
-            if (entity.effects.isEmpty() && entity.members.isEmpty()) {
-                stripRepository.deleteById(entity.id)
-                HttpResponse.noContent()
-            } else {
-                // TODO cascading delete? Unassign effects and group membership?
-                HttpResponse.badRequest("Could not delete strip with uuid $uuid. Please delete or reassign its effects and group memberships first.")
-            }
-        } else {
-            HttpResponse.badRequest("Could not delete strip with uuid $uuid. It does not exist.")
+        return try {
+            stripSetupService.onStripDeleted(uuid)
+            HttpResponse.noContent()
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError()
         }
     }
 }

@@ -14,6 +14,8 @@ interface ActiveLightEffectRegistry {
 
     fun findEffectWithUuid(uuid: String): Optional<ActiveLightEffect>
 
+    fun findAllEffectsForStrip(stripUuid: String): List<ActiveLightEffect>
+
     fun findAllEffects(): List<ActiveLightEffect>
 
     fun reset()

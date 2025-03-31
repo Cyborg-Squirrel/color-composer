@@ -8,5 +8,7 @@ interface PowerLimiterService {
 
     fun getLimit(stripUuid: String): Int?
 
+    fun removeLimit(stripUuid: String)
+
     fun applyLimit(rgbList: List<RgbColor>, stripUuid: String): List<RgbColor>
 }

@@ -30,6 +30,7 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
     override fun removeEffect(lightEffect: ActiveLightEffect) {
         try {
             lock.acquire()
+            logger.info("Removing light effect $lightEffect")
             effectList.remove(lightEffect)
         } finally {
             lock.release()
@@ -58,6 +59,20 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
         }
 
         return if (effect == null) Optional.empty() else Optional.of(effect)
+    }
+
+    override fun findAllEffectsForStrip(stripUuid: String): List<ActiveLightEffect> {
+        val effects = mutableListOf<ActiveLightEffect>()
+        try {
+            lock.acquire()
+            effects.addAll(effectList.filter {
+                it.strip.getUuid() == stripUuid
+            })
+        } finally {
+            lock.release()
+        }
+
+        return effects
     }
 
     override fun findAllEffects(): List<ActiveLightEffect> {
