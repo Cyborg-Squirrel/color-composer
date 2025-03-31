@@ -28,7 +28,7 @@ CREATE TABLE led_strips
     height      INT NOT NULL,
     power_limit INT,
     blend_mode  VARCHAR(50) NOT NULL,
-    client_id   INT,
+    client_id   INT NOT NULL,
     CONSTRAINT strip_client_fk FOREIGN KEY (client_id) REFERENCES led_strip_clients
 );
 
@@ -60,11 +60,7 @@ CREATE TABLE light_effects
     name       VARCHAR(255) NOT NULL,
     status     VARCHAR(50) NOT NULL,
     CONSTRAINT led_strip_group_assoc_fk FOREIGN KEY (group_id) REFERENCES led_strip_groups,
-    CONSTRAINT led_strip_assoc_fk FOREIGN KEY (strip_id) REFERENCES led_strips,
-    CONSTRAINT strip_or_strip_group_not_null CHECK (
-        (strip_id IS NOT NULL AND group_id IS NULL) OR
-                (strip_id IS NULL AND group_id IS NOT NULL)
-    )
+    CONSTRAINT led_strip_assoc_fk FOREIGN KEY (strip_id) REFERENCES led_strips
 );
 
 CREATE TABLE light_effect_triggers
