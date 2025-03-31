@@ -17,4 +17,7 @@ interface LedStripSetupApi {
 
     @Patch("/{uuid}")
     fun updateStrip(uuid: String, @Body updatedStrip: UpdateLedStripRequest): HttpResponse<Any>
+
+    @Delete
+    fun deleteStrip(uuid: String): HttpResponse<Any>
 }

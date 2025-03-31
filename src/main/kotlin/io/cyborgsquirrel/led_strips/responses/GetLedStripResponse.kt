@@ -2,7 +2,7 @@ package io.cyborgsquirrel.led_strips.responses
 
 import io.cyborgsquirrel.lighting.enums.BlendMode
 
-data class LedStripResponse(
+data class GetLedStripResponse(
     val clientUuid: String,
     val name: String,
     val uuid: String,

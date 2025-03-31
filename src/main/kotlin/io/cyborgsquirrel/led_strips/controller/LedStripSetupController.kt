@@ -1,15 +1,15 @@
 package io.cyborgsquirrel.led_strips.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
-import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.cyborgsquirrel.lighting.enums.BlendMode
-import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.led_strips.api.LedStripSetupApi
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
-import io.cyborgsquirrel.led_strips.responses.LedStripResponse
-import io.cyborgsquirrel.led_strips.responses.LedStripsResponse
+import io.cyborgsquirrel.led_strips.responses.GetLedStripResponse
+import io.cyborgsquirrel.led_strips.responses.GetLedStripsResponse
+import io.cyborgsquirrel.lighting.enums.BlendMode
+import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -28,7 +28,7 @@ class LedStripSetupController(
         return if (clientEntityOptional.isPresent) {
             val clientEntity = clientEntityOptional.get()
             val stripResponseList = clientEntity.strips.map { s ->
-                LedStripResponse(
+                GetLedStripResponse(
                     clientUuid = clientUuid,
                     name = s.name!!,
                     uuid = s.uuid!!,
@@ -38,7 +38,7 @@ class LedStripSetupController(
                     blendMode = s.blendMode!!,
                 )
             }
-            HttpResponse.ok(LedStripsResponse(stripResponseList))
+            HttpResponse.ok(GetLedStripsResponse(stripResponseList))
         } else {
             HttpResponse.badRequest("No client exists with uuid $clientUuid!")
         }
@@ -49,7 +49,7 @@ class LedStripSetupController(
         return if (entityOptional.isPresent) {
             val entity = entityOptional.get()
             val response = entity.let { s ->
-                LedStripResponse(
+                GetLedStripResponse(
                     clientUuid = s.client!!.uuid!!,
                     name = s.name!!,
                     uuid = s.uuid!!,
@@ -106,6 +106,22 @@ class LedStripSetupController(
             HttpResponse.noContent()
         } else {
             HttpResponse.badRequest("Client with uuid $uuid does not exist! Please create it first before updating it.")
+        }
+    }
+
+    override fun deleteStrip(uuid: String): HttpResponse<Any> {
+        val entityOptional = stripRepository.findByUuid(uuid)
+        return if (entityOptional.isPresent) {
+            val entity = entityOptional.get()
+            if (entity.effects.isEmpty() && entity.members.isEmpty()) {
+                stripRepository.deleteById(entity.id)
+                HttpResponse.noContent()
+            } else {
+                // TODO cascading delete? Unassign effects and group membership?
+                HttpResponse.badRequest("Could not delete strip with uuid $uuid. Please delete or reassign its effects and group memberships first.")
+            }
+        } else {
+            HttpResponse.badRequest("Could not delete strip with uuid $uuid. It does not exist.")
         }
     }
 }
