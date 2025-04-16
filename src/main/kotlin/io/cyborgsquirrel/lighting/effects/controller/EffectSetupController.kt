@@ -1,55 +1,55 @@
 package io.cyborgsquirrel.lighting.effects.controller
 
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effects.api.EffectSetupApi
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
+import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
+import io.cyborgsquirrel.lighting.effects.service.EffectSetupService
+import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 
 @Controller("/effect")
 class EffectSetupController(
-    private val stripRepository: H2LedStripRepository,
-    private val effectRepository: H2LightEffectRepository
+    private val effectSetupService: EffectSetupService
 ) : EffectSetupApi {
 
     override fun getAllEffects(): HttpResponse<Any> {
-        // TODO strip vs strip group differentiation, strip group support
-        val effectEntities = effectRepository.queryAll()
-        val effectList = effectEntities.map {
-            GetEffectResponse(
-                name = it.name!!,
-                uuid = it.uuid!!,
-                stripUuid = it.strip!!.uuid!!,
-                settings = it.settings!!,
-                status = it.status!!,
-            )
+        return try {
+            val response = effectSetupService.getAllEffects()
+            HttpResponse.ok(response)
+        } catch (ex: Exception) {
+            HttpResponse.serverError()
         }
-        return HttpResponse.ok(effectList)
     }
 
-    // TODO strip group support
-    override fun getEffectsForStrip(stripUuid: String): HttpResponse<Any> {
-        val stripEntityOptional = stripRepository.findByUuid(stripUuid)
-        return if (stripEntityOptional.isPresent) {
-            val strip = stripEntityOptional.get()
-            val effectList = strip.effects.map {
-                GetEffectResponse(
-                    name = it.name!!,
-                    uuid = it.uuid!!,
-                    stripUuid = strip.uuid!!,
-                    settings = it.settings!!,
-                    status = it.status!!,
-                )
+    override fun getEffectsForStrip(stripUuid: String?, groupUuid: String?): HttpResponse<Any> {
+        return try {
+            if (!stripUuid.isNullOrBlank()) {
+                val response = effectSetupService.getEffectsForStrip(stripUuid)
+                HttpResponse.ok(response)
+            } else if (!groupUuid.isNullOrBlank()) {
+                TODO()
+            } else {
+                HttpResponse.badRequest("A stripUuid or groupUuid must be specified!")
             }
-            HttpResponse.ok(effectList)
-        } else {
-            HttpResponse.badRequest("Could not get effect. Strip with uuid $stripUuid does not exist!")
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError()
         }
     }
 
-    override fun createEffect(stripUuid: String): HttpResponse<Any> {
-        TODO("Not yet implemented")
+    override fun createEffect(
+        stripUuid: String,
+        request: CreateEffectRequest
+    ): HttpResponse<Any> {
+        return try {
+            val uuid = effectSetupService.createEffect(stripUuid, request)
+            HttpResponse.created(uuid)
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError()
+        }
     }
 
     override fun updateEffect(uuid: String): HttpResponse<Any> {
