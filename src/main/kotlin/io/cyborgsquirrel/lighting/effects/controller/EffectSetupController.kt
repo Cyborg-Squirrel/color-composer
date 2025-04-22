@@ -39,11 +39,10 @@ class EffectSetupController(
     }
 
     override fun createEffect(
-        stripUuid: String,
         request: CreateEffectRequest
     ): HttpResponse<Any> {
         return try {
-            val uuid = effectSetupService.createEffect(stripUuid, request)
+            val uuid = effectSetupService.createEffect(request)
             HttpResponse.created(uuid)
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)

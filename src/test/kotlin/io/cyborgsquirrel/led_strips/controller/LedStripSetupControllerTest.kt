@@ -79,8 +79,9 @@ class LedStripSetupControllerTest(
         "Creating LED strips" {
             // Create without optional fields specified
             val client = createLedStripClientEntity(clientRepository, "Porch lights", "192.168.50.50", 50, 51)
-            var request = CreateLedStripRequest("Porch underglow strip", 240, blendMode = BlendMode.Additive)
-            var response = apiClient.createStrip(client.uuid!!, request)
+            var request =
+                CreateLedStripRequest(client.uuid!!, "Porch underglow strip", 240, blendMode = BlendMode.Additive)
+            var response = apiClient.createStrip(request)
 
             response.status shouldBe HttpStatus.CREATED
             var uuid = response.body() as String
@@ -96,8 +97,8 @@ class LedStripSetupControllerTest(
             stripRepository.deleteAll()
 
             // Create with optional fields specified
-            request = CreateLedStripRequest("Porch under-glow strip", 180, 2, 4000, BlendMode.Average)
-            response = apiClient.createStrip(client.uuid!!, request)
+            request = CreateLedStripRequest(client.uuid!!, "Porch under-glow strip", 180, 2, 4000, BlendMode.Average)
+            response = apiClient.createStrip(request)
             response.status shouldBe HttpStatus.CREATED
             uuid = response.body() as String
             stripOptional = stripRepository.findByUuid(uuid)

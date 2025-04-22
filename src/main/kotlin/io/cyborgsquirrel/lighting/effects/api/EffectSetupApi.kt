@@ -13,10 +13,7 @@ interface EffectSetupApi {
     fun getEffectsForStrip(@QueryValue stripUuid: String?, @QueryValue groupUuid: String?): HttpResponse<Any>
 
     @Post
-    fun createEffect(
-        @QueryValue stripUuid: String,
-        @Body request: CreateEffectRequest
-    ): HttpResponse<Any>
+    fun createEffect(@Body request: CreateEffectRequest): HttpResponse<Any>
 
     @Patch("/{uuid}")
     fun updateEffect(uuid: String): HttpResponse<Any>

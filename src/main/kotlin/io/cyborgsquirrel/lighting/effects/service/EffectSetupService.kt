@@ -23,7 +23,7 @@ class EffectSetupService(
     private val effectRepository: H2LightEffectRepository
 ) {
 
-    fun createEffect(stripUuid: String, request: CreateEffectRequest): String {
+    fun createEffect(request: CreateEffectRequest): String {
         val settingsObj: Any = when (request.effectType) {
             LightEffectConstants.SPECTRUM_NAME -> objectMapper.readValueFromTree(
                 JsonNode.from(request.settings),
@@ -54,7 +54,7 @@ class EffectSetupService(
             else -> throw ClientRequestException("No effect matching type ${request.effectType}")
         }
 
-        val stripEntityOptional = stripRepository.findByUuid(stripUuid)
+        val stripEntityOptional = stripRepository.findByUuid(request.stripUuid)
         return if (stripEntityOptional.isPresent) {
             val effectEntity = LightEffectEntity(
                 strip = stripEntityOptional.get(),
@@ -66,7 +66,7 @@ class EffectSetupService(
             effectRepository.save(effectEntity)
             effectEntity.uuid!!
         } else {
-            throw ClientRequestException("No strip found with uuid $stripUuid!")
+            throw ClientRequestException("No strip found with uuid ${request.stripUuid}!")
         }
     }
 
