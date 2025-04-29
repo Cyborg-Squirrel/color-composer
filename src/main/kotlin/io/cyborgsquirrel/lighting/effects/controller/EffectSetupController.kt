@@ -2,6 +2,8 @@ package io.cyborgsquirrel.lighting.effects.controller
 
 import io.cyborgsquirrel.lighting.effects.api.EffectSetupApi
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
+import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.service.EffectSetupService
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
@@ -12,7 +14,7 @@ class EffectSetupController(
     private val effectSetupService: EffectSetupService
 ) : EffectSetupApi {
 
-    override fun getAllEffects(): HttpResponse<Any> {
+    override fun getAllEffects(): HttpResponse<GetEffectsResponse> {
         return try {
             val response = effectSetupService.getAllEffects()
             HttpResponse.ok(response)
@@ -51,11 +53,25 @@ class EffectSetupController(
         }
     }
 
-    override fun updateEffect(uuid: String): HttpResponse<Any> {
-        TODO("Not yet implemented")
+    override fun updateEffect(uuid: String, request: UpdateEffectRequest): HttpResponse<Any> {
+        return try {
+            effectSetupService.updateEffect(uuid, request)
+            HttpResponse.noContent()
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError()
+        }
     }
 
     override fun deleteEffect(uuid: String): HttpResponse<Any> {
-        TODO("Not yet implemented")
+        return try {
+            effectSetupService.deleteEffect(uuid)
+            HttpResponse.noContent()
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError()
+        }
     }
 }

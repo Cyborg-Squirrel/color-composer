@@ -1,16 +1,18 @@
 package io.cyborgsquirrel.lighting.effects.service
 
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.settings.*
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.util.exception.ClientRequestException
-import io.micronaut.http.HttpResponse
 import io.micronaut.json.tree.JsonNode
 import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
@@ -20,7 +22,9 @@ import java.util.*
 class EffectSetupService(
     private val objectMapper: ObjectMapper,
     private val stripRepository: H2LedStripRepository,
-    private val effectRepository: H2LightEffectRepository
+    private val effectRepository: H2LightEffectRepository,
+    private val triggerRepository: H2LightEffectTriggerRepository,
+    private val filterRepository: H2LightEffectFilterRepository,
 ) {
 
     fun createEffect(request: CreateEffectRequest): String {
@@ -103,5 +107,53 @@ class EffectSetupService(
         }
 
         return GetEffectsResponse(effectList)
+    }
+
+    fun deleteEffect(effectUuid: String) {
+        val effectEntityOptional = effectRepository.findByUuid(effectUuid)
+        if (effectEntityOptional.isPresent) {
+            val effectEntity = effectEntityOptional.get()
+            val filterEntities = filterRepository.findByEffect(effectEntity)
+            val triggerEntities = triggerRepository.findByEffect(effectEntity)
+
+            filterEntities.forEach { filterRepository.delete(it) }
+            triggerEntities.forEach { triggerRepository.delete(it) }
+            effectRepository.delete(effectEntity)
+        } else {
+            throw ClientRequestException("Effect with uuid $effectUuid doesn't exist!")
+        }
+    }
+
+    fun updateEffect(uuid: String, updateEffectRequest: UpdateEffectRequest) {
+        val effectEntityOptional = effectRepository.findByUuid(uuid)
+        if (effectEntityOptional.isPresent) {
+            var effectEntity = effectEntityOptional.get()
+            if (!updateEffectRequest.name.isNullOrBlank()) {
+                effectEntity = effectEntity.copy(
+                    name = updateEffectRequest.name
+                )
+            }
+
+            if (updateEffectRequest.settings != null) {
+                effectEntity = effectEntity.copy(
+                    settings = updateEffectRequest.settings
+                )
+            }
+
+            if (updateEffectRequest.stripUuid != null && updateEffectRequest.stripUuid != effectEntity.strip?.uuid) {
+                val stripEntityOptional = stripRepository.findByUuid(updateEffectRequest.stripUuid)
+                if (stripEntityOptional.isPresent) {
+                    effectEntity = effectEntity.copy(
+                        strip = stripEntityOptional.get()
+                    )
+                } else {
+                    throw ClientRequestException("No LED strip with uuid ${updateEffectRequest.stripUuid}")
+                }
+            }
+
+            effectRepository.update(effectEntity)
+        } else {
+            throw ClientRequestException("Effect with uuid $uuid doesn't exist!")
+        }
     }
 }
