@@ -15,12 +15,12 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
     override fun addOrUpdateEffect(lightEffect: ActiveLightEffect) {
         try {
             lock.acquire()
-            if (effectList.none { it.uuid == lightEffect.uuid }) {
+            if (effectList.none { it.effectUuid == lightEffect.effectUuid }) {
                 logger.info("New light effect $lightEffect")
                 effectList.add(lightEffect)
             } else {
                 logger.info("Updating light effect $lightEffect")
-                effectList.replaceAll { if (it.uuid == lightEffect.uuid) lightEffect else it }
+                effectList.replaceAll { if (it.effectUuid == lightEffect.effectUuid) lightEffect else it }
             }
         } finally {
             lock.release()
@@ -49,11 +49,11 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
         return matchingEffects
     }
 
-    override fun findEffectWithUuid(uuid: String): Optional<ActiveLightEffect> {
-        var effect: ActiveLightEffect? = null
+    override fun getEffectWithUuid(uuid: String): Optional<ActiveLightEffect> {
+        val effect: ActiveLightEffect?
         try {
             lock.acquire()
-            effect = effectList.first { it.uuid == uuid }
+            effect = effectList.firstOrNull { it.effectUuid == uuid }
         } finally {
             lock.release()
         }
@@ -61,7 +61,7 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
         return if (effect == null) Optional.empty() else Optional.of(effect)
     }
 
-    override fun findAllEffectsForStrip(stripUuid: String): List<ActiveLightEffect> {
+    override fun getAllEffectsForStrip(stripUuid: String): List<ActiveLightEffect> {
         val effects = mutableListOf<ActiveLightEffect>()
         try {
             lock.acquire()
@@ -75,7 +75,7 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
         return effects
     }
 
-    override fun findAllEffects(): List<ActiveLightEffect> {
+    override fun getAllEffects(): List<ActiveLightEffect> {
         val effects = mutableListOf<ActiveLightEffect>()
         try {
             lock.acquire()

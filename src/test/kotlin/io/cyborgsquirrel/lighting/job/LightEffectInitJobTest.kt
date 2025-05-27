@@ -19,6 +19,7 @@ import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.service.CreateLightingHelper
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
@@ -28,10 +29,7 @@ import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
-import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
-import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.test_helpers.objectToMap
-import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.serde.ObjectMapper
@@ -47,13 +45,11 @@ class LightEffectInitJobTest(
     private val ledStripGroupRepository: H2LedStripGroupRepository,
     private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
-    private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
-    private val locationConfigRepository: H2LocationConfigRepository,
     private val triggerRepository: H2LightEffectTriggerRepository,
     private val filterRepository: H2LightEffectFilterRepository,
     private val objectMapper: ObjectMapper,
     private val triggerManager: TriggerManager,
-    private val timeHelper: TimeHelper,
+    private val effectFactory: CreateLightingHelper,
 ) : StringSpec({
 
     val lightEffectSettings =
@@ -75,13 +71,9 @@ class LightEffectInitJobTest(
     "Init light effect one strip - happy path" {
         val job = LightEffectInitJob(
             lightEffectRepository,
-            groupMemberLedStripRepository,
             activeLightEffectRegistry,
-            sunriseSunsetTimeRepository,
-            locationConfigRepository,
             triggerManager,
-            objectMapper,
-            timeHelper,
+            effectFactory,
         )
 
         val client = clientRepository.save(
@@ -115,7 +107,7 @@ class LightEffectInitJobTest(
 
         job.run()
 
-        val activeEffectList = activeLightEffectRegistry.findAllEffects()
+        val activeEffectList = activeLightEffectRegistry.getAllEffects()
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
@@ -123,20 +115,16 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getUuid() shouldBe strip.uuid
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
-        activeEffectList.first().uuid shouldBe lightEffect.uuid
+        activeEffectList.first().effectUuid shouldBe lightEffect.uuid
         activeEffectList.first().strip.getBlendMode() shouldBe strip.blendMode
     }
 
     "Init light effect with trigger - happy path" {
         val job = LightEffectInitJob(
             lightEffectRepository,
-            groupMemberLedStripRepository,
             activeLightEffectRegistry,
-            sunriseSunsetTimeRepository,
-            locationConfigRepository,
             triggerManager,
-            objectMapper,
-            timeHelper,
+            effectFactory,
         )
 
         val client = clientRepository.save(
@@ -179,7 +167,7 @@ class LightEffectInitJobTest(
 
         job.run()
 
-        val activeEffectList = activeLightEffectRegistry.findAllEffects()
+        val activeEffectList = activeLightEffectRegistry.getAllEffects()
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
@@ -187,7 +175,7 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getUuid() shouldBe strip.uuid
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
-        activeEffectList.first().uuid shouldBe lightEffect.uuid
+        activeEffectList.first().effectUuid shouldBe lightEffect.uuid
 
         val triggers = triggerManager.getTriggers()
 
@@ -203,13 +191,9 @@ class LightEffectInitJobTest(
     "Init light effect with filter - happy path" {
         val job = LightEffectInitJob(
             lightEffectRepository,
-            groupMemberLedStripRepository,
             activeLightEffectRegistry,
-            sunriseSunsetTimeRepository,
-            locationConfigRepository,
             triggerManager,
-            objectMapper,
-            timeHelper,
+            effectFactory,
         )
 
         val client = clientRepository.save(
@@ -252,7 +236,7 @@ class LightEffectInitJobTest(
 
         job.run()
 
-        val activeEffectList = activeLightEffectRegistry.findAllEffects()
+        val activeEffectList = activeLightEffectRegistry.getAllEffects()
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
@@ -260,7 +244,7 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getUuid() shouldBe strip.uuid
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
-        activeEffectList.first().uuid shouldBe lightEffect.uuid
+        activeEffectList.first().effectUuid shouldBe lightEffect.uuid
 
         val filters = activeEffectList.first().filters
 
@@ -276,13 +260,9 @@ class LightEffectInitJobTest(
     "Init light effect one group - happy path" {
         val job = LightEffectInitJob(
             lightEffectRepository,
-            groupMemberLedStripRepository,
             activeLightEffectRegistry,
-            sunriseSunsetTimeRepository,
-            locationConfigRepository,
             triggerManager,
-            objectMapper,
-            timeHelper,
+            effectFactory,
         )
 
         val client = clientRepository.save(
@@ -322,7 +302,7 @@ class LightEffectInitJobTest(
 
         job.run()
 
-        val activeEffectList = activeLightEffectRegistry.findAllEffects()
+        val activeEffectList = activeLightEffectRegistry.getAllEffects()
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
@@ -330,6 +310,6 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getUuid() shouldBe group.uuid
         activeEffectList.first().strip.getName() shouldBe group.name
         activeEffectList.first().status shouldBe lightEffect.status
-        activeEffectList.first().uuid shouldBe lightEffect.uuid
+        activeEffectList.first().effectUuid shouldBe lightEffect.uuid
     }
 })

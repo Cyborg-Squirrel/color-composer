@@ -8,15 +8,16 @@ import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
-import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.BouncingBallLightEffect
+import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
-import io.cyborgsquirrel.lighting.effects.settings.BouncingBallEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.*
 import io.cyborgsquirrel.lighting.enums.BlendMode
+import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.lighting.filters.BrightnessFadeFilter
+import io.cyborgsquirrel.lighting.filters.BrightnessFilter
 import io.cyborgsquirrel.lighting.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.filters.ReverseFilter
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
@@ -64,7 +65,7 @@ class WebSocketJob(
     private var client: LedStripWebSocketClient? = null
     private val clientEntity =
         LedStripClientEntity(
-            address = "http://192.168.1.10",
+            address = "http://pilights.local",
             name = "Pi Client",
             uuid = UUID.randomUUID().toString(),
             wsPort = 8765,
@@ -77,6 +78,8 @@ class WebSocketJob(
     private val fps = 35
     private val bufferTimeInSeconds = 1L
     private var lastTimeSyncPerformedAt = 0L
+    var timeSinceLastSync: Long = 0L
+        get() = timeHelper.millisSinceEpoch() - lastTimeSyncPerformedAt
 
     override fun run() {
         logger.info("Start")
@@ -84,8 +87,8 @@ class WebSocketJob(
             setupWebSocket()
             syncClientTime()
             val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1, BlendMode.Additive)
-            // Power supply is 4A
-            powerLimiterService.setLimit(strip.getUuid(), 4000)
+            // Power supply is 500mA
+            powerLimiterService.setLimit(strip.getUuid(), 500)
 
             val effects = listOf(
                 BouncingBallLightEffect(
@@ -118,7 +121,7 @@ class WebSocketJob(
 
             val filters = listOf(
                 BrightnessFadeFilter(
-                    BrightnessFadeFilterSettings(0.1f, 1.0f, Duration.ofSeconds(30)),
+                    BrightnessFadeFilterSettings(0.1f, 0.5f, Duration.ofSeconds(30)),
                     timeHelper,
                     UUID.randomUUID().toString()
                 ),
@@ -128,7 +131,13 @@ class WebSocketJob(
 
             val activeEffects = effects.map { e ->
                 ActiveLightEffect(
-                    UUID.randomUUID().toString(), 1, true, LightEffectStatus.Created, e, strip, filters
+                    UUID.randomUUID().toString(),
+                    1,
+                    true,
+                    LightEffectStatus.Created,
+                    e,
+                    strip,
+                    filters
                 )
             }
 
@@ -145,7 +154,7 @@ class WebSocketJob(
                     TriggerType.StartEffect
                 )
             val triggers = activeEffects.map { ae ->
-                TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), ae.uuid)
+                TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), ae.effectUuid)
             }
 //            val triggerSettings =
 //                SunriseSunsetTriggerSettings(
@@ -178,8 +187,9 @@ class WebSocketJob(
                 val numberLength = min(iterationsString.length, 2)
                 val startIndex = max(iterationsString.length - numberLength, 0)
                 val iterationTwoDigits = iterationsString.substring(startIndex, startIndex + numberLength).toInt()
+
                 /*
-                activeEffect = effectRepository.findEffectWithUuid(activeEffect.uuid).get()
+                val activeEffect = effectRepository.findEffectWithUuid(activeEffects.first().uuid).get()
 
                 // Once we reach the specified iteration count update the effect in the repository
                 // Set lastUpdateIteration to prevent duplicate updates in the registry
@@ -194,7 +204,8 @@ class WebSocketJob(
                             lastUpdateIteration = iterationTwoDigits
                             effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.map {
                                 if (it is ReflectionFilter) ReflectionFilter(
-                                    ReflectionType.LowToHigh
+                                    ReflectionFilterSettings(ReflectionType.LowToHigh),
+                                    UUID.randomUUID().toString()
                                 ) else it
                             }))
                         }
@@ -227,7 +238,7 @@ class WebSocketJob(
                 } else {
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     if (timestampMillis < currentTimeAsMillis + clientTimeOffset) {
-                        logger.info("Frame timestamp is in the past. Jumping it forward to current time.")
+                        logger.info("Frame timestamp is in the past (client time offset ${clientTimeOffset}ms frame timestamp: ${timeHelper.dateTimeFromMillis(timestampMillis)}) re-syncing time...")
                         syncClientTime()
                         timestampMillis = currentTimeAsMillis + clientTimeOffset
                     }
@@ -270,9 +281,8 @@ class WebSocketJob(
     }
 
     private fun syncClientTime() {
-        val timeSinceLastSync = timeHelper.millisSinceEpoch() - lastTimeSyncPerformedAt
-        // Don't sync more often than every 60 seconds
-        if (timeSinceLastSync > 1000 * 60) {
+        // Don't sync more often than every 5 seconds
+        if (timeSinceLastSync > 1000 * 5) {
             val requestTimestamp = timeHelper.millisSinceEpoch()
             val clientTime = configClient.getClientTime(clientEntity)
             val responseTimestamp = timeHelper.millisSinceEpoch()
@@ -281,14 +291,7 @@ class WebSocketJob(
             // Divide by 2 so we only count the transmission time going one way
             val requestResponseDuration = (responseTimestamp - requestTimestamp) / 2
             val adjustedClientTime = clientTime.millisSinceEpoch - requestResponseDuration
-            val offset = adjustedClientTime - responseTimestamp
-
-            // Ignore time offsets less than 10ms
-            clientTimeOffset = if (abs(offset) > 10) {
-                offset
-            } else {
-                0L
-            }
+            clientTimeOffset = adjustedClientTime - responseTimestamp
 
             lastTimeSyncPerformedAt = responseTimestamp
             logger.info("Client time sync complete. Offset in millis: $clientTimeOffset")
@@ -296,7 +299,7 @@ class WebSocketJob(
     }
 
     private fun setupWebSocket() {
-        val uri = UriBuilder.of("ws://192.168.1.10")
+        val uri = UriBuilder.of("ws://pilights.local")
             .port(8765)
             .path("test")
             .build()

@@ -13,7 +13,6 @@ import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.model.RgbColor
-import io.cyborgsquirrel.setup.api.SetupStatusApi
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrips
@@ -26,7 +25,7 @@ import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import java.util.*
 
 @MicronautTest
-class EffectSetupControllerTest(
+class EffectControllerTest(
     @Client private val apiClient: EffectSetupApi,
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
@@ -147,6 +146,7 @@ class EffectSetupControllerTest(
         val updateRequest = UpdateEffectRequest(
             name = "New name", settings = updatedNrSettings,
             stripUuid = null,
+            status = LightEffectStatus.Activated,
         )
         val updateRequestHttpResponse = apiClient.updateEffect(effectEntity.uuid!!, updateRequest)
         updateRequestHttpResponse.status shouldBe HttpStatus.NO_CONTENT
@@ -158,6 +158,7 @@ class EffectSetupControllerTest(
         effectEntities.first().name shouldBe updateRequest.name
         effectEntities.first().uuid shouldBe effectEntity.uuid
         effectEntities.first().settings shouldBe updateRequest.settings
+        effectEntities.first().status shouldBe updateRequest.status
     }
 
     "Deleting an effect" {

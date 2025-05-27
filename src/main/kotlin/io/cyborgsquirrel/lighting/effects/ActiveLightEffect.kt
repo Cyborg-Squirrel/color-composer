@@ -5,7 +5,7 @@ import io.cyborgsquirrel.lighting.filters.LightEffectFilter
 import io.cyborgsquirrel.lighting.model.LedStrip
 
 data class ActiveLightEffect(
-    val uuid: String,
+    val effectUuid: String,
     val priority: Int,
     val skipFramesIfBlank: Boolean,
     val status: LightEffectStatus,

@@ -42,14 +42,20 @@ class TimeTriggerTest(
         val mockStrip = mockk<LedStripModel>()
         val effect = SpectrumLightEffect(60, SpectrumEffectSettings.default(60))
         activeEffect = ActiveLightEffect(
-            UUID.randomUUID().toString(), 1, true, LightEffectStatus.Created, effect, mockStrip, listOf()
+            UUID.randomUUID().toString(),
+            1,
+            true,
+            LightEffectStatus.Created,
+            effect,
+            mockStrip,
+            listOf()
         )
 
         every {
             mockActiveLightEffectRegistry.findEffectsWithStatus(LightEffectStatus.Playing)
         } returns listOf(activeEffect)
         every {
-            mockActiveLightEffectRegistry.findEffectWithUuid(activeEffect.uuid)
+            mockActiveLightEffectRegistry.getEffectWithUuid(activeEffect.effectUuid)
         } returns Optional.of(activeEffect)
     }
 
@@ -69,7 +75,7 @@ class TimeTriggerTest(
             Int.MAX_VALUE,
             TriggerType.StartEffect
         )
-        val trigger = TimeTrigger(mockTimeHelper, settings, UUID.randomUUID().toString(), activeEffect.uuid)
+        val trigger = TimeTrigger(mockTimeHelper, settings, UUID.randomUUID().toString(), activeEffect.effectUuid)
         and("The trigger condition is met") {
             `when`("The latest trigger activation is requested") {
                 val activationOptional = trigger.lastActivation()

@@ -12,11 +12,11 @@ interface ActiveLightEffectRegistry {
 
     fun findEffectsWithStatus(status: LightEffectStatus): List<ActiveLightEffect>
 
-    fun findEffectWithUuid(uuid: String): Optional<ActiveLightEffect>
+    fun getEffectWithUuid(uuid: String): Optional<ActiveLightEffect>
 
-    fun findAllEffectsForStrip(stripUuid: String): List<ActiveLightEffect>
+    fun getAllEffectsForStrip(stripUuid: String): List<ActiveLightEffect>
 
-    fun findAllEffects(): List<ActiveLightEffect>
+    fun getAllEffects(): List<ActiveLightEffect>
 
     fun reset()
 }

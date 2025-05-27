@@ -9,7 +9,7 @@ interface LedClientSetupApi {
     @Get("/{uuid}")
     fun getClient(uuid: String): HttpResponse<Any>
 
-    @Get("/all")
+    @Get
     fun getAllClients(): HttpResponse<Any>
 
     @Put

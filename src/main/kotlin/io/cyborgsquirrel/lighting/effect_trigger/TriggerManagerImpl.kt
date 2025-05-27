@@ -38,10 +38,10 @@ class TriggerManagerImpl(
     }
 
     override fun processTriggers() {
-        val effects = effectRepository.findAllEffects()
+        val effects = effectRepository.getAllEffects()
 
         for (effect in effects) {
-            val trigger = triggers.find { it.effectUuid == effect.uuid }
+            val trigger = triggers.find { it.effectUuid == effect.effectUuid }
             if (trigger != null) {
                 val activationOptional = trigger.lastActivation()
 
@@ -104,7 +104,7 @@ class TriggerManagerImpl(
             return
         }
 
-        logger.info("Updating effect ${effect.uuid} status to $newStatus")
+        logger.info("Updating effect ${effect.effectUuid} status to $newStatus")
         val newEffect = effect.copy(status = newStatus)
         effectRepository.addOrUpdateEffect(newEffect)
     }

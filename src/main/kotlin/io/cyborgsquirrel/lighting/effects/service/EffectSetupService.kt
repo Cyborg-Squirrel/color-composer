@@ -2,8 +2,10 @@ package io.cyborgsquirrel.lighting.effects.service
 
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
+import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
@@ -20,54 +22,46 @@ import java.util.*
 
 @Singleton
 class EffectSetupService(
-    private val objectMapper: ObjectMapper,
     private val stripRepository: H2LedStripRepository,
     private val effectRepository: H2LightEffectRepository,
     private val triggerRepository: H2LightEffectTriggerRepository,
     private val filterRepository: H2LightEffectFilterRepository,
+    private val effectRegistry: ActiveLightEffectRegistry,
+    private val createLightingHelper: CreateLightingHelper,
 ) {
 
     fun createEffect(request: CreateEffectRequest): String {
-        val settingsObj: Any = when (request.effectType) {
-            LightEffectConstants.SPECTRUM_NAME -> objectMapper.readValueFromTree(
-                JsonNode.from(request.settings),
-                SpectrumEffectSettings::class.java
-            )
-
-            LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME -> objectMapper.readValueFromTree(
-                JsonNode.from(request.settings),
-                NightriderColorFillEffectSettings::class.java
-            )
-
-            LightEffectConstants.NIGHTRIDER_COMET_NAME -> objectMapper.readValueFromTree(
-                JsonNode.from(request.settings),
-                NightriderCometEffectSettings::class.java
-            )
-
-            LightEffectConstants.FLAME_EFFECT_NAME -> objectMapper.readValueFromTree(
-                JsonNode.from(request.settings),
-                FlameEffectSettings::class.java
-            )
-
-            LightEffectConstants.BOUNCING_BALL_NAME -> objectMapper.readValueFromTree(
-                JsonNode.from(request.settings),
-                BouncingBallEffectSettings::class.java
-            )
-
-            LightEffectConstants.WAVE_EFFECT_NAME -> TODO("Move wave effect constructor parameters to settings class")
-            else -> throw ClientRequestException("No effect matching type ${request.effectType}")
-        }
-
         val stripEntityOptional = stripRepository.findByUuid(request.stripUuid)
         return if (stripEntityOptional.isPresent) {
-            val effectEntity = LightEffectEntity(
-                strip = stripEntityOptional.get(),
-                uuid = UUID.randomUUID().toString(),
-                name = request.name,
-                status = LightEffectStatus.Created,
-                settings = request.settings
+            val effectEntity = effectRepository.save(
+                LightEffectEntity(
+                    strip = stripEntityOptional.get(),
+                    uuid = UUID.randomUUID().toString(),
+                    name = request.name,
+                    status = LightEffectStatus.Created,
+                    settings = request.settings
+                )
             )
-            effectRepository.save(effectEntity)
+
+            val lightEffect =
+                createLightingHelper.createEffect(
+                    request.settings,
+                    request.effectType,
+                    stripEntityOptional.get().length!!
+                )
+            val strip = createLightingHelper.ledStripFromEffectEntity(effectEntity)
+            val activeEffect = ActiveLightEffect(
+                effectUuid = effectEntity.uuid!!,
+                // TODO add priority to persistence layer
+                priority = 0,
+                skipFramesIfBlank = true,
+                status = effectEntity.status!!,
+                strip = strip,
+                effect = lightEffect,
+                filters = listOf()
+            )
+            effectRegistry.addOrUpdateEffect(activeEffect)
+
             effectEntity.uuid!!
         } else {
             throw ClientRequestException("No strip found with uuid ${request.stripUuid}!")
@@ -109,6 +103,24 @@ class EffectSetupService(
         return GetEffectsResponse(effectList)
     }
 
+    fun getEffectWithUuid(uuid: String): GetEffectResponse {
+        // TODO strip vs strip group differentiation, strip group support
+        val effectEntityOptional = effectRepository.findByUuid(uuid)
+        if (effectEntityOptional.isPresent) {
+            val effectEntity = effectEntityOptional.get()
+            return GetEffectResponse(
+                name = effectEntity.name!!,
+                uuid = effectEntity.uuid!!,
+                stripUuid = effectEntity.strip!!.uuid!!,
+                settings = effectEntity.settings!!,
+                status = effectEntity.status!!,
+            )
+        } else {
+            throw ClientRequestException("Effect with uuid $uuid does not exist!")
+        }
+
+    }
+
     fun deleteEffect(effectUuid: String) {
         val effectEntityOptional = effectRepository.findByUuid(effectUuid)
         if (effectEntityOptional.isPresent) {
@@ -119,6 +131,11 @@ class EffectSetupService(
             filterEntities.forEach { filterRepository.delete(it) }
             triggerEntities.forEach { triggerRepository.delete(it) }
             effectRepository.delete(effectEntity)
+
+            val activeEffectOptional = effectRegistry.getEffectWithUuid(effectUuid)
+            if (activeEffectOptional.isPresent) {
+                effectRegistry.removeEffect(activeEffectOptional.get())
+            }
         } else {
             throw ClientRequestException("Effect with uuid $effectUuid doesn't exist!")
         }
@@ -140,12 +157,38 @@ class EffectSetupService(
                 )
             }
 
+            if (updateEffectRequest.status != null) {
+                effectEntity = effectEntity.copy(status = updateEffectRequest.status)
+            }
+
             if (updateEffectRequest.stripUuid != null && updateEffectRequest.stripUuid != effectEntity.strip?.uuid) {
                 val stripEntityOptional = stripRepository.findByUuid(updateEffectRequest.stripUuid)
                 if (stripEntityOptional.isPresent) {
                     effectEntity = effectEntity.copy(
                         strip = stripEntityOptional.get()
                     )
+
+                    val activeEffectOptional = effectRepository.findByUuid(uuid)
+                    if (activeEffectOptional.isPresent) {
+                        val lightEffect =
+                            createLightingHelper.createEffect(
+                                effectEntity.settings!!,
+                                effectEntity.name!!,
+                                stripEntityOptional.get().length!!
+                            )
+                        val strip = createLightingHelper.ledStripFromEffectEntity(effectEntity)
+                        val activeEffect = ActiveLightEffect(
+                            effectUuid = effectEntity.uuid!!,
+                            // TODO add priority to persistence layer
+                            priority = 0,
+                            skipFramesIfBlank = true,
+                            status = effectEntity.status!!,
+                            strip = strip,
+                            effect = lightEffect,
+                            filters = listOf()
+                        )
+                        effectRegistry.addOrUpdateEffect(activeEffect)
+                    }
                 } else {
                     throw ClientRequestException("No LED strip with uuid ${updateEffectRequest.stripUuid}")
                 }

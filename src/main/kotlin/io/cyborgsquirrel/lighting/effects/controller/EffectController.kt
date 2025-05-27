@@ -10,7 +10,7 @@ import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 
 @Controller("/effect")
-class EffectSetupController(
+class EffectController(
     private val effectSetupService: EffectSetupService
 ) : EffectSetupApi {
 
@@ -33,6 +33,17 @@ class EffectSetupController(
             } else {
                 HttpResponse.badRequest("A stripUuid or groupUuid must be specified!")
             }
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError()
+        }
+    }
+
+    override fun getEffect(uuid: String): HttpResponse<Any> {
+        return try {
+            val response = effectSetupService.getEffectWithUuid(uuid)
+            HttpResponse.ok(response)
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {

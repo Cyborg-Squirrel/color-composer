@@ -64,14 +64,20 @@ class SunriseSunsetTriggerTest(
         val mockStrip = mockk<LedStripModel>()
         val effect = SpectrumLightEffect(60, SpectrumEffectSettings.default(60))
         activeEffect = ActiveLightEffect(
-            UUID.randomUUID().toString(), 1, true, LightEffectStatus.Created, effect, mockStrip, listOf()
+            UUID.randomUUID().toString(),
+            1,
+            true,
+            LightEffectStatus.Created,
+            effect,
+            mockStrip,
+            listOf()
         )
 
         every {
             mockActiveLightEffectRegistry.findEffectsWithStatus(LightEffectStatus.Playing)
         } returns listOf(activeEffect)
         every {
-            mockActiveLightEffectRegistry.findEffectWithUuid(activeEffect.uuid)
+            mockActiveLightEffectRegistry.getEffectWithUuid(activeEffect.effectUuid)
         } returns Optional.of(activeEffect)
     }
 
@@ -126,7 +132,7 @@ class SunriseSunsetTriggerTest(
                 mockTimeHelper,
                 settings,
                 UUID.randomUUID().toString(),
-                activeEffect.uuid
+                activeEffect.effectUuid
             )
 
         val activationOptional = trigger.lastActivation()
@@ -172,7 +178,7 @@ class SunriseSunsetTriggerTest(
                 mockTimeHelper,
                 settings,
                 UUID.randomUUID().toString(),
-                activeEffect.uuid
+                activeEffect.effectUuid
             )
         val activationOptionalA = trigger.lastActivation()
         val activationOptionalB = trigger.lastActivation()
@@ -203,7 +209,7 @@ class SunriseSunsetTriggerTest(
                 mockTimeHelper,
                 settings,
                 UUID.randomUUID().toString(),
-                activeEffect.uuid
+                activeEffect.effectUuid
             )
         val activationOptional = trigger.lastActivation()
         activationOptional.isEmpty shouldBe true
@@ -237,7 +243,7 @@ class SunriseSunsetTriggerTest(
                 mockTimeHelper,
                 settings,
                 UUID.randomUUID().toString(),
-                activeEffect.uuid
+                activeEffect.effectUuid
             )
         val activationOptional = trigger.lastActivation()
         activationOptional.isEmpty shouldBe true

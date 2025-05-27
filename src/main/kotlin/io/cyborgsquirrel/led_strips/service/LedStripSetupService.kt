@@ -34,7 +34,7 @@ class LedStripSetupService(
 
                 if (updatedStrip.powerLimit != null) limitService.setLimit(uuid, updatedStrip.powerLimit)
 
-                val effects = activeLightEffectRegistry.findAllEffectsForStrip(uuid)
+                val effects = activeLightEffectRegistry.getAllEffectsForStrip(uuid)
                 effects.forEach {
                     val newEffect = it.copy(
                         strip = LedStripModel(
@@ -62,7 +62,7 @@ class LedStripSetupService(
             if (entity.effects.isEmpty() && entity.members.isEmpty()) {
                 stripRepository.deleteById(entity.id)
                 limitService.removeLimit(uuid)
-                val effects = activeLightEffectRegistry.findAllEffectsForStrip(uuid)
+                val effects = activeLightEffectRegistry.getAllEffectsForStrip(uuid)
                 effects.forEach {
                     activeLightEffectRegistry.removeEffect(it)
                 }

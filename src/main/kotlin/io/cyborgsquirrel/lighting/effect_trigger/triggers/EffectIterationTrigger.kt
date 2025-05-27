@@ -25,7 +25,7 @@ class EffectIterationTrigger(
     private var sequenceNumber = 0
 
     override fun lastActivation(): Optional<TriggerActivation> {
-        val effectOptional = effectRegistry.findEffectWithUuid(effectUuid)
+        val effectOptional = effectRegistry.getEffectWithUuid(effectUuid)
         if (effectOptional.isPresent) {
             val activeEffect = effectOptional.get()
             if (activeEffect.effect.getIterations() > getMaxIterations() && lastActivation == null) {
