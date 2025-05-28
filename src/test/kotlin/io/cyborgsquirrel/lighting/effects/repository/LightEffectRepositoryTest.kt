@@ -73,7 +73,8 @@ class LightEffectRepositoryTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
-                name = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                name = "Super cool effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Created,
@@ -123,7 +124,8 @@ class LightEffectRepositoryTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
-                name = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                name = "My effect",
                 group = group,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Created,

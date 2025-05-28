@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.clients.config.ConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.config.WebSocketJobConfig
 import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
@@ -54,6 +55,7 @@ class WebSocketJob(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
     private val triggerManager: TriggerManager,
+    private val clientRepository: H2LedStripClientRepository,
     private val effectRepository: ActiveLightEffectRegistry,
     private val timeHelper: TimeHelper,
     private val powerLimiterService: PowerLimiterService,
@@ -63,14 +65,16 @@ class WebSocketJob(
     private val configList = mutableListOf<WebSocketJobConfig>()
     private val serializer = RgbFrameDataSerializer()
     private var client: LedStripWebSocketClient? = null
-    private val clientEntity =
-        LedStripClientEntity(
-            address = "http://pilights.local",
-            name = "Pi Client",
-            uuid = UUID.randomUUID().toString(),
-            wsPort = 8765,
-            apiPort = 8000,
-        )
+
+    //    private val clientEntity =
+//        LedStripClientEntity(
+//            address = "http://pilights.local",
+//            name = "Pi Client",
+//            uuid = UUID.randomUUID().toString(),
+//            wsPort = 8765,
+//            apiPort = 8000,
+//        )
+    private lateinit var clientEntity: LedStripClientEntity
 
     // Difference in millis between the client and server.
     // Negative values mean the client's clock is behind the server, positive values mean the client's clock is ahead.
@@ -84,9 +88,18 @@ class WebSocketJob(
     override fun run() {
         logger.info("Start")
         try {
+            clientEntity = clientRepository.queryAll().first()
             setupWebSocket()
             syncClientTime()
-            val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1, BlendMode.Additive)
+            val stripEntity = clientEntity.strips.first()
+            val strip = LedStripModel(
+                stripEntity.name!!,
+                stripEntity.uuid!!,
+                stripEntity.length!!,
+                stripEntity.height,
+                stripEntity.blendMode!!
+            )
+//            val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1, BlendMode.Additive)
             // Power supply is 500mA
             powerLimiterService.setLimit(strip.getUuid(), 500)
 
@@ -141,9 +154,9 @@ class WebSocketJob(
                 )
             }
 
-            activeEffects.forEach {
-                effectRepository.addOrUpdateEffect(it)
-            }
+//            activeEffects.forEach {
+//                effectRepository.addOrUpdateEffect(it)
+//            }
 
             val triggerTime = LocalDateTime.now()
             val triggerSettings =
@@ -171,9 +184,10 @@ class WebSocketJob(
 //                triggerSettings,
 //                activeEffect.uuid
 //            )
-            triggers.forEach {
-                triggerManager.addTrigger(it)
-            }
+
+//            triggers.forEach {
+//                triggerManager.addTrigger(it)
+//            }
 
             var lastFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
             var timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
@@ -238,7 +252,13 @@ class WebSocketJob(
                 } else {
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     if (timestampMillis < currentTimeAsMillis + clientTimeOffset) {
-                        logger.info("Frame timestamp is in the past (client time offset ${clientTimeOffset}ms frame timestamp: ${timeHelper.dateTimeFromMillis(timestampMillis)}) re-syncing time...")
+                        logger.info(
+                            "Frame timestamp is in the past (client time offset ${clientTimeOffset}ms frame timestamp: ${
+                                timeHelper.dateTimeFromMillis(
+                                    timestampMillis
+                                )
+                            }) re-syncing time..."
+                        )
                         syncClientTime()
                         timestampMillis = currentTimeAsMillis + clientTimeOffset
                     }
@@ -299,8 +319,10 @@ class WebSocketJob(
     }
 
     private fun setupWebSocket() {
-        val uri = UriBuilder.of("ws://pilights.local")
-            .port(8765)
+        val pattern = Regex("https?")
+        val websocketAddress = clientEntity.address!!.replace(pattern, "ws")
+        val uri = UriBuilder.of(websocketAddress)
+            .port(clientEntity.wsPort!!)
             .path("test")
             .build()
         val future = CompletableFuture<LedStripWebSocketClient>()

@@ -22,7 +22,7 @@ interface EffectSetupApi {
     fun createEffect(@Body request: CreateEffectRequest): HttpResponse<Any>
 
     @Patch("/{uuid}")
-    fun updateEffect(uuid: String, request: UpdateEffectRequest): HttpResponse<Any>
+    fun updateEffect(uuid: String, @Body request: UpdateEffectRequest): HttpResponse<Any>
 
     @Delete("/{uuid}")
     fun deleteEffect(uuid: String): HttpResponse<Any>

@@ -86,7 +86,8 @@ class LightEffectTriggerRepositoryTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = lightEffectSettingsJson,
-                name = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                name = "My nightrider effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Created,

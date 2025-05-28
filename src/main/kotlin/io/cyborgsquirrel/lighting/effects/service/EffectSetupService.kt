@@ -3,7 +3,6 @@ package io.cyborgsquirrel.lighting.effects.service
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.LightEffect
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
@@ -12,12 +11,9 @@ import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
-import io.cyborgsquirrel.lighting.effects.settings.*
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.util.exception.ClientRequestException
-import io.micronaut.json.tree.JsonNode
-import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
 import java.util.*
 
@@ -46,6 +42,7 @@ class EffectSetupService(
                     strip = stripEntityOptional.get(),
                     uuid = UUID.randomUUID().toString(),
                     name = request.name,
+                    type = request.effectType,
                     status = LightEffectStatus.Created,
                     settings = request.settings
                 )
@@ -161,13 +158,12 @@ class EffectSetupService(
 
             if (updateEffectRequest.status != null) {
                 // Invalid statuses for an update request
-                val invalidStatusList =
-                    listOf(LightEffectStatus.Created, LightEffectStatus.Playing, LightEffectStatus.Stopped)
+                val invalidStatusList = listOf(LightEffectStatus.Created, LightEffectStatus.Stopped)
                 val validStatusList =
                     LightEffectStatus.entries.filter { !invalidStatusList.contains(it) }
                 if (invalidStatusList.contains(updateEffectRequest.status)) {
                     throw ClientRequestException(
-                        "Updating to status ${updateEffectRequest.status} is not allowed. Use $validStatusList"
+                        "Updating to status ${updateEffectRequest.status} is not allowed. Use $validStatusList."
                     )
                 }
 
@@ -180,31 +176,31 @@ class EffectSetupService(
                     effectEntity = effectEntity.copy(
                         strip = stripEntityOptional.get()
                     )
-
-                    val activeEffectOptional = effectRepository.findByUuid(uuid)
-                    if (activeEffectOptional.isPresent) {
-                        val lightEffect =
-                            createLightingHelper.createEffect(
-                                effectEntity.settings!!,
-                                effectEntity.name!!,
-                                stripEntityOptional.get().length!!
-                            )
-                        val strip = createLightingHelper.ledStripFromEffectEntity(effectEntity)
-                        val activeEffect = ActiveLightEffect(
-                            effectUuid = effectEntity.uuid!!,
-                            // TODO add priority to persistence layer
-                            priority = 0,
-                            skipFramesIfBlank = true,
-                            status = effectEntity.status!!,
-                            strip = strip,
-                            effect = lightEffect,
-                            filters = listOf()
-                        )
-                        effectRegistry.addOrUpdateEffect(activeEffect)
-                    }
                 } else {
                     throw ClientRequestException("No LED strip with uuid ${updateEffectRequest.stripUuid}")
                 }
+            }
+
+            val activeEffectOptional = effectRepository.findByUuid(uuid)
+            if (activeEffectOptional.isPresent) {
+                val lightEffect =
+                    createLightingHelper.createEffect(
+                        effectEntity.settings!!,
+                        effectEntity.type!!,
+                        effectEntity.strip!!.length!!
+                    )
+                val strip = createLightingHelper.ledStripFromEffectEntity(effectEntity)
+                val activeEffect = ActiveLightEffect(
+                    effectUuid = effectEntity.uuid!!,
+                    // TODO add priority to persistence layer
+                    priority = 0,
+                    skipFramesIfBlank = true,
+                    status = effectEntity.status!!,
+                    strip = strip,
+                    effect = lightEffect,
+                    filters = listOf()
+                )
+                effectRegistry.addOrUpdateEffect(activeEffect)
             }
 
             effectRepository.update(effectEntity)

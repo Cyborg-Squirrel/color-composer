@@ -56,6 +56,7 @@ CREATE TABLE light_effects
     group_id   INT,
     uuid       VARCHAR(50) NOT NULL,
     settings   JSON NOT NULL,
+    type       VARCHAR(255) NOT NULL,
     name       VARCHAR(255) NOT NULL,
     status     VARCHAR(50) NOT NULL,
     CONSTRAINT led_strip_group_assoc_fk FOREIGN KEY (group_id) REFERENCES led_strip_groups,

@@ -31,7 +31,7 @@ class LightEffectInitJob(
                     val strip = createLightingHelper.ledStripFromEffectEntity(effectEntity)
                     val lightEffect = createLightingHelper.createEffect(
                         effectEntity.settings!!,
-                        effectEntity.name!!,
+                        effectEntity.type!!,
                         strip.getLength()
                     )
                     val activeEffect = ActiveLightEffect(

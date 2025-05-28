@@ -98,7 +98,8 @@ class LightEffectInitJobTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
-                name = LightEffectConstants.SPECTRUM_NAME,
+                type = LightEffectConstants.SPECTRUM_NAME,
+                name = "Happy path effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Created,
@@ -149,7 +150,8 @@ class LightEffectInitJobTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = lightEffectSettingsJson,
-                name = LightEffectConstants.SPECTRUM_NAME,
+                type = LightEffectConstants.SPECTRUM_NAME,
+                name = "A light effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Created,
@@ -218,7 +220,8 @@ class LightEffectInitJobTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = lightEffectSettingsJson,
-                name = LightEffectConstants.SPECTRUM_NAME,
+                type = LightEffectConstants.SPECTRUM_NAME,
+                name = "Effect A",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Created,
@@ -293,7 +296,8 @@ class LightEffectInitJobTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
-                name = LightEffectConstants.SPECTRUM_NAME,
+                type = LightEffectConstants.SPECTRUM_NAME,
+                name = "Effect C",
                 group = group,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Created,

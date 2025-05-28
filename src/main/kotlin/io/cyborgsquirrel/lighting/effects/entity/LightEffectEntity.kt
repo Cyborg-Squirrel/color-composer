@@ -35,6 +35,8 @@ data class LightEffectEntity(
     @TypeDef(type = DataType.JSON)
     var settings: Map<String, Any>?,
 
+    var type: String?,
+
     var name: String?,
 
     @Enumerated(EnumType.STRING)
@@ -50,6 +52,7 @@ data class LightEffectEntity(
         if (strip?.id != other.strip?.id) return false
         if (group?.id != other.group?.id) return false
         if (uuid != other.uuid) return false
+        if (type != other.type) return false
         if (name != other.name) return false
         if (settings != other.settings) return false
         if (status != other.status) return false
@@ -63,12 +66,13 @@ data class LightEffectEntity(
         result = 31 * result + (strip?.id ?: 0).hashCode()
         result = 31 * result + (group?.id ?: 0).hashCode()
         result = 31 * result + status.hashCode()
+        result = 31 * result + type.hashCode()
         result = 31 * result + name.hashCode()
         result = 31 * result + settings.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "LightEffectLedStripAssociationEntity(strip=${strip?.id}, group=${group?.id}, name=$name, id=$id, uuid=$uuid, status=$status, settings=$settings)"
+        return "LightEffectLedStripAssociationEntity(strip=${strip?.id}, group=${group?.id}, effectType=$type, name=$name, id=$id, uuid=$uuid, status=$status, settings=$settings)"
     }
 }

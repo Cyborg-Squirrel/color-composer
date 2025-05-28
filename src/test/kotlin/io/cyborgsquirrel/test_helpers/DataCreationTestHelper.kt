@@ -57,7 +57,8 @@ fun saveLightEffect(
             strip = strip,
             uuid = UUID.randomUUID().toString(),
             settings = objectToMap(objectMapper, SpectrumEffectSettings(strip.length!!, animated = false)),
-            name = LightEffectConstants.SPECTRUM_NAME,
+            type = LightEffectConstants.SPECTRUM_NAME,
+            name = "My light effect",
             status = LightEffectStatus.Created
         )
     )

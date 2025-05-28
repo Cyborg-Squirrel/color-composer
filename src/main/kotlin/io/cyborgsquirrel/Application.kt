@@ -1,6 +1,7 @@
 package io.cyborgsquirrel
 
 import io.cyborgsquirrel.clients.discovery.job.ClientDiscoveryJob
+import io.cyborgsquirrel.lighting.job.LightEffectInitJob
 import io.cyborgsquirrel.lighting.job.WebSocketJob
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiFetchJob
 import io.cyborgsquirrel.util.H2WebServer
@@ -22,6 +23,7 @@ class StartupListener(
     private val h2WebServer: H2WebServer,
     private val wsJob: WebSocketJob,
     private val sunriseSunsetJob: SunriseSunsetApiFetchJob,
+    private val lightEffectInitJob: LightEffectInitJob,
     private val taskScheduler: TaskScheduler,
 ) :
     ApplicationEventListener<ServerStartupEvent> {
@@ -30,7 +32,8 @@ class StartupListener(
         logger.info("Application started")
         try {
             // Run background task
-//            taskScheduler.schedule(Duration.ofMillis(0), wsJob)
+            taskScheduler.schedule(Duration.ofMillis(0), lightEffectInitJob)
+            taskScheduler.schedule(Duration.ofMillis(0), wsJob)
 //            taskScheduler.schedule("1 0 * * ?", sunriseSunsetJob)
             taskScheduler.schedule(Duration.ofMillis(0), sunriseSunsetJob)
             h2WebServer.start()

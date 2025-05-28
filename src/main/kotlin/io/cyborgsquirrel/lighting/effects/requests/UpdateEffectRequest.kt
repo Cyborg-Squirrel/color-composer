@@ -7,6 +7,7 @@ import io.micronaut.serde.annotation.Serdeable
 data class UpdateEffectRequest(
     val stripUuid: String?,
     val name: String?,
+    val effectType: String?,
     val settings: Map<String, Any>?,
     val status: LightEffectStatus?
 )

@@ -50,6 +50,7 @@ class EffectControllerTest(
         var effectEntity = LightEffectEntity(
             strip = strip,
             name = "Super cool effect",
+            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Created,
             settings = defaultNrSettings
@@ -77,6 +78,7 @@ class EffectControllerTest(
         var effectEntity = LightEffectEntity(
             strip = strips.last(),
             name = "Super cool effect",
+            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Created,
             settings = defaultNrSettings
@@ -136,7 +138,8 @@ class EffectControllerTest(
         )
         var effectEntity = LightEffectEntity(
             strip = strip,
-            name = "Super cool effect",
+            name = "Super cool light effect",
+            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Created,
             settings = defaultNrSettings
@@ -144,8 +147,9 @@ class EffectControllerTest(
         effectEntity = effectRepository.save(effectEntity)
 
         val updateRequest = UpdateEffectRequest(
-            name = "New name", settings = updatedNrSettings,
+            effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME, settings = updatedNrSettings,
             stripUuid = null,
+            name = "New effect name",
             status = LightEffectStatus.Activated,
         )
         val updateRequestHttpResponse = apiClient.updateEffect(effectEntity.uuid!!, updateRequest)
@@ -168,6 +172,7 @@ class EffectControllerTest(
         var effectEntity = LightEffectEntity(
             strip = strip,
             name = "Super cool effect",
+            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Created,
             settings = defaultNrSettings
