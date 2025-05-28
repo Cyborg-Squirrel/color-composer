@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.effects.service
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.LightEffect
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
@@ -158,6 +159,17 @@ class EffectSetupService(
             }
 
             if (updateEffectRequest.status != null) {
+                // Invalid statuses for an update request
+                val invalidStatusList =
+                    listOf(LightEffectStatus.Created, LightEffectStatus.Playing, LightEffectStatus.Stopped)
+                val validStatusList =
+                    LightEffectStatus.entries.filter { !invalidStatusList.contains(it) }
+                if (invalidStatusList.contains(updateEffectRequest.status)) {
+                    throw ClientRequestException(
+                        "Updating to status ${updateEffectRequest.status} is not allowed. Use $validStatusList"
+                    )
+                }
+
                 effectEntity = effectEntity.copy(status = updateEffectRequest.status)
             }
 

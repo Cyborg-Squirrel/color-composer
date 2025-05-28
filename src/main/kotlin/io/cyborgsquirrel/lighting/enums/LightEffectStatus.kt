@@ -4,7 +4,7 @@ enum class LightEffectStatus {
     // Newly created, has not yet been rendered
     Created,
 
-    // User or trigger requested the effect to start, hasn't been sent to a led strip yet
+    // User or trigger requested the effect to start, hasn't been sent to a led strip client yet
     Activated,
 
     // Currently being rendered
