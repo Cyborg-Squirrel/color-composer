@@ -52,7 +52,7 @@ class EffectControllerTest(
             name = "Super cool effect",
             type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
-            status = LightEffectStatus.Created,
+            status = LightEffectStatus.Idle,
             settings = defaultNrSettings
         )
         effectEntity = effectRepository.save(effectEntity)
@@ -80,7 +80,7 @@ class EffectControllerTest(
             name = "Super cool effect",
             type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
-            status = LightEffectStatus.Created,
+            status = LightEffectStatus.Idle,
             settings = defaultNrSettings
         )
         effectEntity = effectRepository.save(effectEntity)
@@ -141,7 +141,7 @@ class EffectControllerTest(
             name = "Super cool light effect",
             type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
-            status = LightEffectStatus.Created,
+            status = LightEffectStatus.Idle,
             settings = defaultNrSettings
         )
         effectEntity = effectRepository.save(effectEntity)
@@ -150,7 +150,7 @@ class EffectControllerTest(
             effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME, settings = updatedNrSettings,
             stripUuid = null,
             name = "New effect name",
-            status = LightEffectStatus.Activated,
+            status = LightEffectStatus.Playing,
         )
         val updateRequestHttpResponse = apiClient.updateEffect(effectEntity.uuid!!, updateRequest)
         updateRequestHttpResponse.status shouldBe HttpStatus.NO_CONTENT
@@ -174,7 +174,7 @@ class EffectControllerTest(
             name = "Super cool effect",
             type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
-            status = LightEffectStatus.Created,
+            status = LightEffectStatus.Idle,
             settings = defaultNrSettings
         )
         effectEntity = effectRepository.save(effectEntity)

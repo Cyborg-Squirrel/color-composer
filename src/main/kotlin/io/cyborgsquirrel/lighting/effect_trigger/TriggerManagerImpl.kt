@@ -95,10 +95,10 @@ class TriggerManagerImpl(
     private fun updateLightEffect(effect: ActiveLightEffect, triggerType: TriggerType) {
         val newStatus = when (triggerType) {
             TriggerType.StartEffect -> LightEffectStatus.Playing
-            TriggerType.StopEffect -> LightEffectStatus.Stopping
+            TriggerType.StopEffect -> LightEffectStatus.Stopped
         }
 
-        val stopTriggerNotNeeded = newStatus == LightEffectStatus.Stopping && effect.status == LightEffectStatus.Stopped
+        val stopTriggerNotNeeded = effect.status == LightEffectStatus.Stopped
         val newStatusMatches = effect.status == newStatus
         if (stopTriggerNotNeeded || newStatusMatches) {
             return

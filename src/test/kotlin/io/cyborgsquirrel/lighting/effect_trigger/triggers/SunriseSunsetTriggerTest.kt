@@ -67,7 +67,7 @@ class SunriseSunsetTriggerTest(
             UUID.randomUUID().toString(),
             1,
             true,
-            LightEffectStatus.Created,
+            LightEffectStatus.Idle,
             effect,
             mockStrip,
             listOf()

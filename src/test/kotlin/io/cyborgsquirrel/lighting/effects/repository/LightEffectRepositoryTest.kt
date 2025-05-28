@@ -77,7 +77,7 @@ class LightEffectRepositoryTest(
                 name = "Super cool effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Created,
+                status = LightEffectStatus.Idle,
             )
         )
 
@@ -128,7 +128,7 @@ class LightEffectRepositoryTest(
                 name = "My effect",
                 group = group,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Created,
+                status = LightEffectStatus.Idle,
             )
         )
 

@@ -3,7 +3,6 @@ package io.cyborgsquirrel.lighting.effects.service
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
@@ -43,7 +42,7 @@ class EffectSetupService(
                     uuid = UUID.randomUUID().toString(),
                     name = request.name,
                     type = request.effectType,
-                    status = LightEffectStatus.Created,
+                    status = LightEffectStatus.Idle,
                     settings = request.settings
                 )
             )
@@ -158,7 +157,7 @@ class EffectSetupService(
 
             if (updateEffectRequest.status != null) {
                 // Invalid statuses for an update request
-                val invalidStatusList = listOf(LightEffectStatus.Created, LightEffectStatus.Stopped)
+                val invalidStatusList = listOf(LightEffectStatus.Idle)
                 val validStatusList =
                     LightEffectStatus.entries.filter { !invalidStatusList.contains(it) }
                 if (invalidStatusList.contains(updateEffectRequest.status)) {

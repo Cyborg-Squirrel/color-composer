@@ -12,13 +12,10 @@ import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.*
-import io.cyborgsquirrel.lighting.enums.BlendMode
-import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.lighting.filters.BrightnessFadeFilter
-import io.cyborgsquirrel.lighting.filters.BrightnessFilter
 import io.cyborgsquirrel.lighting.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.filters.ReverseFilter
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
@@ -43,7 +40,6 @@ import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
@@ -147,7 +143,7 @@ class WebSocketJob(
                     UUID.randomUUID().toString(),
                     1,
                     true,
-                    LightEffectStatus.Created,
+                    LightEffectStatus.Idle,
                     e,
                     strip,
                     filters

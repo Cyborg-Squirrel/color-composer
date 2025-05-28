@@ -59,6 +59,6 @@ fun saveLightEffect(
             settings = objectToMap(objectMapper, SpectrumEffectSettings(strip.length!!, animated = false)),
             type = LightEffectConstants.SPECTRUM_NAME,
             name = "My light effect",
-            status = LightEffectStatus.Created
+            status = LightEffectStatus.Idle
         )
     )

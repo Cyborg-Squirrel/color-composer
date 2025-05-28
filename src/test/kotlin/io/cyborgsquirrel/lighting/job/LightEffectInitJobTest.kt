@@ -102,7 +102,7 @@ class LightEffectInitJobTest(
                 name = "Happy path effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Created,
+                status = LightEffectStatus.Idle,
             )
         )
 
@@ -154,7 +154,7 @@ class LightEffectInitJobTest(
                 name = "A light effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Created,
+                status = LightEffectStatus.Idle,
             )
         )
         val iterationTriggerSettingsJson = objectToMap(objectMapper, iterationTriggerSettings)
@@ -224,7 +224,7 @@ class LightEffectInitJobTest(
                 name = "Effect A",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Created,
+                status = LightEffectStatus.Idle,
             )
         )
         val fadeTriggerSettingsJson = objectToMap(objectMapper, fadeFilterSettings)
@@ -300,7 +300,7 @@ class LightEffectInitJobTest(
                 name = "Effect C",
                 group = group,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Created,
+                status = LightEffectStatus.Idle,
             )
         )
 
