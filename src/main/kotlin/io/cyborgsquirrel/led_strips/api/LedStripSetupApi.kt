@@ -12,7 +12,7 @@ interface LedStripSetupApi {
     @Get("/{uuid}")
     fun getStrip(uuid: String): HttpResponse<Any>
 
-    @Put
+    @Post
     fun createStrip(@Body request: CreateLedStripRequest): HttpResponse<Any>
 
     @Patch("/{uuid}")

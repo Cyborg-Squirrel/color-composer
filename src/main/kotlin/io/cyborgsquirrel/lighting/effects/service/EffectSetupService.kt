@@ -34,6 +34,13 @@ class EffectSetupService(
     fun createEffect(request: CreateEffectRequest): String {
         val stripEntityOptional = stripRepository.findByUuid(request.stripUuid)
         return if (stripEntityOptional.isPresent) {
+            val lightEffect =
+                createLightingHelper.createEffect(
+                    request.settings,
+                    request.effectType,
+                    stripEntityOptional.get().length!!
+                )
+
             val effectEntity = effectRepository.save(
                 LightEffectEntity(
                     strip = stripEntityOptional.get(),
@@ -44,12 +51,6 @@ class EffectSetupService(
                 )
             )
 
-            val lightEffect =
-                createLightingHelper.createEffect(
-                    request.settings,
-                    request.effectType,
-                    stripEntityOptional.get().length!!
-                )
             val strip = createLightingHelper.ledStripFromEffectEntity(effectEntity)
             val activeEffect = ActiveLightEffect(
                 effectUuid = effectEntity.uuid!!,

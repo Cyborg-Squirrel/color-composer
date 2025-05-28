@@ -12,7 +12,7 @@ interface LedClientSetupApi {
     @Get
     fun getAllClients(): HttpResponse<Any>
 
-    @Put
+    @Post
     fun create(@Body newClient: CreateClientRequest): HttpResponse<Any>
 
     @Patch("/{uuid}")

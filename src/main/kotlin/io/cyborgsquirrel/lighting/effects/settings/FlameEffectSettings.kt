@@ -1,5 +1,8 @@
 package io.cyborgsquirrel.lighting.effects.settings
 
+import io.micronaut.serde.annotation.Serdeable
+
+@Serdeable
 data class FlameEffectSettings(
     val cooling: Int,
     val sparking: Int,
