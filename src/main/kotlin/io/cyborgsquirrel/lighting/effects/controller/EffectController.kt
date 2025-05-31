@@ -3,9 +3,11 @@ package io.cyborgsquirrel.lighting.effects.controller
 import io.cyborgsquirrel.lighting.effects.api.EffectSetupApi
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.service.EffectSetupService
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ServerErrorException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 
@@ -36,7 +38,7 @@ class EffectController(
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {
-            HttpResponse.serverError()
+            HttpResponse.serverError(ex.message)
         }
     }
 
@@ -47,7 +49,7 @@ class EffectController(
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {
-            HttpResponse.serverError()
+            HttpResponse.serverError(ex.message)
         }
     }
 
@@ -60,7 +62,7 @@ class EffectController(
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {
-            HttpResponse.serverError()
+            HttpResponse.serverError(ex.message)
         }
     }
 
@@ -71,7 +73,18 @@ class EffectController(
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {
-            HttpResponse.serverError()
+            HttpResponse.serverError(ex.message)
+        }
+    }
+
+    override fun updateEffectStatuses(request: UpdateEffectStatusRequest): HttpResponse<Any> {
+        return try {
+            effectSetupService.updateEffectStatus(request)
+            HttpResponse.noContent()
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError(ex.message)
         }
     }
 
@@ -82,7 +95,7 @@ class EffectController(
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {
-            HttpResponse.serverError()
+            HttpResponse.serverError(ex.message)
         }
     }
 }

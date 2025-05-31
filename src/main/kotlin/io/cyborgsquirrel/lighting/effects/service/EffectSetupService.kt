@@ -8,11 +8,13 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ServerErrorException
 import jakarta.inject.Singleton
 import java.util.*
 
@@ -205,6 +207,27 @@ class EffectSetupService(
             effectRepository.update(effectEntity)
         } else {
             throw ClientRequestException("Effect with uuid $uuid doesn't exist!")
+        }
+    }
+
+    fun updateEffectStatus(request: UpdateEffectStatusRequest) {
+        val effectEntities = mutableListOf<LightEffectEntity>()
+        val activeEffects = mutableListOf<ActiveLightEffect>()
+        request.uuids.forEach { uuid ->
+            val effectEntityOptional = effectRepository.findByUuid(uuid)
+            val activeEffectOptional = effectRegistry.getEffectWithUuid(uuid)
+            if (effectEntityOptional.isEmpty || activeEffectOptional.isEmpty) {
+                throw ClientRequestException("Effect with uuid $uuid doesn't exist!")
+            } else {
+                effectEntities.add(effectEntityOptional.get())
+                activeEffects.add(activeEffectOptional.get())
+            }
+        }
+
+        for (entity in effectEntities) {
+            val activeEffect = activeEffects.first { it.effectUuid == entity.uuid }
+            effectRegistry.addOrUpdateEffect(activeEffect.copy(status = request.status))
+            effectRepository.update(entity.copy(status = request.status))
         }
     }
 }

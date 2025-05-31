@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.effects.api
 
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.micronaut.http.HttpResponse
@@ -23,6 +24,9 @@ interface EffectSetupApi {
 
     @Patch("/{uuid}")
     fun updateEffect(uuid: String, @Body request: UpdateEffectRequest): HttpResponse<Any>
+
+    @Post("/status")
+    fun updateEffectStatuses(@Body request: UpdateEffectStatusRequest) : HttpResponse<Any>
 
     @Delete("/{uuid}")
     fun deleteEffect(uuid: String): HttpResponse<Any>

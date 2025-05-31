@@ -92,7 +92,7 @@ class LedStripSetupController(
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {
-            HttpResponse.serverError()
+            HttpResponse.serverError(ex.message)
         }
     }
 
@@ -103,7 +103,7 @@ class LedStripSetupController(
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {
-            HttpResponse.serverError()
+            HttpResponse.serverError(ex.message)
         }
     }
 }
