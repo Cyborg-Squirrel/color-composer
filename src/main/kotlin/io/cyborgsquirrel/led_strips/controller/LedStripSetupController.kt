@@ -67,27 +67,19 @@ class LedStripSetupController(
     }
 
     override fun createStrip(@Body request: CreateLedStripRequest): HttpResponse<Any> {
-        val clientEntityOptional = clientRepository.findByUuid(request.clientUuid)
-        if (clientEntityOptional.isPresent) {
-            val stripEntity = LedStripEntity(
-                client = clientEntityOptional.get(),
-                uuid = UUID.randomUUID().toString(),
-                name = request.name,
-                length = request.length,
-                height = request.height ?: 1,
-                powerLimit = request.powerLimit,
-                blendMode = request.blendMode ?: BlendMode.Additive
-            )
-            stripRepository.save(stripEntity)
-            return HttpResponse.created(stripEntity.uuid)
-        } else {
-            return HttpResponse.badRequest("No client exists with uuid ${request.clientUuid}!")
+        return try {
+            val stripUuid = stripSetupService.createStrip(request)
+            return HttpResponse.created(stripUuid)
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError(ex.message)
         }
     }
 
     override fun updateStrip(uuid: String, @Body updatedStrip: UpdateLedStripRequest): HttpResponse<Any> {
         return try {
-            stripSetupService.onStripUpdate(uuid, updatedStrip)
+            stripSetupService.updateStrip(uuid, updatedStrip)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)

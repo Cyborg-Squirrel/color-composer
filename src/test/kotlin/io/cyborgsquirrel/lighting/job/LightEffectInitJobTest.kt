@@ -28,6 +28,7 @@ import io.cyborgsquirrel.lighting.filters.LightEffectFilterConstants
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
+import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
@@ -50,6 +51,7 @@ class LightEffectInitJobTest(
     private val objectMapper: ObjectMapper,
     private val triggerManager: TriggerManager,
     private val effectFactory: CreateLightingHelper,
+    private val limiterService: PowerLimiterService,
 ) : StringSpec({
 
     val lightEffectSettings =
@@ -74,6 +76,7 @@ class LightEffectInitJobTest(
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
+            limiterService
         )
 
         val client = clientRepository.save(
@@ -126,6 +129,7 @@ class LightEffectInitJobTest(
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
+            limiterService
         )
 
         val client = clientRepository.save(
@@ -196,6 +200,7 @@ class LightEffectInitJobTest(
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
+            limiterService
         )
 
         val client = clientRepository.save(
@@ -266,6 +271,7 @@ class LightEffectInitJobTest(
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
+            limiterService
         )
 
         val client = clientRepository.save(

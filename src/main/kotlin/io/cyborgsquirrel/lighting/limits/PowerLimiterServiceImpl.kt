@@ -9,6 +9,7 @@ class PowerLimiterServiceImpl : PowerLimiterService {
     private var powerLimits = mutableMapOf<String, Int>()
 
     override fun setLimit(stripUuid: String, milliamps: Int) {
+        logger.info("Setting power limit of ${milliamps}mA for strip $stripUuid")
         powerLimits[stripUuid] = milliamps
     }
 

@@ -1,21 +1,47 @@
 package io.cyborgsquirrel.led_strips.service
 
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import jakarta.inject.Singleton
+import java.util.*
 
 @Singleton
 class LedStripSetupService(
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val stripRepository: H2LedStripRepository,
+    private val clientRepository: H2LedStripClientRepository,
     private val limitService: PowerLimiterService
 ) {
 
-    fun onStripUpdate(uuid: String, updatedStrip: UpdateLedStripRequest) {
+    fun createStrip(request: CreateLedStripRequest): String {
+        val clientEntityOptional = clientRepository.findByUuid(request.clientUuid)
+        if (clientEntityOptional.isPresent) {
+            val stripEntity = LedStripEntity(
+                client = clientEntityOptional.get(),
+                uuid = UUID.randomUUID().toString(),
+                name = request.name,
+                length = request.length,
+                height = request.height ?: 1,
+                powerLimit = request.powerLimit,
+                blendMode = request.blendMode ?: BlendMode.Additive
+            )
+            stripRepository.save(stripEntity)
+            if (stripEntity.powerLimit != null) limitService.setLimit(stripEntity.uuid!!, stripEntity.powerLimit!!)
+            return stripEntity.uuid!!
+        } else {
+            throw ClientRequestException("No client exists with uuid ${request.clientUuid}!")
+        }
+    }
+
+    fun updateStrip(uuid: String, updatedStrip: UpdateLedStripRequest) {
         val entityOptional = stripRepository.findByUuid(uuid)
         if (entityOptional.isPresent) {
             val entity = entityOptional.get()

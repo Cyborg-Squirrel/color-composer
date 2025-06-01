@@ -61,15 +61,6 @@ class WebSocketJob(
     private val configList = mutableListOf<WebSocketJobConfig>()
     private val serializer = RgbFrameDataSerializer()
     private var client: LedStripWebSocketClient? = null
-
-    //    private val clientEntity =
-//        LedStripClientEntity(
-//            address = "http://pilights.local",
-//            name = "Pi Client",
-//            uuid = UUID.randomUUID().toString(),
-//            wsPort = 8765,
-//            apiPort = 8000,
-//        )
     private lateinit var clientEntity: LedStripClientEntity
 
     // Difference in millis between the client and server.
@@ -95,9 +86,6 @@ class WebSocketJob(
                 stripEntity.height,
                 stripEntity.blendMode!!
             )
-//            val strip = LedStripModel("Living Room", UUID.randomUUID().toString(), 60, 1, BlendMode.Additive)
-            // Power supply is 500mA
-            powerLimiterService.setLimit(strip.getUuid(), 500)
 
             val effects = listOf(
                 BouncingBallLightEffect(
@@ -117,15 +105,6 @@ class WebSocketJob(
                     BouncingBallEffectSettings.default(strip.getLength())
                         .copy(speed = 4.0, ballColor = RgbColor.Green, startingHeight = 20.0, maxHeight = 40)
                 ),
-//                NightriderLightEffect(
-//                    strip.getLength(),
-//                    NightriderCometEffectSettings(RgbColor.Rainbow, 10, FadeCurve.Logarithmic, false)
-//                ),
-//                FlameLightEffect(60, FlameEffectSettings.default()),
-//                SpectrumLightEffect(60, SpectrumEffectSettings.default(60).copy(colorPixelWidth = 9)),
-//                NightriderLightEffect(
-//                    60, NightriderColorFillEffectSettings(RgbColor.Rainbow.map { it.scale(0.2f) }, wrap = false)
-//                )
             )
 
             val filters = listOf(
@@ -138,101 +117,13 @@ class WebSocketJob(
                 ReflectionFilter(ReflectionFilterSettings(ReflectionType.CopyOverCenter), UUID.randomUUID().toString()),
             )
 
-            val activeEffects = effects.map { e ->
-                ActiveLightEffect(
-                    UUID.randomUUID().toString(),
-                    1,
-                    true,
-                    LightEffectStatus.Idle,
-                    e,
-                    strip,
-                    filters
-                )
-            }
-
-//            activeEffects.forEach {
-//                effectRepository.addOrUpdateEffect(it)
-//            }
-
-            val triggerTime = LocalDateTime.now()
-            val triggerSettings =
-                TimeTriggerSettings(
-                    triggerTime.toLocalTime(),
-                    Duration.ofSeconds(60 * 1),
-                    null,
-                    TriggerType.StartEffect
-                )
-            val triggers = activeEffects.map { ae ->
-                TimeTrigger(timeHelper, triggerSettings, UUID.randomUUID().toString(), ae.effectUuid)
-            }
-//            val triggerSettings =
-//                SunriseSunsetTriggerSettings(
-//                    SunriseSunsetOption.Sunrise,
-//                    Duration.ofMinutes(10),
-//                    null,
-//                    TriggerType.StartEffect
-//                )
-//            val trigger = SunriseSunsetTrigger(
-//                sunriseSunsetTimeRepository,
-//                locationConfigRepository,
-//                objectMapper,
-//                timeHelper,
-//                triggerSettings,
-//                activeEffect.uuid
-//            )
-
-//            triggers.forEach {
-//                triggerManager.addTrigger(it)
-//            }
-
             var lastFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
             var timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
             var isBlankFrame = false
             var hasHadNonBlankFrame = false
-            var lastUpdateIteration = -1
 
             while (!isBlankFrame || !hasHadNonBlankFrame) {
                 triggerManager.processTriggers()
-                val iterationsString = effects.first().getIterations().toString()
-                val numberLength = min(iterationsString.length, 2)
-                val startIndex = max(iterationsString.length - numberLength, 0)
-                val iterationTwoDigits = iterationsString.substring(startIndex, startIndex + numberLength).toInt()
-
-                /*
-                val activeEffect = effectRepository.findEffectWithUuid(activeEffects.first().uuid).get()
-
-                // Once we reach the specified iteration count update the effect in the repository
-                // Set lastUpdateIteration to prevent duplicate updates in the registry
-                if (lastUpdateIteration != iterationTwoDigits) {
-                    when (iterationTwoDigits) {
-                        0 -> {
-                            lastUpdateIteration = iterationTwoDigits
-                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters))
-                        }
-
-                        16 -> {
-                            lastUpdateIteration = iterationTwoDigits
-                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.map {
-                                if (it is ReflectionFilter) ReflectionFilter(
-                                    ReflectionFilterSettings(ReflectionType.LowToHigh),
-                                    UUID.randomUUID().toString()
-                                ) else it
-                            }))
-                        }
-
-                        33 -> {
-                            lastUpdateIteration = iterationTwoDigits
-                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filter { it is ReverseFilter || it is BrightnessFilter }))
-                        }
-
-                        66 -> {
-                            lastUpdateIteration = iterationTwoDigits
-                            effectRepository.addOrUpdateEffect(activeEffect.copy(filters = filters.filterIsInstance<BrightnessFilter>()))
-                        }
-                    }
-                }
-                 */
-
                 val frame = renderer.renderFrame(strip.getUuid(), 0)
                 isBlankFrame = frame.isEmpty || (frame.isPresent && frame.get().frameData.isEmpty())
                 hasHadNonBlankFrame = hasHadNonBlankFrame || !isBlankFrame

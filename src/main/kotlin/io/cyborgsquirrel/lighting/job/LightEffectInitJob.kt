@@ -5,6 +5,7 @@ import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingHelper
+import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Semaphore
@@ -15,6 +16,7 @@ class LightEffectInitJob(
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val triggerManager: TriggerManager,
     private val createLightingHelper: CreateLightingHelper,
+    private val limiterService: PowerLimiterService,
 ) : Runnable {
 
     // Flag tracking if this init job has run.
@@ -27,6 +29,10 @@ class LightEffectInitJob(
             lock.acquire()
             if (!completed) {
                 val effectEntities = lightEffectRepository.queryAll()
+                val strips = effectEntities.mapNotNull { it.strip }.distinctBy { it.uuid }
+                strips.forEach {
+                    if (it.uuid != null && it.powerLimit != null) limiterService.setLimit(it.uuid!!, it.powerLimit!!)
+                }
                 for (effectEntity in effectEntities) {
                     val strip = createLightingHelper.ledStripFromEffectEntity(effectEntity)
                     val lightEffect = createLightingHelper.createEffect(
