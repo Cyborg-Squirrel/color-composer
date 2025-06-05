@@ -3,7 +3,7 @@ package io.cyborgsquirrel.lighting.effects.controller
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
-import io.cyborgsquirrel.lighting.effects.api.EffectSetupApi
+import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
@@ -26,7 +26,7 @@ import java.util.*
 
 @MicronautTest
 class EffectControllerTest(
-    @Client private val apiClient: EffectSetupApi,
+    @Client private val apiClient: EffectApi,
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
     private val effectRepository: H2LightEffectRepository,

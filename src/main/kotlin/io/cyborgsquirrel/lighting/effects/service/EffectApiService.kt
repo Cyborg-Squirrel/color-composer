@@ -14,12 +14,11 @@ import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.util.exception.ClientRequestException
-import io.cyborgsquirrel.util.exception.ServerErrorException
 import jakarta.inject.Singleton
 import java.util.*
 
 @Singleton
-class EffectSetupService(
+class EffectApiService(
     private val stripRepository: H2LedStripRepository,
     private val effectRepository: H2LightEffectRepository,
     private val triggerRepository: H2LightEffectTriggerRepository,

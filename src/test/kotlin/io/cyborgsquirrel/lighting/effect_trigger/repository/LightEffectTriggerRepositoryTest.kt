@@ -99,7 +99,8 @@ class LightEffectTriggerRepositoryTest(
                 effect = lightEffect,
                 uuid = UUID.randomUUID().toString(),
                 settings = triggerSettingsJson,
-                name = LightEffectTriggerConstants.TIME_TRIGGER_NAME,
+                type = LightEffectTriggerConstants.TIME_TRIGGER_NAME,
+                name = "7pm trigger",
             )
         )
 

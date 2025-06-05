@@ -20,5 +20,7 @@ data class LightEffectFilterEntity(
     @TypeDef(type = DataType.JSON)
     var settings: Map<String, Any>?,
 
+    var type: String? = null,
+
     var name: String? = null,
 )

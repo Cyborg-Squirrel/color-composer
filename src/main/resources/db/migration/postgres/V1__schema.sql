@@ -71,6 +71,7 @@ CREATE TABLE light_effect_triggers
     uuid        VARCHAR(50) NOT NULL UNIQUE,
     settings    JSONB NOT NULL,
     name        VARCHAR(255) NOT NULL,
+    type        VARCHAR(255) NOT NULL,
     CONSTRAINT trigger_effect_fk FOREIGN KEY (effect_id) REFERENCES light_effects
 );
 
@@ -81,6 +82,7 @@ CREATE TABLE light_effect_filters
     uuid        VARCHAR(50) NOT NULL UNIQUE,
     settings    JSONB NOT NULL,
     name        VARCHAR(255) NOT NULL,
+    type        VARCHAR(255) NOT NULL,
     CONSTRAINT filter_effect_fk FOREIGN KEY (effect_id) REFERENCES light_effects
 );
 

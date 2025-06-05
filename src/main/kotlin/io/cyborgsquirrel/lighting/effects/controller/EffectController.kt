@@ -1,24 +1,23 @@
 package io.cyborgsquirrel.lighting.effects.controller
 
-import io.cyborgsquirrel.lighting.effects.api.EffectSetupApi
+import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
-import io.cyborgsquirrel.lighting.effects.service.EffectSetupService
+import io.cyborgsquirrel.lighting.effects.service.EffectApiService
 import io.cyborgsquirrel.util.exception.ClientRequestException
-import io.cyborgsquirrel.util.exception.ServerErrorException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 
 @Controller("/effect")
 class EffectController(
-    private val effectSetupService: EffectSetupService
-) : EffectSetupApi {
+    private val effectApiService: EffectApiService
+) : EffectApi {
 
     override fun getAllEffects(): HttpResponse<GetEffectsResponse> {
         return try {
-            val response = effectSetupService.getAllEffects()
+            val response = effectApiService.getAllEffects()
             HttpResponse.ok(response)
         } catch (ex: Exception) {
             HttpResponse.serverError()
@@ -28,7 +27,7 @@ class EffectController(
     override fun getEffectsForStrip(stripUuid: String?, groupUuid: String?): HttpResponse<Any> {
         return try {
             if (!stripUuid.isNullOrBlank()) {
-                val response = effectSetupService.getEffectsForStrip(stripUuid)
+                val response = effectApiService.getEffectsForStrip(stripUuid)
                 HttpResponse.ok(response)
             } else if (!groupUuid.isNullOrBlank()) {
                 TODO()
@@ -44,7 +43,7 @@ class EffectController(
 
     override fun getEffect(uuid: String): HttpResponse<Any> {
         return try {
-            val response = effectSetupService.getEffectWithUuid(uuid)
+            val response = effectApiService.getEffectWithUuid(uuid)
             HttpResponse.ok(response)
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
@@ -57,7 +56,7 @@ class EffectController(
         request: CreateEffectRequest
     ): HttpResponse<Any> {
         return try {
-            val uuid = effectSetupService.createEffect(request)
+            val uuid = effectApiService.createEffect(request)
             HttpResponse.created(uuid)
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
@@ -68,7 +67,7 @@ class EffectController(
 
     override fun updateEffect(uuid: String, request: UpdateEffectRequest): HttpResponse<Any> {
         return try {
-            effectSetupService.updateEffect(uuid, request)
+            effectApiService.updateEffect(uuid, request)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
@@ -79,7 +78,7 @@ class EffectController(
 
     override fun updateEffectStatuses(request: UpdateEffectStatusRequest): HttpResponse<Any> {
         return try {
-            effectSetupService.updateEffectStatus(request)
+            effectApiService.updateEffectStatus(request)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
@@ -90,7 +89,7 @@ class EffectController(
 
     override fun deleteEffect(uuid: String): HttpResponse<Any> {
         return try {
-            effectSetupService.deleteEffect(uuid)
+            effectApiService.deleteEffect(uuid)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)

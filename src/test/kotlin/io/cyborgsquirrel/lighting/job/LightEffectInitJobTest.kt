@@ -166,7 +166,8 @@ class LightEffectInitJobTest(
             LightEffectTriggerEntity(
                 effect = lightEffect,
                 uuid = UUID.randomUUID().toString(),
-                name = LightEffectTriggerConstants.ITERATION_TRIGGER_NAME,
+                type = LightEffectTriggerConstants.ITERATION_TRIGGER_NAME,
+                name = "25x trigger",
                 settings = iterationTriggerSettingsJson,
             )
         )
@@ -237,7 +238,8 @@ class LightEffectInitJobTest(
             LightEffectFilterEntity(
                 effect = lightEffect,
                 uuid = UUID.randomUUID().toString(),
-                name = LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME,
+                type = LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME,
+                name = "25x trigger",
                 settings = fadeTriggerSettingsJson,
             )
         )

@@ -60,7 +60,7 @@ class LightEffectInitJob(
                         }
                     }
 
-                    val filters = createLightingHelper.effectFilterFromEntity(effectEntity)
+                    val filters = createLightingHelper.createEffectFilterFromEntity(effectEntity)
                     if (filters.isNotEmpty()) {
                         activeLightEffectRegistry.addOrUpdateEffect(activeEffect.copy(filters = activeEffect.filters + filters))
                     }

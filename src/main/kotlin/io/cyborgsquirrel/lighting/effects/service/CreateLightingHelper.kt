@@ -126,7 +126,7 @@ class CreateLightingHelper(
             listOf()
         } else {
             effectEntity.triggers.map { trigger ->
-                when (trigger.name) {
+                when (trigger.type) {
                     LightEffectTriggerConstants.ITERATION_TRIGGER_NAME -> {
                         EffectIterationTrigger(
                             timeHelper = timeHelper,
@@ -174,52 +174,56 @@ class CreateLightingHelper(
         }
     }
 
-    fun effectFilterFromEntity(effectEntity: LightEffectEntity): List<LightEffectFilter> {
+    fun createEffectFilterFromEntity(effectEntity: LightEffectEntity): List<LightEffectFilter> {
         return if (effectEntity.filters.isEmpty()) {
             listOf()
         } else {
             effectEntity.filters.map { filter ->
-                when (filter.name) {
-                    LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME -> {
-                        BrightnessFadeFilter(
-                            timeHelper = timeHelper,
-                            settings = objectMapper.readValueFromTree(
-                                JsonNode.from(filter.settings),
-                                BrightnessFadeFilterSettings::class.java
-                            ),
-                            uuid = filter.uuid!!
-                        )
-                    }
-
-                    LightEffectFilterConstants.BRIGHTNESS_FILTER_NAME -> {
-                        BrightnessFilter(
-                            settings = objectMapper.readValueFromTree(
-                                JsonNode.from(filter.settings),
-                                BrightnessFilterSettings::class.java
-                            ),
-                            uuid = filter.uuid!!
-                        )
-                    }
-
-                    LightEffectFilterConstants.REFLECTION_FILTER_NAME -> {
-                        ReflectionFilter(
-                            settings = objectMapper.readValueFromTree(
-                                JsonNode.from(filter.settings),
-                                ReflectionFilterSettings::class.java
-                            ),
-                            uuid = filter.uuid!!
-                        )
-                    }
-
-                    LightEffectFilterConstants.REVERSE_FILTER_NAME -> {
-                        // Reverse filter doesn't have settings
-                        ReverseFilter(uuid = filter.uuid!!)
-                    }
-
-                    // TODO throwing an Exception is not ideal. Logger.error instead?
-                    else -> throw IllegalArgumentException("Unknown LightEffectFilter name: ${filter.name}")
-                }
+                createEffectFilter(filter.type!!, filter.uuid!!, filter.settings!!)
             }
+        }
+    }
+
+    fun createEffectFilter(effectType: String, uuid: String, settings: Map<String, Any>): LightEffectFilter {
+        return when (effectType) {
+            LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME -> {
+                BrightnessFadeFilter(
+                    timeHelper = timeHelper,
+                    settings = objectMapper.readValueFromTree(
+                        JsonNode.from(settings),
+                        BrightnessFadeFilterSettings::class.java
+                    ),
+                    uuid = uuid
+                )
+            }
+
+            LightEffectFilterConstants.BRIGHTNESS_FILTER_NAME -> {
+                BrightnessFilter(
+                    settings = objectMapper.readValueFromTree(
+                        JsonNode.from(settings),
+                        BrightnessFilterSettings::class.java
+                    ),
+                    uuid = uuid
+                )
+            }
+
+            LightEffectFilterConstants.REFLECTION_FILTER_NAME -> {
+                ReflectionFilter(
+                    settings = objectMapper.readValueFromTree(
+                        JsonNode.from(settings),
+                        ReflectionFilterSettings::class.java
+                    ),
+                    uuid = uuid
+                )
+            }
+
+            LightEffectFilterConstants.REVERSE_FILTER_NAME -> {
+                // Reverse filter doesn't have settings
+                ReverseFilter(uuid = uuid)
+            }
+
+            // TODO throwing an Exception is not ideal. Logger.error instead?
+            else -> throw IllegalArgumentException("Unknown LightEffectFilter type: $effectType")
         }
     }
 }

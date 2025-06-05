@@ -14,7 +14,7 @@ import jakarta.inject.Singleton
 import java.util.*
 
 @Singleton
-class LedStripSetupService(
+class LedStripApiService(
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val stripRepository: H2LedStripRepository,
     private val clientRepository: H2LedStripClientRepository,
