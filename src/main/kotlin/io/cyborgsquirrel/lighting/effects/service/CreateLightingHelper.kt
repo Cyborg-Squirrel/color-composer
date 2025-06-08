@@ -110,11 +110,12 @@ class CreateLightingHelper(
                 )
             )
 
-            // TODO WaveLightEffect settings
             LightEffectConstants.WAVE_EFFECT_NAME -> WaveLightEffect(
                 numberOfLeds = stripLength,
-                startPoint = 0,
-                waveLength = 1,
+                settings = objectMapper.readValueFromTree(
+                    JsonNode.from(settings),
+                    WaveEffectSettings::class.java
+                )
             )
 
             else -> throw IllegalArgumentException("Unknown LightEffect name: $effectName")

@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
+import io.cyborgsquirrel.lighting.effects.settings.WaveEffectSettings
 import io.cyborgsquirrel.lighting.effects.shared.Comet
 import io.cyborgsquirrel.lighting.enums.Direction
 import io.cyborgsquirrel.lighting.enums.FadeCurve
@@ -8,15 +9,17 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-class WaveLightEffect(private val numberOfLeds: Int, private val startPoint: Int, private val waveLength: Int) :
+class WaveLightEffect(private val numberOfLeds: Int, settings: WaveEffectSettings) :
     LightEffect {
 
     private var waveALocation = 0
     private var waveBLocation = 0
     private var frame = 0
     private var iterations = 0
-    lateinit var waveA: Comet
-    lateinit var waveB: Comet
+    private lateinit var waveA: Comet
+    private lateinit var waveB: Comet
+    private val waveLength = settings.waveLength
+    private val startPoint = settings.startPoint
 
     override fun getName() = LightEffectConstants.WAVE_EFFECT_NAME
 
