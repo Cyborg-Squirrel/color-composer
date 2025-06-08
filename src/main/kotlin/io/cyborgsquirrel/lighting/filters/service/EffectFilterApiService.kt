@@ -3,14 +3,17 @@ package io.cyborgsquirrel.lighting.filters.service
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingHelper
-import io.cyborgsquirrel.lighting.filters.LightEffectFilter
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.requests.CreateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.requests.UpdateEffectFilterRequest
+import io.cyborgsquirrel.lighting.filters.responses.GetFilterResponse
+import io.cyborgsquirrel.lighting.filters.responses.GetFiltersResponse
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import jakarta.inject.Singleton
 import java.util.*
 
+@Singleton
 class EffectFilterApiService(
     private val effectRepository: H2LightEffectRepository,
     private val filterRepository: H2LightEffectFilterRepository,
@@ -18,17 +21,36 @@ class EffectFilterApiService(
     private val effectLightingHelper: CreateLightingHelper,
 ) {
 
-    fun getFiltersForEffect(effectUuid: String) {
+    fun getFiltersForEffect(effectUuid: String): GetFiltersResponse {
         val effectOptional = effectRepository.findByUuid(effectUuid)
         if (effectOptional.isPresent) {
             val filterEntities = effectOptional.get().filters
-            val filters = filterEntities.map {
-                effectLightingHelper.createEffectFilter(it.type!!, it.uuid!!, it.settings!!)
+            val filterResponses = filterEntities.map { filter ->
+                GetFilterResponse(filter.name!!, filter.type!!, filter.uuid!!, filter.effect?.uuid, filter.settings!!)
             }
+            return GetFiltersResponse(filterResponses)
+        } else {
+            throw ClientRequestException("Effect with uuid $effectUuid does not exist")
         }
     }
 
-    fun createFilter(request: CreateEffectFilterRequest) {
+    fun getFilter(uuid: String): GetFilterResponse {
+        val filterOptional = filterRepository.findByUuid(uuid)
+        if (filterOptional.isPresent) {
+            val filter = filterOptional.get()
+            return GetFilterResponse(
+                filter.name!!,
+                filter.type!!,
+                filter.uuid!!,
+                filter.effect?.uuid,
+                filter.settings!!
+            )
+        } else {
+            throw ClientRequestException("Filter with uuid $uuid does not exist")
+        }
+    }
+
+    fun createFilter(request: CreateEffectFilterRequest): String {
         val effectEntity =
             if (request.effectUuid == null) {
                 null
@@ -57,6 +79,8 @@ class EffectFilterApiService(
             val activeEffect = activeEffectOptional.get()
             effectRegistry.addOrUpdateEffect(activeEffect.copy(filters = activeEffect.filters + filter))
         }
+
+        return filterEntity.uuid!!
     }
 
     fun updateFilter(uuid: String, request: UpdateEffectFilterRequest) {

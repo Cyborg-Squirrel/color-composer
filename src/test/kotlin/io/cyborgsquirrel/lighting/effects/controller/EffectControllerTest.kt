@@ -30,14 +30,10 @@ class EffectControllerTest(
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
     private val effectRepository: H2LightEffectRepository,
-    private val triggerRepository: H2LightEffectRepository,
-    private val filterRepository: H2LightEffectFilterRepository,
     private val objectMapper: ObjectMapper
 ) : StringSpec({
 
     afterEach {
-        triggerRepository.deleteAll()
-        filterRepository.deleteAll()
         effectRepository.deleteAll()
         stripRepository.deleteAll()
         clientRepository.deleteAll()

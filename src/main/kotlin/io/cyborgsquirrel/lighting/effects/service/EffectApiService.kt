@@ -78,6 +78,7 @@ class EffectApiService(
                     stripUuid = strip.uuid!!,
                     settings = it.settings!!,
                     status = it.status!!,
+                    type = it.type!!,
                 )
             }
             GetEffectsResponse(effectList)
@@ -96,6 +97,7 @@ class EffectApiService(
                 stripUuid = it.strip!!.uuid!!,
                 settings = it.settings!!,
                 status = it.status!!,
+                type = it.type!!,
             )
         }
 
@@ -113,6 +115,7 @@ class EffectApiService(
                 stripUuid = effectEntity.strip!!.uuid!!,
                 settings = effectEntity.settings!!,
                 status = effectEntity.status!!,
+                type = effectEntity.type!!,
             )
         } else {
             throw ClientRequestException("Effect with uuid $uuid does not exist!")

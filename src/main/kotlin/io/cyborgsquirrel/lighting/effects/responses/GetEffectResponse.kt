@@ -4,6 +4,7 @@ import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 
 data class GetEffectResponse(
     val name: String,
+    val type: String,
     val uuid: String,
     val stripUuid: String,
     val settings: Map<String, Any>,
