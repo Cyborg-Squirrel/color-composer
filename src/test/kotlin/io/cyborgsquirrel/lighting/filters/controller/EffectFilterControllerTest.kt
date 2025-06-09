@@ -5,12 +5,15 @@ import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
+import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
+import io.cyborgsquirrel.lighting.filters.BrightnessFadeFilter
 import io.cyborgsquirrel.lighting.filters.LightEffectFilterConstants
+import io.cyborgsquirrel.lighting.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.filters.api.EffectFilterApi
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
@@ -25,7 +28,6 @@ import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrips
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.annotation.Client
@@ -42,6 +44,7 @@ class EffectFilterControllerTest(
     private val stripRepository: H2LedStripRepository,
     private val effectRepository: H2LightEffectRepository,
     private val filterRepository: H2LightEffectFilterRepository,
+    private val effectRegistry: ActiveLightEffectRegistry,
     private val objectMapper: ObjectMapper
 ) : StringSpec({
 
@@ -136,12 +139,13 @@ class EffectFilterControllerTest(
             )
         )
 
-        val brightnessFadeFilterSettings = BrightnessFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(15))
+        val effectUuid = (createEffectHttpResponse.body() as String)
+        val brightnessFadeFilterSettings = BrightnessFadeFilterSettings(0.25f, 1.0f, Duration.ofSeconds(15))
         val settingsAsMap = objectToMap(objectMapper, brightnessFadeFilterSettings)
         val request = CreateEffectFilterRequest(
             "My brightness fade filter",
             LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME,
-            (createEffectHttpResponse.body() as String),
+            effectUuid,
             settingsAsMap
         )
 
@@ -157,6 +161,16 @@ class EffectFilterControllerTest(
         filterEntity.name shouldBe request.name
         filterEntity.type shouldBe request.filterType
         filterEntity.settings shouldBe request.settings
+
+        val activeEffectOptional = effectRegistry.getEffectWithUuid(effectUuid)
+        activeEffectOptional.isPresent shouldBe true
+        val activeEffect = activeEffectOptional.get()
+
+        activeEffect.filters.size shouldBe 1
+        val activeFilter = activeEffect.filters.first()
+
+        (activeFilter as BrightnessFadeFilter).uuid shouldBe filterUuid
+        activeFilter.settings shouldBe brightnessFadeFilterSettings
     }
 
     "Updating a filter" {
@@ -184,7 +198,8 @@ class EffectFilterControllerTest(
         val createFilterHttpResponse = apiClient.createEffectFilter(createRequest)
         val filterUuid = createFilterHttpResponse.body() as String
 
-        val updatedSettingsMap = objectToMap(objectMapper, reflectionFilterSettings.copy(ReflectionType.LowToHigh))
+        val updatedSettings = reflectionFilterSettings.copy(ReflectionType.LowToHigh)
+        val updatedSettingsMap = objectToMap(objectMapper, updatedSettings)
         val updateRequest = UpdateEffectFilterRequest(
             name = "My reflection filter UPDATED",
             effectUuid = effectUuid,
@@ -202,6 +217,16 @@ class EffectFilterControllerTest(
         filterEntity.name shouldBe updateRequest.name
         filterEntity.settings shouldBe updateRequest.settings
         filterEntity.type shouldBe createRequest.filterType
+
+        val activeEffectOptional = effectRegistry.getEffectWithUuid(effectUuid)
+        activeEffectOptional.isPresent shouldBe true
+        val activeEffect = activeEffectOptional.get()
+
+        activeEffect.filters.size shouldBe 1
+        val activeFilter = activeEffect.filters.first()
+
+        (activeFilter as ReflectionFilter).uuid shouldBe filterUuid
+        activeFilter.settings shouldBe updatedSettings
     }
 
 //    "Deleting an effect" {
