@@ -14,6 +14,8 @@ import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.*
 import io.cyborgsquirrel.lighting.filters.*
+import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
+import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
@@ -32,6 +34,7 @@ class CreateLightingHelper(
     private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
     private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
     private val locationConfigRepository: H2LocationConfigRepository,
+    private val junctionRepository: H2LightEffectFilterJunctionRepository,
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val timeHelper: TimeHelper,
     private val objectMapper: ObjectMapper
@@ -176,10 +179,12 @@ class CreateLightingHelper(
     }
 
     fun createEffectFilterFromEntity(effectEntity: LightEffectEntity): List<LightEffectFilter> {
-        return if (effectEntity.filters.isEmpty()) {
+        return if (effectEntity.filterJunctions.isEmpty()) {
             listOf()
         } else {
-            effectEntity.filters.map { filter ->
+            val junctionEntities = junctionRepository.findByEffect(effectEntity)
+            val filterEntities = junctionEntities.map { it.filter!! }
+            filterEntities.map { filter ->
                 createEffectFilter(filter.type!!, filter.uuid!!, filter.settings!!)
             }
         }

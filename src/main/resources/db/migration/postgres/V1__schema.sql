@@ -1,6 +1,7 @@
-DELETE FROM flyway_schema_history;
+--DELETE FROM flyway_schema_history;
 DROP TABLE IF EXISTS light_effect_triggers;
 DROP TABLE IF EXISTS light_effect_filters;
+DROP TABLE IF EXISTS light_effect_filter_junctions;
 DROP TABLE IF EXISTS light_effects;
 DROP TABLE IF EXISTS group_member_led_strips;
 DROP TABLE IF EXISTS led_strip_groups;
@@ -29,7 +30,7 @@ CREATE TABLE led_strips
     power_limit INT,
     blend_mode  VARCHAR(50) NOT NULL,
     client_id   INT NOT NULL,
-    CONSTRAINT strip_client_fk FOREIGN KEY (client_id) REFERENCES led_strip_clients
+    FOREIGN KEY (client_id) REFERENCES led_strip_clients
 );
 
 CREATE TABLE led_strip_groups
@@ -46,8 +47,8 @@ CREATE TABLE group_member_led_strips
     group_index  SMALLINT NOT NULL,
     strip_id     INT NOT NULL,
     group_id     INT NOT NULL,
-    CONSTRAINT led_strip_fk FOREIGN KEY (strip_id) REFERENCES led_strips,
-    CONSTRAINT led_strip_group_fk FOREIGN KEY (group_id) REFERENCES led_strip_groups
+    FOREIGN KEY (strip_id) REFERENCES led_strips,
+    FOREIGN KEY (group_id) REFERENCES led_strip_groups
 );
 
 CREATE TABLE light_effects
@@ -60,8 +61,8 @@ CREATE TABLE light_effects
     type       VARCHAR(255) NOT NULL,
     name       VARCHAR(255) NOT NULL,
     status     VARCHAR(50) NOT NULL,
-    CONSTRAINT led_strip_group_assoc_fk FOREIGN KEY (group_id) REFERENCES led_strip_groups,
-    CONSTRAINT led_strip_assoc_fk FOREIGN KEY (strip_id) REFERENCES led_strips
+    FOREIGN KEY (group_id) REFERENCES led_strip_groups,
+    FOREIGN KEY (strip_id) REFERENCES led_strips
 );
 
 CREATE TABLE light_effect_triggers
@@ -72,18 +73,25 @@ CREATE TABLE light_effect_triggers
     settings    JSONB NOT NULL,
     name        VARCHAR(255) NOT NULL,
     type        VARCHAR(255) NOT NULL,
-    CONSTRAINT trigger_effect_fk FOREIGN KEY (effect_id) REFERENCES light_effects
+    FOREIGN KEY (effect_id) REFERENCES light_effects
 );
 
 CREATE TABLE light_effect_filters
 (
-    id          SERIAL PRIMARY KEY,
-    effect_id   INT NOT NULL,
-    uuid        VARCHAR(50) NOT NULL UNIQUE,
-    settings    JSONB NOT NULL,
-    name        VARCHAR(255) NOT NULL,
-    type        VARCHAR(255) NOT NULL,
-    CONSTRAINT filter_effect_fk FOREIGN KEY (effect_id) REFERENCES light_effects
+    id                 SERIAL PRIMARY KEY,
+    uuid               VARCHAR(50) NOT NULL UNIQUE,
+    settings           JSONB NOT NULL,
+    name               VARCHAR(255) NOT NULL,
+    type               VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE light_effect_filter_junctions
+(
+    id        SERIAL PRIMARY KEY,
+    filter_id INT NOT NULL,
+    effect_id INT,
+    FOREIGN KEY (filter_id) REFERENCES light_effect_filters(id),
+    FOREIGN KEY (effect_id) REFERENCES light_effects(id)
 );
 
 CREATE TABLE location_configs
@@ -100,7 +108,7 @@ CREATE TABLE sunrise_sunset_times
     ymd           VARCHAR(10) NOT NULL,
     json          VARCHAR(500) NOT NULL,
     location_id   INT NOT NULL,
-    CONSTRAINT location_fk FOREIGN KEY (location_id) REFERENCES location_configs
+    FOREIGN KEY (location_id) REFERENCES location_configs
 );
 
 INSERT INTO location_configs VALUES(1, '44.5855', '-93.160900', TRUE)

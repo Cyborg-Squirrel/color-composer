@@ -5,13 +5,12 @@ import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
 import io.micronaut.data.annotation.*
 import io.micronaut.data.model.DataType
-import io.micronaut.serde.annotation.Serdeable
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 
-@Serdeable
 @MappedEntity("light_effects")
 data class LightEffectEntity(
     @Id
@@ -28,7 +27,7 @@ data class LightEffectEntity(
     var triggers: Set<LightEffectTriggerEntity> = setOf(),
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
-    var filters: Set<LightEffectFilterEntity> = setOf(),
+    var filterJunctions: Set<LightEffectFilterJunctionEntity> = setOf(),
 
     var uuid: String? = null,
 

@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
-import io.cyborgsquirrel.lighting.effects.*
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingHelper
@@ -40,6 +40,7 @@ class LightEffectInitJob(
                         effectEntity.type!!,
                         strip.getLength()
                     )
+                    val filters = createLightingHelper.createEffectFilterFromEntity(effectEntity)
                     val activeEffect = ActiveLightEffect(
                         effectUuid = effectEntity.uuid!!,
                         // TODO add priority to persistence layer
@@ -48,7 +49,7 @@ class LightEffectInitJob(
                         status = effectEntity.status!!,
                         strip = strip,
                         effect = lightEffect,
-                        filters = listOf()
+                        filters = filters
                     )
 
                     activeLightEffectRegistry.addOrUpdateEffect(activeEffect)
@@ -58,11 +59,6 @@ class LightEffectInitJob(
                         triggers.forEach {
                             triggerManager.addTrigger(it)
                         }
-                    }
-
-                    val filters = createLightingHelper.createEffectFilterFromEntity(effectEntity)
-                    if (filters.isNotEmpty()) {
-                        activeLightEffectRegistry.addOrUpdateEffect(activeEffect.copy(filters = activeEffect.filters + filters))
                     }
                 }
 

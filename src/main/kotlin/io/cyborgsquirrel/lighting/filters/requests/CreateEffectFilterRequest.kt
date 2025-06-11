@@ -6,6 +6,5 @@ import io.micronaut.serde.annotation.Serdeable
 data class CreateEffectFilterRequest(
     val name: String,
     val filterType: String,
-    val effectUuid: String?,
     val settings: Map<String, Any>
 )

@@ -127,7 +127,8 @@ class EffectApiService(
         val effectEntityOptional = effectRepository.findByUuid(effectUuid)
         if (effectEntityOptional.isPresent) {
             val effectEntity = effectEntityOptional.get()
-            val filterEntities = filterRepository.findByEffect(effectEntity)
+            val filterIds = effectEntity.filterJunctions.map { it.filter!!.id }
+            val filterEntities = filterRepository.findByIdIn(filterIds)
             val triggerEntities = triggerRepository.findByEffect(effectEntity)
 
             filterEntities.forEach { filterRepository.delete(it) }

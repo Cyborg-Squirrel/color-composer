@@ -7,6 +7,6 @@ data class GetFilterResponse(
     val name: String,
     val type: String,
     val uuid: String,
-    val effectUuid: String?,
+    val effectUuids: List<String>,
     val settings: Map<String, Any>,
 )

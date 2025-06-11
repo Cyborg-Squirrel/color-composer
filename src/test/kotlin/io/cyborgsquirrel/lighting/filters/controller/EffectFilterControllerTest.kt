@@ -16,6 +16,8 @@ import io.cyborgsquirrel.lighting.filters.LightEffectFilterConstants
 import io.cyborgsquirrel.lighting.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.filters.api.EffectFilterApi
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
+import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
+import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.requests.CreateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.requests.UpdateEffectFilterRequest
@@ -45,6 +47,7 @@ class EffectFilterControllerTest(
     private val effectRepository: H2LightEffectRepository,
     private val filterRepository: H2LightEffectFilterRepository,
     private val effectRegistry: ActiveLightEffectRegistry,
+    private val junctionRepository: H2LightEffectFilterJunctionRepository,
     private val objectMapper: ObjectMapper
 ) : StringSpec({
 
@@ -56,21 +59,8 @@ class EffectFilterControllerTest(
     }
 
     "Getting filter by uuid" {
-        val client = createLedStripClientEntity(clientRepository, "Living Room lights", "192.168.50.50", 50, 51)
-        val strips = saveLedStrips(stripRepository, client, listOf("Strip A" to 200, "Strip B" to 100))
-        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
-        var effectEntity = LightEffectEntity(
-            strip = strips.last(),
-            name = "Super cool effect",
-            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
-            uuid = UUID.randomUUID().toString(),
-            status = LightEffectStatus.Idle,
-            settings = defaultNrSettings
-        )
-        effectEntity = effectRepository.save(effectEntity)
         val defaultBrightnessSettings = objectToMap(objectMapper, BrightnessFilterSettings(0.5f))
         val filterEntity = LightEffectFilterEntity(
-            effect = effectEntity,
             name = "Half brightness filter",
             uuid = UUID.randomUUID().toString(),
             settings = defaultBrightnessSettings,
@@ -87,7 +77,6 @@ class EffectFilterControllerTest(
         getAllFilterResponse.type shouldBe LightEffectFilterConstants.BRIGHTNESS_FILTER_NAME
         getAllFilterResponse.uuid shouldBe filterEntity.uuid
         getAllFilterResponse.settings shouldBe filterEntity.settings
-        getAllFilterResponse.effectUuid shouldBe effectEntity.uuid
     }
 
     "Getting filters for an effect" {
@@ -103,14 +92,15 @@ class EffectFilterControllerTest(
             settings = defaultNrSettings
         )
         effectEntity = effectRepository.save(effectEntity)
-        val filterEntity = LightEffectFilterEntity(
-            effect = effectEntity,
+        var filterEntity = LightEffectFilterEntity(
             name = "My reverse filter",
             uuid = UUID.randomUUID().toString(),
             settings = mapOf(),
             type = LightEffectFilterConstants.REVERSE_FILTER_NAME
         )
-        filterRepository.save(filterEntity)
+        filterEntity = filterRepository.save(filterEntity)
+        val junctionEntity = LightEffectFilterJunctionEntity(filter = filterEntity, effect = effectEntity)
+        junctionRepository.save(junctionEntity)
 
         val getAllFiltersHttpResponse = apiClient.getFiltersForEffect(effectEntity.uuid!!)
         getAllFiltersHttpResponse.status shouldBe HttpStatus.OK
@@ -123,7 +113,7 @@ class EffectFilterControllerTest(
         filterFromApi.type shouldBe LightEffectFilterConstants.REVERSE_FILTER_NAME
         filterFromApi.uuid shouldBe filterEntity.uuid
         filterFromApi.settings shouldBe filterEntity.settings
-        filterFromApi.effectUuid shouldBe effectEntity.uuid
+        filterFromApi.effectUuids shouldBe listOf(effectEntity.uuid)
     }
 
     "Create a filter" {
@@ -145,7 +135,6 @@ class EffectFilterControllerTest(
         val request = CreateEffectFilterRequest(
             "My brightness fade filter",
             LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME,
-            effectUuid,
             settingsAsMap
         )
 
@@ -157,7 +146,6 @@ class EffectFilterControllerTest(
         filterEntityOptional.isPresent shouldBe true
         val filterEntity = filterEntityOptional.get()
 
-        filterEntity.effect?.uuid shouldBe request.effectUuid
         filterEntity.name shouldBe request.name
         filterEntity.type shouldBe request.filterType
         filterEntity.settings shouldBe request.settings
@@ -166,11 +154,8 @@ class EffectFilterControllerTest(
         activeEffectOptional.isPresent shouldBe true
         val activeEffect = activeEffectOptional.get()
 
-        activeEffect.filters.size shouldBe 1
-        val activeFilter = activeEffect.filters.first()
-
-        (activeFilter as BrightnessFadeFilter).uuid shouldBe filterUuid
-        activeFilter.settings shouldBe brightnessFadeFilterSettings
+        // Filter was created but not assigned to an effect
+        activeEffect.filters.isEmpty() shouldBe true
     }
 
     "Updating a filter" {
@@ -192,7 +177,6 @@ class EffectFilterControllerTest(
         val createRequest = CreateEffectFilterRequest(
             "My brightness fade filter",
             LightEffectFilterConstants.REFLECTION_FILTER_NAME,
-            effectUuid,
             settingsAsMap
         )
         val createFilterHttpResponse = apiClient.createEffectFilter(createRequest)
@@ -202,7 +186,7 @@ class EffectFilterControllerTest(
         val updatedSettingsMap = objectToMap(objectMapper, updatedSettings)
         val updateRequest = UpdateEffectFilterRequest(
             name = "My reflection filter UPDATED",
-            effectUuid = effectUuid,
+            effectUuids = listOf(effectUuid),
             settings = updatedSettingsMap
         )
 
@@ -211,9 +195,13 @@ class EffectFilterControllerTest(
 
         val filterEntityOptional = filterRepository.findByUuid(filterUuid)
         filterEntityOptional.isPresent shouldBe true
-
         val filterEntity = filterEntityOptional.get()
-        filterEntity.effect?.uuid shouldBe effectUuid
+
+        val junctionEntities = junctionRepository.findByFilter(filterEntity)
+        junctionEntities.size shouldBe 1
+        val junctionEntity = junctionEntities.first()
+
+        junctionEntity.effect?.uuid shouldBe effectUuid
         filterEntity.name shouldBe updateRequest.name
         filterEntity.settings shouldBe updateRequest.settings
         filterEntity.type shouldBe createRequest.filterType
@@ -229,6 +217,7 @@ class EffectFilterControllerTest(
         activeFilter.settings shouldBe updatedSettings
     }
 
+    // TODO delete filter test
 //    "Deleting an effect" {
 //        val client = createLedStripClientEntity(clientRepository, "Christmas Tree lights", "192.168.50.50", 50, 51)
 //        val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
@@ -246,5 +235,6 @@ class EffectFilterControllerTest(
 //        val createEffectHttpResponse = effectApiClient.deleteEffect(effectEntity.uuid!!)
 //        createEffectHttpResponse.status shouldBe HttpStatus.NO_CONTENT
 //        effectRepository.findAll().isEmpty() shouldBe true
+//        junctionRepository.findAll().isEmpty() shouldBe true
 //    }
 })

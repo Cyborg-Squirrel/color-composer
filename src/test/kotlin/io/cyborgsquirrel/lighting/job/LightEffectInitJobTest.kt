@@ -1,13 +1,13 @@
 package io.cyborgsquirrel.lighting.job
 
-import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripGroupRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.H2LedStripGroupRepository
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
@@ -26,6 +26,8 @@ import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.BrightnessFadeFilter
 import io.cyborgsquirrel.lighting.filters.LightEffectFilterConstants
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
+import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
+import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.lighting.limits.PowerLimiterService
@@ -48,6 +50,7 @@ class LightEffectInitJobTest(
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val triggerRepository: H2LightEffectTriggerRepository,
     private val filterRepository: H2LightEffectFilterRepository,
+    private val junctionRepository: H2LightEffectFilterJunctionRepository,
     private val objectMapper: ObjectMapper,
     private val triggerManager: TriggerManager,
     private val effectFactory: CreateLightingHelper,
@@ -61,6 +64,7 @@ class LightEffectInitJobTest(
 
     afterTest {
         activeLightEffectRegistry.reset()
+        junctionRepository.deleteAll()
         triggerRepository.deleteAll()
         filterRepository.deleteAll()
         lightEffectRepository.deleteAll()
@@ -236,13 +240,13 @@ class LightEffectInitJobTest(
         val fadeTriggerSettingsJson = objectToMap(objectMapper, fadeFilterSettings)
         val filter = filterRepository.save(
             LightEffectFilterEntity(
-                effect = lightEffect,
                 uuid = UUID.randomUUID().toString(),
                 type = LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME,
                 name = "25x trigger",
                 settings = fadeTriggerSettingsJson,
             )
         )
+        val junction = junctionRepository.save(LightEffectFilterJunctionEntity(filter = filter, effect = lightEffect))
 
         job.run()
 

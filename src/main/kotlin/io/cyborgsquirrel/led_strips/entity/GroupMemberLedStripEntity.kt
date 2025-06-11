@@ -4,9 +4,7 @@ import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity
 import io.micronaut.data.annotation.Relation
-import io.micronaut.serde.annotation.Serdeable
 
-@Serdeable
 @MappedEntity("group_member_led_strips")
 data class GroupMemberLedStripEntity(
     @Id
