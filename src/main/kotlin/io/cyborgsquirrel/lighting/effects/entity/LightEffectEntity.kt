@@ -6,6 +6,7 @@ import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
+import io.cyborgsquirrel.lighting.palette.entity.LightEffectPaletteJunctionEntity
 import io.micronaut.data.annotation.*
 import io.micronaut.data.model.DataType
 import jakarta.persistence.EnumType
@@ -28,6 +29,9 @@ data class LightEffectEntity(
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
     var filterJunctions: Set<LightEffectFilterJunctionEntity> = setOf(),
+
+    @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
+    var paletteJunctions: Set<LightEffectPaletteJunctionEntity> = setOf(),
 
     var uuid: String? = null,
 
