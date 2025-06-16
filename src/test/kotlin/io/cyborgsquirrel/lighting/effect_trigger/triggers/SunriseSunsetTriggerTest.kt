@@ -1,10 +1,7 @@
 package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
-import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
-import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
-import io.cyborgsquirrel.lighting.effect_trigger.enums.SunriseSunsetOption
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
-import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTriggerSettings
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
@@ -12,13 +9,14 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistryImpl
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
+import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
+import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiTestData.Companion.apiResponse2025Jan21Json
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiTestData.Companion.apiResponse2025Jan2Json
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
-import io.cyborgsquirrel.util.time.TimeHelper
-import io.cyborgsquirrel.util.time.TimeHelperImpl
-import io.cyborgsquirrel.util.time.ymd
+import io.cyborgsquirrel.util.time.*
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -45,6 +43,7 @@ class SunriseSunsetTriggerTest(
     lateinit var mockLocationConfigRepository: H2LocationConfigRepository
     lateinit var mockSunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository
     lateinit var mockActiveLightEffectRegistry: ActiveLightEffectRegistry
+    lateinit var timeOfDayService: TimeOfDayService
 
     // Location option 1
     val duluthMnLocation = LocationConfigEntity(1, "46.465978", "-92.062368", true)
@@ -57,6 +56,7 @@ class SunriseSunsetTriggerTest(
 
     beforeTest {
         mockTimeHelper = getMock(timeHelper)
+        timeOfDayService = TimeOfDayServiceImpl(mockTimeHelper)
         mockLocationConfigRepository = getMock(locationConfigRepository)
         mockSunriseSunsetTimeRepository = getMock(sunriseSunsetTimeRepository)
         mockActiveLightEffectRegistry = getMock(activeLightEffectRegistry)
@@ -95,7 +95,7 @@ class SunriseSunsetTriggerTest(
             mockLocationConfigRepository.findByActiveTrue()
         } returns Optional.of(locationConfig)
         every {
-            mockSunriseSunsetTimeRepository.findByYmdEqualsAndLocationEquals(date.ymd(), locationConfig)
+            mockSunriseSunsetTimeRepository.findByYmdEqualsAndLocation(date.ymd(), locationConfig)
         } returns Optional.of(SunriseSunsetTimeEntity(1, date.ymd(), apiResponseString, locationConfig))
     }
 
@@ -118,18 +118,19 @@ class SunriseSunsetTriggerTest(
         mockLocation(date, apiResponse2025Jan21Json, duluthMnLocation)
         mockTimestampParse(cst)
 
-        val settings = SunriseSunsetTriggerSettings(
-            SunriseSunsetOption.Sunrise,
+        val settings = TimeOfDayTriggerSettings(
+            TimeOfDay.Sunrise,
             Duration.ofMinutes(30),
             Int.MAX_VALUE,
             TriggerType.StartEffect
         )
         val trigger =
-            SunriseSunsetTrigger(
+            TimeOfDayTrigger(
                 mockSunriseSunsetTimeRepository,
                 mockLocationConfigRepository,
                 objectMapper,
                 mockTimeHelper,
+                timeOfDayService,
                 settings,
                 UUID.randomUUID().toString(),
                 activeEffect.effectUuid
@@ -138,7 +139,7 @@ class SunriseSunsetTriggerTest(
         val activationOptional = trigger.lastActivation()
         val activation = activationOptional.getOrNull()
         activation shouldNotBe null
-        activation!!.sequenceNumber shouldBe 1
+        activation!!.activationNumber shouldBe 1
         activation.timestamp.toLocalDate() shouldBe date
         activation.timestamp.toLocalTime().hour shouldBe 7
         activation.timestamp.toLocalTime().minute shouldBe 41
@@ -164,18 +165,19 @@ class SunriseSunsetTriggerTest(
 
         mockLocation(date, apiResponse2025Jan2Json, londonGbLocation)
         mockTimestampParse(utc)
-        val settings = SunriseSunsetTriggerSettings(
-            SunriseSunsetOption.Sunset,
+        val settings = TimeOfDayTriggerSettings(
+            TimeOfDay.Sunset,
             Duration.ofHours(1),
             Int.MAX_VALUE,
             TriggerType.StartEffect
         )
         val trigger =
-            SunriseSunsetTrigger(
+            TimeOfDayTrigger(
                 mockSunriseSunsetTimeRepository,
                 mockLocationConfigRepository,
                 objectMapper,
                 mockTimeHelper,
+                timeOfDayService,
                 settings,
                 UUID.randomUUID().toString(),
                 activeEffect.effectUuid
@@ -195,18 +197,19 @@ class SunriseSunsetTriggerTest(
         mockTime(date, time)
         mockLocation(date, apiResponse2025Jan2Json, londonGbLocation)
         mockTimestampParse(utc)
-        val settings = SunriseSunsetTriggerSettings(
-            SunriseSunsetOption.Sunset,
+        val settings = TimeOfDayTriggerSettings(
+            TimeOfDay.Sunset,
             Duration.ofHours(1),
             Int.MAX_VALUE,
             TriggerType.StartEffect
         )
         val trigger =
-            SunriseSunsetTrigger(
+            TimeOfDayTrigger(
                 mockSunriseSunsetTimeRepository,
                 mockLocationConfigRepository,
                 objectMapper,
                 mockTimeHelper,
+                timeOfDayService,
                 settings,
                 UUID.randomUUID().toString(),
                 activeEffect.effectUuid
@@ -224,23 +227,24 @@ class SunriseSunsetTriggerTest(
             mockLocationConfigRepository.findByActiveTrue()
         } returns Optional.of(duluthMnLocation)
         every {
-            mockSunriseSunsetTimeRepository.findByYmdEqualsAndLocationEquals(date.ymd(), duluthMnLocation)
+            mockSunriseSunsetTimeRepository.findByYmdEqualsAndLocation(date.ymd(), duluthMnLocation)
         } returns Optional.empty()
 
         mockTime(date, time)
         mockTimestampParse(utc)
-        val settings = SunriseSunsetTriggerSettings(
-            SunriseSunsetOption.Sunset,
+        val settings = TimeOfDayTriggerSettings(
+            TimeOfDay.Sunset,
             Duration.ofHours(1),
             Int.MAX_VALUE,
             TriggerType.StartEffect
         )
         val trigger =
-            SunriseSunsetTrigger(
+            TimeOfDayTrigger(
                 mockSunriseSunsetTimeRepository,
                 mockLocationConfigRepository,
                 objectMapper,
                 mockTimeHelper,
+                timeOfDayService,
                 settings,
                 UUID.randomUUID().toString(),
                 activeEffect.effectUuid

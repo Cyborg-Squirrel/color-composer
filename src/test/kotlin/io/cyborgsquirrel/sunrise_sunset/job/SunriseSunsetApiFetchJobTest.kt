@@ -93,7 +93,7 @@ class SunriseSunsetApiFetchJobTest(
             entity
         }
         every {
-            mockSunriseSunsetRepo.findByYmdEqualsAndLocationEquals(any(), any())
+            mockSunriseSunsetRepo.findByYmdEqualsAndLocation(any(), any())
         } answers {
             val ymdString = it.invocation.args.first() as String
             val location = it.invocation.args.last() as LocationConfigEntity

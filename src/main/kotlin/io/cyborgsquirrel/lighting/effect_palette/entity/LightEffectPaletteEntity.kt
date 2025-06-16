@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.palette.entity
+package io.cyborgsquirrel.lighting.effect_palette.entity
 
 import io.micronaut.data.annotation.*
 import io.micronaut.data.model.DataType

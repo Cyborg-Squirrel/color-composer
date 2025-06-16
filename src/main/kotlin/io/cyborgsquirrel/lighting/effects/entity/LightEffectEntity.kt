@@ -6,7 +6,7 @@ import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
-import io.cyborgsquirrel.lighting.palette.entity.LightEffectPaletteJunctionEntity
+import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteJunctionEntity
 import io.micronaut.data.annotation.*
 import io.micronaut.data.model.DataType
 import jakarta.persistence.EnumType

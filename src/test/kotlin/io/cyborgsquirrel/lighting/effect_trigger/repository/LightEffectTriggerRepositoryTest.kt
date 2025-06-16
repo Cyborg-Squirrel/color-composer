@@ -41,7 +41,7 @@ class LightEffectTriggerRepositoryTest(
         NightriderEffectSettings.default().copy(colorList = listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
     val timeTriggerSettings =
         TimeTriggerSettings(
-            LocalTime.of(19, 0), Duration.ofHours(4), maxActivations = null, triggerType = TriggerType.StartEffect
+            LocalTime.of(19, 0), null, Duration.ofHours(4), maxActivations = null, triggerType = TriggerType.StartEffect
         )
 
     fun verifyLightEffectTriggerEntity(

@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.effect_trigger
+package io.cyborgsquirrel.lighting.effect_trigger.service
 
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.LightEffectTrigger
 

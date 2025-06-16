@@ -4,22 +4,28 @@ import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.util.time.TimeHelper
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.util.*
 
 class TimeTrigger(private val timeHelper: TimeHelper, settings: TimeTriggerSettings, uuid: String, effectUuid: String) :
     LightEffectTrigger(settings, uuid, effectUuid) {
 
-    private var sequenceNumber = 0
+    private var activationNumber = 0
     private var lastActivation: LocalDateTime? = null
 
     override fun lastActivation(): Optional<TriggerActivation> {
         val now = timeHelper.now()
         val currentTime = now.toLocalTime()
         val triggerTime = getTriggerTime()
+        val triggerDay = getTriggerDay()
 
-        if (currentTime.isAfter(triggerTime) && now.toLocalDate() != lastActivation?.toLocalDate()) {
-            sequenceNumber++
+        if (triggerDay != null) {
+            val triggerDateTime = LocalDateTime.of(triggerDay, triggerTime)
+            if (now.isAfter(triggerDateTime) && now.toLocalDate() != lastActivation?.toLocalDate()) {
+                activationNumber++
+                lastActivation = LocalDateTime.of(now.toLocalDate(), triggerTime)
+            }
+        } else if (currentTime.isAfter(triggerTime) && now.toLocalDate() != lastActivation?.toLocalDate()) {
+            activationNumber++
             lastActivation = LocalDateTime.of(now.toLocalDate(), triggerTime)
         }
 
@@ -27,12 +33,12 @@ class TimeTrigger(private val timeHelper: TimeHelper, settings: TimeTriggerSetti
             TriggerActivation(
                 lastActivation!!,
                 settings,
-                sequenceNumber,
+                activationNumber,
             )
         )
     }
 
-    private fun getTriggerTime(): LocalTime {
-        return (settings as TimeTriggerSettings).triggerTime
-    }
+    private fun getTriggerTime() = (settings as TimeTriggerSettings).triggerTime
+
+    private fun getTriggerDay() = (settings as TimeTriggerSettings).triggerDay
 }

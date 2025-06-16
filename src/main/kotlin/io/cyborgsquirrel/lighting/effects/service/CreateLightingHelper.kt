@@ -3,11 +3,11 @@ package io.cyborgsquirrel.lighting.effects.service
 import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
-import io.cyborgsquirrel.lighting.effect_trigger.settings.SunriseSunsetTriggerSettings
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.LightEffectTrigger
-import io.cyborgsquirrel.lighting.effect_trigger.triggers.SunriseSunsetTrigger
+import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeOfDayTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
@@ -15,7 +15,6 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.*
 import io.cyborgsquirrel.lighting.filters.*
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
-import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
@@ -25,6 +24,7 @@ import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.TimeHelper
+import io.cyborgsquirrel.util.time.TimeOfDayService
 import io.micronaut.json.tree.JsonNode
 import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
@@ -37,6 +37,7 @@ class CreateLightingHelper(
     private val junctionRepository: H2LightEffectFilterJunctionRepository,
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val timeHelper: TimeHelper,
+    private val timeOfDayService: TimeOfDayService,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -157,17 +158,18 @@ class CreateLightingHelper(
                     }
 
                     LightEffectTriggerConstants.SUNRISE_SUNSET_TRIGGER_NAME -> {
-                        SunriseSunsetTrigger(
+                        TimeOfDayTrigger(
                             sunriseSunsetTimeRepository = sunriseSunsetTimeRepository,
                             locationConfigRepository = locationConfigRepository,
                             objectMapper = objectMapper,
                             timeHelper = timeHelper,
+                            timeOfDayService = timeOfDayService,
                             settings = objectMapper.readValueFromTree(
                                 JsonNode.from(trigger.settings),
-                                SunriseSunsetTriggerSettings::class.java
+                                TimeOfDayTriggerSettings::class.java
                             ),
                             uuid = trigger.uuid!!,
-                            effectUuid = effectEntity.uuid!!,
+                            effectUuid = effectEntity.uuid!!
                         )
                     }
 

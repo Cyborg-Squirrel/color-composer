@@ -9,7 +9,7 @@ import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
-import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
+import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings

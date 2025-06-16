@@ -40,7 +40,7 @@ class SunriseSunsetApiFetchJob(
             val ymdString = date.ymd()
             val lat = location.latitude!!
             val long = location.longitude!!
-            val sunriseSunsetTime = sunriseSunsetRepository.findByYmdEqualsAndLocationEquals(ymdString, location)
+            val sunriseSunsetTime = sunriseSunsetRepository.findByYmdEqualsAndLocation(ymdString, location)
 
             if (sunriseSunsetTime.isEmpty) {
                 val sunriseSunsetModel =

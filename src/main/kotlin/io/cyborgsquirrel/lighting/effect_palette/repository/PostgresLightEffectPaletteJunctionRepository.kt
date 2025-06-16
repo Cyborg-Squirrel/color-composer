@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.palette.repository
+package io.cyborgsquirrel.lighting.effect_palette.repository
 
 import io.micronaut.context.annotation.Replaces
 import io.micronaut.context.annotation.Requires

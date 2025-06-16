@@ -12,7 +12,7 @@ import java.time.LocalTime
 class TimeTriggerSettingsTest(private val objectMapper: ObjectMapper) : StringSpec({
 
     val timeTriggerSettings =
-        TimeTriggerSettings(LocalTime.of(18, 0), Duration.ofHours(4), 120, TriggerType.StartEffect)
+        TimeTriggerSettings(LocalTime.of(18, 0), null, Duration.ofHours(4), 120, TriggerType.StartEffect)
     val timeTriggerSettingsJson =
         "{\"activationDuration\":14400000000000,\"maxActivations\":120,\"triggerType\":\"StartEffect\",\"triggerTime\":\"18:00:00\"}"
 

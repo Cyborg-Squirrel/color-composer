@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.palette.entity
+package io.cyborgsquirrel.lighting.effect_palette.entity
 
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.micronaut.data.annotation.GeneratedValue

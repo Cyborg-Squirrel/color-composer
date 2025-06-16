@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.job
 
-import io.cyborgsquirrel.lighting.effect_trigger.TriggerManager
+import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository

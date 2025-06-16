@@ -71,6 +71,7 @@ class TimeTriggerTest(
         mockResponses(date, time)
         val settings = TimeTriggerSettings(
             LocalTime.of(17, 0),
+            null,
             Duration.ofMinutes(30),
             Int.MAX_VALUE,
             TriggerType.StartEffect
@@ -82,7 +83,7 @@ class TimeTriggerTest(
                 then("The last activation shall be returned") {
                     val activation = activationOptional.getOrNull()
                     activation shouldNotBe null
-                    activation!!.sequenceNumber shouldBe 1
+                    activation!!.activationNumber shouldBe 1
                     activation.timestamp.toLocalDate() shouldBe date
                     activation.timestamp.toLocalTime() shouldBe settings.triggerTime
                     activation.settings shouldBe settings

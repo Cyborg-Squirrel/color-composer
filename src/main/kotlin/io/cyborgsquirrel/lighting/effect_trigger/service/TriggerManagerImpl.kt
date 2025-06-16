@@ -1,10 +1,10 @@
-package io.cyborgsquirrel.lighting.effect_trigger
+package io.cyborgsquirrel.lighting.effect_trigger.service
 
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.LightEffectTrigger
-import io.cyborgsquirrel.lighting.effect_trigger.triggers.SunriseSunsetTrigger
+import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeOfDayTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
@@ -54,7 +54,7 @@ class TriggerManagerImpl(
                             updateLightEffect(effect, TriggerType.StopEffect)
                         }
 
-                        is SunriseSunsetTrigger -> {
+                        is TimeOfDayTrigger -> {
                             checkSharedTriggerActivationConditions(trigger, activation, effect)
                         }
 
@@ -80,7 +80,7 @@ class TriggerManagerImpl(
             activation.timestamp.plusSeconds(settings.activationDuration.seconds)
                 .isAfter(now)
         val triggerHasReachedMaxActivations =
-            settings.maxActivations != null && settings.maxActivations < activation.sequenceNumber
+            settings.maxActivations != null && settings.maxActivations < activation.activationNumber
         if (triggerHasReachedMaxActivations) {
             // TODO if the effect was last activated by this trigger and is still active set it to inactive
             // then set the trigger to inactive

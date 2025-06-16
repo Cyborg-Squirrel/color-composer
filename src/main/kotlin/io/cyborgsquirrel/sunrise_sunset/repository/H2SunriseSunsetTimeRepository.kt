@@ -18,5 +18,8 @@ interface H2SunriseSunsetTimeRepository : CrudRepository<SunriseSunsetTimeEntity
     fun findByYmdEquals(ymd: String): List<SunriseSunsetTimeEntity>
 
     @Join(value = "location", type = Join.Type.RIGHT_FETCH)
-    fun findByYmdEqualsAndLocationEquals(ymd: String, location: LocationConfigEntity): Optional<SunriseSunsetTimeEntity>
+    fun findByYmdEqualsAndLocation(ymd: String, location: LocationConfigEntity): Optional<SunriseSunsetTimeEntity>
+
+    @Join(value = "location", type = Join.Type.RIGHT_FETCH)
+    fun findByLocationOrderByYmd(location: LocationConfigEntity): List<SunriseSunsetTimeEntity>
 }

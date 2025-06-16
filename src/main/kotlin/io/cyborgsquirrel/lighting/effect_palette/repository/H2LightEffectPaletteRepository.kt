@@ -1,6 +1,6 @@
-package io.cyborgsquirrel.lighting.palette.repository
+package io.cyborgsquirrel.lighting.effect_palette.repository
 
-import io.cyborgsquirrel.lighting.palette.entity.LightEffectPaletteEntity
+import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.micronaut.data.annotation.Join
 import io.micronaut.data.jdbc.annotation.JdbcRepository
 import io.micronaut.data.model.query.builder.sql.Dialect
