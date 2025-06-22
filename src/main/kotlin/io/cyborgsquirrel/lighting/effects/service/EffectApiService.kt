@@ -218,7 +218,9 @@ class EffectApiService(
                 )
 
                 var activeEffect = activeEffectOptional.get()
-                if (updateEffectRequest.paletteUuid != null && palette != null) {
+                val onlyPaletteChange =
+                    updateEffectRequest.stripUuid == null && updateEffectRequest.paletteUuid != null && updateEffectRequest.name == null && updateEffectRequest.settings == null && updateEffectRequest.status == null
+                if (onlyPaletteChange && palette != null) {
                     // If the palette is the only update, don't create a new ActiveEffect with copy()
                     // This retains the state of the effect and just swaps the palette.
                     activeEffect.effect.updatePalette(palette)
