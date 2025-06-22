@@ -237,7 +237,6 @@ class EffectApiService(
                     status = effectEntity.status!!,
                     strip = strip,
                     effect = lightEffect,
-                    filters = listOf()
                 )
 
                 effectRegistry.addOrUpdateEffect(activeEffect)

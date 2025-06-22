@@ -242,7 +242,7 @@ class EffectControllerTest(
         effectEntity = effectRepository.save(effectEntity)
 
         val updateRequest = UpdateEffectRequest(
-            effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME, settings = updatedNrSettings,
+            settings = updatedNrSettings,
             stripUuid = null,
             paletteUuid = null,
             name = "New effect name",
