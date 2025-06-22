@@ -6,6 +6,6 @@ import io.micronaut.serde.annotation.Serdeable
 data class MarqueeEffectSettings(val dotLength: Int, val spaceBetweenDots: Int, val scrollAmountPerSecond: Int) :
     LightEffectSettings() {
     companion object {
-        fun default() = MarqueeEffectSettings(2, 2, 4)
+        fun default() = MarqueeEffectSettings(2, 2, 8)
     }
 }
