@@ -1,14 +1,14 @@
 package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
-import io.cyborgsquirrel.lighting.effects.settings.ScrollingDotEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.MarqueeEffectSettings
 import io.cyborgsquirrel.lighting.effects.shared.LightEffectHelper
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 
-class ScrollingDotsEffect(
+class MarqueeEffect(
     private val numberOfLeds: Int,
-    private val settings: ScrollingDotEffectSettings,
+    private val settings: MarqueeEffectSettings,
     private var palette: ColorPalette?,
     private val timeHelper: TimeHelper,
 ) : LightEffect {
