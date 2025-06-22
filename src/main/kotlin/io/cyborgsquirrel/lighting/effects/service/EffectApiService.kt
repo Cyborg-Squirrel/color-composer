@@ -45,18 +45,11 @@ class EffectApiService(
 
             val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
             val palette = if (effectEntity.palette != null) createLightingService.createPalette(
-                effectEntity.palette!!.settings!!,
-                effectEntity.palette!!.type!!,
-                effectEntity.palette!!.uuid!!,
-                strip
+                effectEntity.palette!!.settings!!, effectEntity.palette!!.type!!, effectEntity.palette!!.uuid!!, strip
             ) else null
-            val lightEffect =
-                createLightingService.createEffect(
-                    request.settings,
-                    request.effectType,
-                    palette,
-                    strip
-                )
+            val lightEffect = createLightingService.createEffect(
+                request.settings, request.effectType, palette, strip
+            )
 
             val activeEffect = ActiveLightEffect(
                 effectUuid = effectEntity.uuid!!,
@@ -177,8 +170,7 @@ class EffectApiService(
             if (updateEffectRequest.status != null) {
                 // Invalid statuses for an update request
                 val invalidStatusList = listOf(LightEffectStatus.Idle)
-                val validStatusList =
-                    LightEffectStatus.entries.filter { !invalidStatusList.contains(it) }
+                val validStatusList = LightEffectStatus.entries.filter { !invalidStatusList.contains(it) }
                 if (invalidStatusList.contains(updateEffectRequest.status)) {
                     throw ClientRequestException(
                         "Updating to status ${updateEffectRequest.status} is not allowed. Use $validStatusList."
@@ -221,25 +213,28 @@ class EffectApiService(
                     effectEntity.palette!!.uuid!!,
                     strip
                 ) else null
-                val lightEffect =
-                    createLightingService.createEffect(
-                        effectEntity.settings!!,
-                        effectEntity.type!!,
-                        palette,
-                        strip
-                    )
-                var activeEffect = activeEffectOptional.get()
-                activeEffect = activeEffect.copy(
-                    effectUuid = effectEntity.uuid!!,
-                    // TODO add priority to persistence layer
-                    priority = 0,
-                    skipFramesIfBlank = true,
-                    status = effectEntity.status!!,
-                    strip = strip,
-                    effect = lightEffect,
+                val lightEffect = createLightingService.createEffect(
+                    effectEntity.settings!!, effectEntity.type!!, palette, strip
                 )
 
-                effectRegistry.addOrUpdateEffect(activeEffect)
+                var activeEffect = activeEffectOptional.get()
+                if (updateEffectRequest.paletteUuid != null && palette != null) {
+                    // If the palette is the only update, don't create a new ActiveEffect with copy()
+                    // This retains the state of the effect and just swaps the palette.
+                    activeEffect.effect.updatePalette(palette)
+                } else {
+                    activeEffect = activeEffect.copy(
+                        effectUuid = effectEntity.uuid!!,
+                        // TODO add priority to persistence layer
+                        priority = 0,
+                        skipFramesIfBlank = true,
+                        status = effectEntity.status!!,
+                        strip = strip,
+                        effect = lightEffect,
+                    )
+
+                    effectRegistry.addOrUpdateEffect(activeEffect)
+                }
             }
         } else {
             throw ClientRequestException("Effect with uuid $uuid doesn't exist!")
