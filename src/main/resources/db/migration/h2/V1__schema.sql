@@ -1,9 +1,8 @@
 DROP TABLE IF EXISTS light_effect_triggers;
-DROP TABLE IF EXISTS light_effect_palettes;
-DROP TABLE IF EXISTS light_effect_palette_junctions;
 DROP TABLE IF EXISTS light_effect_filter_junctions;
 DROP TABLE IF EXISTS light_effect_filters;
 DROP TABLE IF EXISTS light_effects;
+DROP TABLE IF EXISTS light_effect_palettes;
 DROP TABLE IF EXISTS group_member_led_strips;
 DROP TABLE IF EXISTS led_strip_groups;
 DROP TABLE IF EXISTS led_strips;
@@ -52,18 +51,29 @@ CREATE TABLE group_member_led_strips
     FOREIGN KEY (group_id) REFERENCES led_strip_groups
 );
 
+CREATE TABLE light_effect_palettes
+(
+    id          IDENTITY PRIMARY KEY NOT NULL,
+    uuid        VARCHAR(50) NOT NULL UNIQUE,
+    settings    JSON NOT NULL,
+    name        VARCHAR(255) NOT NULL,
+    type        VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE light_effects
 (
     id         IDENTITY PRIMARY KEY NOT NULL,
     strip_id   INT,
     group_id   INT,
+    palette_id INT,
     uuid       VARCHAR(50) NOT NULL UNIQUE,
     settings   JSON NOT NULL,
     type       VARCHAR(255) NOT NULL,
     name       VARCHAR(255) NOT NULL,
     status     VARCHAR(50) NOT NULL,
     FOREIGN KEY (group_id) REFERENCES led_strip_groups,
-    FOREIGN KEY (strip_id) REFERENCES led_strips
+    FOREIGN KEY (strip_id) REFERENCES led_strips,
+    FOREIGN KEY (palette_id) REFERENCES light_effect_palettes
 );
 
 CREATE TABLE light_effect_triggers
@@ -75,24 +85,6 @@ CREATE TABLE light_effect_triggers
     name        VARCHAR(255) NOT NULL,
     type        VARCHAR(255) NOT NULL,
     FOREIGN KEY (effect_id) REFERENCES light_effects
-);
-
-CREATE TABLE light_effect_palettes
-(
-    id          IDENTITY PRIMARY KEY NOT NULL,
-    uuid        VARCHAR(50) NOT NULL UNIQUE,
-    settings    JSON NOT NULL,
-    name        VARCHAR(255) NOT NULL,
-    type        VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE light_effect_palette_junctions
-(
-    id         IDENTITY PRIMARY KEY NOT NULL,
-    palette_id INT NOT NULL,
-    effect_id  INT,
-    FOREIGN KEY (palette_id) REFERENCES light_effect_palettes(id),
-    FOREIGN KEY (effect_id) REFERENCES light_effects(id)
 );
 
 CREATE TABLE light_effect_filters

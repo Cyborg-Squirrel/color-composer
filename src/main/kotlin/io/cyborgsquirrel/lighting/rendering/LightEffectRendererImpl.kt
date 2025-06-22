@@ -36,9 +36,13 @@ class LightEffectRendererImpl(
         for (activeEffect in activeEffects) {
             when (activeEffect.strip) {
                 is LedStripModel -> {
+                    logger.debug("Rendering effect {} {}", activeEffect.effect, activeEffect.effectUuid)
                     var rgbData = activeEffect.effect.getNextStep()
+                    logger.debug("Rendered effect {} {}", activeEffect.effect, activeEffect.effectUuid)
                     for (filter in activeEffect.filters) {
+                        logger.debug("Applying filter ${filter.uuid}")
                         rgbData = filter.apply(rgbData)
+                        logger.debug("Applied filter ${filter.uuid}")
                     }
 
                     if (activeEffect.skipFramesIfBlank) {
@@ -49,7 +53,18 @@ class LightEffectRendererImpl(
                             }
 
                             if (allBlank) {
+                                logger.debug("All frames are blank and effect is set to skip blank frames")
+                                logger.debug(
+                                    "Rendering next frame for effect {} {}",
+                                    activeEffect.effect,
+                                    activeEffect.effectUuid
+                                )
                                 rgbData = activeEffect.effect.getNextStep()
+                                logger.debug(
+                                    "Rendered next frame for effect {} {}",
+                                    activeEffect.effect,
+                                    activeEffect.effectUuid
+                                )
                                 for (filter in activeEffect.filters) {
                                     rgbData = filter.apply(rgbData)
                                 }

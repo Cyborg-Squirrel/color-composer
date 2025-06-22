@@ -1,23 +1,20 @@
 package io.cyborgsquirrel.lighting.effects
 
+import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 import kotlin.math.ceil
 
 class SpectrumLightEffect(
     private val numberOfLeds: Int,
-    private val settings: SpectrumEffectSettings
+    private val settings: SpectrumEffectSettings,
+    private var palette: ColorPalette?,
 ) : LightEffect {
 
     private var frame = 0
     private var iterations = 0
-    private var colorWidth = if (settings.colorPixelWidth == 0) settings.colorList.size else settings.colorPixelWidth
-    private val colorList = settings.colorList
     private var referenceFrame = mutableListOf<RgbColor>()
-
-    override fun getName(): String {
-        return NAME
-    }
+    private val colorWidth = getColorWidth()
 
     override fun getNextStep(): List<RgbColor> {
         val rgbList = mutableListOf<RgbColor>()
@@ -25,8 +22,9 @@ class SpectrumLightEffect(
 
         if (referenceFrame.isEmpty()) {
             for (i in 0..<repeatOfColorsCount) {
-                val color = colorList[i % colorList.size]
-                val nextColor = colorList[(i + 1) % colorList.size]
+                val colors = colorList(i)
+                val color = colors[i % colors.size]
+                val nextColor = colors[(i + 1) % colors.size]
                 for (j in 0..<colorWidth) {
                     val interpolationFactor = j.toFloat() / colorWidth
                     val interpolatedColor = color.interpolate(nextColor, interpolationFactor)
@@ -64,14 +62,6 @@ class SpectrumLightEffect(
 
     override fun getSettings() = settings
 
-    override fun complete() {
-        TODO("Not yet implemented")
-    }
-
-    override fun isDone(): Boolean {
-        TODO("Not yet implemented")
-    }
-
     private fun <T> shift(list: List<T>, amount: Int): List<T> {
         val newList = mutableListOf<T>()
         for (i in list.indices) {
@@ -81,11 +71,34 @@ class SpectrumLightEffect(
         return newList
     }
 
+    private fun colorList(index: Int): List<RgbColor> {
+        if (palette != null) {
+            val mainColors = listOf(palette!!.getPrimaryColor(index), palette!!.getSecondaryColor(index))
+            val tertiary = palette!!.getTertiaryColor(index)
+            val otherColors = palette!!.getOtherColors(index)
+            return if (tertiary == null) {
+                mainColors
+            } else {
+                mainColors + tertiary
+            } + otherColors
+        } else {
+            return RgbColor.Rainbow
+        }
+    }
+
+    private fun getColorWidth(): Int {
+        return if (settings.colorPixelWidth <= 0) {
+            colorList(1).size
+        } else {
+            settings.colorPixelWidth
+        }
+    }
+
     override fun getIterations(): Int {
         return iterations
     }
 
-    companion object {
-        private const val NAME = LightEffectConstants.SPECTRUM_NAME
+    override fun updatePalette(palette: ColorPalette) {
+        this.palette = palette
     }
 }

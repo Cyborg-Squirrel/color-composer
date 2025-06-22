@@ -40,7 +40,7 @@ class TimeTriggerTest(
         mockActiveLightEffectRegistry = getMock(activeLightEffectRegistry)
 
         val mockStrip = mockk<LedStripModel>()
-        val effect = SpectrumLightEffect(60, SpectrumEffectSettings.default(60))
+        val effect = SpectrumLightEffect(60, SpectrumEffectSettings.default(60), null)
         activeEffect = ActiveLightEffect(
             UUID.randomUUID().toString(),
             1,

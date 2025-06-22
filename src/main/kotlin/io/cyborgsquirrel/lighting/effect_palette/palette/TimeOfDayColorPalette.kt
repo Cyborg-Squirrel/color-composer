@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effect_palette.palette
 
 import io.cyborgsquirrel.lighting.effect_palette.helper.TimePaletteHelper
-import io.cyborgsquirrel.lighting.effect_palette.settings.Palette
+import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
 import io.cyborgsquirrel.lighting.effect_palette.settings.TimeOfDayPaletteSettings
 import io.cyborgsquirrel.lighting.model.LedStrip
 import io.cyborgsquirrel.lighting.model.RgbColor
@@ -22,8 +22,9 @@ class TimeOfDayColorPalette(
     private val locationConfigRepository: H2LocationConfigRepository,
     private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
     private val objectMapper: ObjectMapper,
-    uuid: String
-) : ColorPalette(uuid) {
+    uuid: String,
+    strip: LedStrip,
+) : ColorPalette(uuid, strip) {
 
     init {
         fetchLocationSunriseSunsetData()
@@ -33,7 +34,7 @@ class TimeOfDayColorPalette(
     private var latestSunriseSunsetModel: SunriseSunsetModel? = null
     private var latestSunriseSunsetDate: LocalDate? = null
 
-    override fun getPrimaryColor(index: Int, strip: LedStrip): RgbColor {
+    override fun getPrimaryColor(index: Int): RgbColor {
         val now = timeHelper.now()
         if (isSunriseSunsetTimeExpired(now)) fetchLocationSunriseSunsetData()
         val points = getTimeColorMap()
@@ -41,7 +42,7 @@ class TimeOfDayColorPalette(
         return palette.primaryColor
     }
 
-    override fun getSecondaryColor(index: Int, strip: LedStrip): RgbColor {
+    override fun getSecondaryColor(index: Int): RgbColor {
         val now = timeHelper.now()
         if (isSunriseSunsetTimeExpired(now)) fetchLocationSunriseSunsetData()
         val points = getTimeColorMap()
@@ -49,7 +50,7 @@ class TimeOfDayColorPalette(
         return palette.secondaryColor
     }
 
-    override fun getTertiaryColor(index: Int, strip: LedStrip): RgbColor? {
+    override fun getTertiaryColor(index: Int): RgbColor? {
         val now = timeHelper.now()
         if (isSunriseSunsetTimeExpired(now)) fetchLocationSunriseSunsetData()
         val points = getTimeColorMap()
@@ -57,7 +58,7 @@ class TimeOfDayColorPalette(
         return palette.tertiaryColor
     }
 
-    override fun getOtherColors(index: Int, strip: LedStrip): List<RgbColor> {
+    override fun getOtherColors(index: Int): List<RgbColor> {
         val now = timeHelper.now()
         if (isSunriseSunsetTimeExpired(now)) fetchLocationSunriseSunsetData()
         val points = getTimeColorMap()
@@ -91,7 +92,7 @@ class TimeOfDayColorPalette(
         }
     }
 
-    private fun getTimeColorMap(): Map<LocalDateTime, Palette> {
+    private fun getTimeColorMap(): Map<LocalDateTime, SettingsPalette> {
         return if (latestSunriseSunsetModel != null) {
             settings.paletteMap.mapKeys {
                 timeOfDayService.timeOfDayToLocalDateTime(latestSunriseSunsetModel!!, it.key)

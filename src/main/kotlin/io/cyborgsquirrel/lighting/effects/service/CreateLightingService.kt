@@ -1,6 +1,9 @@
 package io.cyborgsquirrel.lighting.effects.service
 
 import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
+import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
+import io.cyborgsquirrel.lighting.effect_palette.palette.*
+import io.cyborgsquirrel.lighting.effect_palette.settings.*
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTriggerSettings
@@ -30,7 +33,7 @@ import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
 
 @Singleton
-class CreateLightingHelper(
+class CreateLightingService(
     private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
     private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
     private val locationConfigRepository: H2LocationConfigRepository,
@@ -71,58 +74,154 @@ class CreateLightingHelper(
         }
     }
 
-    fun createEffect(settings: Map<String, Any>, effectName: String, stripLength: Int): LightEffect {
-        return when (effectName) {
+    fun createPalette(
+        settings: Map<String, Any>,
+        paletteType: String,
+        uuid: String,
+        strip: LedStrip
+    ): ColorPalette {
+        return when (paletteType) {
+            EffectPaletteConstants.STATIC_COLOR_PALETTE -> {
+                StaticColorPalette(
+                    settings = objectMapper.readValueFromTree(
+                        JsonNode.from(settings),
+                        StaticPaletteSettings::class.java
+                    ),
+                    uuid = uuid,
+                    strip = strip,
+                )
+            }
+
+            EffectPaletteConstants.GRADIENT_COLOR_PALETTE_NAME -> {
+                GradientColorPalette(
+                    settings = objectMapper.readValueFromTree(
+                        JsonNode.from(settings),
+                        GradientPaletteSettings::class.java
+                    ),
+                    uuid = uuid,
+                    strip = strip,
+                )
+            }
+
+            EffectPaletteConstants.CHANGING_COLOR_GRADIENT_PALETTE_NAME -> {
+                ChangingColorPalette(
+                    settings = objectMapper.readValueFromTree(
+                        JsonNode.from(settings),
+                        ChangingGradientPaletteSettings::class.java
+                    ),
+                    timeHelper = timeHelper,
+                    uuid = uuid,
+                    strip = strip,
+                )
+            }
+
+            EffectPaletteConstants.CHANGING_COLOR_STATIC_PALETTE_NAME -> {
+                ChangingColorPalette(
+                    settings = objectMapper.readValueFromTree(
+                        JsonNode.from(settings),
+                        ChangingStaticPaletteSettings::class.java
+                    ),
+                    timeHelper = timeHelper,
+                    uuid = uuid,
+                    strip = strip,
+                )
+            }
+
+            EffectPaletteConstants.TIME_OF_DAY_COLOR_PALETTE -> {
+                TimeOfDayColorPalette(
+                    settings = objectMapper.readValueFromTree(
+                        JsonNode.from(settings),
+                        TimeOfDayPaletteSettings::class.java
+                    ),
+                    timeHelper = timeHelper,
+                    timeOfDayService = timeOfDayService,
+                    locationConfigRepository = locationConfigRepository,
+                    sunriseSunsetTimeRepository = sunriseSunsetTimeRepository,
+                    objectMapper = objectMapper,
+                    uuid = uuid,
+                    strip = strip,
+                )
+            }
+
+            EffectPaletteConstants.LOCAL_TIME_COLOR_PALETTE -> {
+                LocalTimeColorPalette(
+                    settings = objectMapper.readValueFromTree(
+                        JsonNode.from(settings),
+                        LocalTimePaletteSettings::class.java
+                    ),
+                    timeHelper = timeHelper,
+                    uuid = uuid,
+                    strip = strip,
+                )
+            }
+
+            else -> throw IllegalArgumentException("Unknown LightEffect name: $paletteType")
+        }
+    }
+
+    fun createEffect(
+        settings: Map<String, Any>,
+        effectType: String,
+        palette: ColorPalette?,
+        strip: LedStrip
+    ): LightEffect {
+        return when (effectType) {
             LightEffectConstants.BOUNCING_BALL_NAME -> BouncingBallLightEffect(
-                numberOfLeds = stripLength,
+                numberOfLeds = strip.getLength(),
                 timeHelper = timeHelper,
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     BouncingBallEffectSettings::class.java
-                )
+                ),
+                palette
             )
 
             LightEffectConstants.FLAME_EFFECT_NAME -> FlameLightEffect(
-                numberOfLeds = stripLength,
+                numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     FlameEffectSettings::class.java
-                )
+                ),
+                palette
             )
 
             LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME -> NightriderLightEffect(
-                numberOfLeds = stripLength,
+                numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     NightriderColorFillEffectSettings::class.java
-                )
+                ),
+                palette
             )
 
             LightEffectConstants.NIGHTRIDER_COMET_NAME -> NightriderLightEffect(
-                numberOfLeds = stripLength,
+                numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     NightriderCometEffectSettings::class.java
-                )
+                ),
+                palette
             )
 
             LightEffectConstants.SPECTRUM_NAME -> SpectrumLightEffect(
-                numberOfLeds = stripLength,
+                numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     SpectrumEffectSettings::class.java
-                )
+                ),
+                palette
             )
 
             LightEffectConstants.WAVE_EFFECT_NAME -> WaveLightEffect(
-                numberOfLeds = stripLength,
+                numberOfLeds = strip.getLength(),
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     WaveEffectSettings::class.java
-                )
+                ),
+                palette
             )
 
-            else -> throw IllegalArgumentException("Unknown LightEffect name: $effectName")
+            else -> throw IllegalArgumentException("Unknown LightEffect name: $effectType")
         }
     }
 
@@ -157,7 +256,7 @@ class CreateLightingHelper(
                         )
                     }
 
-                    LightEffectTriggerConstants.SUNRISE_SUNSET_TRIGGER_NAME -> {
+                    LightEffectTriggerConstants.TIME_OF_DAY_TRIGGER_NAME -> {
                         TimeOfDayTrigger(
                             sunriseSunsetTimeRepository = sunriseSunsetTimeRepository,
                             locationConfigRepository = locationConfigRepository,

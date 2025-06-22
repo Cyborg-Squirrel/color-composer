@@ -1,11 +1,11 @@
 package io.cyborgsquirrel.lighting.effect_palette.settings
 
 import io.micronaut.serde.annotation.Serdeable
-import kotlin.time.Duration
+import java.time.Duration
 
 @Serdeable
 data class ChangingStaticPaletteSettings(
-    val palettes: List<Palette>,
+    val palettes: List<SettingsPalette>,
     val holdTime: Duration,
     val transitionTime: Duration
 ) : ChangingPaletteSettings() {

@@ -4,7 +4,6 @@ import io.cyborgsquirrel.clients.config.ConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
-import io.cyborgsquirrel.lighting.config.WebSocketJobConfig
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
@@ -52,7 +51,6 @@ class WebSocketJob(
     private val configClient: ConfigClient,
 ) : Runnable {
 
-    private val configList = mutableListOf<WebSocketJobConfig>()
     private val serializer = RgbFrameDataSerializer()
     private var client: LedStripWebSocketClient? = null
     private lateinit var clientEntity: LedStripClientEntity
@@ -81,25 +79,25 @@ class WebSocketJob(
                 stripEntity.blendMode!!
             )
 
-            val effects = listOf(
-                BouncingBallLightEffect(
-                    strip.getLength(),
-                    timeHelper,
-                    BouncingBallEffectSettings.default(strip.getLength())
-                ),
-                BouncingBallLightEffect(
-                    strip.getLength(),
-                    timeHelper,
-                    BouncingBallEffectSettings.default(strip.getLength())
-                        .copy(speed = 4.0, ballColor = RgbColor.Blue, startingHeight = 10.0, maxHeight = 50)
-                ),
-                BouncingBallLightEffect(
-                    strip.getLength(),
-                    timeHelper,
-                    BouncingBallEffectSettings.default(strip.getLength())
-                        .copy(speed = 4.0, ballColor = RgbColor.Green, startingHeight = 20.0, maxHeight = 40)
-                ),
-            )
+//            val effects = listOf(
+//                BouncingBallLightEffect(
+//                    strip.getLength(),
+//                    timeHelper,
+//                    BouncingBallEffectSettings.default(strip.getLength())
+//                ),
+//                BouncingBallLightEffect(
+//                    strip.getLength(),
+//                    timeHelper,
+//                    BouncingBallEffectSettings.default(strip.getLength())
+//                        .copy(speed = 4.0, ballColor = RgbColor.Blue, startingHeight = 10.0, maxHeight = 50)
+//                ),
+//                BouncingBallLightEffect(
+//                    strip.getLength(),
+//                    timeHelper,
+//                    BouncingBallEffectSettings.default(strip.getLength())
+//                        .copy(speed = 4.0, ballColor = RgbColor.Green, startingHeight = 20.0, maxHeight = 40)
+//                ),
+//            )
 
             val filters = listOf(
                 BrightnessFadeFilter(

@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
+import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
@@ -16,7 +17,8 @@ import kotlin.math.max
  */
 class NightriderLightEffect(
     private val numberOfLeds: Int,
-    private val settings: NightriderEffectSettings
+    private val settings: NightriderEffectSettings,
+    private var palette: ColorPalette?,
 ) : LightEffect {
 
     private var frame: Long = 0
@@ -24,13 +26,6 @@ class NightriderLightEffect(
     private var previousLocation = 0
     private var location = 0
     private var iterations = 0
-
-    override fun getName(): String {
-        return when (settings) {
-            is NightriderColorFillEffectSettings -> LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME
-            is NightriderCometEffectSettings -> LightEffectConstants.NIGHTRIDER_COMET_NAME
-        }
-    }
 
     override fun getNextStep(): List<RgbColor> {
         onNextStep()
@@ -46,12 +41,12 @@ class NightriderLightEffect(
 
             if (location > 0) {
                 // Before comet
-                rgbList.addAll(getBeginningColors(RgbColor.Blank))
+                rgbList.addAll(getBeginningColors({ RgbColor.Blank }))
             }
 
             // The comet + trail behind it
             val dotScaleFactor = 1.5f
-            val dotColor = getColor(iterations).scale(dotScaleFactor)
+            val dotColor = getColor(location, iterations).scale(dotScaleFactor)
 
             val cometBuffer = mutableListOf<RgbColor>()
             // Brightest spot is at the beginning for the reflect scenario
@@ -60,6 +55,7 @@ class NightriderLightEffect(
             }
 
             for (i in 0..<settings.trailLength) {
+                val color = getColor(i, iterations).scale(dotScaleFactor)
                 val interpolationFactor = when (settings.trailFadeCurve) {
                     FadeCurve.Linear -> i.toFloat() / settings.trailLength
                     FadeCurve.Logarithmic -> max(
@@ -69,10 +65,10 @@ class NightriderLightEffect(
                         ), 0f
                     )
                 }
-                val interpolatedColor = if (reflect) dotColor.interpolate(
+                val interpolatedColor = if (reflect) color.interpolate(
                     RgbColor.Blank,
                     interpolationFactor
-                ) else RgbColor.Blank.interpolate(dotColor, interpolationFactor)
+                ) else RgbColor.Blank.interpolate(color, interpolationFactor)
                 cometBuffer.add(interpolatedColor)
             }
 
@@ -88,7 +84,7 @@ class NightriderLightEffect(
                 rgbList.addAll(cometBuffer)
             }
 
-            completeFrame(rgbList, RgbColor.Blank)
+            completeFrame(rgbList, { RgbColor.Blank })
         } else {
             logger.warn("Config mismatch! Expected NightriderCometEffectSettings.")
             renderNightriderColorFill()
@@ -97,40 +93,51 @@ class NightriderLightEffect(
 
     private fun renderNightriderColorFill(): List<RgbColor> {
         val rgbList = mutableListOf<RgbColor>()
-        val startingColor = if (reflect) getColor(iterations - 1) else getColor(iterations)
-        val endingColor = if (iterations > 0) {
-            if (reflect) getColor(iterations) else getColor(iterations - 1)
-        } else {
-            RgbColor.Blank
+        val startingColorCallback: (Int) -> RgbColor =
+            { location -> if (reflect) getColor(location, iterations - 1) else getColor(location, iterations) }
+        val endingColorCallback: (Int) -> RgbColor = { location ->
+            if (iterations > 0) {
+                if (reflect) getColor(location, iterations) else getColor(location, iterations - 1)
+            } else {
+                RgbColor.Blank
+            }
         }
 
         // Before scrolling dot
-        rgbList.addAll(getBeginningColors(startingColor))
+        rgbList.addAll(getBeginningColors(startingColorCallback))
 
         // The scrolling dot + trail behind it
-        val dotColor = getColor(iterations).scale(1.5f)
-        rgbList.add(dotColor)
-        rgbList.add(dotColor)
+        rgbList.add(getColor(location, iterations).scale(1.5f))
+        rgbList.add(getColor(location + 1, iterations).scale(1.5f))
 
-        return completeFrame(rgbList, endingColor)
+        return completeFrame(rgbList, endingColorCallback)
     }
 
     override fun getSettings() = settings
-
-    override fun complete() {
-        TODO("Not yet implemented")
-    }
-
-    override fun isDone(): Boolean {
-        TODO("Not yet implemented")
-    }
 
     override fun getIterations(): Int {
         return iterations
     }
 
-    private fun getColor(iteration: Int): RgbColor {
-        return settings.getColors()[iteration % settings.getColors().size]
+    override fun updatePalette(palette: ColorPalette) {
+        this.palette = palette
+    }
+
+    private fun getColor(index: Int, iteration: Int): RgbColor {
+        if (palette != null) {
+            val mainColors = listOf(palette!!.getPrimaryColor(index), palette!!.getSecondaryColor(index))
+            val tertiary = palette!!.getTertiaryColor(index)
+            val otherColors = palette!!.getOtherColors(index)
+            val allColors = if (tertiary == null) {
+                mainColors
+            } else {
+                mainColors + tertiary
+            } + otherColors
+
+            return allColors[iteration % allColors.size]
+        } else {
+            return RgbColor.Rainbow[iteration % RgbColor.Rainbow.size]
+        }
     }
 
     private fun updatePointerLocation() {
@@ -199,22 +206,25 @@ class NightriderLightEffect(
         updatePointerLocation()
     }
 
-    private fun getBeginningColors(color: RgbColor): MutableList<RgbColor> {
+    private fun getBeginningColors(colorCallback: (Int) -> RgbColor): MutableList<RgbColor> {
         val rgbList = mutableListOf<RgbColor>()
         val upperBound = if (reflect) location else previousLocation
         for (i in 0..<upperBound) {
-            rgbList.add(color)
+            rgbList.add(colorCallback(i))
         }
 
         return rgbList
     }
 
-    private fun completeFrame(frameData: MutableList<RgbColor>, endColor: RgbColor): MutableList<RgbColor> {
+    private fun completeFrame(
+        frameData: MutableList<RgbColor>,
+        endingColorCallback: (Int) -> RgbColor
+    ): MutableList<RgbColor> {
         previousLocation = location
         frame++
         if (frameData.size < numberOfLeds) {
             for (i in 0..<numberOfLeds - frameData.size) {
-                frameData.add(endColor)
+                frameData.add(endingColorCallback(i + frameData.size))
             }
 
             return frameData

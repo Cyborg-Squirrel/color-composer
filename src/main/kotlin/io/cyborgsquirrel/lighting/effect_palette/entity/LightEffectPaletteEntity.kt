@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effect_palette.entity
 
+import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.micronaut.data.annotation.*
 import io.micronaut.data.model.DataType
 
@@ -10,7 +11,7 @@ data class LightEffectPaletteEntity(
     var id: Long = -1,
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "palette")
-    var effectJunctions: Set<LightEffectPaletteJunctionEntity> = setOf(),
+    var effects: Set<LightEffectEntity> = setOf(),
 
     var uuid: String? = null,
 

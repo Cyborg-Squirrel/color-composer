@@ -19,7 +19,7 @@ import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.service.CreateLightingHelper
+import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
@@ -53,12 +53,11 @@ class LightEffectInitJobTest(
     private val junctionRepository: H2LightEffectFilterJunctionRepository,
     private val objectMapper: ObjectMapper,
     private val triggerManager: TriggerManager,
-    private val effectFactory: CreateLightingHelper,
+    private val effectFactory: CreateLightingService,
     private val limiterService: PowerLimiterService,
 ) : StringSpec({
 
-    val lightEffectSettings =
-        SpectrumEffectSettings.default(60).copy(10, listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
+    val lightEffectSettings = SpectrumEffectSettings.default(60).copy(10)
     val iterationTriggerSettings = EffectIterationTriggerSettings(25)
     val fadeFilterSettings = BrightnessFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(20))
 

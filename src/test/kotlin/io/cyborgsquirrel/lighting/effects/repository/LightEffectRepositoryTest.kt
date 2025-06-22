@@ -31,8 +31,7 @@ class LightEffectRepositoryTest(
     private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
 ) : StringSpec({
 
-    val settings =
-        NightriderEffectSettings.default().copy(colorList = listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
+    val settings = NightriderEffectSettings.default()
 
     fun verifyLightEffectEntity(
         newEntity: LightEffectEntity,

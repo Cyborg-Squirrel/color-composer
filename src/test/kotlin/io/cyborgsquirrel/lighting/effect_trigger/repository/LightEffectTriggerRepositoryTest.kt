@@ -37,8 +37,7 @@ class LightEffectTriggerRepositoryTest(
     private val lightEffectTriggerRepository: H2LightEffectTriggerRepository,
 ) : StringSpec({
 
-    val nightriderLightEffectSettings =
-        NightriderEffectSettings.default().copy(colorList = listOf(RgbColor.Red, RgbColor.Orange, RgbColor.Yellow))
+    val nightriderLightEffectSettings = NightriderEffectSettings.default()
     val timeTriggerSettings =
         TimeTriggerSettings(
             LocalTime.of(19, 0), null, Duration.ofHours(4), maxActivations = null, triggerType = TriggerType.StartEffect

@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
+import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.WaveEffectSettings
 import io.cyborgsquirrel.lighting.effects.shared.Comet
 import io.cyborgsquirrel.lighting.enums.Direction
@@ -9,7 +10,12 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-class WaveLightEffect(private val numberOfLeds: Int, settings: WaveEffectSettings) :
+// TODO palette support
+class WaveLightEffect(
+    private val numberOfLeds: Int,
+    private val settings: WaveEffectSettings,
+    private var palette: ColorPalette?,
+) :
     LightEffect {
 
     private var waveALocation = 0
@@ -20,8 +26,6 @@ class WaveLightEffect(private val numberOfLeds: Int, settings: WaveEffectSetting
     private lateinit var waveB: Comet
     private val waveLength = settings.waveLength
     private val startPoint = settings.startPoint
-
-    override fun getName() = LightEffectConstants.WAVE_EFFECT_NAME
 
     override fun getNextStep(): List<RgbColor> {
         val rgbData = mutableListOf<RgbColor>()
@@ -68,19 +72,13 @@ class WaveLightEffect(private val numberOfLeds: Int, settings: WaveEffectSetting
         return rgbData
     }
 
-    override fun getSettings(): Any {
-        TODO("Not yet implemented")
-    }
-
-    override fun complete() {
-        TODO("Not yet implemented")
-    }
-
-    override fun isDone(): Boolean {
-        TODO("Not yet implemented")
-    }
+    override fun getSettings() = settings
 
     override fun getIterations(): Int {
         return iterations
+    }
+
+    override fun updatePalette(palette: ColorPalette) {
+        this.palette = palette
     }
 }

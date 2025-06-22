@@ -3,12 +3,13 @@ package io.cyborgsquirrel.lighting.effect_palette.palette
 import io.cyborgsquirrel.lighting.effect_palette.settings.StaticPaletteSettings
 import io.cyborgsquirrel.lighting.model.LedStrip
 
-class StaticColorPalette(private val settings: StaticPaletteSettings, uuid: String) : ColorPalette(uuid) {
-    override fun getPrimaryColor(index: Int, strip: LedStrip) = settings.palette.primaryColor
+class StaticColorPalette(private val settings: StaticPaletteSettings, uuid: String, strip: LedStrip) :
+    ColorPalette(uuid, strip) {
+    override fun getPrimaryColor(index: Int) = settings.palette.primaryColor
 
-    override fun getSecondaryColor(index: Int, strip: LedStrip) = settings.palette.secondaryColor
+    override fun getSecondaryColor(index: Int) = settings.palette.secondaryColor
 
-    override fun getTertiaryColor(index: Int, strip: LedStrip) = settings.palette.tertiaryColor
+    override fun getTertiaryColor(index: Int) = settings.palette.tertiaryColor
 
-    override fun getOtherColors(index: Int, strip: LedStrip) = settings.palette.otherColors
+    override fun getOtherColors(index: Int) = settings.palette.otherColors
 }

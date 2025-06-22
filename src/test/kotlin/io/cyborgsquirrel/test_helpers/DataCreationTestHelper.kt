@@ -4,6 +4,8 @@ import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
+import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
+import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository

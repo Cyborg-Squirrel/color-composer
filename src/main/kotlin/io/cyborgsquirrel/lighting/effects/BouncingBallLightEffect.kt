@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
+import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.BouncingBallEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -14,7 +15,8 @@ import kotlin.math.sqrt
 class BouncingBallLightEffect(
     private val numberOfLeds: Int,
     private val timeHelper: TimeHelper,
-    private val settings: BouncingBallEffectSettings
+    private val settings: BouncingBallEffectSettings,
+    private var palette: ColorPalette?,
 ) : LightEffect {
     // Higher values slow the effect
     private val speedKnob = settings.speed
@@ -24,8 +26,7 @@ class BouncingBallLightEffect(
     private var ballSpeed = initialBallSpeed(settings.startingHeight)
     private val dampening = 0.90
     private var iterations = 0
-
-    override fun getName() = LightEffectConstants.BOUNCING_BALL_NAME
+    private lateinit var backupColor: RgbColor
 
     override fun getNextStep(): List<RgbColor> {
         val ballLocation = getBallPosition()
@@ -35,8 +36,8 @@ class BouncingBallLightEffect(
         }
 
         // Ball length of 2 looks better than 1
-        rgbList.add(settings.ballColor)
-        rgbList.add(settings.ballColor)
+        rgbList.add(getColor(ballLocation))
+        rgbList.add(getColor(ballLocation + 1))
 
         for (i in rgbList.size..<numberOfLeds) {
             rgbList.add(RgbColor.Blank)
@@ -47,16 +48,12 @@ class BouncingBallLightEffect(
 
     override fun getSettings() = settings
 
-    override fun complete() {
-        TODO("Not yet implemented")
-    }
-
-    override fun isDone(): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun getIterations(): Int {
         return iterations
+    }
+
+    override fun updatePalette(palette: ColorPalette) {
+        this.palette = palette
     }
 
     private fun initialBallSpeed(height: Double): Double {
@@ -83,5 +80,22 @@ class BouncingBallLightEffect(
 
     private fun unixTime(): Double {
         return timeHelper.millisSinceEpoch() / 1000.0
+    }
+
+    private fun getColor(index: Int): RgbColor {
+        return if (palette != null) {
+            palette!!.getPrimaryColor(index)
+        } else {
+            if (this::backupColor.isInitialized) {
+                backupColor
+            } else {
+                val backupColorSeed = settings.startingHeight.toInt() % 3
+                when (backupColorSeed) {
+                    2 -> RgbColor.Red
+                    1 -> RgbColor.Green
+                    else -> RgbColor.Blue
+                }
+            }
+        }
     }
 }

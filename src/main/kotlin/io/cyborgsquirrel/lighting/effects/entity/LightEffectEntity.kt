@@ -1,12 +1,11 @@
 package io.cyborgsquirrel.lighting.effects.entity
 
-import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
-import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteJunctionEntity
 import io.micronaut.data.annotation.*
 import io.micronaut.data.model.DataType
 import jakarta.persistence.EnumType
@@ -30,8 +29,8 @@ data class LightEffectEntity(
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
     var filterJunctions: Set<LightEffectFilterJunctionEntity> = setOf(),
 
-    @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
-    var paletteJunctions: Set<LightEffectPaletteJunctionEntity> = setOf(),
+    @Relation(value = Relation.Kind.MANY_TO_ONE)
+    var palette: LightEffectPaletteEntity? = null,
 
     var uuid: String? = null,
 
@@ -54,6 +53,7 @@ data class LightEffectEntity(
         if (id != other.id) return false
         if (strip?.id != other.strip?.id) return false
         if (group?.id != other.group?.id) return false
+        if (palette?.id != other.palette?.id) return false
         if (uuid != other.uuid) return false
         if (type != other.type) return false
         if (name != other.name) return false
@@ -68,6 +68,7 @@ data class LightEffectEntity(
         result = 31 * result + id.hashCode()
         result = 31 * result + (strip?.id ?: 0).hashCode()
         result = 31 * result + (group?.id ?: 0).hashCode()
+        result = 31 * result + (palette?.id ?: 0).hashCode()
         result = 31 * result + status.hashCode()
         result = 31 * result + type.hashCode()
         result = 31 * result + name.hashCode()
@@ -76,6 +77,6 @@ data class LightEffectEntity(
     }
 
     override fun toString(): String {
-        return "LightEffectLedStripAssociationEntity(strip=${strip?.id}, group=${group?.id}, effectType=$type, name=$name, id=$id, uuid=$uuid, status=$status, settings=$settings)"
+        return "LightEffectLedStripAssociationEntity(strip=${strip?.id}, group=${group?.id}, palette=${palette?.id} effectType=$type, name=$name, id=$id, uuid=$uuid, status=$status, settings=$settings)"
     }
 }

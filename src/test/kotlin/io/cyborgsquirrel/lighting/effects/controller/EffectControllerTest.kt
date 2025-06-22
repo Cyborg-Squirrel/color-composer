@@ -2,6 +2,10 @@ package io.cyborgsquirrel.lighting.effects.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
+import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
+import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
+import io.cyborgsquirrel.lighting.effect_palette.settings.*
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
@@ -13,6 +17,7 @@ import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrips
@@ -22,6 +27,7 @@ import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
+import java.time.Duration
 import java.util.*
 
 @MicronautTest
@@ -30,10 +36,12 @@ class EffectControllerTest(
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
     private val effectRepository: H2LightEffectRepository,
+    private val paletteRepository: H2LightEffectPaletteRepository,
     private val objectMapper: ObjectMapper
 ) : StringSpec({
 
     afterEach {
+        paletteRepository.deleteAll()
         effectRepository.deleteAll()
         stripRepository.deleteAll()
         clientRepository.deleteAll()
@@ -42,9 +50,29 @@ class EffectControllerTest(
     "Getting all effects" {
         val client = createLedStripClientEntity(clientRepository, "Porch lights", "192.168.50.50", 50, 51)
         val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
+        val paletteSettings = objectToMap(
+            objectMapper,
+            StaticPaletteSettings(
+                SettingsPalette(
+                    primaryColor = RgbColor.Red,
+                    secondaryColor = RgbColor.Orange,
+                    tertiaryColor = null,
+                    otherColors = listOf()
+                )
+            )
+        )
+        val palette = paletteRepository.save(
+            LightEffectPaletteEntity(
+                uuid = UUID.randomUUID().toString(),
+                settings = paletteSettings,
+                name = "Warm color palette",
+                type = EffectPaletteConstants.STATIC_COLOR_PALETTE,
+            )
+        )
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         var effectEntity = LightEffectEntity(
             strip = strip,
+            palette = palette,
             name = "Super cool effect",
             type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
@@ -64,15 +92,50 @@ class EffectControllerTest(
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
         effectFromApi.settings shouldBe effectEntity.settings
-        effectFromApi.stripUuid shouldBe effectEntity.strip!!.uuid
+        effectFromApi.stripUuid shouldBe strip.uuid
+        effectFromApi.paletteUuid shouldBe palette.uuid
     }
 
     "Getting effects for a strip" {
         val client = createLedStripClientEntity(clientRepository, "Living Room lights", "192.168.50.50", 50, 51)
         val strips = saveLedStrips(stripRepository, client, listOf("Strip A" to 200, "Strip B" to 100))
+        val paletteSettings = objectToMap(
+            objectMapper,
+            GradientPaletteSettings(
+                mapOf(
+                    0 to SettingsPalette(
+                        primaryColor = RgbColor.Blue,
+                        secondaryColor = RgbColor.Blue,
+                        tertiaryColor = null,
+                        otherColors = listOf()
+                    ),
+                    50 to SettingsPalette(
+                        primaryColor = RgbColor.Cyan,
+                        secondaryColor = RgbColor.Cyan,
+                        tertiaryColor = null,
+                        otherColors = listOf()
+                    ),
+                    100 to SettingsPalette(
+                        primaryColor = RgbColor.Green,
+                        secondaryColor = RgbColor.Green,
+                        tertiaryColor = null,
+                        otherColors = listOf()
+                    )
+                )
+            )
+        )
+        val palette = paletteRepository.save(
+            LightEffectPaletteEntity(
+                uuid = UUID.randomUUID().toString(),
+                settings = paletteSettings,
+                name = "Cool gradient palette",
+                type = EffectPaletteConstants.GRADIENT_COLOR_PALETTE_NAME,
+            )
+        )
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         var effectEntity = LightEffectEntity(
             strip = strips.last(),
+            palette = palette,
             name = "Super cool effect",
             type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
@@ -97,6 +160,7 @@ class EffectControllerTest(
         effectFromApi.status shouldBe effectEntity.status
         effectFromApi.settings shouldBe effectEntity.settings
         effectFromApi.stripUuid shouldBe effectEntity.strip?.uuid
+        effectFromApi.paletteUuid shouldBe palette?.uuid
     }
 
     "Create an effect" {
@@ -122,18 +186,53 @@ class EffectControllerTest(
         effectEntity.name shouldBe request.name
         effectEntity.uuid shouldBe effectUuid
         effectEntity.settings shouldBe request.settings
+        effectEntity.palette shouldBe null
     }
 
     "Updating an effect" {
         val client = createLedStripClientEntity(clientRepository, "Bedroom lights", "192.168.50.50", 50, 51)
         val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
+        val paletteSettings = objectToMap(
+            objectMapper,
+            TimeOfDayPaletteSettings(
+                mapOf(
+                    TimeOfDay.Midnight to SettingsPalette(
+                        primaryColor = RgbColor.Purple,
+                        secondaryColor = RgbColor.Purple,
+                        tertiaryColor = null,
+                        otherColors = listOf()
+                    ),
+                    TimeOfDay.Sunrise to SettingsPalette(
+                        primaryColor = RgbColor.Yellow,
+                        secondaryColor = RgbColor.Yellow,
+                        tertiaryColor = null,
+                        otherColors = listOf()
+                    ),
+                    TimeOfDay.Sunset to SettingsPalette(
+                        primaryColor = RgbColor.Red,
+                        secondaryColor = RgbColor.Red,
+                        tertiaryColor = null,
+                        otherColors = listOf()
+                    )
+                )
+            )
+        )
+        val palette = paletteRepository.save(
+            LightEffectPaletteEntity(
+                uuid = UUID.randomUUID().toString(),
+                settings = paletteSettings,
+                name = "Time of day palette",
+                type = EffectPaletteConstants.TIME_OF_DAY_COLOR_PALETTE,
+            )
+        )
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         val updatedNrSettings = objectToMap(
             objectMapper,
-            NightriderEffectSettings.default().copy(listOf(RgbColor.Green, RgbColor.Cyan, RgbColor.Purple), true)
+            NightriderEffectSettings.default().copy(true)
         )
         var effectEntity = LightEffectEntity(
             strip = strip,
+            palette = palette,
             name = "Super cool light effect",
             type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
@@ -145,6 +244,7 @@ class EffectControllerTest(
         val updateRequest = UpdateEffectRequest(
             effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME, settings = updatedNrSettings,
             stripUuid = null,
+            paletteUuid = null,
             name = "New effect name",
             status = LightEffectStatus.Playing,
         )
@@ -158,15 +258,50 @@ class EffectControllerTest(
         effectEntities.first().name shouldBe updateRequest.name
         effectEntities.first().uuid shouldBe effectEntity.uuid
         effectEntities.first().settings shouldBe updateRequest.settings
+        effectEntities.first().palette shouldBe palette
         effectEntities.first().status shouldBe updateRequest.status
     }
 
     "Deleting an effect" {
         val client = createLedStripClientEntity(clientRepository, "Christmas Tree lights", "192.168.50.50", 50, 51)
         val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
+        val paletteSettings = objectToMap(
+            objectMapper,
+            ChangingStaticPaletteSettings(
+                listOf(
+                    SettingsPalette(
+                        primaryColor = RgbColor.Red,
+                        secondaryColor = RgbColor.Red,
+                        tertiaryColor = null,
+                        otherColors = listOf()
+                    ), SettingsPalette(
+                        primaryColor = RgbColor.Green,
+                        secondaryColor = RgbColor.Green,
+                        tertiaryColor = null,
+                        otherColors = listOf()
+                    ), SettingsPalette(
+                        primaryColor = RgbColor.Blue,
+                        secondaryColor = RgbColor.Blue,
+                        tertiaryColor = null,
+                        otherColors = listOf()
+                    )
+                ),
+                Duration.ofMinutes(15),
+                Duration.ofSeconds(20)
+            )
+        )
+        val palette = paletteRepository.save(
+            LightEffectPaletteEntity(
+                uuid = UUID.randomUUID().toString(),
+                settings = paletteSettings,
+                name = "Changing palette",
+                type = EffectPaletteConstants.CHANGING_COLOR_STATIC_PALETTE_NAME,
+            )
+        )
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         var effectEntity = LightEffectEntity(
             strip = strip,
+            palette = palette,
             name = "Super cool effect",
             type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             uuid = UUID.randomUUID().toString(),
@@ -178,5 +313,6 @@ class EffectControllerTest(
         val createEffectHttpResponse = apiClient.deleteEffect(effectEntity.uuid!!)
         createEffectHttpResponse.status shouldBe HttpStatus.NO_CONTENT
         effectRepository.findAll().isEmpty() shouldBe true
+        paletteRepository.findAll().isEmpty() shouldBe false
     }
 })

@@ -7,6 +7,7 @@ data class GetEffectResponse(
     val type: String,
     val uuid: String,
     val stripUuid: String,
+    val paletteUuid: String?,
     val settings: Map<String, Any>,
     val status: LightEffectStatus,
 )

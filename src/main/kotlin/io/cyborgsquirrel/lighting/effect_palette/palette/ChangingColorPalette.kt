@@ -5,7 +5,7 @@ import io.cyborgsquirrel.lighting.effect_palette.helper.GradientColorHelper
 import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingGradientPaletteSettings
 import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingPaletteSettings
 import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingStaticPaletteSettings
-import io.cyborgsquirrel.lighting.effect_palette.settings.Palette
+import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
 import io.cyborgsquirrel.lighting.model.LedStrip
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -13,9 +13,10 @@ import io.cyborgsquirrel.util.time.TimeHelper
 class ChangingColorPalette(
     private val settings: ChangingPaletteSettings,
     private val timeHelper: TimeHelper,
-    uuid: String
+    uuid: String,
+    strip: LedStrip,
 ) :
-    ColorPalette(uuid) {
+    ColorPalette(uuid, strip) {
 
     private var counter = 0
     private var holdStart = 0L
@@ -33,7 +34,7 @@ class ChangingColorPalette(
             }
 
             ChangingPaletteStep.ColorHold -> {
-                if (now - holdStart >= settings.paletteHoldTime().inWholeMilliseconds) {
+                if (now - holdStart >= settings.paletteHoldTime().toMillis()) {
                     // Begin transition to next color
                     step = ChangingPaletteStep.StartTransition
                     transitionStart = 0L
@@ -49,7 +50,7 @@ class ChangingColorPalette(
             }
 
             ChangingPaletteStep.Transition -> {
-                if (now - transitionStart > settings.paletteTransitionTime().inWholeMilliseconds) {
+                if (now - transitionStart > settings.paletteTransitionTime().toMillis()) {
                     // Transition complete, return next color and hold
                     step = ChangingPaletteStep.StartColorHold
                     holdStart = 0L
@@ -58,14 +59,14 @@ class ChangingColorPalette(
                 } else {
                     // Blend between current and next palette
                     val fractionComplete =
-                        (now - transitionStart).toFloat() / settings.paletteTransitionTime().inWholeMilliseconds
+                        (now - transitionStart).toFloat() / settings.paletteTransitionTime().toMillis()
                     currentColor.interpolate(nextColor, fractionComplete)
                 }
             }
         }
     }
 
-    private fun getCurrentPalette(index: Int, strip: LedStrip): Palette {
+    private fun getCurrentPalette(index: Int): SettingsPalette {
         return when (settings) {
             is ChangingStaticPaletteSettings -> settings.palettes[counter % settings.palettes.size]
             is ChangingGradientPaletteSettings -> helper.getPalette(
@@ -76,9 +77,9 @@ class ChangingColorPalette(
         }
     }
 
-    private fun getNextPalette(index: Int, strip: LedStrip): Palette {
+    private fun getNextPalette(index: Int): SettingsPalette {
         return when (settings) {
-            is ChangingStaticPaletteSettings -> settings.palettes[counter + 1 % settings.palettes.size]
+            is ChangingStaticPaletteSettings -> settings.palettes[(counter + 1) % settings.palettes.size]
             is ChangingGradientPaletteSettings -> helper.getPalette(
                 index,
                 strip,
@@ -87,21 +88,21 @@ class ChangingColorPalette(
         }
     }
 
-    override fun getPrimaryColor(index: Int, strip: LedStrip): RgbColor {
-        val currentPalette = getCurrentPalette(index, strip)
-        val nextPalette = getNextPalette(index, strip)
+    override fun getPrimaryColor(index: Int): RgbColor {
+        val currentPalette = getCurrentPalette(index)
+        val nextPalette = getNextPalette(index)
         return getColor(currentPalette.primaryColor, nextPalette.primaryColor)
     }
 
-    override fun getSecondaryColor(index: Int, strip: LedStrip): RgbColor {
-        val currentPalette = getCurrentPalette(index, strip)
-        val nextPalette = getNextPalette(index, strip)
+    override fun getSecondaryColor(index: Int): RgbColor {
+        val currentPalette = getCurrentPalette(index)
+        val nextPalette = getNextPalette(index)
         return getColor(currentPalette.secondaryColor, nextPalette.secondaryColor)
     }
 
-    override fun getTertiaryColor(index: Int, strip: LedStrip): RgbColor? {
-        val currentPalette = getCurrentPalette(index, strip)
-        val nextPalette = getNextPalette(index, strip)
+    override fun getTertiaryColor(index: Int): RgbColor? {
+        val currentPalette = getCurrentPalette(index)
+        val nextPalette = getNextPalette(index)
         return if (currentPalette.tertiaryColor != null && nextPalette.tertiaryColor != null) {
             getColor(currentPalette.tertiaryColor, nextPalette.tertiaryColor)
         } else {
@@ -109,9 +110,9 @@ class ChangingColorPalette(
         }
     }
 
-    override fun getOtherColors(index: Int, strip: LedStrip): List<RgbColor> {
-        val currentPalette = getCurrentPalette(index, strip)
-        val nextPalette = getNextPalette(index, strip)
+    override fun getOtherColors(index: Int): List<RgbColor> {
+        val currentPalette = getCurrentPalette(index)
+        val nextPalette = getNextPalette(index)
         return currentPalette.otherColors.zip(nextPalette.otherColors).map {
             getColor(it.first, it.second)
         }

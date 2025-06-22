@@ -1,10 +1,11 @@
 package io.cyborgsquirrel.lighting.job
 
+import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.service.CreateLightingHelper
+import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
@@ -15,7 +16,7 @@ class LightEffectInitJob(
     private val lightEffectRepository: H2LightEffectRepository,
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val triggerManager: TriggerManager,
-    private val createLightingHelper: CreateLightingHelper,
+    private val createLightingService: CreateLightingService,
     private val limiterService: PowerLimiterService,
 ) : Runnable {
 
@@ -34,13 +35,20 @@ class LightEffectInitJob(
                     if (it.uuid != null && it.powerLimit != null) limiterService.setLimit(it.uuid!!, it.powerLimit!!)
                 }
                 for (effectEntity in effectEntities) {
-                    val strip = createLightingHelper.ledStripFromEffectEntity(effectEntity)
-                    val lightEffect = createLightingHelper.createEffect(
+                    val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
+                    val palette = if (effectEntity.palette != null) createLightingService.createPalette(
+                        effectEntity.palette!!.settings!!,
+                        effectEntity.palette!!.type!!,
+                        effectEntity.palette!!.uuid!!,
+                        strip
+                    ) else null
+                    val lightEffect = createLightingService.createEffect(
                         effectEntity.settings!!,
                         effectEntity.type!!,
-                        strip.getLength()
+                        palette,
+                        strip
                     )
-                    val filters = createLightingHelper.createEffectFilterFromEntity(effectEntity)
+                    val filters = createLightingService.createEffectFilterFromEntity(effectEntity)
                     val activeEffect = ActiveLightEffect(
                         effectUuid = effectEntity.uuid!!,
                         // TODO add priority to persistence layer
@@ -54,7 +62,7 @@ class LightEffectInitJob(
 
                     activeLightEffectRegistry.addOrUpdateEffect(activeEffect)
 
-                    val triggers = createLightingHelper.effectTriggerFromEntity(effectEntity)
+                    val triggers = createLightingService.effectTriggerFromEntity(effectEntity)
                     if (triggers.isNotEmpty()) {
                         triggers.forEach {
                             triggerManager.addTrigger(it)

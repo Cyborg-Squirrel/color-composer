@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.lighting.effects.service
 
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
@@ -23,20 +24,14 @@ class EffectApiService(
     private val effectRepository: H2LightEffectRepository,
     private val triggerRepository: H2LightEffectTriggerRepository,
     private val filterRepository: H2LightEffectFilterRepository,
+    private val paletteRepository: H2LightEffectPaletteRepository,
     private val effectRegistry: ActiveLightEffectRegistry,
-    private val createLightingHelper: CreateLightingHelper,
+    private val createLightingService: CreateLightingService,
 ) {
 
     fun createEffect(request: CreateEffectRequest): String {
         val stripEntityOptional = stripRepository.findByUuid(request.stripUuid)
         return if (stripEntityOptional.isPresent) {
-            val lightEffect =
-                createLightingHelper.createEffect(
-                    request.settings,
-                    request.effectType,
-                    stripEntityOptional.get().length!!
-                )
-
             val effectEntity = effectRepository.save(
                 LightEffectEntity(
                     strip = stripEntityOptional.get(),
@@ -48,7 +43,21 @@ class EffectApiService(
                 )
             )
 
-            val strip = createLightingHelper.ledStripFromEffectEntity(effectEntity)
+            val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
+            val palette = if (effectEntity.palette != null) createLightingService.createPalette(
+                effectEntity.palette!!.settings!!,
+                effectEntity.palette!!.type!!,
+                effectEntity.palette!!.uuid!!,
+                strip
+            ) else null
+            val lightEffect =
+                createLightingService.createEffect(
+                    request.settings,
+                    request.effectType,
+                    palette,
+                    strip
+                )
+
             val activeEffect = ActiveLightEffect(
                 effectUuid = effectEntity.uuid!!,
                 // TODO add priority to persistence layer
@@ -70,17 +79,20 @@ class EffectApiService(
     fun getEffectsForStrip(stripUuid: String): GetEffectsResponse {
         val stripEntityOptional = stripRepository.findByUuid(stripUuid)
         return if (stripEntityOptional.isPresent) {
-            val strip = stripEntityOptional.get()
-            val effectList = strip.effects.map {
+            val stripEntity = stripEntityOptional.get()
+            val effectEntities = effectRepository.findByStrip(stripEntity)
+            val effectList = effectEntities.map {
                 GetEffectResponse(
                     name = it.name!!,
                     uuid = it.uuid!!,
-                    stripUuid = strip.uuid!!,
+                    stripUuid = stripEntity.uuid!!,
+                    paletteUuid = it.palette?.uuid,
                     settings = it.settings!!,
                     status = it.status!!,
                     type = it.type!!,
                 )
             }
+
             GetEffectsResponse(effectList)
         } else {
             throw ClientRequestException("Could not get effects. Strip with uuid $stripUuid does not exist!")
@@ -95,6 +107,7 @@ class EffectApiService(
                 name = it.name!!,
                 uuid = it.uuid!!,
                 stripUuid = it.strip!!.uuid!!,
+                paletteUuid = it.palette?.uuid,
                 settings = it.settings!!,
                 status = it.status!!,
                 type = it.type!!,
@@ -113,6 +126,7 @@ class EffectApiService(
                 name = effectEntity.name!!,
                 uuid = effectEntity.uuid!!,
                 stripUuid = effectEntity.strip!!.uuid!!,
+                paletteUuid = effectEntity.palette?.uuid,
                 settings = effectEntity.settings!!,
                 status = effectEntity.status!!,
                 type = effectEntity.type!!,
@@ -185,16 +199,37 @@ class EffectApiService(
                 }
             }
 
-            val activeEffectOptional = effectRepository.findByUuid(uuid)
+            if (updateEffectRequest.paletteUuid != null && updateEffectRequest.paletteUuid != effectEntity.palette?.uuid) {
+                val paletteEntityOptional = paletteRepository.findByUuid(updateEffectRequest.paletteUuid)
+                if (paletteEntityOptional.isPresent) {
+                    effectEntity = effectEntity.copy(
+                        palette = paletteEntityOptional.get()
+                    )
+                } else {
+                    throw ClientRequestException("No palette with uuid ${updateEffectRequest.paletteUuid}")
+                }
+            }
+
+            effectEntity = effectRepository.update(effectEntity)
+
+            val activeEffectOptional = effectRegistry.getEffectWithUuid(uuid)
             if (activeEffectOptional.isPresent) {
+                val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
+                val palette = if (effectEntity.palette != null) createLightingService.createPalette(
+                    effectEntity.palette!!.settings!!,
+                    effectEntity.palette!!.type!!,
+                    effectEntity.palette!!.uuid!!,
+                    strip
+                ) else null
                 val lightEffect =
-                    createLightingHelper.createEffect(
+                    createLightingService.createEffect(
                         effectEntity.settings!!,
                         effectEntity.type!!,
-                        effectEntity.strip!!.length!!
+                        palette,
+                        strip
                     )
-                val strip = createLightingHelper.ledStripFromEffectEntity(effectEntity)
-                val activeEffect = ActiveLightEffect(
+                var activeEffect = activeEffectOptional.get()
+                activeEffect = activeEffect.copy(
                     effectUuid = effectEntity.uuid!!,
                     // TODO add priority to persistence layer
                     priority = 0,
@@ -204,10 +239,9 @@ class EffectApiService(
                     effect = lightEffect,
                     filters = listOf()
                 )
+
                 effectRegistry.addOrUpdateEffect(activeEffect)
             }
-
-            effectRepository.update(effectEntity)
         } else {
             throw ClientRequestException("Effect with uuid $uuid doesn't exist!")
         }

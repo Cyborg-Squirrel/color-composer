@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effects
 
+import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.FlameEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 import kotlin.math.max
@@ -11,13 +12,15 @@ import kotlin.random.Random
  *
  * https://github.com/davepl/DavesGarageLEDSeries/blob/master/LED%20Episode%2011/include/fire.h
  */
-class FlameLightEffect(private val numberOfLeds: Int, private val settings: FlameEffectSettings) : LightEffect {
+class FlameLightEffect(
+    private val numberOfLeds: Int,
+    private val settings: FlameEffectSettings,
+    private var palette: ColorPalette?,
+) : LightEffect {
 
     // TODO how do we count iterations? Do we count iterations for this effect?
     private var iterations = 0
     private val heat = IntArray(numberOfLeds)
-
-    override fun getName() = LightEffectConstants.FLAME_EFFECT_NAME
 
     override fun getNextStep(): List<RgbColor> {
         val rgbList = drawFire()
@@ -26,15 +29,11 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
 
     override fun getSettings() = settings
 
-    override fun complete() {
-        TODO("Not yet implemented")
-    }
-
-    override fun isDone(): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun getIterations() = iterations
+
+    override fun updatePalette(palette: ColorPalette) {
+        this.palette = palette
+    }
 
     private fun drawFire(): List<RgbColor> {
         // Cool each cell
@@ -61,14 +60,36 @@ class FlameLightEffect(private val numberOfLeds: Int, private val settings: Flam
         // Convert heat to color
         val rgbList = mutableListOf<RgbColor>()
         for (i in heat.indices) {
-            val color = colorFromInt(heat[heat.size - 1 - i])
+            val color = getColor(heat[heat.size - 1 - i], i)
             rgbList.add(color)
         }
 
         return rgbList
     }
 
-    private fun colorFromInt(heat: Int): RgbColor {
+    private fun getColor(heat: Int, index: Int): RgbColor {
+        if (palette != null) {
+            val ubyteMaxAsInt = UByte.MAX_VALUE.toInt()
+            val heatVal = min(heat, ubyteMaxAsInt)
+            val primary = palette!!.getPrimaryColor(index)
+            val secondary = palette!!.getSecondaryColor(index)
+
+            return if (heatVal > 170) {
+                // Hottest
+                secondary.interpolate(RgbColor.White, (heatVal / (255 - 170)).toFloat())
+            } else if (heatVal > 85) {
+                // Medium heat
+                primary.interpolate(secondary, (heatVal / (170 - 85)).toFloat())
+            } else {
+                // Coolest
+                primary.interpolate(RgbColor.Blank, (heatVal / 85).toFloat())
+            }
+        } else {
+            return flameColorFromInt(heat)
+        }
+    }
+
+    private fun flameColorFromInt(heat: Int): RgbColor {
         val ubyteMaxAsInt = UByte.MAX_VALUE.toInt()
         val heatVal = min(heat, ubyteMaxAsInt)
         val red: UByte
