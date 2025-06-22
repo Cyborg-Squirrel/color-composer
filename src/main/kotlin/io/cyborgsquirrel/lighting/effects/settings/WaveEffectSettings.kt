@@ -6,7 +6,7 @@ import kotlin.math.min
 @Serdeable
 data class WaveEffectSettings(
     val startPoint: Int, val waveLength: Int, val repeat: Boolean,
-) {
+) : LightEffectSettings() {
     companion object {
         fun default(numberOfLeds: Int) =
             WaveEffectSettings(

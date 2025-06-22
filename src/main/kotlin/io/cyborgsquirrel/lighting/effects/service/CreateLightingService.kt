@@ -221,6 +221,16 @@ class CreateLightingService(
                 palette
             )
 
+            LightEffectConstants.SCROLLING_DOTS_EFFECT_NAME -> ScrollingDotsEffect(
+                numberOfLeds = strip.getLength(),
+                settings = objectMapper.readValueFromTree(
+                    JsonNode.from(settings),
+                    ScrollingDotEffectSettings::class.java
+                ),
+                palette,
+                timeHelper
+            )
+
             else -> throw IllegalArgumentException("Unknown LightEffect name: $effectType")
         }
     }

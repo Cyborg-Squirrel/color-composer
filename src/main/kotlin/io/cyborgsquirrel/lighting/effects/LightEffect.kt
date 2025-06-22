@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
+import io.cyborgsquirrel.lighting.effects.settings.LightEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 
 interface LightEffect {
@@ -13,7 +14,7 @@ interface LightEffect {
     /**
      * Returns the current settings for the LightEffect
      */
-    fun getSettings(): Any
+    fun getSettings(): LightEffectSettings
 
     /**
      * Returns the number of times the effect has played

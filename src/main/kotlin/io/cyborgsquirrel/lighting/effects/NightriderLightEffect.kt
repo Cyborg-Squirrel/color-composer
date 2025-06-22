@@ -115,9 +115,7 @@ class NightriderLightEffect(
 
     override fun getSettings() = settings
 
-    override fun getIterations(): Int {
-        return iterations
-    }
+    override fun getIterations() = iterations
 
     override fun updatePalette(palette: ColorPalette) {
         this.palette = palette

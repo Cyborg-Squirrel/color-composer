@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
+import io.cyborgsquirrel.lighting.effects.shared.LightEffectHelper
 import io.cyborgsquirrel.lighting.model.RgbColor
 import kotlin.math.ceil
 
@@ -15,6 +16,7 @@ class SpectrumLightEffect(
     private var iterations = 0
     private var referenceFrame = mutableListOf<RgbColor>()
     private val colorWidth = getColorWidth()
+    private val helper = LightEffectHelper()
 
     override fun getNextStep(): List<RgbColor> {
         val rgbList = mutableListOf<RgbColor>()
@@ -50,7 +52,7 @@ class SpectrumLightEffect(
         }
 
         if (frame % numberOfLeds != 0) {
-            val shiftedFrame = shift(rgbList, (frame % rgbList.size))
+            val shiftedFrame = helper.shift(rgbList, (frame % rgbList.size))
             frame++
             return shiftedFrame
         }
@@ -61,15 +63,6 @@ class SpectrumLightEffect(
     }
 
     override fun getSettings() = settings
-
-    private fun <T> shift(list: List<T>, amount: Int): List<T> {
-        val newList = mutableListOf<T>()
-        for (i in list.indices) {
-            newList.add(list[(i + amount) % list.size])
-        }
-
-        return newList
-    }
 
     private fun colorList(index: Int): List<RgbColor> {
         if (palette != null) {
@@ -94,9 +87,7 @@ class SpectrumLightEffect(
         }
     }
 
-    override fun getIterations(): Int {
-        return iterations
-    }
+    override fun getIterations() = iterations
 
     override fun updatePalette(palette: ColorPalette) {
         this.palette = palette

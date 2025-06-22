@@ -13,5 +13,6 @@ class LightEffectConstants {
         const val FLAME_EFFECT_NAME = "Flame"
         const val BOUNCING_BALL_NAME = "Bouncing Ball"
         const val WAVE_EFFECT_NAME = "Wave"
+        const val SCROLLING_DOTS_EFFECT_NAME = "Scrolling Dots"
     }
 }
