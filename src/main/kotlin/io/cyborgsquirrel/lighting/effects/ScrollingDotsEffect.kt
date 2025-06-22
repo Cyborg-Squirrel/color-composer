@@ -20,6 +20,7 @@ class ScrollingDotsEffect(
     private var shiftAmount = 0
 
     override fun getNextStep(): List<RgbColor> {
+        val dotList = mutableListOf<Boolean>()
         val rgbList = mutableListOf<RgbColor>()
         var drawingDot = true
         var dotStart = 0
@@ -30,18 +31,14 @@ class ScrollingDotsEffect(
                 if (i - dotStart >= settings.dotLength) {
                     drawingDot = false
                     spaceStart = i
-                    rgbList.add(RgbColor.Blank)
-                } else {
-                    rgbList.add(getColor(i))
                 }
+                dotList.add(drawingDot)
             } else {
                 if (i - spaceStart >= settings.spaceBetweenDots) {
                     drawingDot = true
                     dotStart = i
-                    rgbList.add(getColor(i))
-                } else {
-                    rgbList.add(RgbColor.Blank)
                 }
+                dotList.add(drawingDot)
             }
         }
 
@@ -51,9 +48,18 @@ class ScrollingDotsEffect(
             lastChangeMillis = nowMillis
         }
 
-        val shiftedList = helper.shift(rgbList, shiftAmount)
+        val shiftedDotList = helper.shift(dotList, shiftAmount)
+
+        for (i in shiftedDotList.indices) {
+            if (shiftedDotList[i]) {
+                rgbList.add(getColor(i))
+            } else {
+                rgbList.add(RgbColor.Blank)
+            }
+        }
+
         frame++
-        return shiftedList
+        return rgbList
     }
 
     override fun getSettings() = settings
