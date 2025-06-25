@@ -60,6 +60,7 @@ class WebSocketJob(
     private var lastFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
     private var timestampMillis = 0L
     private var sleepMillis = 0L
+    private var exponentialReconnectionBackoffValue = 0
 
     override fun run() {
         logger.info("Start")
@@ -86,6 +87,7 @@ class WebSocketJob(
                     }
 
                     WebSocketState.ConnectedIdle -> {
+                        exponentialReconnectionBackoffValue = 0
                         state = if (lastTimeSyncPerformedAt == 0L) {
                             WebSocketState.TimeSyncRequired
                         } else {
@@ -98,9 +100,9 @@ class WebSocketJob(
                             logger.info("Client disconnected. Attempting to reconnect...")
                             setupWebSocket()
                         } catch (ex: Exception) {
-                            logger.warn("Unable to connect to client $clientEntity")
-                            // Wait before next reconnection attempt
-                            sleep(10000)
+                            logger.info("Unable to connect to client $clientEntity")
+                            if (exponentialReconnectionBackoffValue < 8) exponentialReconnectionBackoffValue++
+                            sleep((2 shl exponentialReconnectionBackoffValue) * 1000L)
                         }
                     }
 
@@ -164,9 +166,10 @@ class WebSocketJob(
                     }
                 }
             } catch (ex: Exception) {
-                ex.printStackTrace()
                 logger.error("Error $ex while processing state $state")
-                sleep((1000 / fps).toLong())
+                ex.printStackTrace()
+                sleep((2 shl exponentialReconnectionBackoffValue) * 1000L)
+                if (exponentialReconnectionBackoffValue < 8) exponentialReconnectionBackoffValue++
             }
         }
 
