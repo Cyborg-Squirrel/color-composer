@@ -5,8 +5,6 @@ import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
-import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.RgbFrameData
@@ -35,9 +33,7 @@ class WebSocketJob(
     private val renderer: LightEffectRenderer,
     private val triggerManager: TriggerManager,
     private val clientRepository: H2LedStripClientRepository,
-    private val effectRepository: ActiveLightEffectRegistry,
     private val timeHelper: TimeHelper,
-    private val powerLimiterService: PowerLimiterService,
     private val configClient: ConfigClient,
 ) : Runnable {
 
