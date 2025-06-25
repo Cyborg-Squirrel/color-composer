@@ -83,7 +83,7 @@ class ChangingColorPalette(
             is ChangingGradientPaletteSettings -> helper.getPalette(
                 index,
                 strip,
-                settings.gradientList[counter + 1 % settings.gradientList.size]
+                settings.gradientList[(counter + 1) % settings.gradientList.size]
             )
         }
     }

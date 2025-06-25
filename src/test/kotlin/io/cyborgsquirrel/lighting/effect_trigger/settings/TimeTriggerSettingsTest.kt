@@ -14,7 +14,7 @@ class TimeTriggerSettingsTest(private val objectMapper: ObjectMapper) : StringSp
     val timeTriggerSettings =
         TimeTriggerSettings(LocalTime.of(18, 0), null, Duration.ofHours(4), 120, TriggerType.StartEffect)
     val timeTriggerSettingsJson =
-        "{\"activationDuration\":14400000000000,\"maxActivations\":120,\"triggerType\":\"StartEffect\",\"triggerTime\":\"18:00:00\"}"
+        "{\"activationDuration\":14400000,\"maxActivations\":120,\"triggerType\":\"StartEffect\",\"triggerTime\":\"18:00:00\"}"
 
     "Serialize to json" {
         val json = objectMapper.writeValueAsString(timeTriggerSettings)
