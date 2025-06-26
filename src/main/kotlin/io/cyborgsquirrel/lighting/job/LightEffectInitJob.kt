@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.job
 
-import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
@@ -13,11 +13,13 @@ import java.util.concurrent.Semaphore
 
 @Singleton
 class LightEffectInitJob(
+    private val clientRepository: H2LedStripClientRepository,
     private val lightEffectRepository: H2LightEffectRepository,
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val triggerManager: TriggerManager,
     private val createLightingService: CreateLightingService,
     private val limiterService: PowerLimiterService,
+    private val websocketJobManager: WebsocketJobManager,
 ) : Runnable {
 
     // Flag tracking if this init job has run.
@@ -68,6 +70,11 @@ class LightEffectInitJob(
                             triggerManager.addTrigger(it)
                         }
                     }
+                }
+
+                val clients = clientRepository.queryAll()
+                for (client in clients) {
+                    websocketJobManager.startWebsocketJob(client)
                 }
 
                 completed = true

@@ -32,11 +32,16 @@ import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterReposito
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.serde.ObjectMapper
+import io.micronaut.test.annotation.MockBean
+import io.micronaut.test.extensions.kotest5.MicronautKotest5Extension.getMock
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
+import io.mockk.every
+import io.mockk.mockk
 import java.time.Duration
 import java.util.*
 
@@ -55,11 +60,17 @@ class LightEffectInitJobTest(
     private val triggerManager: TriggerManager,
     private val effectFactory: CreateLightingService,
     private val limiterService: PowerLimiterService,
+    private val websocketJobManager: WebsocketJobManager
 ) : StringSpec({
 
     val lightEffectSettings = SpectrumEffectSettings.default(60).copy(10)
     val iterationTriggerSettings = EffectIterationTriggerSettings(25)
     val fadeFilterSettings = BrightnessFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(20))
+    lateinit var websocketManagerMock: WebsocketJobManager
+
+    beforeTest {
+        websocketManagerMock = getMock(websocketJobManager)
+    }
 
     afterTest {
         activeLightEffectRegistry.reset()
@@ -75,11 +86,13 @@ class LightEffectInitJobTest(
 
     "Init light effect one strip - happy path" {
         val job = LightEffectInitJob(
+            clientRepository,
             lightEffectRepository,
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
-            limiterService
+            limiterService,
+            websocketManagerMock
         )
 
         val client = clientRepository.save(
@@ -128,11 +141,13 @@ class LightEffectInitJobTest(
 
     "Init light effect with trigger - happy path" {
         val job = LightEffectInitJob(
+            clientRepository,
             lightEffectRepository,
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
-            limiterService
+            limiterService,
+            websocketManagerMock
         )
 
         val client = clientRepository.save(
@@ -200,11 +215,13 @@ class LightEffectInitJobTest(
 
     "Init light effect with filter - happy path" {
         val job = LightEffectInitJob(
+            clientRepository,
             lightEffectRepository,
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
-            limiterService
+            limiterService,
+            websocketManagerMock
         )
 
         val client = clientRepository.save(
@@ -272,11 +289,13 @@ class LightEffectInitJobTest(
 
     "Init light effect one group - happy path" {
         val job = LightEffectInitJob(
+            clientRepository,
             lightEffectRepository,
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
-            limiterService
+            limiterService,
+            websocketManagerMock
         )
 
         val client = clientRepository.save(
@@ -327,4 +346,9 @@ class LightEffectInitJobTest(
         activeEffectList.first().status shouldBe lightEffect.status
         activeEffectList.first().effectUuid shouldBe lightEffect.uuid
     }
-})
+}) {
+    @MockBean(WebsocketJobManager::class)
+    fun websocketJobManager(): WebsocketJobManager {
+        return mockk()
+    }
+}

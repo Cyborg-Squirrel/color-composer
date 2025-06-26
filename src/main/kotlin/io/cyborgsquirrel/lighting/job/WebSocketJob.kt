@@ -13,7 +13,6 @@ import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
-import jakarta.inject.Singleton
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
@@ -25,9 +24,8 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
 /**
- * Background job for streaming RgbFrameData with clients
+ * Background job for streaming effects to clients
  */
-@Singleton
 class WebSocketJob(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
@@ -35,11 +33,11 @@ class WebSocketJob(
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private val configClient: ConfigClient,
+    private var clientEntity: LedStripClientEntity,
 ) : Runnable {
 
     private val serializer = RgbFrameDataSerializer()
     private var client: LedStripWebSocketClient? = null
-    private lateinit var clientEntity: LedStripClientEntity
     private lateinit var strip: LedStripModel
 
     // Difference in millis between the client and server.
@@ -53,7 +51,7 @@ class WebSocketJob(
         get() = timeHelper.millisSinceEpoch() - lastTimeSyncPerformedAt
     private var state = WebSocketState.InsufficientData
     private var shouldRun = true
-    private var lastFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
+    private var lastKeepaliveFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
     private var timestampMillis = 0L
     private var sleepMillis = 0L
     private var exponentialReconnectionBackoffValue = 0
@@ -64,9 +62,9 @@ class WebSocketJob(
             try {
                 when (state) {
                     WebSocketState.InsufficientData -> {
-                        val clients = clientRepository.queryAll()
-                        if (clients.isNotEmpty()) {
-                            clientEntity = clients.first()
+                        val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
+                        if (clientOptional.isPresent) {
+                            clientEntity = clientOptional.get()
                             if (clientEntity.strips.isNotEmpty()) {
                                 val stripEntity = clientEntity.strips.first()
                                 strip = LedStripModel(
@@ -78,7 +76,11 @@ class WebSocketJob(
                                 )
                                 timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
                                 setupWebSocket()
+                            } else {
+                                sleep(5000)
                             }
+                        } else {
+                            sleep(5000)
                         }
                     }
 
@@ -97,7 +99,7 @@ class WebSocketJob(
                             setupWebSocket()
                         } catch (ex: Exception) {
                             logger.info("Unable to connect to client $clientEntity")
-                            if (exponentialReconnectionBackoffValue < 8) exponentialReconnectionBackoffValue++
+                            if (exponentialReconnectionBackoffValue < 7) exponentialReconnectionBackoffValue++
                             sleep((2 shl exponentialReconnectionBackoffValue) * 1000L)
                         }
                     }
@@ -133,13 +135,12 @@ class WebSocketJob(
                             triggerManager.processTriggers()
                             val frame = renderer.renderFrame(strip.getUuid(), 0)
                             if (frame.isEmpty) {
-                                if (lastFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
+                                if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
                                     logger.info("Sending keep-alive frame")
                                     sendBlankFrame(0)
-                                    lastFrameTimestamp = LocalDateTime.now()
+                                    lastKeepaliveFrameTimestamp = LocalDateTime.now()
                                 } else {
-                                    val sleepMillis = 100L
-                                    sleep(sleepMillis)
+                                    sleep(250)
                                 }
 
                                 timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
@@ -165,7 +166,7 @@ class WebSocketJob(
                 logger.error("Error $ex while processing state $state")
                 ex.printStackTrace()
                 sleep((2 shl exponentialReconnectionBackoffValue) * 1000L)
-                if (exponentialReconnectionBackoffValue < 8) exponentialReconnectionBackoffValue++
+                if (exponentialReconnectionBackoffValue < 7) exponentialReconnectionBackoffValue++
             }
         }
 
@@ -234,6 +235,11 @@ class WebSocketJob(
     fun dispose() {
         shouldRun = false
         client?.close()
+    }
+
+    fun onDataUpdate() {
+        client?.close()
+        state = WebSocketState.InsufficientData
     }
 
     companion object {

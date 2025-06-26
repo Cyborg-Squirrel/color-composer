@@ -7,6 +7,7 @@ import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
+import io.cyborgsquirrel.lighting.job.WebsocketJobManager
 import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
@@ -18,7 +19,8 @@ class LedStripApiService(
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val stripRepository: H2LedStripRepository,
     private val clientRepository: H2LedStripClientRepository,
-    private val limitService: PowerLimiterService
+    private val limitService: PowerLimiterService,
+    private val websocketJobManager: WebsocketJobManager,
 ) {
 
     fun createStrip(request: CreateLedStripRequest): String {
@@ -92,6 +94,7 @@ class LedStripApiService(
                 effects.forEach {
                     activeLightEffectRegistry.removeEffect(it)
                 }
+                websocketJobManager.updateJob(entity.client!!)
             } else {
                 // TODO cascading delete? Unassign effects and group membership?
                 throw ClientRequestException("Could not delete strip with uuid $uuid. Please delete or reassign its effects and group memberships first.")

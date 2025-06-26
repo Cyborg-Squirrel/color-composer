@@ -1,8 +1,7 @@
 package io.cyborgsquirrel.lighting.job
 
 enum class WebSocketState {
-    // This state will be removed when WebSocketJobs are spawned by creating
-    // a LedClient via the API or from the database at startup.
+    // The websocket job needs a client and strip, until it has both it is in this state
     InsufficientData,
 
     // LedClient is connected but no effects are being rendered

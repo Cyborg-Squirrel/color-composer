@@ -1,8 +1,7 @@
 package io.cyborgsquirrel
 
-import io.cyborgsquirrel.clients.discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.lighting.job.LightEffectInitJob
-import io.cyborgsquirrel.lighting.job.WebSocketJob
+import io.cyborgsquirrel.lighting.job.WebsocketJobManager
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiFetchJob
 import io.cyborgsquirrel.util.H2WebServer
 import io.micronaut.context.event.ApplicationEventListener
@@ -21,7 +20,6 @@ fun main(args: Array<String>) {
 @Singleton
 class StartupListener(
     private val h2WebServer: H2WebServer,
-    private val wsJob: WebSocketJob,
     private val sunriseSunsetJob: SunriseSunsetApiFetchJob,
     private val lightEffectInitJob: LightEffectInitJob,
     private val taskScheduler: TaskScheduler,
@@ -33,8 +31,7 @@ class StartupListener(
         try {
             // Run background task
             taskScheduler.schedule(Duration.ofMillis(0), lightEffectInitJob)
-            taskScheduler.schedule(Duration.ofMillis(0), wsJob)
-//            taskScheduler.schedule("1 0 * * ?", sunriseSunsetJob)
+            taskScheduler.schedule("1 0 * * ?", sunriseSunsetJob)
             taskScheduler.schedule(Duration.ofMillis(0), sunriseSunsetJob)
             h2WebServer.start()
         } catch (e: InterruptedException) {
@@ -49,7 +46,7 @@ class StartupListener(
 
 @Singleton
 class ShutdownListener(
-    private val wsJob: WebSocketJob,
+    private val websocketJobManager: WebsocketJobManager,
     private val h2WebServer: H2WebServer,
 ) :
     ApplicationEventListener<ServerShutdownEvent> {
@@ -58,7 +55,7 @@ class ShutdownListener(
         logger.info("Application shutting down")
         try {
             h2WebServer.stop()
-            wsJob.dispose()
+            websocketJobManager.stopAllJobs()
         } catch (e: InterruptedException) {
             e.printStackTrace()
         }

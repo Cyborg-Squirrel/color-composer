@@ -106,7 +106,7 @@ class LedClientSetupControllerTest(
             stripRepository.delete(strips.first())
 
             deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
-            deleteResponse.status shouldBe HttpStatus.OK
+            deleteResponse.status shouldBe HttpStatus.NO_CONTENT
 
             deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
             deleteResponse.status shouldBe HttpStatus.BAD_REQUEST

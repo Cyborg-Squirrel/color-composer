@@ -13,10 +13,10 @@ interface LedClientSetupApi {
     fun getAllClients(): HttpResponse<Any>
 
     @Post
-    fun create(@Body newClient: CreateClientRequest): HttpResponse<Any>
+    fun create(@Body request: CreateClientRequest): HttpResponse<Any>
 
     @Patch("/{uuid}")
-    fun update(uuid: String, @Body updatedClient: UpdateClientRequest): HttpResponse<Any>
+    fun update(uuid: String, @Body request: UpdateClientRequest): HttpResponse<Any>
 
     @Delete("/{uuid}")
     fun deleteClient(uuid: String): HttpResponse<Any>
