@@ -18,6 +18,7 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
 import java.sql.Timestamp
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
@@ -136,13 +137,17 @@ class WebSocketJob(
 
                 WebSocketState.RenderingEffect -> {
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
-                    if (timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset) {
+                    val timeDesynced =
+                        timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset
+                    val lastTimeSyncMoreThan5MinsAgo =
+                        currentTimeAsMillis - lastTimeSyncPerformedAt > Duration.ofMinutes(5).toMillis()
+                    if (timeDesynced || lastTimeSyncMoreThan5MinsAgo) {
                         logger.info(
-                            "Time desync detected (client time offset ${clientTimeOffset}ms frame timestamp: ${
+                            "Re-syncing time with client $client - (client time offset ${clientTimeOffset}ms frame timestamp: ${
                                 timeHelper.dateTimeFromMillis(
                                     timestampMillis
                                 )
-                            }) re-syncing time..."
+                            })"
                         )
                         state = WebSocketState.TimeSyncRequired
                     } else {
