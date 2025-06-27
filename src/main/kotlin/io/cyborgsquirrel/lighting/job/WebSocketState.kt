@@ -4,6 +4,9 @@ enum class WebSocketState {
     // The websocket job needs a client and strip, until it has both it is in this state
     InsufficientData,
 
+    // The job is waiting for the connection attempt to complete
+    WaitingForConnection,
+
     // LedClient is connected but no effects are being rendered
     ConnectedIdle,
 

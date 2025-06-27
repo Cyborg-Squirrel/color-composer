@@ -23,6 +23,7 @@ dependencies {
     ksp("io.micronaut:micronaut-http-validation")
     ksp("io.micronaut.serde:micronaut-serde-processor")
     ksp("io.micronaut.validation:micronaut-validation-processor")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     implementation("io.micronaut:micronaut-http-client")
     implementation("io.micronaut:micronaut-websocket")
     implementation("io.micronaut.data:micronaut-data-jdbc")

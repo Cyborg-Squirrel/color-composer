@@ -8,8 +8,8 @@ import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.websocket.WebSocketClient
 import jakarta.inject.Singleton
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
-import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 
 @Singleton
@@ -20,16 +20,16 @@ class WebsocketJobManagerImpl(
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private val configClient: ConfigClient,
-): WebsocketJobManager {
-    private val executor = Executors.newVirtualThreadPerTaskExecutor()
-    private val jobMap = mutableMapOf<String, WebSocketJob>()
+) : WebsocketJobManager {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + Dispatchers.IO)
+    private val jobMap = mutableMapOf<String, Pair<WebSocketJob, Job>>()
     private val lock = Semaphore(1)
 
     override fun startWebsocketJob(client: LedStripClientEntity) {
         logger.info("Starting websocket job for $client")
         try {
             lock.acquire()
-            val job = WebSocketJob(
+            val wsJob = WebSocketJob(
                 webSocketClient,
                 renderer,
                 triggerManager,
@@ -43,8 +43,8 @@ class WebsocketJobManagerImpl(
                 stopWebsocketJob(client)
             }
 
-            jobMap[client.uuid!!] = job
-            executor.submit(job)
+            val job = wsJob.start(scope)
+            jobMap[client.uuid!!] = Pair(wsJob, job)
         } catch (ex: Exception) {
             ex.printStackTrace()
         } finally {
@@ -56,7 +56,7 @@ class WebsocketJobManagerImpl(
         logger.info("Updating websocket job for $client")
         try {
             lock.acquire()
-            jobMap[client.uuid!!]?.onDataUpdate()
+            jobMap[client.uuid!!]?.first?.onDataUpdate()
         } catch (ex: Exception) {
             ex.printStackTrace()
         } finally {
@@ -68,7 +68,8 @@ class WebsocketJobManagerImpl(
         logger.info("Stopping websocket job for $client")
         try {
             lock.acquire()
-            jobMap[client.uuid!!]?.dispose()
+            jobMap[client.uuid!!]?.first?.dispose()
+            runBlocking { jobMap[client.uuid!!]?.second?.join() }
             jobMap.remove(client.uuid!!)
         } catch (ex: Exception) {
             ex.printStackTrace()
@@ -78,11 +79,12 @@ class WebsocketJobManagerImpl(
     }
 
     override fun stopAllJobs() {
-        logger.info("Starting all websocket jobs...")
+        logger.info("Stopping all websocket jobs...")
         try {
             lock.acquire()
             for (clientUuid in jobMap.keys) {
-                jobMap[clientUuid]?.dispose()
+                jobMap[clientUuid]?.first?.dispose()
+                runBlocking { jobMap[clientUuid]?.second?.join() }
             }
 
             jobMap.clear()

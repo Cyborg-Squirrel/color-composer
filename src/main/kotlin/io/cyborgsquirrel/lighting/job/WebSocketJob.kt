@@ -13,10 +13,10 @@ import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
+import kotlinx.coroutines.*
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
-import java.lang.Thread.sleep
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
@@ -34,7 +34,7 @@ class WebSocketJob(
     private val timeHelper: TimeHelper,
     private val configClient: ConfigClient,
     private var clientEntity: LedStripClientEntity,
-) : Runnable {
+) : DisposableHandle {
 
     private val serializer = RgbFrameDataSerializer()
     private var client: LedStripWebSocketClient? = null
@@ -56,124 +56,137 @@ class WebSocketJob(
     private var sleepMillis = 0L
     private var exponentialReconnectionBackoffValue = 0
 
-    override fun run() {
-        logger.info("Start")
-        while (shouldRun) {
-            try {
-                when (state) {
-                    WebSocketState.InsufficientData -> {
-                        val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
-                        if (clientOptional.isPresent) {
-                            clientEntity = clientOptional.get()
-                            if (clientEntity.strips.isNotEmpty()) {
-                                val stripEntity = clientEntity.strips.first()
-                                strip = LedStripModel(
-                                    stripEntity.name!!,
-                                    stripEntity.uuid!!,
-                                    stripEntity.length!!,
-                                    stripEntity.height,
-                                    stripEntity.blendMode!!
-                                )
-                                timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
-                                setupWebSocket()
-                            } else {
-                                sleep(5000)
-                            }
-                        } else {
-                            sleep(5000)
-                        }
-                    }
+    fun start(scope: CoroutineScope): Job {
+        return scope.launch {
+            logger.info("Start")
+            while (isActive && shouldRun) {
+                processState()
+            }
+            logger.info("Done")
+        }
+    }
 
-                    WebSocketState.ConnectedIdle -> {
-                        exponentialReconnectionBackoffValue = 0
-                        state = if (lastTimeSyncPerformedAt == 0L) {
-                            WebSocketState.TimeSyncRequired
-                        } else {
-                            WebSocketState.RenderingEffect
-                        }
-                    }
-
-                    WebSocketState.DisconnectedIdle -> {
-                        try {
-                            logger.info("Client disconnected. Attempting to reconnect...")
+    private suspend fun processState() {
+        try {
+            when (state) {
+                WebSocketState.InsufficientData -> {
+                    val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
+                    if (clientOptional.isPresent) {
+                        clientEntity = clientOptional.get()
+                        if (clientEntity.strips.isNotEmpty()) {
+                            val stripEntity = clientEntity.strips.first()
+                            strip = LedStripModel(
+                                stripEntity.name!!,
+                                stripEntity.uuid!!,
+                                stripEntity.length!!,
+                                stripEntity.height,
+                                stripEntity.blendMode!!
+                            )
+                            timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
+                            state = WebSocketState.WaitingForConnection
                             setupWebSocket()
-                        } catch (ex: Exception) {
-                            logger.info("Unable to connect to client $clientEntity")
-                            if (exponentialReconnectionBackoffValue < 7) exponentialReconnectionBackoffValue++
-                            sleep((2 shl exponentialReconnectionBackoffValue) * 1000L)
+                        } else {
+                            delay(5000)
                         }
+                    } else {
+                        delay(5000)
                     }
+                }
 
-                    WebSocketState.BufferFullWaiting -> {
-                        sleep(sleepMillis)
+                WebSocketState.WaitingForConnection -> {
+                    delay(50)
+                }
+
+                WebSocketState.ConnectedIdle -> {
+                    exponentialReconnectionBackoffValue = 0
+                    state = if (lastTimeSyncPerformedAt == 0L) {
+                        WebSocketState.TimeSyncRequired
+                    } else {
+                        WebSocketState.RenderingEffect
+                    }
+                }
+
+                WebSocketState.DisconnectedIdle -> {
+                    try {
+                        logger.info("Client disconnected. Attempting to reconnect...")
+                        state = WebSocketState.WaitingForConnection
+                        setupWebSocket()
+                    } catch (ex: Exception) {
+                        logger.info("Unable to connect to client $clientEntity")
+                        if (exponentialReconnectionBackoffValue < 7) exponentialReconnectionBackoffValue++
+                        delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
+                    }
+                }
+
+                WebSocketState.BufferFullWaiting -> {
+                    delay(sleepMillis)
+                    state = WebSocketState.RenderingEffect
+                }
+
+                WebSocketState.TimeSyncRequired -> {
+                    syncClientTime()
+                    timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
+                    logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)}")
+
+                    // If we disconnect during the time sync don't set the state to connected
+                    if (state != WebSocketState.DisconnectedIdle) {
                         state = WebSocketState.RenderingEffect
                     }
+                }
 
-                    WebSocketState.TimeSyncRequired -> {
-                        syncClientTime()
-                        timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
-                        logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)}")
-
-                        // If we disconnect during the time sync don't set the state to connected
-                        if (state != WebSocketState.DisconnectedIdle) {
-                            state = WebSocketState.RenderingEffect
-                        }
-                    }
-
-                    WebSocketState.RenderingEffect -> {
-                        val currentTimeAsMillis = timeHelper.millisSinceEpoch()
-                        if (timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset) {
-                            logger.info(
-                                "Time desync detected (client time offset ${clientTimeOffset}ms frame timestamp: ${
-                                    timeHelper.dateTimeFromMillis(
-                                        timestampMillis
-                                    )
-                                }) re-syncing time..."
-                            )
-                            state = WebSocketState.TimeSyncRequired
-                        } else {
-                            triggerManager.processTriggers()
-                            val frame = renderer.renderFrame(strip.getUuid(), 0)
-                            if (frame.isEmpty) {
-                                if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
-                                    logger.info("Sending keep-alive frame")
-                                    sendBlankFrame(0)
-                                    lastKeepaliveFrameTimestamp = LocalDateTime.now()
-                                } else {
-                                    sleep(250)
-                                }
-
-                                timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
+                WebSocketState.RenderingEffect -> {
+                    val currentTimeAsMillis = timeHelper.millisSinceEpoch()
+                    if (timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset) {
+                        logger.info(
+                            "Time desync detected (client time offset ${clientTimeOffset}ms frame timestamp: ${
+                                timeHelper.dateTimeFromMillis(
+                                    timestampMillis
+                                )
+                            }) re-syncing time..."
+                        )
+                        state = WebSocketState.TimeSyncRequired
+                    } else {
+                        triggerManager.processTriggers()
+                        val frame = renderer.renderFrame(strip.getUuid(), 0)
+                        if (frame.isEmpty) {
+                            if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
+                                logger.info("Sending keep-alive frame")
+                                sendBlankFrame(0)
+                                lastKeepaliveFrameTimestamp = LocalDateTime.now()
                             } else {
-                                timestampMillis += 1000 / fps
-                                val rgbData = frame.get().frameData
-                                val frameData = RgbFrameData(timestampMillis, rgbData)
-                                val encodedFrame = serializer.encode(frameData)
-                                client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
+                                delay(250)
+                            }
 
-                                // Slow down to ensure we only buffer the specified amount of time into the future.
-                                val nowPlusBufferSeconds =
-                                    Timestamp.from(Instant.now().plusSeconds(bufferTimeInSeconds)).time
-                                if (nowPlusBufferSeconds < timestampMillis) {
-                                    sleepMillis = timestampMillis - nowPlusBufferSeconds
-                                    state = WebSocketState.BufferFullWaiting
-                                }
+                            timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
+                        } else {
+                            timestampMillis += 1000 / fps
+                            val rgbData = frame.get().frameData
+                            val frameData = RgbFrameData(timestampMillis, rgbData)
+                            val encodedFrame = serializer.encode(frameData)
+                            withContext(Dispatchers.IO) {
+                                client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
+                            }
+
+                            // Slow down to ensure we only buffer the specified amount of time into the future.
+                            val nowPlusBufferSeconds =
+                                Timestamp.from(Instant.now().plusSeconds(bufferTimeInSeconds)).time
+                            if (nowPlusBufferSeconds < timestampMillis) {
+                                sleepMillis = timestampMillis - nowPlusBufferSeconds
+                                state = WebSocketState.BufferFullWaiting
                             }
                         }
                     }
                 }
-            } catch (ex: Exception) {
-                logger.error("Error $ex while processing state $state")
-                ex.printStackTrace()
-                sleep((2 shl exponentialReconnectionBackoffValue) * 1000L)
-                if (exponentialReconnectionBackoffValue < 7) exponentialReconnectionBackoffValue++
             }
+        } catch (ex: Exception) {
+            logger.error("Error $ex while processing state $state")
+            ex.printStackTrace()
+            delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
+            if (exponentialReconnectionBackoffValue < 7) exponentialReconnectionBackoffValue++
         }
-
-        logger.info("Done")
     }
 
-    private fun sendBlankFrame(timestamp: Long) {
+    private suspend fun sendBlankFrame(timestamp: Long) {
         val rgbData = mutableListOf<RgbColor>()
         for (i in 0..<strip.getLength()) {
             rgbData.add(RgbColor.Blank)
@@ -181,7 +194,9 @@ class WebSocketJob(
 
         val frameData = RgbFrameData(timestamp, rgbData)
         val frame = serializer.encode(frameData)
-        client?.send(frame)?.get(1, TimeUnit.SECONDS)
+        withContext(Dispatchers.IO) {
+            client?.send(frame)?.get(1, TimeUnit.SECONDS)
+        }
     }
 
     private fun syncClientTime() {
@@ -217,7 +232,10 @@ class WebSocketJob(
             }
 
             override fun onError(t: Throwable?) {
-                state = WebSocketState.DisconnectedIdle
+                if (state != WebSocketState.InsufficientData) {
+                    state = WebSocketState.DisconnectedIdle
+                }
+
                 future.completeExceptionally(t)
             }
 
@@ -232,7 +250,7 @@ class WebSocketJob(
         client = future.get(5, TimeUnit.SECONDS)
     }
 
-    fun dispose() {
+    override fun dispose() {
         shouldRun = false
         client?.close()
     }
