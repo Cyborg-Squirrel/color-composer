@@ -1,13 +1,19 @@
 package io.cyborgsquirrel.lighting.serialization
 
 import io.cyborgsquirrel.lighting.model.RgbFrameData
+import io.cyborgsquirrel.lighting.model.RgbFrameOptions
 
 class RgbFrameDataSerializer {
 
     /**
-     * Encodes [RgbFrameData] into a [ByteArray]
+     * Encodes [RgbFrameData] into a [ByteArray] with no [RgbFrameOptions] set
      */
-    fun encode(frameData: RgbFrameData): ByteArray {
+    fun encode(frameData: RgbFrameData): ByteArray = encode(frameData, RgbFrameOptions.blank())
+
+    /**
+     * Encodes [RgbFrameData] into a [ByteArray] with the specified [RgbFrameOptions]
+     */
+    fun encode(frameData: RgbFrameData, options: RgbFrameOptions): ByteArray {
         val bitsPerByte = 8
         val reservedByteLen = 1
         val timestampByteLen = 8
@@ -15,7 +21,7 @@ class RgbFrameDataSerializer {
         val rgbDataByteLen = frameData.rgbData.size * 3
         val encodedFrame = ByteArray(reservedByteLen + timestampByteLen + rgbDataByteLen)
 
-        encodedFrame[0] = 0
+        encodedFrame[0] = options.byte
 
         val bitsToShift = timestampByteLen * bitsPerByte - bitsPerByte
         // Add timestamp bytes in big endian order

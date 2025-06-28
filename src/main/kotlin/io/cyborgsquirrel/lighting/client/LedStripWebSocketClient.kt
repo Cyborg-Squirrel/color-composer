@@ -14,6 +14,16 @@ abstract class LedStripWebSocketClient : AutoCloseable {
 
     private var future: CompletableFuture<Unit>? = null
 
+    private var onDisconnectedCallback: () -> Unit = {}
+
+    fun registerOnDisconnectedCallback(callback: () -> Unit) {
+        onDisconnectedCallback = callback
+    }
+
+    fun unregisterOnDisconnectedCallback() {
+        onDisconnectedCallback = {}
+    }
+
     @OnMessage
     fun onMessage(message: ByteArray) {
         future?.complete(Unit)
@@ -28,12 +38,14 @@ abstract class LedStripWebSocketClient : AutoCloseable {
     fun onClose(closeReason: CloseReason) {
         logger.info("WebSocket closed - cause: $closeReason")
         session = null
+        notifyDisconnectCallback()
     }
 
     @OnError
     fun onError(error: Throwable) {
         logger.error("WebSocket error! ${error.javaClass} ${error.message}")
         session = null
+        notifyDisconnectCallback()
     }
 
     fun send(message: ByteArray): CompletableFuture<ByteArray> {
@@ -44,6 +56,13 @@ abstract class LedStripWebSocketClient : AutoCloseable {
 
     private fun waitForSend() {
         future?.get(5, TimeUnit.SECONDS)
+    }
+
+    private fun notifyDisconnectCallback() {
+        try {
+            onDisconnectedCallback()
+        } catch (_: Exception) {
+        }
     }
 
     companion object {

@@ -8,6 +8,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.RgbFrameData
+import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -156,7 +157,7 @@ class WebSocketJob(
                         if (frame.isEmpty) {
                             if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
                                 logger.info("Sending keep-alive frame")
-                                sendBlankFrame(0)
+                                sendClearFrame()
                                 lastKeepaliveFrameTimestamp = LocalDateTime.now()
                             } else {
                                 delay(250)
@@ -164,6 +165,7 @@ class WebSocketJob(
 
                             timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
                         } else {
+                            lastKeepaliveFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
                             timestampMillis += 1000 / fps
                             val rgbData = frame.get().frameData
                             val frameData = RgbFrameData(timestampMillis, rgbData)
@@ -191,14 +193,17 @@ class WebSocketJob(
         }
     }
 
-    private suspend fun sendBlankFrame(timestamp: Long) {
+    private suspend fun sendClearFrame() {
         val rgbData = mutableListOf<RgbColor>()
         for (i in 0..<strip.getLength()) {
             rgbData.add(RgbColor.Blank)
         }
 
-        val frameData = RgbFrameData(timestamp, rgbData)
-        val frame = serializer.encode(frameData)
+        val frameData = RgbFrameData(0, rgbData)
+        val optionsBuilder = RgbFrameOptionsBuilder()
+        optionsBuilder.setClearBuffer()
+        val options = optionsBuilder.build()
+        val frame = serializer.encode(frameData, options)
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
         }
@@ -237,10 +242,7 @@ class WebSocketJob(
             }
 
             override fun onError(t: Throwable?) {
-                if (state != WebSocketState.InsufficientData) {
-                    state = WebSocketState.DisconnectedIdle
-                }
-
+                state = WebSocketState.DisconnectedIdle
                 future.completeExceptionally(t)
             }
 
@@ -248,6 +250,11 @@ class WebSocketJob(
 
             override fun onNext(client: LedStripWebSocketClient?) {
                 state = WebSocketState.ConnectedIdle
+                client?.registerOnDisconnectedCallback({
+                    if (state != WebSocketState.InsufficientData) {
+                        state = WebSocketState.DisconnectedIdle
+                    }
+                })
                 future.complete(client)
             }
         })
@@ -257,6 +264,7 @@ class WebSocketJob(
 
     override fun dispose() {
         shouldRun = false
+        client?.unregisterOnDisconnectedCallback()
         client?.close()
     }
 
