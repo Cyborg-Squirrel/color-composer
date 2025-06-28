@@ -13,6 +13,10 @@ class CustomLightEffect : LightEffect {
         TODO("Not yet implemented")
     }
 
+    override fun getBuffer(): List<RgbColor> {
+        TODO("Not yet implemented")
+    }
+
     override fun getSettings(): LightEffectSettings {
         TODO("Not yet implemented")
     }

@@ -26,14 +26,19 @@ class NightriderLightEffect(
     private var previousLocation = 0
     private var location = 0
     private var iterations = 0
+    private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
         onNextStep()
-        return when (settings) {
+        buffer = when (settings) {
             is NightriderColorFillEffectSettings -> renderNightriderColorFill()
             is NightriderCometEffectSettings -> renderNightriderComet()
         }
+
+        return buffer
     }
+
+    override fun getBuffer(): List<RgbColor> = buffer
 
     private fun renderNightriderComet(): List<RgbColor> {
         return if (settings is NightriderCometEffectSettings) {

@@ -17,6 +17,7 @@ class SpectrumLightEffect(
     private var referenceFrame = mutableListOf<RgbColor>()
     private val colorWidth = getColorWidth()
     private val helper = LightEffectHelper()
+    private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
         val rgbList = mutableListOf<RgbColor>()
@@ -40,11 +41,13 @@ class SpectrumLightEffect(
 
             referenceFrame = rgbList
             frame++
+            buffer = rgbList
             return rgbList
         } else {
             if (!settings.animated) {
                 iterations++
                 frame++
+                buffer = referenceFrame
                 return referenceFrame
             }
 
@@ -54,13 +57,17 @@ class SpectrumLightEffect(
         if (frame % numberOfLeds != 0) {
             val shiftedFrame = helper.shift(rgbList, (frame % rgbList.size))
             frame++
+            buffer = shiftedFrame
             return shiftedFrame
         }
 
         iterations++
         frame++
+        buffer = rgbList
         return rgbList
     }
+
+    override fun getBuffer(): List<RgbColor> = buffer
 
     override fun getSettings() = settings
 

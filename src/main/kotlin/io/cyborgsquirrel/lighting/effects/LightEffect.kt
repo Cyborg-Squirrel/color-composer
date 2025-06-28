@@ -12,6 +12,13 @@ interface LightEffect {
     fun getNextStep(): List<RgbColor>
 
     /**
+     * Returns the buffer rendered by the last [getNextStep] call
+     *
+     * If [getNextStep] has never been called this returns an empty list
+     */
+    fun getBuffer(): List<RgbColor>
+
+    /**
      * Returns the current settings for the LightEffect
      */
     fun getSettings(): LightEffectSettings

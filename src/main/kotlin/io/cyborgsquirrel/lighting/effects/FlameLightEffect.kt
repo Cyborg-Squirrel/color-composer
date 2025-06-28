@@ -21,11 +21,14 @@ class FlameLightEffect(
     // TODO how do we count iterations? Do we count iterations for this effect?
     private var iterations = 0
     private val heat = IntArray(numberOfLeds)
+    private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
-        val rgbList = drawFire()
-        return rgbList
+        buffer = drawFire()
+        return buffer
     }
+
+    override fun getBuffer(): List<RgbColor> = buffer
 
     override fun getSettings() = settings
 

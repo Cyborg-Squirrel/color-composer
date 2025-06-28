@@ -26,6 +26,7 @@ class WaveLightEffect(
     private lateinit var waveB: Comet
     private val waveLength = settings.waveLength
     private val startPoint = settings.startPoint
+    private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
         val rgbData = mutableListOf<RgbColor>()
@@ -69,8 +70,11 @@ class WaveLightEffect(
         }
 
         frame++
+        buffer = rgbData
         return rgbData
     }
+
+    override fun getBuffer(): List<RgbColor> = buffer
 
     override fun getSettings() = settings
 

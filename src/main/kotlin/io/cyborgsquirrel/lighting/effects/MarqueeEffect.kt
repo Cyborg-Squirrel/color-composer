@@ -18,6 +18,7 @@ class MarqueeEffect(
     private val helper = LightEffectHelper()
     private var lastChangeMillis = timeHelper.millisSinceEpoch()
     private var shiftAmount = 0
+    private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
         val dotList = mutableListOf<Boolean>()
@@ -59,8 +60,11 @@ class MarqueeEffect(
         }
 
         frame++
+        buffer = rgbList
         return rgbList
     }
+
+    override fun getBuffer(): List<RgbColor> = buffer
 
     override fun getSettings() = settings
 

@@ -24,9 +24,9 @@ class LightEffectRendererImpl(
     private var stripGroupFrameBuffer = mutableListOf<RenderedFrameModel>()
 
     override fun renderFrame(lightUuid: String, sequenceNumber: Short): Optional<RenderedFrameModel> {
-        val activeEffects =
-            effectRepository.findEffectsWithStatus(LightEffectStatus.Playing).filter { it.strip.getUuid() == lightUuid }
-                .sortedBy { it.priority }
+        val activeEffects = effectRepository.getAllEffectsForStrip(lightUuid)
+            .filter { it.status == LightEffectStatus.Playing || it.status == LightEffectStatus.Paused }
+            .sortedBy { it.priority }
         if (activeEffects.isEmpty()) {
             // No active effects for the specified LED strip
             return Optional.empty()
@@ -37,7 +37,11 @@ class LightEffectRendererImpl(
             when (activeEffect.strip) {
                 is LedStripModel -> {
                     logger.debug("Rendering effect {} {}", activeEffect.effect, activeEffect.effectUuid)
-                    var rgbData = activeEffect.effect.getNextStep()
+                    var rgbData = if (activeEffect.status == LightEffectStatus.Playing) {
+                        activeEffect.effect.getNextStep()
+                    } else {
+                        activeEffect.effect.getBuffer()
+                    }
                     logger.debug("Rendered effect {} {}", activeEffect.effect, activeEffect.effectUuid)
                     for (filter in activeEffect.filters) {
                         logger.debug("Applying filter ${filter.uuid}")
@@ -114,8 +118,10 @@ class LightEffectRendererImpl(
             }
         }
 
+        val effectStatuses = activeEffects.map { it.status }.toSet()
+        val allEffectsPaused = effectStatuses.size == 1 && effectStatuses.first() == LightEffectStatus.Paused
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame groups
-        return Optional.of(RenderedFrameModel(0, lightUuid, renderedRgbData, -1))
+        return Optional.of(RenderedFrameModel(0, lightUuid, renderedRgbData, -1, allEffectsPaused))
     }
 
     companion object {

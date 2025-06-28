@@ -7,4 +7,5 @@ data class RenderedFrameModel(
     val lightUuid: String,
     val frameData: List<RgbColor>,
     val sequenceNumber: Short,
+    val allEffectsPaused: Boolean
 )

@@ -153,8 +153,9 @@ class WebSocketJob(
                         state = WebSocketState.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
-                        val frame = renderer.renderFrame(strip.getUuid(), 0)
-                        if (frame.isEmpty) {
+                        val frameOptional = renderer.renderFrame(strip.getUuid(), 0)
+                        if (frameOptional.isEmpty) {
+                            // Send a keep-alive frame to clear the strip and prevent the WebSocket from timing out
                             if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
                                 logger.info("Sending keep-alive frame")
                                 sendClearFrame()
@@ -165,11 +166,24 @@ class WebSocketJob(
 
                             timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
                         } else {
+                            // Time tracking - reset last keep-alive timestamp to ensure if effects are stopped the empty
+                            // frame logic will immediately send sendClearFrame() to clear the strip.
                             lastKeepaliveFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
                             timestampMillis += 1000 / fps
-                            val rgbData = frame.get().frameData
-                            val frameData = RgbFrameData(timestampMillis, rgbData)
-                            val encodedFrame = serializer.encode(frameData)
+
+                            // Assemble RGB data - timestamp of 0L to not buffer the frame if all effects are paused
+                            val frame = frameOptional.get()
+                            val rgbData = frame.frameData
+                            val frameTimestamp = if (frame.allEffectsPaused) 0L else timestampMillis
+                            val frameData = RgbFrameData(frameTimestamp, rgbData)
+
+                            // Build options - clear the frame buffer if all effects are paused, this makes the LED strip more responsive to play/pause commands
+                            val optionsBuilder = RgbFrameOptionsBuilder()
+                            if (frame.allEffectsPaused) optionsBuilder.setClearBuffer()
+                            val options = optionsBuilder.build()
+
+                            // Serialize and send frame
+                            val encodedFrame = serializer.encode(frameData, options)
                             withContext(Dispatchers.IO) {
                                 client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
                             }
@@ -179,6 +193,12 @@ class WebSocketJob(
                                 Timestamp.from(Instant.now().plusSeconds(bufferTimeInSeconds)).time
                             if (nowPlusBufferSeconds < timestampMillis) {
                                 sleepMillis = timestampMillis - nowPlusBufferSeconds
+                                state = WebSocketState.BufferFullWaiting
+                            } else if (frame.allEffectsPaused) {
+                                // Wait for the duration of one frame to reduce time spent rendering/sending frames
+                                // if all effects are paused.
+                                sleepMillis = (1000 / fps).toLong()
+                                timestampMillis += sleepMillis
                                 state = WebSocketState.BufferFullWaiting
                             }
                         }
@@ -210,8 +230,8 @@ class WebSocketJob(
     }
 
     private fun syncClientTime() {
-        // Don't sync more often than every 5 seconds
-        if (timeSinceLastSync > 1000 * 5) {
+        // Don't sync more often than every 3 seconds
+        if (timeSinceLastSync > 1000 * 3) {
             val requestTimestamp = timeHelper.millisSinceEpoch()
             val clientTime = configClient.getClientTime(clientEntity)
             val responseTimestamp = timeHelper.millisSinceEpoch()

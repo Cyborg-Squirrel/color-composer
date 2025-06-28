@@ -8,6 +8,7 @@ import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.LightEffectStatusCommand
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
@@ -168,16 +169,8 @@ class EffectApiService(
             }
 
             if (updateEffectRequest.status != null) {
-                // Invalid statuses for an update request
-                val invalidStatusList = listOf(LightEffectStatus.Idle)
-                val validStatusList = LightEffectStatus.entries.filter { !invalidStatusList.contains(it) }
-                if (invalidStatusList.contains(updateEffectRequest.status)) {
-                    throw ClientRequestException(
-                        "Updating to status ${updateEffectRequest.status} is not allowed. Use $validStatusList."
-                    )
-                }
-
-                effectEntity = effectEntity.copy(status = updateEffectRequest.status)
+                val newStatus = effectStatusFromCommand(updateEffectRequest.status)
+                effectEntity = effectEntity.copy(status = newStatus)
             }
 
             if (updateEffectRequest.stripUuid != null && updateEffectRequest.stripUuid != effectEntity.strip?.uuid) {
@@ -259,8 +252,17 @@ class EffectApiService(
 
         for (entity in effectEntities) {
             val activeEffect = activeEffects.first { it.effectUuid == entity.uuid }
-            effectRegistry.addOrUpdateEffect(activeEffect.copy(status = request.status))
-            effectRepository.update(entity.copy(status = request.status))
+            val newStatus = effectStatusFromCommand(request.command)
+            effectRegistry.addOrUpdateEffect(activeEffect.copy(status = newStatus))
+            effectRepository.update(entity.copy(status = newStatus))
+        }
+    }
+
+    private fun effectStatusFromCommand(command: LightEffectStatusCommand): LightEffectStatus {
+        return when (command) {
+            LightEffectStatusCommand.Play -> LightEffectStatus.Playing
+            LightEffectStatusCommand.Pause -> LightEffectStatus.Paused
+            LightEffectStatusCommand.Stop -> LightEffectStatus.Stopped
         }
     }
 }
