@@ -56,7 +56,7 @@ class WebSocketJob(
     private var lastKeepaliveFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
     private var timestampMillis = 0L
     private var sleepMillis = 0L
-    private var exponentialReconnectionBackoffValue = 0
+    private var exponentialReconnectionBackoffValue = 1
 
     fun start(scope: CoroutineScope): Job {
         return scope.launch {
@@ -100,7 +100,7 @@ class WebSocketJob(
                 }
 
                 WebSocketState.ConnectedIdle -> {
-                    exponentialReconnectionBackoffValue = 0
+                    exponentialReconnectionBackoffValue = 1
                     state = if (lastTimeSyncPerformedAt == 0L) {
                         WebSocketState.TimeSyncRequired
                     } else {
