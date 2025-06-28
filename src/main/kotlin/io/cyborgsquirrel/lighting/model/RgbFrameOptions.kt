@@ -20,7 +20,7 @@ class RgbFrameOptionsBuilder {
 
     fun build(): RgbFrameOptions {
         var optionsByte: Byte = 0x00
-        optionsByte = optionsByte or 0x01
+        if (clearBuffer) optionsByte = optionsByte or 0x01
         return RgbFrameOptions(optionsByte)
     }
 }
