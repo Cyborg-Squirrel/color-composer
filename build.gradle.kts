@@ -12,7 +12,7 @@ plugins {
 
 fun getBuildNumber(): String {
     val buildVersion = System.getProperty("BUILD_NUMBER")
-    if (buildVersion.isNullOrEmpty()) return buildVersion
+    if (!buildVersion.isNullOrEmpty()) return buildVersion
 
     try {
         val stdout = ByteArrayOutputStream()
