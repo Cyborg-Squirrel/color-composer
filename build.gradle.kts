@@ -10,7 +10,10 @@ plugins {
     id("io.micronaut.aot") version "4.4.4"
 }
 
-fun getCommitHash(): String {
+fun getMinorVersion(): String {
+    val buildVersion = System.getProperty("BUILD_NUMBER")
+    if (buildVersion.isNullOrEmpty()) return buildVersion
+
     try {
         val stdout = ByteArrayOutputStream()
         exec {
@@ -26,8 +29,7 @@ fun getCommitHash(): String {
     }
 }
 
-// Use it to build the version string
-version = "0.1." + getCommitHash()
+version = "0.1." + getMinorVersion()
 
 group = "io.cyborgsquirrel"
 
