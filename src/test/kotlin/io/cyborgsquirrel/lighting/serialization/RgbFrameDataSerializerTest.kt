@@ -32,14 +32,14 @@ class RgbFrameDataSerializerTest : StringSpec({
         assert(encodedBytes[0] == 0.toByte())
 
         // Timestamp bytes
-        assert(encodedBytes[1] == 0.toByte())
-        assert(encodedBytes[2] == 0.toByte())
-        assert(encodedBytes[3] == 1.toByte())
-        assert(encodedBytes[4] == (-110).toByte())
-        assert(encodedBytes[5] == 80.toByte())
-        assert(encodedBytes[6] == 43.toByte())
-        assert(encodedBytes[7] == (-61).toByte())
-        assert(encodedBytes[8] == (-44).toByte())
+        assert(encodedBytes[1] == (-44).toByte())
+        assert(encodedBytes[2] == (-61).toByte())
+        assert(encodedBytes[3] == 43.toByte())
+        assert(encodedBytes[4] == 80.toByte())
+        assert(encodedBytes[5] == (-110).toByte())
+        assert(encodedBytes[6] == 1.toByte())
+        assert(encodedBytes[7] == 0.toByte())
+        assert(encodedBytes[8] == 0.toByte())
 
         var byteDataIndex = 9
         // RgbPixel bytes

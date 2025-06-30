@@ -23,11 +23,10 @@ class RgbFrameDataSerializer {
 
         encodedFrame[0] = options.byte
 
-        val bitsToShift = timestampByteLen * bitsPerByte - bitsPerByte
-        // Add timestamp bytes in big endian order
-        for (i in 0..<timestampByteLen) {
+        // Add timestamp bytes in little endian order
+        for (i in 0 until timestampByteLen) {
             encodedFrame[i + reservedByteLen] =
-                ((frameData.timestamp shr (bitsToShift - i * bitsPerByte)) and 0xFF).toByte()
+                ((frameData.timestamp shr (i * bitsPerByte)) and 0xFF).toByte()
         }
 
         val r = 0
