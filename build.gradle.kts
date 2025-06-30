@@ -10,7 +10,7 @@ plugins {
     id("io.micronaut.aot") version "4.4.4"
 }
 
-fun getMinorVersion(): String {
+fun getBuildNumber(): String {
     val buildVersion = System.getProperty("BUILD_NUMBER")
     if (buildVersion.isNullOrEmpty()) return buildVersion
 
@@ -29,7 +29,7 @@ fun getMinorVersion(): String {
     }
 }
 
-version = "0.1." + getMinorVersion()
+version = "0.1." + getBuildNumber()
 
 group = "io.cyborgsquirrel"
 
