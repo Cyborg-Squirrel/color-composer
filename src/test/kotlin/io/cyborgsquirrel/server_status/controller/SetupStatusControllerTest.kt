@@ -1,11 +1,11 @@
-package io.cyborgsquirrel.setup.controller
+package io.cyborgsquirrel.server_status.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
-import io.cyborgsquirrel.setup.api.SetupStatusApi
-import io.cyborgsquirrel.setup.responses.SetupStatus
-import io.cyborgsquirrel.setup.responses.SetupStatusResponse
+import io.cyborgsquirrel.server_status.api.ServerStatusApi
+import io.cyborgsquirrel.server_status.responses.SetupStatus
+import io.cyborgsquirrel.server_status.responses.SetupStatusResponse
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrips
 import io.cyborgsquirrel.test_helpers.saveLightEffect
@@ -18,7 +18,7 @@ import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 
 @MicronautTest
 class SetupStatusControllerTest(
-    @Client private val apiClient: SetupStatusApi,
+    @Client private val apiClient: ServerStatusApi,
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
     private val effectRepository: H2LightEffectRepository,

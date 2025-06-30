@@ -11,11 +11,11 @@ import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.LightEffectStatusCommand
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
@@ -246,7 +246,7 @@ class EffectControllerTest(
             stripUuid = null,
             paletteUuid = null,
             name = "New effect name",
-            status = LightEffectStatus.Playing,
+            status = LightEffectStatusCommand.Play,
         )
         val updateRequestHttpResponse = apiClient.updateEffect(effectEntity.uuid!!, updateRequest)
         updateRequestHttpResponse.status shouldBe HttpStatus.NO_CONTENT
@@ -259,7 +259,7 @@ class EffectControllerTest(
         effectEntities.first().uuid shouldBe effectEntity.uuid
         effectEntities.first().settings shouldBe updateRequest.settings
         effectEntities.first().palette shouldBe palette
-        effectEntities.first().status shouldBe updateRequest.status
+        effectEntities.first().status shouldBe LightEffectStatus.Playing
     }
 
     "Deleting an effect" {

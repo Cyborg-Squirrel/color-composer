@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.9.25"
     id("org.jetbrains.kotlin.plugin.allopen") version "1.9.25"
@@ -8,7 +10,25 @@ plugins {
     id("io.micronaut.aot") version "4.4.4"
 }
 
-version = "0.1"
+fun getCommitHash(): String {
+    try {
+        val stdout = ByteArrayOutputStream()
+        exec {
+            commandLine("git", "rev-parse", "--short", "HEAD")
+            standardOutput = stdout
+            errorOutput = ByteArrayOutputStream()
+            isIgnoreExitValue = true
+        }
+        val hash = stdout.toString().trim()
+        return hash
+    } catch (ex: Exception) {
+        return "0"
+    }
+}
+
+// Use it to build the version string
+version = "0.1." + getCommitHash()
+
 group = "io.cyborgsquirrel"
 
 val kotlinVersion = project.properties["kotlinVersion"]

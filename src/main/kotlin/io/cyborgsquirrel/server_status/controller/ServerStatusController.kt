@@ -1,14 +1,18 @@
-package io.cyborgsquirrel.setup.controller
+package io.cyborgsquirrel.server_status.controller
 
-import io.cyborgsquirrel.setup.api.SetupStatusApi
-import io.cyborgsquirrel.setup.responses.SetupStatusResponse
-import io.cyborgsquirrel.setup.service.SetupStatusCheckService
+import io.cyborgsquirrel.server_status.api.ServerStatusApi
+import io.cyborgsquirrel.server_status.responses.SetupStatusResponse
+import io.cyborgsquirrel.server_status.service.SetupStatusCheckService
+import io.micronaut.context.annotation.Property
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 import org.slf4j.LoggerFactory
 
 @Controller
-class SetupStatusController(private val setupStatusCheckService: SetupStatusCheckService) : SetupStatusApi {
+class ServerStatusController(private val setupStatusCheckService: SetupStatusCheckService) : ServerStatusApi {
+
+    @Property(name = "cc-version", defaultValue = "")
+    private lateinit var version: String
 
     override fun setupStatus(): HttpResponse<Any> {
         try {
@@ -23,7 +27,9 @@ class SetupStatusController(private val setupStatusCheckService: SetupStatusChec
         }
     }
 
+    override fun getVersion(): HttpResponse<String> = HttpResponse.ok(version)
+
     companion object {
-        private val logger = LoggerFactory.getLogger(SetupStatusController::class.java)
+        private val logger = LoggerFactory.getLogger(ServerStatusController::class.java)
     }
 }
