@@ -174,12 +174,10 @@ class WebSocketJob(
                             // Assemble RGB data - timestamp of 0L to not buffer the frame if all effects are paused
                             val frame = frameOptional.get()
                             val rgbData = frame.frameData
-                            val frameTimestamp = if (frame.allEffectsPaused) 0L else timestampMillis
-                            val frameData = RgbFrameData(frameTimestamp, rgbData)
+                            val frameData = RgbFrameData(timestampMillis, rgbData)
 
                             // Build options - clear the frame buffer if all effects are paused, this makes the LED strip more responsive to play/pause commands
                             val optionsBuilder = RgbFrameOptionsBuilder()
-                            if (frame.allEffectsPaused) optionsBuilder.setClearBuffer()
                             val options = optionsBuilder.build()
 
                             // Serialize and send frame
