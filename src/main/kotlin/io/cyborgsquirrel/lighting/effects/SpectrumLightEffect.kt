@@ -6,6 +6,7 @@ import io.cyborgsquirrel.lighting.effects.shared.LightEffectHelper
 import io.cyborgsquirrel.lighting.model.RgbColor
 import kotlin.math.ceil
 
+// TODO detect if palette is gradient, don't interpolate colors if the palette is a gradient palette
 class SpectrumLightEffect(
     private val numberOfLeds: Int,
     private val settings: SpectrumEffectSettings,
