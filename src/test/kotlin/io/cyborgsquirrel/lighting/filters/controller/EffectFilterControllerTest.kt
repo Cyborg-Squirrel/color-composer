@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.lighting.filters.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
@@ -28,7 +29,7 @@ import io.cyborgsquirrel.lighting.filters.settings.BrightnessFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.objectToMap
-import io.cyborgsquirrel.test_helpers.saveLedStrips
+import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
@@ -81,7 +82,9 @@ class EffectFilterControllerTest(
 
     "Getting filters for an effect" {
         val client = createLedStripClientEntity(clientRepository, "Living Room lights", "192.168.50.50", 50, 51)
-        val strips = saveLedStrips(stripRepository, client, listOf("Strip A" to 200, "Strip B" to 100))
+        val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName)
+        val stripB = saveLedStrip(stripRepository, client, "Strip B", 100, PiClientPin.D21.pinName)
+        val strips = listOf(stripA, stripB)
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         var effectEntity = LightEffectEntity(
             strip = strips.last(),
@@ -118,7 +121,7 @@ class EffectFilterControllerTest(
 
     "Create a filter" {
         val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
@@ -160,7 +163,7 @@ class EffectFilterControllerTest(
 
     "Updating a filter" {
         val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(

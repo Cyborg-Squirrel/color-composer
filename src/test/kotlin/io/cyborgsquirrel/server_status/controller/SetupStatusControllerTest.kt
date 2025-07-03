@@ -1,13 +1,14 @@
 package io.cyborgsquirrel.server_status.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.server_status.api.ServerStatusApi
 import io.cyborgsquirrel.server_status.responses.SetupStatus
 import io.cyborgsquirrel.server_status.responses.SetupStatusResponse
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
-import io.cyborgsquirrel.test_helpers.saveLedStrips
+import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.cyborgsquirrel.test_helpers.saveLightEffect
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -49,7 +50,7 @@ class SetupStatusControllerTest(
 
         "Setup status - clients and strips configured, no effects" {
             val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.1.12", 1111, 2222)
-            saveLedStrips(stripRepository, client, listOf("Hallway lights" to 240))
+            saveLedStrip(stripRepository, client, "Hallway lights", 240, PiClientPin.D21.pinName)
             val statusResponse = apiClient.setupStatus()
             val response = statusResponse.body() as SetupStatusResponse
             response.status shouldBe SetupStatus.NoEffects
@@ -57,7 +58,7 @@ class SetupStatusControllerTest(
 
         "Setup status - everything configured" {
             val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.1.12", 1111, 2222)
-            val strip = saveLedStrips(stripRepository, client, listOf("Hallway lights" to 240)).first()
+            val strip = saveLedStrip(stripRepository, client, "Hallway lights", 240, PiClientPin.D10.pinName)
             saveLightEffect(effectRepository, objectMapper, strip)
             val statusResponse = apiClient.setupStatus()
             val response = statusResponse.body() as SetupStatusResponse

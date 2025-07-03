@@ -6,6 +6,7 @@ import io.cyborgsquirrel.led_strips.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
@@ -77,6 +78,7 @@ class LightEffectTriggerRepositoryTest(
                 client = client,
                 uuid = UUID.randomUUID().toString(),
                 name = "Strip A",
+                pin = PiClientPin.D18.pinName,
                 length = 60,
                 blendMode = BlendMode.Average
             )

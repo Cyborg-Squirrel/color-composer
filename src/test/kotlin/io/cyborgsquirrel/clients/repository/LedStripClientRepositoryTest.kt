@@ -3,6 +3,7 @@ package io.cyborgsquirrel.clients.repository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
@@ -27,6 +28,7 @@ class LedStripClientRepositoryTest(
     val demoLedStripEntity = LedStripEntity(
         name = "Living Room Vertical Strip A",
         client = demoClientEntity,
+        pin = PiClientPin.D10.pinName,
         length = 60,
         uuid = UUID.randomUUID().toString(),
         blendMode = BlendMode.Layer,

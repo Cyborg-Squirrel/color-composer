@@ -6,6 +6,7 @@ data class GetLedStripResponse(
     val clientUuid: String,
     val name: String,
     val uuid: String,
+    val pin: String,
     val length: Int,
     val height: Int,
     val powerLimit: Int?,

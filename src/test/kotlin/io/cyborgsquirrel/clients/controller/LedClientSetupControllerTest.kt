@@ -6,9 +6,10 @@ import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
 import io.cyborgsquirrel.clients.responses.GetClientResponse
 import io.cyborgsquirrel.clients.responses.GetClientsResponse
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
-import io.cyborgsquirrel.test_helpers.saveLedStrips
+import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
@@ -98,12 +99,12 @@ class LedClientSetupControllerTest(
 
         "Delete clients" {
             val clientEntity = createLedStripClientEntity(clientRepository, "Window lights", "192.168.50.67", 80, 90)
-            val strips = saveLedStrips(stripRepository, clientEntity, listOf("Window light" to 60))
+            val strip = saveLedStrip(stripRepository, clientEntity, "Window light", 60, PiClientPin.D10.pinName)
 
             var deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
             deleteResponse.status shouldBe HttpStatus.BAD_REQUEST
 
-            stripRepository.delete(strips.first())
+            stripRepository.delete(strip)
 
             deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
             deleteResponse.status shouldBe HttpStatus.NO_CONTENT

@@ -5,6 +5,7 @@ import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -36,18 +37,17 @@ class LedStripGroupRepositoryTest(
         )
     )
 
-    fun saveLedStrips(client: LedStripClientEntity, strips: List<Pair<String, Int>>): List<LedStripEntity> =
-        strips.map { (name, length) ->
-            ledStripRepository.save(
-                LedStripEntity(
-                    client = client,
-                    name = name,
-                    uuid = UUID.randomUUID().toString(),
-                    length = length,
-                    blendMode = BlendMode.Average,
-                )
+    fun saveLedStrip(client: LedStripClientEntity, name: String, length: Int, pin: String): LedStripEntity =
+        ledStripRepository.save(
+            LedStripEntity(
+                client = client,
+                name = name,
+                uuid = UUID.randomUUID().toString(),
+                pin = pin,
+                length = length,
+                blendMode = BlendMode.Average,
             )
-        }
+        )
 
     fun createLedStripGroupEntity(name: String): LedStripGroupEntity =
         ledStripGroupRepository.save(
@@ -77,7 +77,9 @@ class LedStripGroupRepositoryTest(
 
     beforeTest {
         val client = createLedStripClientEntity("Hallway client", "192.168.50.210", 8888, 7777)
-        val savedStrips = saveLedStrips(client, listOf("Hallway lights A" to 120, "Hallway lights B" to 60))
+        val stripA = saveLedStrip(client, "Hallway lights A", 120, PiClientPin.D10.pinName)
+        val stripB = saveLedStrip(client, "Hallway lights B", 60, PiClientPin.D10.pinName)
+        val savedStrips = listOf(stripA, stripB)
         ledStripA = savedStrips[0]
         ledStripB = savedStrips[1]
     }

@@ -7,6 +7,7 @@ import io.micronaut.serde.annotation.Serdeable
 data class CreateLedStripRequest(
     val clientUuid: String,
     val name: String,
+    val pin: String,
     val length: Int,
     val height: Int? = null,
     val powerLimit: Int? = null,

@@ -30,6 +30,7 @@ class LedStripApiService(
                 client = clientEntityOptional.get(),
                 uuid = UUID.randomUUID().toString(),
                 name = request.name,
+                pin = request.pin,
                 length = request.length,
                 height = request.height ?: 1,
                 powerLimit = request.powerLimit,
@@ -51,6 +52,7 @@ class LedStripApiService(
             // TODO notify renderer or active effect registry of blend mode changes.
             val newEntity = entity.copy(
                 name = updatedStrip.name ?: entity.name,
+                pin = updatedStrip.pin ?: entity.pin,
                 length = updatedStrip.length ?: entity.length,
                 height = updatedStrip.height ?: entity.height,
                 powerLimit = updatedStrip.powerLimit ?: entity.powerLimit,
@@ -68,6 +70,7 @@ class LedStripApiService(
                         strip = LedStripModel(
                             newStripEntity.name!!,
                             newStripEntity.uuid!!,
+                            newStripEntity.pin!!,
                             newStripEntity.length!!,
                             newStripEntity.height,
                             newStripEntity.blendMode!!,
@@ -96,7 +99,6 @@ class LedStripApiService(
                 }
                 websocketJobManager.updateJob(entity.client!!)
             } else {
-                // TODO cascading delete? Unassign effects and group membership?
                 throw ClientRequestException("Could not delete strip with uuid $uuid. Please delete or reassign its effects and group memberships first.")
             }
         } else {

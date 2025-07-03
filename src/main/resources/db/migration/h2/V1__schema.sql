@@ -25,6 +25,7 @@ CREATE TABLE led_strips
     id          IDENTITY PRIMARY KEY NOT NULL,
     name        VARCHAR(255) NOT NULL,
     uuid        VARCHAR(50) NOT NULL UNIQUE,
+    pin         VARCHAR(50) NOT NULL,
     length      INT NOT NULL,
     height      INT NOT NULL,
     power_limit INT,

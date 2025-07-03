@@ -30,6 +30,9 @@ data class LedStripEntity(
 
     var name: String? = null,
 
+    // Raspberry Pi pin or NightDriver channel
+    var pin: String? = null,
+
     var length: Int? = null,
 
     // Always 1 for strips, can be greater than 1 for matrices

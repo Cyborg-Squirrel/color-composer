@@ -12,6 +12,7 @@ import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.kotest.core.Tuple3
 import io.micronaut.serde.ObjectMapper
 import java.util.*
 
@@ -32,22 +33,21 @@ fun createLedStripClientEntity(
         )
     )
 
-fun saveLedStrips(
+fun saveLedStrip(
     stripRepository: H2LedStripRepository,
     client: LedStripClientEntity,
-    strips: List<Pair<String, Int>>
-): List<LedStripEntity> =
-    strips.map { (name, length) ->
-        stripRepository.save(
-            LedStripEntity(
-                client = client,
-                name = name,
-                uuid = UUID.randomUUID().toString(),
-                length = length,
-                blendMode = BlendMode.Average,
-            )
+    name: String, length: Int, pin: String
+): LedStripEntity =
+    stripRepository.save(
+        LedStripEntity(
+            client = client,
+            name = name,
+            uuid = UUID.randomUUID().toString(),
+            pin = pin,
+            length = length,
+            blendMode = BlendMode.Average,
         )
-    }
+    )
 
 fun saveLightEffect(
     effectRepository: H2LightEffectRepository,

@@ -10,7 +10,7 @@ import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
-import io.cyborgsquirrel.lighting.serialization.RgbFrameDataSerializer
+import io.cyborgsquirrel.lighting.serialization.FrameDataSerializer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
@@ -38,25 +38,33 @@ class WebSocketJob(
     private var clientEntity: LedStripClientEntity,
 ) : DisposableHandle {
 
-    private val serializer = RgbFrameDataSerializer()
+    // Helpers
+    private val serializer = FrameDataSerializer()
+
+    // Client data
     private var client: LedStripWebSocketClient? = null
     private lateinit var strip: LedStripModel
+    private val isNightDriver = false
 
-    // Difference in millis between the client and server.
-    // Negative values mean the client's clock is behind the server, positive values mean the client's clock is ahead.
-    private var clientTimeOffset: Long = 0L
-    private val fps = 35
-    private val bufferTimeInSeconds = 1L
+    // Time tracking
     private val timeDesyncToleranceMillis = 5
     private var lastTimeSyncPerformedAt = 0L
     private val timeSinceLastSync: Long
         get() = timeHelper.millisSinceEpoch() - lastTimeSyncPerformedAt
-    private var state = WebSocketState.InsufficientData
-    private var shouldRun = true
     private var lastKeepaliveFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
     private var timestampMillis = 0L
     private var sleepMillis = 0L
+
+    // Difference in millis between the client and server.
+    // Negative values mean the client's clock is behind the server, positive values mean the client's clock is ahead.
+    private var clientTimeOffset: Long = 0L
+
+    // State/logic
     private var exponentialReconnectionBackoffValue = 1
+    private val fps = 35
+    private val bufferTimeInSeconds = 1L
+    private var shouldRun = true
+    private var state = WebSocketState.InsufficientData
 
     fun start(scope: CoroutineScope): Job {
         return scope.launch {
@@ -80,6 +88,7 @@ class WebSocketJob(
                             strip = LedStripModel(
                                 stripEntity.name!!,
                                 stripEntity.uuid!!,
+                                stripEntity.pin!!,
                                 stripEntity.length!!,
                                 stripEntity.height,
                                 stripEntity.blendMode!!
@@ -101,7 +110,7 @@ class WebSocketJob(
 
                 WebSocketState.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
-                    state = if (lastTimeSyncPerformedAt == 0L) {
+                    state = if (lastTimeSyncPerformedAt == 0L && !isNightDriver) {
                         WebSocketState.TimeSyncRequired
                     } else {
                         WebSocketState.RenderingEffect
@@ -128,7 +137,7 @@ class WebSocketJob(
                 WebSocketState.TimeSyncRequired -> {
                     syncClientTime()
                     timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
-                    logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)}")
+                    logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
                     // If we disconnect during the time sync don't set the state to connected
                     if (state != WebSocketState.DisconnectedIdle) {
@@ -142,7 +151,7 @@ class WebSocketJob(
                         timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset
                     val lastTimeSyncMoreThan5MinsAgo =
                         currentTimeAsMillis - lastTimeSyncPerformedAt > Duration.ofMinutes(5).toMillis()
-                    if (timeDesynced || lastTimeSyncMoreThan5MinsAgo) {
+                    if (!isNightDriver && (timeDesynced || lastTimeSyncMoreThan5MinsAgo)) {
                         logger.info(
                             "Re-syncing time with client $client - (client time offset ${clientTimeOffset}ms frame timestamp: ${
                                 timeHelper.dateTimeFromMillis(
@@ -181,7 +190,7 @@ class WebSocketJob(
                             val options = optionsBuilder.build()
 
                             // Serialize and send frame
-                            val encodedFrame = serializer.encode(frameData, options)
+                            val encodedFrame = serializer.encode(frameData, strip.getPin(), options)
                             withContext(Dispatchers.IO) {
                                 client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
                             }
@@ -221,7 +230,7 @@ class WebSocketJob(
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
-        val frame = serializer.encode(frameData, options)
+        val frame = serializer.encode(frameData, strip.getPin(), options)
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
         }
@@ -248,10 +257,7 @@ class WebSocketJob(
     private fun setupWebSocket() {
         val pattern = Regex("https?")
         val websocketAddress = clientEntity.address!!.replace(pattern, "ws")
-        val uri = UriBuilder.of(websocketAddress)
-            .port(clientEntity.wsPort!!)
-            .path("test")
-            .build()
+        val uri = UriBuilder.of(websocketAddress).port(clientEntity.wsPort!!).build()
         val future = CompletableFuture<LedStripWebSocketClient>()
         val clientPublisher = webSocketClient.connect(LedStripWebSocketClient::class.java, uri)
         clientPublisher.subscribe(object : Subscriber<LedStripWebSocketClient> {

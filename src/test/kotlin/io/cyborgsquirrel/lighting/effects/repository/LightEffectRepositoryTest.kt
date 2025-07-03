@@ -8,6 +8,7 @@ import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
@@ -64,7 +65,11 @@ class LightEffectRepositoryTest(
         )
         val strip = ledStripRepository.save(
             LedStripEntity(
-                client = client, uuid = UUID.randomUUID().toString(), name = "Strip A", length = 60,
+                client = client,
+                uuid = UUID.randomUUID().toString(),
+                name = "Strip A",
+                pin = PiClientPin.D18.pinName,
+                length = 60,
                 blendMode = BlendMode.Average
             )
         )
@@ -100,6 +105,7 @@ class LightEffectRepositoryTest(
                 client = client,
                 uuid = UUID.randomUUID().toString(),
                 name = "Strip A",
+                pin = PiClientPin.D10.pinName,
                 length = 60,
                 blendMode = BlendMode.Average
             )

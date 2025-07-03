@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.lighting.effects.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
@@ -20,7 +21,7 @@ import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.objectToMap
-import io.cyborgsquirrel.test_helpers.saveLedStrips
+import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
@@ -49,7 +50,7 @@ class EffectControllerTest(
 
     "Getting all effects" {
         val client = createLedStripClientEntity(clientRepository, "Porch lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
         val paletteSettings = objectToMap(
             objectMapper,
             StaticPaletteSettings(
@@ -98,7 +99,9 @@ class EffectControllerTest(
 
     "Getting effects for a strip" {
         val client = createLedStripClientEntity(clientRepository, "Living Room lights", "192.168.50.50", 50, 51)
-        val strips = saveLedStrips(stripRepository, client, listOf("Strip A" to 200, "Strip B" to 100))
+        val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName)
+        val stripB = saveLedStrip(stripRepository, client, "Strip B", 100, PiClientPin.D21.pinName)
+        val strips = listOf(stripA, stripB)
         val paletteSettings = objectToMap(
             objectMapper,
             GradientPaletteSettings(
@@ -165,7 +168,7 @@ class EffectControllerTest(
 
     "Create an effect" {
         val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         val request = CreateEffectRequest(
             strip.uuid!!,
@@ -191,7 +194,7 @@ class EffectControllerTest(
 
     "Updating an effect" {
         val client = createLedStripClientEntity(clientRepository, "Bedroom lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
         val paletteSettings = objectToMap(
             objectMapper,
             TimeOfDayPaletteSettings(
@@ -264,7 +267,7 @@ class EffectControllerTest(
 
     "Deleting an effect" {
         val client = createLedStripClientEntity(clientRepository, "Christmas Tree lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
         val paletteSettings = objectToMap(
             objectMapper,
             ChangingStaticPaletteSettings(

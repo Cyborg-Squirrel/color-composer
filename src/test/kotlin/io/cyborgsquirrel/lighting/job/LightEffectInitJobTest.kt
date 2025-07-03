@@ -5,6 +5,7 @@ import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
@@ -109,6 +110,7 @@ class LightEffectInitJobTest(
                 client = client,
                 uuid = UUID.randomUUID().toString(),
                 name = "Strip A",
+                pin = PiClientPin.D12.pinName,
                 length = 60,
                 blendMode = BlendMode.Average
             )
@@ -164,6 +166,7 @@ class LightEffectInitJobTest(
                 client = client,
                 uuid = UUID.randomUUID().toString(),
                 name = "Strip A",
+                pin = PiClientPin.D10.pinName,
                 length = 60,
                 blendMode = BlendMode.Average
             )
@@ -238,6 +241,7 @@ class LightEffectInitJobTest(
                 client = client,
                 uuid = UUID.randomUUID().toString(),
                 name = "Strip A",
+                pin = PiClientPin.D10.pinName,
                 length = 60,
                 blendMode = BlendMode.Average
             )
@@ -262,7 +266,7 @@ class LightEffectInitJobTest(
                 settings = fadeTriggerSettingsJson,
             )
         )
-        val junction = junctionRepository.save(LightEffectFilterJunctionEntity(filter = filter, effect = lightEffect))
+        junctionRepository.save(LightEffectFilterJunctionEntity(filter = filter, effect = lightEffect))
 
         job.run()
 
@@ -312,6 +316,7 @@ class LightEffectInitJobTest(
                 client = client,
                 uuid = UUID.randomUUID().toString(),
                 name = "Strip A",
+                pin = PiClientPin.D21.pinName,
                 length = 60,
                 blendMode = BlendMode.Average
             )
@@ -319,7 +324,7 @@ class LightEffectInitJobTest(
         val group = ledStripGroupRepository.save(
             LedStripGroupEntity(uuid = UUID.randomUUID().toString(), name = "Living Room Group")
         )
-        val groupMember = groupMemberLedStripRepository.save(
+        groupMemberLedStripRepository.save(
             GroupMemberLedStripEntity(strip = strip, group = group, groupIndex = 0, inverted = false)
         )
         val settingsJson = objectToMap(objectMapper, lightEffectSettings)

@@ -52,6 +52,7 @@ class CreateLightingService(
             return LedStripModel(
                 stripEntity.name!!,
                 stripEntity.uuid!!,
+                stripEntity.pin!!,
                 stripEntity.length!!,
                 stripEntity.height,
                 stripEntity.blendMode!!
@@ -61,7 +62,7 @@ class CreateLightingService(
             val stripMemberEntities = groupMemberLedStripRepository.findByGroup(groupEntity)
             val stripEntities = stripMemberEntities.mapNotNull { it.strip }
             val stripModels = stripEntities.map {
-                LedStripModel(it.name!!, it.uuid!!, it.length!!, it.height, it.blendMode!!)
+                LedStripModel(it.name!!, it.uuid!!, it.pin!!, it.length!!, it.height, it.blendMode!!)
             }
             return LedStripGroupModel(
                 groupEntity.name!!,

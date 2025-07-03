@@ -21,6 +21,10 @@ data class LedStripGroupModel(
         return uuid
     }
 
+    override fun getPin(): String {
+        TODO("Not yet implemented")
+    }
+
     override fun getLength(): Int {
         var len = 0
         for (strip in strips) {

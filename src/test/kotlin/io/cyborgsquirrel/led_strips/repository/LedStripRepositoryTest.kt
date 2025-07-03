@@ -5,6 +5,7 @@ import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -36,6 +37,7 @@ class LedStripRepositoryTest(
             LedStripEntity(
                 client = clientEntity,
                 name = name,
+                pin = PiClientPin.D12.pinName,
                 uuid = uuid,
                 length = length,
                 blendMode = BlendMode.Average,
