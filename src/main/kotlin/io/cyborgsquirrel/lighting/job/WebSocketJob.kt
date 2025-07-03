@@ -19,7 +19,6 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
 import java.sql.Timestamp
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
@@ -149,9 +148,7 @@ class WebSocketJob(
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     val timeDesynced =
                         timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset
-                    val lastTimeSyncMoreThan5MinsAgo =
-                        currentTimeAsMillis - lastTimeSyncPerformedAt > Duration.ofMinutes(5).toMillis()
-                    if (!isNightDriver && (timeDesynced || lastTimeSyncMoreThan5MinsAgo)) {
+                    if (!isNightDriver && timeDesynced) {
                         logger.info(
                             "Re-syncing time with client $client - (client time offset ${clientTimeOffset}ms frame timestamp: ${
                                 timeHelper.dateTimeFromMillis(
@@ -237,7 +234,7 @@ class WebSocketJob(
     }
 
     private fun syncClientTime() {
-        // Don't sync more often than every 3 seconds
+        // Don't sync more often than every 3 seconds if we end up looping on time sync for some reason
         if (timeSinceLastSync > 1000 * 3) {
             val requestTimestamp = timeHelper.millisSinceEpoch()
             val clientTime = configClient.getClientTime(clientEntity)
