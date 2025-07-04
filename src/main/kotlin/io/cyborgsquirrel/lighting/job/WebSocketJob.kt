@@ -38,12 +38,14 @@ class WebSocketJob(
     private var clientEntity: LedStripClientEntity,
 ) : DisposableHandle {
 
-    // Helpers
+    // Helpers/websocket
     private val serializer = FrameDataSerializer()
+    private var client: LedStripWebSocketClient? = null
 
     // Client data
-    private var client: LedStripWebSocketClient? = null
     private lateinit var strip: LedStripModel
+    private val timeSyncSupported: Boolean
+        get() = clientEntity.clientType == ClientType.Pi
 
     // Time tracking
     private val timeDesyncToleranceMillis = 5
@@ -109,7 +111,7 @@ class WebSocketJob(
 
                 WebSocketState.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
-                    state = if (lastTimeSyncPerformedAt == 0L && clientEntity.clientType == ClientType.Pi) {
+                    state = if (timeSyncSupported && lastTimeSyncPerformedAt == 0L) {
                         WebSocketState.TimeSyncRequired
                     } else {
                         WebSocketState.RenderingEffect
@@ -148,7 +150,7 @@ class WebSocketJob(
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     val timeDesynced =
                         timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset
-                    if (clientEntity.clientType == ClientType.Pi && timeDesynced) {
+                    if (timeSyncSupported && timeDesynced) {
                         logger.info(
                             "Re-syncing time with client $client - (client time offset ${clientTimeOffset}ms frame timestamp: ${
                                 timeHelper.dateTimeFromMillis(
