@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.limits
 import io.cyborgsquirrel.lighting.model.RgbColor
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
+import java.lang.Float.min
 
 @Singleton
 class PowerLimiterServiceImpl : PowerLimiterService {
@@ -32,8 +33,8 @@ class PowerLimiterServiceImpl : PowerLimiterService {
             }
 
             logger.debug("Power usage of frame being sent to strip $stripUuid - ${powerUsageMilliamps}mA")
-            if (powerUsageMilliamps > powerLimit) {
-                val scaleFactor = (powerLimit / powerUsageMilliamps)
+            if (powerUsageMilliamps >= powerLimit) {
+                val scaleFactor = min(powerLimit / powerUsageMilliamps, 0.99f)
                 logger.debug("Dimming LEDs to ${scaleFactor * 100}%")
                 return rgbList.map {
                     it.scale(scaleFactor)

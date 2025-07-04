@@ -76,7 +76,6 @@ class LightEffectRendererImpl(
                         }
                     }
 
-                    rgbData = powerLimiterService.applyLimit(rgbData, activeEffect.strip.getUuid())
                     allEffectsRgbData.add(rgbData)
                 }
 
@@ -118,10 +117,11 @@ class LightEffectRendererImpl(
             }
         }
 
+        val powerLimitedRenderedRgbData = powerLimiterService.applyLimit(renderedRgbData, lightUuid)
         val effectStatuses = activeEffects.map { it.status }.toSet()
         val allEffectsPaused = effectStatuses.size == 1 && effectStatuses.first() == LightEffectStatus.Paused
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame groups
-        return Optional.of(RenderedFrameModel(0, lightUuid, renderedRgbData, -1, allEffectsPaused))
+        return Optional.of(RenderedFrameModel(0, lightUuid, powerLimitedRenderedRgbData, -1, allEffectsPaused))
     }
 
     companion object {
