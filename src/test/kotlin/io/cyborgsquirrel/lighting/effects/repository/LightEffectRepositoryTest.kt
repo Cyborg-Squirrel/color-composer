@@ -5,6 +5,7 @@ import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripGroupRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
@@ -58,6 +59,7 @@ class LightEffectRepositoryTest(
             LedStripClientEntity(
                 name = "Living Room",
                 address = "192.168.1.1",
+                clientType = ClientType.Pi,
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
                 wsPort = 2222
@@ -95,6 +97,7 @@ class LightEffectRepositoryTest(
             LedStripClientEntity(
                 name = "Living Room",
                 address = "192.168.1.1",
+                clientType = ClientType.Pi,
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
                 wsPort = 2222

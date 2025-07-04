@@ -12,12 +12,13 @@ DROP TABLE IF EXISTS location_configs;
 
 CREATE TABLE led_strip_clients
 (
-    id       IDENTITY PRIMARY KEY NOT NULL,
-    name     VARCHAR(255) NOT NULL,
-    uuid     VARCHAR(50) NOT NULL UNIQUE,
-    address  VARCHAR(255) NOT NULL,
-    ws_port  SMALLINT NOT NULL,
-    api_port SMALLINT NOT NULL
+    id          IDENTITY PRIMARY KEY NOT NULL,
+    name        VARCHAR(255) NOT NULL,
+    uuid        VARCHAR(50) NOT NULL UNIQUE,
+    address     VARCHAR(255) NOT NULL,
+    client_type VARCHAR(50) NOT NULL,
+    ws_port     SMALLINT NOT NULL,
+    api_port    SMALLINT NOT NULL
 );
 
 CREATE TABLE led_strips

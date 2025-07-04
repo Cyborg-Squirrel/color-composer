@@ -53,6 +53,7 @@ class LedClientSetupApiService(
                 LedStripClientEntity(
                     name = request.name,
                     address = request.address,
+                    clientType = request.clientType,
                     apiPort = request.apiPort,
                     wsPort = request.wsPort,
                     uuid = UUID.randomUUID().toString()

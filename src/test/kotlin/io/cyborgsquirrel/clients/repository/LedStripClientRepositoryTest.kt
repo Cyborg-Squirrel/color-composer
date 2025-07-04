@@ -2,6 +2,7 @@ package io.cyborgsquirrel.clients.repository
 
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.lighting.enums.BlendMode
@@ -20,6 +21,7 @@ class LedStripClientRepositoryTest(
     val demoClientEntity = LedStripClientEntity(
         name = "Living Room",
         address = "192.168.50.200",
+        clientType = ClientType.Pi,
         uuid = UUID.randomUUID().toString(),
         wsPort = 8888,
         apiPort = 80

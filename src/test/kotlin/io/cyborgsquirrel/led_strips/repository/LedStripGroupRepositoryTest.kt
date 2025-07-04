@@ -3,6 +3,7 @@ package io.cyborgsquirrel.led_strips.repository
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
@@ -31,6 +32,7 @@ class LedStripGroupRepositoryTest(
         LedStripClientEntity(
             name = name,
             address = address,
+            clientType = ClientType.Pi,
             uuid = UUID.randomUUID().toString(),
             wsPort = wsPort,
             apiPort = apiPort

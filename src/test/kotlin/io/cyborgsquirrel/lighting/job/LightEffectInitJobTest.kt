@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
@@ -100,6 +101,7 @@ class LightEffectInitJobTest(
             LedStripClientEntity(
                 name = "Living Room",
                 address = "192.168.1.1",
+                clientType = ClientType.Pi,
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
                 wsPort = 2222
@@ -156,6 +158,7 @@ class LightEffectInitJobTest(
             LedStripClientEntity(
                 name = "Living Room",
                 address = "192.168.1.1",
+                clientType = ClientType.Pi,
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
                 wsPort = 2222
@@ -231,6 +234,7 @@ class LightEffectInitJobTest(
             LedStripClientEntity(
                 name = "Living Room",
                 address = "192.168.1.1",
+                clientType = ClientType.Pi,
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
                 wsPort = 2222
@@ -306,6 +310,7 @@ class LightEffectInitJobTest(
             LedStripClientEntity(
                 name = "Living Room",
                 address = "192.168.1.1",
+                clientType = ClientType.Pi,
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
                 wsPort = 2222

@@ -6,6 +6,7 @@ import io.cyborgsquirrel.clients.discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.clients.discovery.model.DiscoveredClientsResponseList
 import io.cyborgsquirrel.clients.discovery.model.DiscoveryStatusResponse
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.requests.SelectClientRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
@@ -69,9 +70,11 @@ class ClientDiscoveryController(
             for (client in discoveredClients) {
                 val clientExists = clientRepository.findByAddress(matchingClient.address).isPresent
                 if (!clientExists) {
+                    // The Raspberry Pi client is the only client that supports discovery
                     val entity = LedStripClientEntity(
                         name = client.name,
                         address = client.address,
+                        clientType = ClientType.Pi,
                         wsPort = client.wsPort,
                         apiPort = client.apiPort,
                         uuid = UUID.randomUUID().toString()

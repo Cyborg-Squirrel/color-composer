@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.clients.controller
 
 import io.cyborgsquirrel.clients.api.LedClientSetupApi
+import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
@@ -65,7 +66,7 @@ class LedClientSetupControllerTest(
         }
 
         "Creating clients" {
-            val createClientRequest = CreateClientRequest("Window lights", "192.168.5.5", 80, 82)
+            val createClientRequest = CreateClientRequest("Window lights", "192.168.5.5", ClientType.Pi, 80, 82)
             val createResponse = apiClient.create(createClientRequest)
             createResponse.status shouldBe HttpStatus.CREATED
 
@@ -77,6 +78,7 @@ class LedClientSetupControllerTest(
             clientEntity.uuid shouldBe clientUuid
             clientEntity.name shouldBe createClientRequest.name
             clientEntity.address shouldBe createClientRequest.address
+            clientEntity.clientType shouldBe createClientRequest.clientType
             clientEntity.apiPort shouldBe createClientRequest.apiPort
             clientEntity.wsPort shouldBe createClientRequest.wsPort
         }
@@ -92,6 +94,7 @@ class LedClientSetupControllerTest(
             val updatedClientEntity = clientEntityOptional.get()
             updatedClientEntity.name shouldBe updatedClientRequest.name
             updatedClientEntity.address shouldBe updatedClientRequest.address
+            clientEntity.clientType shouldBe updatedClientEntity.clientType
             updatedClientEntity.apiPort shouldBe updatedClientRequest.apiPort
             updatedClientEntity.wsPort shouldBe updatedClientRequest.wsPort
             updatedClientEntity.uuid shouldBe clientEntity.uuid

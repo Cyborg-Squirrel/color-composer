@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.clients.config.ConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
@@ -43,7 +44,6 @@ class WebSocketJob(
     // Client data
     private var client: LedStripWebSocketClient? = null
     private lateinit var strip: LedStripModel
-    private val isNightDriver = false
 
     // Time tracking
     private val timeDesyncToleranceMillis = 5
@@ -109,7 +109,7 @@ class WebSocketJob(
 
                 WebSocketState.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
-                    state = if (lastTimeSyncPerformedAt == 0L && !isNightDriver) {
+                    state = if (lastTimeSyncPerformedAt == 0L && clientEntity.clientType == ClientType.Pi) {
                         WebSocketState.TimeSyncRequired
                     } else {
                         WebSocketState.RenderingEffect
@@ -148,7 +148,7 @@ class WebSocketJob(
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     val timeDesynced =
                         timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset
-                    if (!isNightDriver && timeDesynced) {
+                    if (clientEntity.clientType == ClientType.Pi && timeDesynced) {
                         logger.info(
                             "Re-syncing time with client $client - (client time offset ${clientTimeOffset}ms frame timestamp: ${
                                 timeHelper.dateTimeFromMillis(

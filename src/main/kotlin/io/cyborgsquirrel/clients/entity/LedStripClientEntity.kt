@@ -1,10 +1,13 @@
 package io.cyborgsquirrel.clients.entity
 
+import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity
 import io.micronaut.data.annotation.Relation
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 
 @MappedEntity("led_strip_clients")
 data class LedStripClientEntity(
@@ -22,6 +25,10 @@ data class LedStripClientEntity(
 
     var address: String?,
 
+    @MappedEntity("client_type")
+    @Enumerated(EnumType.STRING)
+    var clientType: ClientType?,
+
     var wsPort: Int? = null,
 
     var apiPort: Int? = null,
@@ -35,6 +42,7 @@ data class LedStripClientEntity(
         if (id != other.id) return false
         if (name != other.name) return false
         if (address != other.address) return false
+        if (clientType != other.clientType) return false
         if (uuid != other.uuid) return false
         if (apiPort != other.apiPort) return false
         if (wsPort != other.wsPort) return false
@@ -46,6 +54,7 @@ data class LedStripClientEntity(
         var result = name.hashCode()
         result = 31 * result + id.hashCode()
         result = 31 * result + (address ?: 0).hashCode()
+        result = 31 * result + (clientType?.ordinal ?: 0).hashCode()
         result = 31 * result + (uuid ?: 0).hashCode()
         result = 31 * result + (apiPort ?: 0).hashCode()
         result = 31 * result + (wsPort ?: 0).hashCode()
@@ -53,6 +62,6 @@ data class LedStripClientEntity(
     }
 
     override fun toString(): String {
-        return "LedStripClientEntity(id=$id, name=$name, address=$address, uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort)"
+        return "LedStripClientEntity(id=$id, name=$name, address=$address, clienType=$clientType, uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort)"
     }
 }
