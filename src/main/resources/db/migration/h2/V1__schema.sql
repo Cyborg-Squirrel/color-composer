@@ -17,8 +17,8 @@ CREATE TABLE led_strip_clients
     uuid        VARCHAR(50) NOT NULL UNIQUE,
     address     VARCHAR(255) NOT NULL,
     client_type VARCHAR(50) NOT NULL,
-    ws_port     SMALLINT NOT NULL,
-    api_port    SMALLINT NOT NULL
+    ws_port     INT NOT NULL,
+    api_port    INT NOT NULL
 );
 
 CREATE TABLE led_strips

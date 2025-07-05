@@ -8,25 +8,26 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 
 @AnnotationSpec.Test
-class FrameDataSerializerTest : StringSpec({
+class PiFrameDataSerializerTest : StringSpec({
+
+    val timestamp = 1727921898452
+    val rgbData =
+        listOf(
+            RgbColor(0u, 0u, 255u),
+            RgbColor(0u, 255u, 0u),
+            RgbColor(255u, 0u, 0u),
+            RgbColor(128u, 127u, 200u),
+        )
 
     "Serialize a frame" {
-        val serializer = FrameDataSerializer()
-        val timestamp = 1727921898452
-        val rgbData =
-            listOf(
-                RgbColor(0u, 0u, 255u),
-                RgbColor(0u, 255u, 0u),
-                RgbColor(255u, 0u, 0u),
-                RgbColor(128u, 127u, 200u),
-            )
+        val serializer = PiFrameDataSerializer()
         val rgbFrameData = RgbFrameData(timestamp, rgbData)
         val pin = PiClientPin.D10.pinName
 
         val encodedBytes = serializer.encode(rgbFrameData, pin)
 
         // Encoded bytes include:
-        // Reserved byte (1)
+        // Command byte (1)
         // Pin (4)
         // Timestamp (8)
         // Four RgbPixels which are three bytes each (12)

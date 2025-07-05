@@ -6,12 +6,10 @@ import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.model.LedStripModel
-import io.cyborgsquirrel.lighting.model.RgbColor
-import io.cyborgsquirrel.lighting.model.RgbFrameData
-import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
+import io.cyborgsquirrel.lighting.model.*
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
-import io.cyborgsquirrel.lighting.serialization.FrameDataSerializer
+import io.cyborgsquirrel.lighting.serialization.NightDriverFrameDataSerializer
+import io.cyborgsquirrel.lighting.serialization.PiFrameDataSerializer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
@@ -38,8 +36,6 @@ class WebSocketJob(
     private var clientEntity: LedStripClientEntity,
 ) : DisposableHandle {
 
-    // Helpers/websocket
-    private val serializer = FrameDataSerializer()
     private var client: LedStripWebSocketClient? = null
 
     // Client data
@@ -62,6 +58,7 @@ class WebSocketJob(
 
     // State/logic
     private var exponentialReconnectionBackoffValue = 1
+    private val exponentialReconnectionBackoffValueMax = 8
     private val fps = 35
     private val bufferTimeInSeconds = 1L
     private var shouldRun = true
@@ -125,7 +122,7 @@ class WebSocketJob(
                         setupWebSocket()
                     } catch (ex: Exception) {
                         logger.info("Unable to connect to client $clientEntity")
-                        if (exponentialReconnectionBackoffValue < 7) exponentialReconnectionBackoffValue++
+                        if (exponentialReconnectionBackoffValue <= exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
                         delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
                     }
                 }
@@ -189,7 +186,7 @@ class WebSocketJob(
                             val options = optionsBuilder.build()
 
                             // Serialize and send frame
-                            val encodedFrame = serializer.encode(frameData, strip.getPin(), options)
+                            val encodedFrame = serializeFrame(frameData, strip.getPin(), options)
                             withContext(Dispatchers.IO) {
                                 client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
                             }
@@ -215,7 +212,7 @@ class WebSocketJob(
             logger.error("Error $ex while processing state $state")
             ex.printStackTrace()
             delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
-            if (exponentialReconnectionBackoffValue < 7) exponentialReconnectionBackoffValue++
+            if (exponentialReconnectionBackoffValue <= exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
         }
     }
 
@@ -229,9 +226,25 @@ class WebSocketJob(
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
-        val frame = serializer.encode(frameData, strip.getPin(), options)
+        val frame = serializeFrame(frameData, strip.getPin(), options)
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
+        }
+    }
+
+    private fun serializeFrame(frameData: RgbFrameData, pin: String, options: RgbFrameOptions): ByteArray {
+        return when (clientEntity.clientType) {
+            ClientType.Pi -> {
+                val serializer = PiFrameDataSerializer()
+                serializer.encode(frameData, pin, options)
+            }
+
+            ClientType.NightDriver -> {
+                val serializer = NightDriverFrameDataSerializer()
+                serializer.encode(frameData, pin.toInt())
+            }
+
+            null -> throw Exception("No clientType specified!")
         }
     }
 
@@ -254,8 +267,13 @@ class WebSocketJob(
     }
 
     private fun setupWebSocket() {
-        val pattern = Regex("https?")
-        val websocketAddress = clientEntity.address!!.replace(pattern, "ws")
+        val pattern = Regex("^(http|https)")
+        val result = pattern.find(clientEntity.address!!)
+        val websocketAddress = if (result?.groups?.isNotEmpty() == true) {
+            clientEntity.address!!.replace(pattern, "ws")
+        } else {
+            "ws://${clientEntity.address!!}"
+        }
         val uri = UriBuilder.of(websocketAddress).port(clientEntity.wsPort!!).build()
         val future = CompletableFuture<LedStripWebSocketClient>()
         val clientPublisher = webSocketClient.connect(LedStripWebSocketClient::class.java, uri)

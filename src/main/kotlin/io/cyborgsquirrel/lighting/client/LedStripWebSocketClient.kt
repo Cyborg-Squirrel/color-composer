@@ -12,7 +12,7 @@ abstract class LedStripWebSocketClient : AutoCloseable {
 
     private var session: WebSocketSession? = null
 
-    private var future: CompletableFuture<Unit>? = null
+    private var future: CompletableFuture<ByteArray>? = null
 
     private var onDisconnectedCallback: () -> Unit = {}
 
@@ -26,7 +26,7 @@ abstract class LedStripWebSocketClient : AutoCloseable {
 
     @OnMessage
     fun onMessage(message: ByteArray) {
-        future?.complete(Unit)
+        future?.complete(message)
     }
 
     @OnOpen
@@ -59,6 +59,10 @@ abstract class LedStripWebSocketClient : AutoCloseable {
     }
 
     private fun notifyDisconnectCallback() {
+        try {
+            future?.cancel(true)
+        } catch (_: Exception) {
+        }
         try {
             onDisconnectedCallback()
         } catch (_: Exception) {
