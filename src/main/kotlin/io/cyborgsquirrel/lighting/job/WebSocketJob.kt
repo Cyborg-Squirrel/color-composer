@@ -18,6 +18,7 @@ import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
 import java.net.Socket
+import java.net.SocketException
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
@@ -128,7 +129,7 @@ class WebSocketJob(
 
                 WebSocketState.DisconnectedIdle -> {
                     try {
-                        logger.info("Client disconnected. Attempting to reconnect...")
+                        logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
                         state = WebSocketState.WaitingForConnection
                         setupSocket()
                     } catch (ex: Exception) {
@@ -204,9 +205,7 @@ class WebSocketJob(
                                     client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
                                 }
 
-                                ClientType.NightDriver -> withContext(Dispatchers.IO) {
-                                    socket?.getOutputStream()?.write(encodedFrame)
-                                }
+                                ClientType.NightDriver -> sendSocketFrame(encodedFrame)
                             }
 
                             // Slow down to ensure we only buffer the specified amount of time into the future.
@@ -251,8 +250,18 @@ class WebSocketJob(
                 client?.send(frame)?.get(1, TimeUnit.SECONDS)
             }
 
-            ClientType.NightDriver -> withContext(Dispatchers.IO) {
+            ClientType.NightDriver -> sendSocketFrame(frame)
+        }
+    }
+
+    private suspend fun sendSocketFrame(frame: ByteArray) {
+        try {
+            withContext(Dispatchers.IO) {
                 socket?.getOutputStream()?.write(frame)
+            }
+        } catch (sockEx: SocketException) {
+            if (state != WebSocketState.InsufficientData) {
+                state = WebSocketState.DisconnectedIdle
             }
         }
     }
@@ -340,7 +349,13 @@ class WebSocketJob(
                 }
 
                 socket = Socket(host, clientEntity.wsPort!!)
-                logger.info("Socket connected to ${clientEntity.address}? ${socket?.isConnected == true}")
+                if (socket?.isConnected == true) {
+                    state = WebSocketState.ConnectedIdle
+                } else {
+                    if (state != WebSocketState.InsufficientData) {
+                        state = WebSocketState.DisconnectedIdle
+                    }
+                }
             }
         }
     }
