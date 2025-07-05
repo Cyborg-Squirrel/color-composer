@@ -17,6 +17,7 @@ import kotlinx.coroutines.*
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
+import java.net.Socket
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
@@ -36,7 +37,11 @@ class WebSocketJob(
     private var clientEntity: LedStripClientEntity,
 ) : DisposableHandle {
 
+    // Pi WebSocket client
     private var client: LedStripWebSocketClient? = null
+
+    // NightDriver TCP connection
+    private var socket: Socket? = null
 
     // Client data
     private lateinit var strip: LedStripModel
@@ -76,6 +81,12 @@ class WebSocketJob(
 
     private suspend fun processState() {
         try {
+            // Check if NightDriver socket is still connected
+            if (state != WebSocketState.InsufficientData && socket?.isConnected == false) {
+                delay(250)
+                state = WebSocketState.DisconnectedIdle
+            }
+
             when (state) {
                 WebSocketState.InsufficientData -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
@@ -93,7 +104,7 @@ class WebSocketJob(
                             )
                             timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
                             state = WebSocketState.WaitingForConnection
-                            setupWebSocket()
+                            setupSocket()
                         } else {
                             delay(5000)
                         }
@@ -119,7 +130,7 @@ class WebSocketJob(
                     try {
                         logger.info("Client disconnected. Attempting to reconnect...")
                         state = WebSocketState.WaitingForConnection
-                        setupWebSocket()
+                        setupSocket()
                     } catch (ex: Exception) {
                         logger.info("Unable to connect to client $clientEntity")
                         if (exponentialReconnectionBackoffValue <= exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
@@ -162,7 +173,7 @@ class WebSocketJob(
                         if (frameOptional.isEmpty) {
                             // Send a keep-alive frame to clear the strip and prevent the WebSocket from timing out
                             if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
-                                logger.info("Sending keep-alive frame")
+                                logger.info("Sending keep-alive frame to $clientEntity")
                                 sendClearFrame()
                                 lastKeepaliveFrameTimestamp = LocalDateTime.now()
                             } else {
@@ -187,8 +198,15 @@ class WebSocketJob(
 
                             // Serialize and send frame
                             val encodedFrame = serializeFrame(frameData, strip.getPin(), options)
-                            withContext(Dispatchers.IO) {
-                                client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
+
+                            when (clientEntity.clientType!!) {
+                                ClientType.Pi -> withContext(Dispatchers.IO) {
+                                    client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
+                                }
+
+                                ClientType.NightDriver -> withContext(Dispatchers.IO) {
+                                    socket?.getOutputStream()?.write(encodedFrame)
+                                }
                             }
 
                             // Slow down to ensure we only buffer the specified amount of time into the future.
@@ -227,8 +245,15 @@ class WebSocketJob(
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
         val frame = serializeFrame(frameData, strip.getPin(), options)
-        withContext(Dispatchers.IO) {
-            client?.send(frame)?.get(1, TimeUnit.SECONDS)
+
+        when (clientEntity.clientType!!) {
+            ClientType.Pi -> withContext(Dispatchers.IO) {
+                client?.send(frame)?.get(1, TimeUnit.SECONDS)
+            }
+
+            ClientType.NightDriver -> withContext(Dispatchers.IO) {
+                socket?.getOutputStream()?.write(frame)
+            }
         }
     }
 
@@ -266,51 +291,70 @@ class WebSocketJob(
         }
     }
 
-    private fun setupWebSocket() {
-        val pattern = Regex("^(http|https)")
-        val result = pattern.find(clientEntity.address!!)
-        val websocketAddress = if (result?.groups?.isNotEmpty() == true) {
-            clientEntity.address!!.replace(pattern, "ws")
-        } else {
-            "ws://${clientEntity.address!!}"
-        }
-        val uri = UriBuilder.of(websocketAddress).port(clientEntity.wsPort!!).build()
-        val future = CompletableFuture<LedStripWebSocketClient>()
-        val clientPublisher = webSocketClient.connect(LedStripWebSocketClient::class.java, uri)
-        clientPublisher.subscribe(object : Subscriber<LedStripWebSocketClient> {
-            override fun onSubscribe(s: Subscription?) {
-                s?.request(1)
-            }
+    private fun setupSocket() {
+        when (clientEntity.clientType!!) {
+            ClientType.Pi -> {
+                val httpPattern = Regex("^(http|https)")
+                val httpPatternResult = httpPattern.find(clientEntity.address!!)
+                val websocketAddress = if (httpPatternResult?.groups?.isNotEmpty() == true) {
+                    clientEntity.address!!.replace(httpPattern, "ws")
+                } else {
+                    "ws://${clientEntity.address!!}"
+                }
+                val uri = UriBuilder.of(websocketAddress).port(clientEntity.wsPort!!).build()
+                val future = CompletableFuture<LedStripWebSocketClient>()
+                val clientPublisher = webSocketClient.connect(LedStripWebSocketClient::class.java, uri)
+                clientPublisher.subscribe(object : Subscriber<LedStripWebSocketClient> {
+                    override fun onSubscribe(s: Subscription?) {
+                        s?.request(1)
+                    }
 
-            override fun onError(t: Throwable?) {
-                state = WebSocketState.DisconnectedIdle
-                future.completeExceptionally(t)
-            }
-
-            override fun onComplete() {}
-
-            override fun onNext(client: LedStripWebSocketClient?) {
-                state = WebSocketState.ConnectedIdle
-                client?.registerOnDisconnectedCallback({
-                    if (state != WebSocketState.InsufficientData) {
+                    override fun onError(t: Throwable?) {
                         state = WebSocketState.DisconnectedIdle
+                        future.completeExceptionally(t)
+                    }
+
+                    override fun onComplete() {}
+
+                    override fun onNext(client: LedStripWebSocketClient?) {
+                        state = WebSocketState.ConnectedIdle
+                        client?.registerOnDisconnectedCallback({
+                            if (state != WebSocketState.InsufficientData) {
+                                state = WebSocketState.DisconnectedIdle
+                            }
+                        })
+                        future.complete(client)
                     }
                 })
-                future.complete(client)
-            }
-        })
 
-        client = future.get(5, TimeUnit.SECONDS)
+                client = future.get(5, TimeUnit.SECONDS)
+            }
+
+            ClientType.NightDriver -> {
+                val httpSlashPattern = Regex("^(http|https)://")
+                val httpSlashPatternResult = httpSlashPattern.find(clientEntity.address!!)
+                val host = if (httpSlashPatternResult?.groups?.isNotEmpty() == true) {
+                    clientEntity.address?.replace(httpSlashPattern, "")
+                } else {
+                    clientEntity.address
+                }
+
+                socket = Socket(host, clientEntity.wsPort!!)
+                logger.info("Socket connected to ${clientEntity.address}? ${socket?.isConnected == true}")
+            }
+        }
     }
 
     override fun dispose() {
         shouldRun = false
         client?.unregisterOnDisconnectedCallback()
         client?.close()
+        socket?.close()
     }
 
     fun onDataUpdate() {
         client?.close()
+        socket?.close()
         state = WebSocketState.InsufficientData
     }
 

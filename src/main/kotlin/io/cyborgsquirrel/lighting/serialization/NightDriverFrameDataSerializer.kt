@@ -3,7 +3,7 @@ package io.cyborgsquirrel.lighting.serialization
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.util.toLittleEndian
 
-class NightDriverFrameDataSerializer() {
+class NightDriverFrameDataSerializer {
 
     private val commandBytesLen = 2
     private val lengthBytesLen = 4
