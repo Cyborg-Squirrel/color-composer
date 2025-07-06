@@ -42,9 +42,9 @@ class NightDriverSocketJob(
     // State/logic
     private var exponentialReconnectionBackoffValue = 1
     private val exponentialReconnectionBackoffValueMax = 8
-    private val fps = 30
+    private val fps = 35
     private var shouldRun = true
-    private var state = WebSocketState.InsufficientData
+    private var state = StreamingJobState.InsufficientData
 
     override fun start(scope: CoroutineScope): Job {
         return scope.launch {
@@ -59,13 +59,13 @@ class NightDriverSocketJob(
     private suspend fun processState() {
         try {
             // Check if NightDriver socket is still connected
-            if (state != WebSocketState.InsufficientData && socket?.isConnected == false) {
+            if (state != StreamingJobState.InsufficientData && socket?.isConnected == false) {
                 delay(250)
-                state = WebSocketState.DisconnectedIdle
+                state = StreamingJobState.DisconnectedIdle
             }
 
             when (state) {
-                WebSocketState.InsufficientData -> {
+                StreamingJobState.InsufficientData -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
@@ -88,40 +88,33 @@ class NightDriverSocketJob(
                     }
                 }
 
-                WebSocketState.ConnectedIdle -> {
+                StreamingJobState.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
                     timestampMillis = timeHelper.millisSinceEpoch() + bufferTimeMillis
-                    state = WebSocketState.RenderingEffect
+                    state = StreamingJobState.RenderingEffect
                 }
 
-                WebSocketState.DisconnectedIdle -> {
-                    try {
-                        logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
-                        state = WebSocketState.WaitingForConnection
-                        setupSocket()
-                    } catch (ex: Exception) {
-                        logger.info("Unable to connect to client $clientEntity")
-                        if (exponentialReconnectionBackoffValue <= exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
-                        delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
-                    }
+                StreamingJobState.DisconnectedIdle -> {
+                    logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
+                    setupSocket()
                 }
 
-                WebSocketState.BufferFullWaiting -> {
+                StreamingJobState.BufferFullWaiting -> {
                     // Not supported by NightDriver - we should never end up in this state
                     throw Exception("Unexpected state! $state")
                 }
 
-                WebSocketState.WaitingForConnection -> {
+                StreamingJobState.WaitingForConnection -> {
                     // Not supported by NightDriver - we should never end up in this state
                     throw Exception("Unexpected state! $state")
                 }
 
-                WebSocketState.TimeSyncRequired -> {
+                StreamingJobState.TimeSyncRequired -> {
                     // Not supported by NightDriver - we should never end up in this state
                     throw Exception("Unexpected state! $state")
                 }
 
-                WebSocketState.RenderingEffect -> {
+                StreamingJobState.RenderingEffect -> {
                     triggerManager.processTriggers()
                     val frameOptional = renderer.renderFrame(strip.getUuid(), 0)
                     if (frameOptional.isEmpty) {
@@ -174,8 +167,8 @@ class NightDriverSocketJob(
                 socket?.getOutputStream()?.flush()
             }
         } catch (sockEx: SocketException) {
-            if (state != WebSocketState.InsufficientData) {
-                state = WebSocketState.DisconnectedIdle
+            if (state != StreamingJobState.InsufficientData) {
+                state = StreamingJobState.DisconnectedIdle
             }
         }
     }
@@ -198,10 +191,10 @@ class NightDriverSocketJob(
         socket?.connect(InetSocketAddress(host, clientEntity.wsPort!!), 5000)
 
         if (socket?.isConnected == true) {
-            state = WebSocketState.ConnectedIdle
+            state = StreamingJobState.ConnectedIdle
         } else {
-            if (state != WebSocketState.InsufficientData) {
-                state = WebSocketState.DisconnectedIdle
+            if (state != StreamingJobState.InsufficientData) {
+                state = StreamingJobState.DisconnectedIdle
             }
         }
     }
@@ -213,7 +206,7 @@ class NightDriverSocketJob(
 
     override fun onDataUpdate() {
         socket?.close()
-        state = WebSocketState.InsufficientData
+        state = StreamingJobState.InsufficientData
     }
 
     companion object {

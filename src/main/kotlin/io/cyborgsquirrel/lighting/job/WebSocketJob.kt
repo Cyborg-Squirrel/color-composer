@@ -65,7 +65,7 @@ class WebSocketJob(
     private val fps = 35
     private val bufferTimeInMilliseconds = 500L
     private var shouldRun = true
-    private var state = WebSocketState.InsufficientData
+    private var state = StreamingJobState.InsufficientData
 
     override fun start(scope: CoroutineScope): Job {
         return scope.launch {
@@ -80,7 +80,7 @@ class WebSocketJob(
     private suspend fun processState() {
         try {
             when (state) {
-                WebSocketState.InsufficientData -> {
+                StreamingJobState.InsufficientData -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
@@ -95,7 +95,7 @@ class WebSocketJob(
                                 stripEntity.blendMode!!
                             )
                             timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
-                            state = WebSocketState.WaitingForConnection
+                            state = StreamingJobState.WaitingForConnection
                             setupSocket()
                         } else {
                             delay(5000)
@@ -105,48 +105,42 @@ class WebSocketJob(
                     }
                 }
 
-                WebSocketState.WaitingForConnection -> {
+                StreamingJobState.WaitingForConnection -> {
                     delay(50)
                 }
 
-                WebSocketState.ConnectedIdle -> {
+                StreamingJobState.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
                     state = if (lastTimeSyncPerformedAt == 0L) {
-                        WebSocketState.TimeSyncRequired
+                        StreamingJobState.TimeSyncRequired
                     } else {
-                        WebSocketState.RenderingEffect
+                        StreamingJobState.RenderingEffect
                     }
                 }
 
-                WebSocketState.DisconnectedIdle -> {
-                    try {
-                        logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
-                        state = WebSocketState.WaitingForConnection
-                        setupSocket()
-                    } catch (ex: Exception) {
-                        logger.info("Unable to connect to client $clientEntity")
-                        if (exponentialReconnectionBackoffValue <= exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
-                        delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
-                    }
+                StreamingJobState.DisconnectedIdle -> {
+                    logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
+                    state = StreamingJobState.WaitingForConnection
+                    setupSocket()
                 }
 
-                WebSocketState.BufferFullWaiting -> {
+                StreamingJobState.BufferFullWaiting -> {
                     delay(sleepMillis)
-                    state = WebSocketState.RenderingEffect
+                    state = StreamingJobState.RenderingEffect
                 }
 
-                WebSocketState.TimeSyncRequired -> {
+                StreamingJobState.TimeSyncRequired -> {
                     syncClientTime()
                     timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
                     logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
                     // If we disconnect during the time sync don't set the state to connected
-                    if (state != WebSocketState.DisconnectedIdle) {
-                        state = WebSocketState.RenderingEffect
+                    if (state != StreamingJobState.DisconnectedIdle) {
+                        state = StreamingJobState.RenderingEffect
                     }
                 }
 
-                WebSocketState.RenderingEffect -> {
+                StreamingJobState.RenderingEffect -> {
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     val timeDesynced =
                         timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset
@@ -158,7 +152,7 @@ class WebSocketJob(
                                 )
                             })"
                         )
-                        state = WebSocketState.TimeSyncRequired
+                        state = StreamingJobState.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
                         val frameOptional = renderer.renderFrame(strip.getUuid(), 0)
@@ -200,13 +194,13 @@ class WebSocketJob(
                                 Timestamp.from(Instant.now().plusSeconds(bufferTimeInMilliseconds)).time
                             if (nowPlusBufferSeconds < timestampMillis) {
                                 sleepMillis = timestampMillis - nowPlusBufferSeconds
-                                state = WebSocketState.BufferFullWaiting
+                                state = StreamingJobState.BufferFullWaiting
                             } else if (frame.allEffectsPaused) {
                                 // Wait for the duration of one frame to reduce time spent rendering/sending frames
                                 // if all effects are paused.
                                 sleepMillis = (1000 / fps).toLong()
                                 timestampMillis += sleepMillis
-                                state = WebSocketState.BufferFullWaiting
+                                state = StreamingJobState.BufferFullWaiting
                             }
                         }
                     }
@@ -272,17 +266,17 @@ class WebSocketJob(
             }
 
             override fun onError(t: Throwable?) {
-                state = WebSocketState.DisconnectedIdle
+                state = StreamingJobState.DisconnectedIdle
                 future.completeExceptionally(t)
             }
 
             override fun onComplete() {}
 
             override fun onNext(client: LedStripWebSocketClient?) {
-                state = WebSocketState.ConnectedIdle
+                state = StreamingJobState.ConnectedIdle
                 client?.registerOnDisconnectedCallback({
-                    if (state != WebSocketState.InsufficientData) {
-                        state = WebSocketState.DisconnectedIdle
+                    if (state != StreamingJobState.InsufficientData) {
+                        state = StreamingJobState.DisconnectedIdle
                     }
                 })
                 future.complete(client)
@@ -300,7 +294,7 @@ class WebSocketJob(
 
     override fun onDataUpdate() {
         client?.close()
-        state = WebSocketState.InsufficientData
+        state = StreamingJobState.InsufficientData
     }
 
     companion object {

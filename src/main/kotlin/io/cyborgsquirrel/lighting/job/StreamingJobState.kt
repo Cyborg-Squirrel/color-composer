@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.job
 
-enum class WebSocketState {
+enum class StreamingJobState {
     // The websocket job needs a client and strip, until it has both it is in this state
     InsufficientData,
 
