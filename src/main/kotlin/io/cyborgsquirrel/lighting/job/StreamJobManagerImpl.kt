@@ -22,7 +22,7 @@ class StreamJobManagerImpl(
     private val timeHelper: TimeHelper,
     private val configClient: ConfigClient,
 ) : StreamJobManager {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val jobMap = mutableMapOf<String, Pair<ClientStreamingJob, Job>>()
     private val lock = Semaphore(1)
 
