@@ -12,9 +12,7 @@ import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Socket
-import java.net.SocketAddress
 import java.net.SocketException
-import kotlin.math.log
 import kotlin.math.max
 
 /**
@@ -167,6 +165,11 @@ class NightDriverSocketJob(
     private suspend fun sendSocketFrame(frame: ByteArray) {
         try {
             withContext(Dispatchers.IO) {
+                val availableBytes = socket?.getInputStream()?.available()?.toLong()
+                if (availableBytes != null && availableBytes > 0L) {
+                    socket?.getInputStream()?.skip(availableBytes)
+                }
+
                 socket?.getOutputStream()?.write(frame)
                 socket?.getOutputStream()?.flush()
             }
