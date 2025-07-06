@@ -86,7 +86,7 @@ class StreamJobManagerImpl(
         try {
             lock.acquire()
             jobMap[client.uuid!!]?.first?.dispose()
-            runBlocking { jobMap[client.uuid!!]?.second?.join() }
+            runBlocking { jobMap[client.uuid!!]?.second?.cancel() }
             jobMap.remove(client.uuid!!)
         } catch (ex: Exception) {
             ex.printStackTrace()
@@ -101,7 +101,7 @@ class StreamJobManagerImpl(
             lock.acquire()
             for (clientUuid in jobMap.keys) {
                 jobMap[clientUuid]?.first?.dispose()
-                runBlocking { jobMap[clientUuid]?.second?.join() }
+                runBlocking { jobMap[clientUuid]?.second?.cancel() }
             }
 
             jobMap.clear()
