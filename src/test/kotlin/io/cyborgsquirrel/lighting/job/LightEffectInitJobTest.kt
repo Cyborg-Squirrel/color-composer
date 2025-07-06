@@ -33,8 +33,6 @@ import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunction
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.lighting.limits.PowerLimiterService
-import io.cyborgsquirrel.lighting.model.RgbColor
-import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -42,7 +40,6 @@ import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.kotest5.MicronautKotest5Extension.getMock
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
-import io.mockk.every
 import io.mockk.mockk
 import java.time.Duration
 import java.util.*
@@ -62,16 +59,16 @@ class LightEffectInitJobTest(
     private val triggerManager: TriggerManager,
     private val effectFactory: CreateLightingService,
     private val limiterService: PowerLimiterService,
-    private val websocketJobManager: WebsocketJobManager
+    private val streamJobManager: StreamJobManager
 ) : StringSpec({
 
     val lightEffectSettings = SpectrumEffectSettings.default(60).copy(10)
     val iterationTriggerSettings = EffectIterationTriggerSettings(25)
     val fadeFilterSettings = BrightnessFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(20))
-    lateinit var websocketManagerMock: WebsocketJobManager
+    lateinit var websocketManagerMock: StreamJobManager
 
     beforeTest {
-        websocketManagerMock = getMock(websocketJobManager)
+        websocketManagerMock = getMock(streamJobManager)
     }
 
     afterTest {
@@ -357,8 +354,8 @@ class LightEffectInitJobTest(
         activeEffectList.first().effectUuid shouldBe lightEffect.uuid
     }
 }) {
-    @MockBean(WebsocketJobManager::class)
-    fun websocketJobManager(): WebsocketJobManager {
+    @MockBean(StreamJobManager::class)
+    fun websocketJobManager(): StreamJobManager {
         return mockk()
     }
 }

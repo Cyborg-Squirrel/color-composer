@@ -2,7 +2,7 @@ package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 
-interface WebsocketJobManager {
+interface StreamJobManager {
     fun startWebsocketJob(client: LedStripClientEntity)
 
     fun updateJob(client: LedStripClientEntity)

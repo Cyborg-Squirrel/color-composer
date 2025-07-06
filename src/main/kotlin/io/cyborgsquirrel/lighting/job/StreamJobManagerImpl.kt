@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.clients.config.ConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
@@ -13,31 +14,47 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.Semaphore
 
 @Singleton
-class WebsocketJobManagerImpl(
+class StreamJobManagerImpl(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
     private val triggerManager: TriggerManager,
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private val configClient: ConfigClient,
-) : WebsocketJobManager {
+) : StreamJobManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + Dispatchers.IO)
-    private val jobMap = mutableMapOf<String, Pair<WebSocketJob, Job>>()
+    private val jobMap = mutableMapOf<String, Pair<ClientStreamingJob, Job>>()
     private val lock = Semaphore(1)
 
     override fun startWebsocketJob(client: LedStripClientEntity) {
         logger.info("Starting websocket job for $client")
         try {
             lock.acquire()
-            val wsJob = WebSocketJob(
-                webSocketClient,
-                renderer,
-                triggerManager,
-                clientRepository,
-                timeHelper,
-                configClient,
-                client
-            )
+            val wsJob = when (client.clientType) {
+                ClientType.Pi -> {
+                    WebSocketJob(
+                        webSocketClient,
+                        renderer,
+                        triggerManager,
+                        clientRepository,
+                        timeHelper,
+                        configClient,
+                        client
+                    )
+                }
+
+                ClientType.NightDriver -> {
+                    NightDriverSocketJob(
+                        renderer,
+                        triggerManager,
+                        clientRepository,
+                        timeHelper,
+                        client
+                    )
+                }
+
+                null -> throw Exception("No clientType specified!")
+            }
 
             if (jobMap.containsKey((client.uuid!!))) {
                 stopWebsocketJob(client)
@@ -96,6 +113,6 @@ class WebsocketJobManagerImpl(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(WebsocketJobManagerImpl::class.java)
+        private val logger = LoggerFactory.getLogger(StreamJobManagerImpl::class.java)
     }
 }

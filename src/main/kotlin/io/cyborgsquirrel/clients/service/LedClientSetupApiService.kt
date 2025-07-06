@@ -6,16 +6,15 @@ import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
 import io.cyborgsquirrel.clients.responses.GetClientResponse
 import io.cyborgsquirrel.clients.responses.GetClientsResponse
-import io.cyborgsquirrel.lighting.job.WebsocketJobManager
+import io.cyborgsquirrel.lighting.job.StreamJobManager
 import io.cyborgsquirrel.util.exception.ClientRequestException
-import io.micronaut.http.HttpResponse
 import jakarta.inject.Singleton
 import java.util.*
 
 @Singleton
 class LedClientSetupApiService(
     private val clientRepository: H2LedStripClientRepository,
-    private val websocketJobManager: WebsocketJobManager,
+    private val streamJobManager: StreamJobManager,
 ) {
 
     fun getAllClients(): GetClientsResponse {
@@ -60,7 +59,7 @@ class LedClientSetupApiService(
                 )
             )
 
-            websocketJobManager.startWebsocketJob(clientEntity)
+            streamJobManager.startWebsocketJob(clientEntity)
             clientEntity.uuid!!
         }
     }
@@ -78,9 +77,9 @@ class LedClientSetupApiService(
             )
 
             if (newEntity != entity) {
-                websocketJobManager.stopWebsocketJob(entity)
+                streamJobManager.stopWebsocketJob(entity)
                 clientRepository.update(newEntity)
-                websocketJobManager.startWebsocketJob(newEntity)
+                streamJobManager.startWebsocketJob(newEntity)
             }
         } else {
             throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")
@@ -92,7 +91,7 @@ class LedClientSetupApiService(
         if (entityOptional.isPresent) {
             val entity = entityOptional.get()
             if (entity.strips.isEmpty()) {
-                websocketJobManager.stopWebsocketJob(entity)
+                streamJobManager.stopWebsocketJob(entity)
                 clientRepository.deleteById(entityOptional.get().id)
             } else {
                 throw ClientRequestException("Could not delete client with uuid $uuid. Please delete its LED strips first.")

@@ -19,7 +19,7 @@ class LightEffectInitJob(
     private val triggerManager: TriggerManager,
     private val createLightingService: CreateLightingService,
     private val limiterService: PowerLimiterService,
-    private val websocketJobManager: WebsocketJobManager,
+    private val streamJobManager: StreamJobManager,
 ) : Runnable {
 
     // Flag tracking if this init job has run.
@@ -74,7 +74,7 @@ class LightEffectInitJob(
 
                 val clients = clientRepository.queryAll()
                 for (client in clients) {
-                    websocketJobManager.startWebsocketJob(client)
+                    streamJobManager.startWebsocketJob(client)
                 }
 
                 completed = true

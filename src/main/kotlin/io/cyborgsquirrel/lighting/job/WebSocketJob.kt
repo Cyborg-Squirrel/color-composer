@@ -2,13 +2,14 @@ package io.cyborgsquirrel.lighting.job
 
 import io.cyborgsquirrel.clients.config.ConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
-import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.client.LedStripWebSocketClient
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.model.*
+import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbFrameData
+import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
-import io.cyborgsquirrel.lighting.serialization.NightDriverFrameDataSerializer
 import io.cyborgsquirrel.lighting.serialization.PiFrameDataSerializer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
@@ -17,8 +18,6 @@ import kotlinx.coroutines.*
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
-import java.net.Socket
-import java.net.SocketException
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDateTime
@@ -36,18 +35,16 @@ class WebSocketJob(
     private val timeHelper: TimeHelper,
     private val configClient: ConfigClient,
     private var clientEntity: LedStripClientEntity,
-) : DisposableHandle {
+) : ClientStreamingJob {
 
     // Pi WebSocket client
     private var client: LedStripWebSocketClient? = null
 
-    // NightDriver TCP connection
-    private var socket: Socket? = null
-
     // Client data
     private lateinit var strip: LedStripModel
-    private val timeSyncSupported: Boolean
-        get() = clientEntity.clientType == ClientType.Pi
+
+    // Serialization
+    private val serializer = PiFrameDataSerializer()
 
     // Time tracking
     private val timeDesyncToleranceMillis = 5
@@ -66,11 +63,11 @@ class WebSocketJob(
     private var exponentialReconnectionBackoffValue = 1
     private val exponentialReconnectionBackoffValueMax = 8
     private val fps = 35
-    private val bufferTimeInSeconds = 1L
+    private val bufferTimeInMilliseconds = 500L
     private var shouldRun = true
     private var state = WebSocketState.InsufficientData
 
-    fun start(scope: CoroutineScope): Job {
+    override fun start(scope: CoroutineScope): Job {
         return scope.launch {
             logger.info("Start")
             while (isActive && shouldRun) {
@@ -82,12 +79,6 @@ class WebSocketJob(
 
     private suspend fun processState() {
         try {
-            // Check if NightDriver socket is still connected
-            if (state != WebSocketState.InsufficientData && socket?.isConnected == false) {
-                delay(250)
-                state = WebSocketState.DisconnectedIdle
-            }
-
             when (state) {
                 WebSocketState.InsufficientData -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
@@ -120,7 +111,7 @@ class WebSocketJob(
 
                 WebSocketState.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
-                    state = if (timeSyncSupported && lastTimeSyncPerformedAt == 0L) {
+                    state = if (lastTimeSyncPerformedAt == 0L) {
                         WebSocketState.TimeSyncRequired
                     } else {
                         WebSocketState.RenderingEffect
@@ -159,7 +150,7 @@ class WebSocketJob(
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     val timeDesynced =
                         timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset
-                    if (timeSyncSupported && timeDesynced) {
+                    if (timeDesynced) {
                         logger.info(
                             "Re-syncing time with client $client - (client time offset ${clientTimeOffset}ms frame timestamp: ${
                                 timeHelper.dateTimeFromMillis(
@@ -198,19 +189,15 @@ class WebSocketJob(
                             val options = optionsBuilder.build()
 
                             // Serialize and send frame
-                            val encodedFrame = serializeFrame(frameData, strip.getPin(), options)
+                            val encodedFrame = serializer.encode(frameData, strip.getPin(), options)
 
-                            when (clientEntity.clientType!!) {
-                                ClientType.Pi -> withContext(Dispatchers.IO) {
-                                    client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
-                                }
-
-                                ClientType.NightDriver -> sendSocketFrame(encodedFrame)
+                            withContext(Dispatchers.IO) {
+                                client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
                             }
 
                             // Slow down to ensure we only buffer the specified amount of time into the future.
                             val nowPlusBufferSeconds =
-                                Timestamp.from(Instant.now().plusSeconds(bufferTimeInSeconds)).time
+                                Timestamp.from(Instant.now().plusSeconds(bufferTimeInMilliseconds)).time
                             if (nowPlusBufferSeconds < timestampMillis) {
                                 sleepMillis = timestampMillis - nowPlusBufferSeconds
                                 state = WebSocketState.BufferFullWaiting
@@ -243,42 +230,10 @@ class WebSocketJob(
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
-        val frame = serializeFrame(frameData, strip.getPin(), options)
+        val frame = serializer.encode(frameData, strip.getPin(), options)
 
-        when (clientEntity.clientType!!) {
-            ClientType.Pi -> withContext(Dispatchers.IO) {
-                client?.send(frame)?.get(1, TimeUnit.SECONDS)
-            }
-
-            ClientType.NightDriver -> sendSocketFrame(frame)
-        }
-    }
-
-    private suspend fun sendSocketFrame(frame: ByteArray) {
-        try {
-            withContext(Dispatchers.IO) {
-                socket?.getOutputStream()?.write(frame)
-            }
-        } catch (sockEx: SocketException) {
-            if (state != WebSocketState.InsufficientData) {
-                state = WebSocketState.DisconnectedIdle
-            }
-        }
-    }
-
-    private fun serializeFrame(frameData: RgbFrameData, pin: String, options: RgbFrameOptions): ByteArray {
-        return when (clientEntity.clientType) {
-            ClientType.Pi -> {
-                val serializer = PiFrameDataSerializer()
-                serializer.encode(frameData, pin, options)
-            }
-
-            ClientType.NightDriver -> {
-                val serializer = NightDriverFrameDataSerializer()
-                serializer.encode(frameData, pin.toInt())
-            }
-
-            null -> throw Exception("No clientType specified!")
+        withContext(Dispatchers.IO) {
+            client?.send(frame)?.get(1, TimeUnit.SECONDS)
         }
     }
 
@@ -301,75 +256,50 @@ class WebSocketJob(
     }
 
     private fun setupSocket() {
-        when (clientEntity.clientType!!) {
-            ClientType.Pi -> {
-                val httpPattern = Regex("^(http|https)")
-                val httpPatternResult = httpPattern.find(clientEntity.address!!)
-                val websocketAddress = if (httpPatternResult?.groups?.isNotEmpty() == true) {
-                    clientEntity.address!!.replace(httpPattern, "ws")
-                } else {
-                    "ws://${clientEntity.address!!}"
-                }
-                val uri = UriBuilder.of(websocketAddress).port(clientEntity.wsPort!!).build()
-                val future = CompletableFuture<LedStripWebSocketClient>()
-                val clientPublisher = webSocketClient.connect(LedStripWebSocketClient::class.java, uri)
-                clientPublisher.subscribe(object : Subscriber<LedStripWebSocketClient> {
-                    override fun onSubscribe(s: Subscription?) {
-                        s?.request(1)
-                    }
-
-                    override fun onError(t: Throwable?) {
-                        state = WebSocketState.DisconnectedIdle
-                        future.completeExceptionally(t)
-                    }
-
-                    override fun onComplete() {}
-
-                    override fun onNext(client: LedStripWebSocketClient?) {
-                        state = WebSocketState.ConnectedIdle
-                        client?.registerOnDisconnectedCallback({
-                            if (state != WebSocketState.InsufficientData) {
-                                state = WebSocketState.DisconnectedIdle
-                            }
-                        })
-                        future.complete(client)
-                    }
-                })
-
-                client = future.get(5, TimeUnit.SECONDS)
+        val httpPattern = Regex("^(http|https)")
+        val httpPatternResult = httpPattern.find(clientEntity.address!!)
+        val websocketAddress = if (httpPatternResult?.groups?.isNotEmpty() == true) {
+            clientEntity.address!!.replace(httpPattern, "ws")
+        } else {
+            "ws://${clientEntity.address!!}"
+        }
+        val uri = UriBuilder.of(websocketAddress).port(clientEntity.wsPort!!).build()
+        val future = CompletableFuture<LedStripWebSocketClient>()
+        val clientPublisher = webSocketClient.connect(LedStripWebSocketClient::class.java, uri)
+        clientPublisher.subscribe(object : Subscriber<LedStripWebSocketClient> {
+            override fun onSubscribe(s: Subscription?) {
+                s?.request(1)
             }
 
-            ClientType.NightDriver -> {
-                val httpSlashPattern = Regex("^(http|https)://")
-                val httpSlashPatternResult = httpSlashPattern.find(clientEntity.address!!)
-                val host = if (httpSlashPatternResult?.groups?.isNotEmpty() == true) {
-                    clientEntity.address?.replace(httpSlashPattern, "")
-                } else {
-                    clientEntity.address
-                }
+            override fun onError(t: Throwable?) {
+                state = WebSocketState.DisconnectedIdle
+                future.completeExceptionally(t)
+            }
 
-                socket = Socket(host, clientEntity.wsPort!!)
-                if (socket?.isConnected == true) {
-                    state = WebSocketState.ConnectedIdle
-                } else {
+            override fun onComplete() {}
+
+            override fun onNext(client: LedStripWebSocketClient?) {
+                state = WebSocketState.ConnectedIdle
+                client?.registerOnDisconnectedCallback({
                     if (state != WebSocketState.InsufficientData) {
                         state = WebSocketState.DisconnectedIdle
                     }
-                }
+                })
+                future.complete(client)
             }
-        }
+        })
+
+        client = future.get(5, TimeUnit.SECONDS)
     }
 
     override fun dispose() {
         shouldRun = false
         client?.unregisterOnDisconnectedCallback()
         client?.close()
-        socket?.close()
     }
 
-    fun onDataUpdate() {
+    override fun onDataUpdate() {
         client?.close()
-        socket?.close()
         state = WebSocketState.InsufficientData
     }
 
