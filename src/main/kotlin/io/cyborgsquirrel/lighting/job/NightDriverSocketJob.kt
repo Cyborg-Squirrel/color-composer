@@ -42,7 +42,7 @@ class NightDriverSocketJob(
 
     // Time tracking
     private var timestampMillis = 0L
-    private var sleepMillis = 0L
+    private val futureMillis = 150L
 
     // State/logic
     private var exponentialReconnectionBackoffValue = 1
@@ -84,8 +84,6 @@ class NightDriverSocketJob(
                                 stripEntity.height,
                                 stripEntity.blendMode!!
                             )
-                            timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps)
-                            state = WebSocketState.WaitingForConnection
                             setupSocket()
                         } else {
                             delay(5000)
@@ -113,8 +111,8 @@ class NightDriverSocketJob(
                 }
 
                 WebSocketState.BufferFullWaiting -> {
-                    delay(sleepMillis)
-                    state = WebSocketState.RenderingEffect
+                    // Not supported by NightDriver - we should never end up in this state
+                    throw Exception("Unexpected state! $state")
                 }
 
                 WebSocketState.WaitingForConnection -> {
@@ -132,10 +130,17 @@ class NightDriverSocketJob(
                     val frameOptional = renderer.renderFrame(strip.getUuid(), 0)
                     if (frameOptional.isEmpty) {
                         delay(150)
-                        timestampMillis = timeHelper.millisSinceEpoch()
+                        timestampMillis = timeHelper.millisSinceEpoch() + futureMillis
                     } else {
-                        // Time tracking
-                        timestampMillis = timeHelper.millisSinceEpoch()
+                        // Time tracking - fast-forward timestamp if it is the same as the current time or in the past.
+                        val now = timeHelper.millisSinceEpoch()
+                        val tenSecondsInMillis = 10 * 1000
+                        if (now <= timestampMillis) {
+                            timestampMillis = now + futureMillis
+                        } else if (now + tenSecondsInMillis <= timestampMillis) {
+                            // Somehow we got very far ahead in the future, so wait.
+                            delay(500)
+                        }
                         timestampMillis += 1000 / fps
 
                         // Assemble RGB data
@@ -147,7 +152,7 @@ class NightDriverSocketJob(
                         val encodedFrame = serializer.encode(frameData, strip.getPin().toInt())
                         sendSocketFrame(encodedFrame)
 
-                        val delayMillis = max((1000 / fps) - 7L, 0L)
+                        val delayMillis = max((1000 / fps) - 5L, 0L)
                         delay(delayMillis)
                     }
                 }
@@ -181,6 +186,7 @@ class NightDriverSocketJob(
             clientEntity.address
         }
 
+        socket?.close()
         socket = Socket(host, clientEntity.wsPort!!)
         if (socket?.isConnected == true) {
             state = WebSocketState.ConnectedIdle
