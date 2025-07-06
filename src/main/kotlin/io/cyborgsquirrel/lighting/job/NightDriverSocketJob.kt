@@ -14,6 +14,7 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketAddress
 import java.net.SocketException
+import kotlin.math.log
 import kotlin.math.max
 
 /**
@@ -131,9 +132,12 @@ class NightDriverSocketJob(
                     } else {
                         // Time tracking - fast-forward timestamp if it is the same as the current time or in the past.
                         val now = timeHelper.millisSinceEpoch()
-                        if (now <= timestampMillis) {
-                            logger.info("Timestamp is less than or equal to now")
+                        if (timestampMillis <= now) {
+                            logger.info("Timestamp is less than or equal to now, catching it up.")
                             timestampMillis = now + bufferTimeMillis
+                        } else if (timestampMillis - (bufferTimeMillis * 2) > now) {
+                            // Wait for the duration of one frame so we don't overload the NightDriver client
+                            delay(1000 / fps.toLong())
                         }
 
                         timestampMillis += 1000 / fps
@@ -147,7 +151,7 @@ class NightDriverSocketJob(
                         val encodedFrame = serializer.encode(frameData, strip.getPin().toInt())
                         sendSocketFrame(encodedFrame)
 
-                        val delayMillis = max((1000 / fps) - 7L, 0L)
+                        val delayMillis = max((1000 / fps) - 10L, 1L)
                         delay(delayMillis)
                     }
                 }
