@@ -1,8 +1,6 @@
 package io.cyborgsquirrel.lighting.job
 
-import io.cyborgsquirrel.clients.config.ConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
-import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.model.LedStripModel
@@ -10,14 +8,12 @@ import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.lighting.serialization.NightDriverFrameDataSerializer
 import io.cyborgsquirrel.util.time.TimeHelper
-import io.micronaut.websocket.WebSocketClient
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.SocketAddress
 import java.net.SocketException
-import java.sql.Timestamp
-import java.time.Instant
-import java.time.LocalDateTime
 import kotlin.math.max
 
 /**
@@ -42,7 +38,7 @@ class NightDriverSocketJob(
 
     // Time tracking
     private var timestampMillis = 0L
-    private val futureMillis = 150L
+    private val bufferTimeMillis = 150L
 
     // State/logic
     private var exponentialReconnectionBackoffValue = 1
@@ -95,6 +91,7 @@ class NightDriverSocketJob(
 
                 WebSocketState.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
+                    timestampMillis = timeHelper.millisSinceEpoch() + bufferTimeMillis
                     state = WebSocketState.RenderingEffect
                 }
 
@@ -130,17 +127,15 @@ class NightDriverSocketJob(
                     val frameOptional = renderer.renderFrame(strip.getUuid(), 0)
                     if (frameOptional.isEmpty) {
                         delay(150)
-                        timestampMillis = timeHelper.millisSinceEpoch() + futureMillis
+                        timestampMillis = timeHelper.millisSinceEpoch() + bufferTimeMillis
                     } else {
                         // Time tracking - fast-forward timestamp if it is the same as the current time or in the past.
                         val now = timeHelper.millisSinceEpoch()
-                        val tenSecondsInMillis = 10 * 1000
                         if (now <= timestampMillis) {
-                            timestampMillis = now + futureMillis
-                        } else if (now + tenSecondsInMillis <= timestampMillis) {
-                            // Somehow we got very far ahead in the future, so wait.
-                            delay(500)
+                            logger.info("Timestamp is less than or equal to now")
+                            timestampMillis = now + bufferTimeMillis
                         }
+
                         timestampMillis += 1000 / fps
 
                         // Assemble RGB data
@@ -152,7 +147,7 @@ class NightDriverSocketJob(
                         val encodedFrame = serializer.encode(frameData, strip.getPin().toInt())
                         sendSocketFrame(encodedFrame)
 
-                        val delayMillis = max((1000 / fps) - 5L, 0L)
+                        val delayMillis = max((1000 / fps) - 7L, 0L)
                         delay(delayMillis)
                     }
                 }
@@ -169,6 +164,7 @@ class NightDriverSocketJob(
         try {
             withContext(Dispatchers.IO) {
                 socket?.getOutputStream()?.write(frame)
+                socket?.getOutputStream()?.flush()
             }
         } catch (sockEx: SocketException) {
             if (state != WebSocketState.InsufficientData) {
@@ -186,8 +182,14 @@ class NightDriverSocketJob(
             clientEntity.address
         }
 
-        socket?.close()
-        socket = Socket(host, clientEntity.wsPort!!)
+        try {
+            socket?.close()
+        } catch (_: Exception) {
+        }
+
+        socket = Socket()
+        socket?.connect(InetSocketAddress(host, clientEntity.wsPort!!), 5000)
+
         if (socket?.isConnected == true) {
             state = WebSocketState.ConnectedIdle
         } else {
