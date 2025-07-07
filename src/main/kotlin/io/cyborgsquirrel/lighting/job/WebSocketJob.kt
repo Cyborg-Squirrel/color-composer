@@ -210,7 +210,7 @@ class WebSocketJob(
             logger.error("Error $ex while processing state $state")
             ex.printStackTrace()
             delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
-            if (exponentialReconnectionBackoffValue <= exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
+            if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
         }
     }
 
