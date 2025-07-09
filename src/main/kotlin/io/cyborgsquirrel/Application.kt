@@ -1,7 +1,7 @@
 package io.cyborgsquirrel
 
 import io.cyborgsquirrel.lighting.job.LightEffectInitJob
-import io.cyborgsquirrel.lighting.job.StreamJobManager
+import io.cyborgsquirrel.lighting.job.streaming.StreamJobManager
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiFetchJob
 import io.cyborgsquirrel.util.H2WebServer
 import io.micronaut.context.event.ApplicationEventListener

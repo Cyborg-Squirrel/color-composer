@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.job
+package io.cyborgsquirrel.lighting.job.streaming
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 

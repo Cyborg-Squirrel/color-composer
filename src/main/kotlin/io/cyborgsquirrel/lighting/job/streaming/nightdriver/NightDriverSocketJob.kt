@@ -1,8 +1,10 @@
-package io.cyborgsquirrel.lighting.job
+package io.cyborgsquirrel.lighting.job.streaming.nightdriver
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
+import io.cyborgsquirrel.lighting.job.streaming.ClientStreamingJob
+import io.cyborgsquirrel.lighting.job.streaming.StreamingJobState
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer

@@ -9,7 +9,7 @@ import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
-import io.cyborgsquirrel.lighting.job.StreamJobManager
+import io.cyborgsquirrel.lighting.job.streaming.StreamJobManager
 import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.util.exception.ClientRequestException

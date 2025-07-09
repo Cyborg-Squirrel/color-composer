@@ -6,6 +6,7 @@ import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
+import io.cyborgsquirrel.lighting.job.streaming.StreamJobManager
 import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory

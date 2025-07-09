@@ -32,6 +32,7 @@ import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
+import io.cyborgsquirrel.lighting.job.streaming.StreamJobManager
 import io.cyborgsquirrel.lighting.limits.PowerLimiterService
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
