@@ -192,7 +192,8 @@ class CreateLightingService(
                     JsonNode.from(settings),
                     NightriderColorFillEffectSettings::class.java
                 ),
-                palette
+                palette,
+                timeHelper
             )
 
             LightEffectConstants.NIGHTRIDER_COMET_NAME -> NightriderLightEffect(
@@ -201,7 +202,8 @@ class CreateLightingService(
                     JsonNode.from(settings),
                     NightriderCometEffectSettings::class.java
                 ),
-                palette
+                palette,
+                timeHelper
             )
 
             LightEffectConstants.SPECTRUM_NAME -> SpectrumLightEffect(

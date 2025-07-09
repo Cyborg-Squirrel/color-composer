@@ -22,8 +22,8 @@ class BouncingBallLightEffect(
     private val speedKnob = settings.speed
 
     private var clockTimeAtLastBounce = unixTime()
-    private var height = settings.startingHeight
-    private var ballSpeed = initialBallSpeed(settings.startingHeight)
+    private var height = numberOfLeds * settings.startingHeightPercent / 100.0
+    private var ballSpeed = initialBallSpeed(settings.startingHeightPercent / 100.0)
     private val dampening = 0.90
     private var iterations = 0
     private lateinit var backupColor: RgbColor
@@ -72,11 +72,13 @@ class BouncingBallLightEffect(
             clockTimeAtLastBounce = unixTime()
             if (ballSpeed < settings.minimumSpeed) {
                 iterations++
-                ballSpeed = initialBallSpeed(settings.startingHeight) * dampening
+                ballSpeed = initialBallSpeed(numberOfLeds * settings.startingHeightPercent / 100.0) * dampening
             }
         }
 
-        val position = (height * settings.maxHeight / settings.startingHeight).toInt() % numberOfLeds
+        val maxHeight = numberOfLeds * settings.maxHeightPercent / 100.0
+        val startingHeight = numberOfLeds * settings.startingHeightPercent / 100.0
+        val position = (height * maxHeight / startingHeight).toInt() % numberOfLeds
         return position
     }
 
@@ -91,7 +93,7 @@ class BouncingBallLightEffect(
             if (this::backupColor.isInitialized) {
                 backupColor
             } else {
-                val backupColorSeed = settings.startingHeight.toInt() % 3
+                val backupColorSeed = settings.startingHeightPercent % 3
                 when (backupColorSeed) {
                     2 -> RgbColor.Red
                     1 -> RgbColor.Green

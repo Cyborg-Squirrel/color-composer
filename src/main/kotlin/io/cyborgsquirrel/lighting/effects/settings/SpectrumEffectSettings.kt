@@ -2,7 +2,6 @@ package io.cyborgsquirrel.lighting.effects.settings
 
 import io.micronaut.serde.annotation.Serdeable
 
-// TODO hold time and transition time
 @Serdeable
 data class SpectrumEffectSettings(
     val colorPixelWidth: Int,

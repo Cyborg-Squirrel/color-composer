@@ -6,6 +6,7 @@ import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.util.time.TimeHelper
 import org.slf4j.LoggerFactory
 import kotlin.math.abs
 import kotlin.math.log
@@ -19,6 +20,7 @@ class NightriderLightEffect(
     private val numberOfLeds: Int,
     private val settings: NightriderEffectSettings,
     private var palette: ColorPalette?,
+    private val timeHelper: TimeHelper,
 ) : LightEffect {
 
     private var frame: Long = 0
@@ -27,9 +29,15 @@ class NightriderLightEffect(
     private var location = 0
     private var iterations = 0
     private var buffer = listOf<RgbColor>()
+    private var lastChangeMillis = timeHelper.millisSinceEpoch()
 
     override fun getNextStep(): List<RgbColor> {
-        onNextStep()
+        val nowMillis = timeHelper.millisSinceEpoch()
+        if ((nowMillis - lastChangeMillis) / 1000f > 1 / settings.updatesPerSecond().toFloat()) {
+            lastChangeMillis = nowMillis
+            onNextStep()
+        }
+
         buffer = when (settings) {
             is NightriderColorFillEffectSettings -> renderNightriderColorFill()
             is NightriderCometEffectSettings -> renderNightriderComet()

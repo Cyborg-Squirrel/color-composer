@@ -10,7 +10,6 @@ class GradientColorPalette(private val settings: GradientPaletteSettings, uuid: 
     ColorPalette(uuid, strip) {
 
     private val helper = GradientColorHelper()
-    // TODO is the cache necessary? The memory usage may be worth the CPU time save.
     private val cache = mutableMapOf<Int, SettingsPalette>()
 
     override fun getPrimaryColor(index: Int): RgbColor {

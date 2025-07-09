@@ -1,10 +1,11 @@
 package io.cyborgsquirrel.lighting.effects.settings
 
-// TODO Updates per second settings, update effect logic
 sealed class NightriderEffectSettings : LightEffectSettings() {
     abstract fun wrap(): Boolean
 
+    abstract fun updatesPerSecond(): Int
+
     companion object {
-        fun default() = NightriderColorFillEffectSettings(false)
+        fun default() = NightriderColorFillEffectSettings(false, 35)
     }
 }

@@ -2,8 +2,8 @@ package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.MarqueeEffectSettings
-import io.cyborgsquirrel.lighting.effects.shared.LightEffectHelper
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.util.shift
 import io.cyborgsquirrel.util.time.TimeHelper
 
 class MarqueeEffect(
@@ -15,7 +15,6 @@ class MarqueeEffect(
 
     private var frame = 0
     private var iterations = 0
-    private val helper = LightEffectHelper()
     private var lastChangeMillis = timeHelper.millisSinceEpoch()
     private var shiftAmount = 0
     private var buffer = listOf<RgbColor>()
@@ -49,7 +48,7 @@ class MarqueeEffect(
             lastChangeMillis = nowMillis
         }
 
-        val shiftedDotList = helper.shift(dotList, shiftAmount)
+        val shiftedDotList = dotList.shift(shiftAmount)
 
         for (i in shiftedDotList.indices) {
             if (shiftedDotList[i]) {

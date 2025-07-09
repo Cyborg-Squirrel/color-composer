@@ -1,12 +1,12 @@
 package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
+import io.cyborgsquirrel.lighting.effect_palette.palette.GradientColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
-import io.cyborgsquirrel.lighting.effects.shared.LightEffectHelper
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.util.shift
 import kotlin.math.ceil
 
-// TODO detect if palette is gradient, don't interpolate colors if the palette is a gradient palette
 class SpectrumLightEffect(
     private val numberOfLeds: Int,
     private val settings: SpectrumEffectSettings,
@@ -17,7 +17,6 @@ class SpectrumLightEffect(
     private var iterations = 0
     private var referenceFrame = mutableListOf<RgbColor>()
     private val colorWidth = getColorWidth()
-    private val helper = LightEffectHelper()
     private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
@@ -28,14 +27,18 @@ class SpectrumLightEffect(
             for (i in 0..<repeatOfColorsCount) {
                 val colors = colorList(i)
                 val color = colors[i % colors.size]
-                val nextColor = colors[(i + 1) % colors.size]
-                for (j in 0..<colorWidth) {
-                    val interpolationFactor = j.toFloat() / colorWidth
-                    val interpolatedColor = color.interpolate(nextColor, interpolationFactor)
-                    rgbList.add(interpolatedColor)
+                if (palette is GradientColorPalette) {
+                    rgbList.add(color)
+                } else {
+                    val nextColor = colors[(i + 1) % colors.size]
+                    for (j in 0..<colorWidth) {
+                        val interpolationFactor = j.toFloat() / colorWidth
+                        val interpolatedColor = color.interpolate(nextColor, interpolationFactor)
+                        rgbList.add(interpolatedColor)
 
-                    if (rgbList.size >= numberOfLeds) {
-                        break
+                        if (rgbList.size >= numberOfLeds) {
+                            break
+                        }
                     }
                 }
             }
@@ -56,7 +59,7 @@ class SpectrumLightEffect(
         }
 
         if (frame % numberOfLeds != 0) {
-            val shiftedFrame = helper.shift(rgbList, (frame % rgbList.size))
+            val shiftedFrame = rgbList.shift(frame % rgbList.size)
             frame++
             buffer = shiftedFrame
             return shiftedFrame
