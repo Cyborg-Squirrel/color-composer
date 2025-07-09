@@ -190,10 +190,10 @@ class WebSocketJob(
                             }
 
                             // Slow down to ensure we only buffer the specified amount of time into the future.
-                            val nowPlusBufferSeconds =
-                                Timestamp.from(Instant.now().plusSeconds(bufferTimeInMilliseconds)).time
-                            if (nowPlusBufferSeconds < timestampMillis) {
-                                sleepMillis = timestampMillis - nowPlusBufferSeconds
+                            val nowPlusBufferMillis =
+                                Timestamp.from(Instant.now().plusMillis(bufferTimeInMilliseconds)).time
+                            if (nowPlusBufferMillis < timestampMillis) {
+                                sleepMillis = timestampMillis - nowPlusBufferMillis
                                 state = StreamingJobState.BufferFullWaiting
                             } else if (frame.allEffectsPaused) {
                                 // Wait for the duration of one frame to reduce time spent rendering/sending frames
@@ -249,7 +249,7 @@ class WebSocketJob(
         }
     }
 
-    private fun setupSocket() {
+    private suspend fun setupSocket() {
         val httpPattern = Regex("^(http|https)")
         val httpPatternResult = httpPattern.find(clientEntity.address!!)
         val websocketAddress = if (httpPatternResult?.groups?.isNotEmpty() == true) {
@@ -283,7 +283,9 @@ class WebSocketJob(
             }
         })
 
-        client = future.get(5, TimeUnit.SECONDS)
+        client = withContext(Dispatchers.IO) {
+            future.get(5, TimeUnit.SECONDS)
+        }
     }
 
     override fun dispose() {

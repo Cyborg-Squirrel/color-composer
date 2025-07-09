@@ -36,20 +36,20 @@ class LightEffectRendererImpl(
         for (activeEffect in activeEffects) {
             when (activeEffect.strip) {
                 is LedStripModel -> {
-                    logger.debug("Rendering effect {} {}", activeEffect.effect, activeEffect.effectUuid)
+                    logger.debug("Rendering effect {}", activeEffect)
                     var rgbData = if (activeEffect.status == LightEffectStatus.Playing) {
                         activeEffect.effect.getNextStep()
                     } else {
                         activeEffect.effect.getBuffer()
                     }
-                    logger.debug("Rendered effect {} {}", activeEffect.effect, activeEffect.effectUuid)
+                    logger.debug("Rendered effect {}", activeEffect)
                     for (filter in activeEffect.filters) {
                         logger.debug("Applying filter ${filter.uuid}")
                         rgbData = filter.apply(rgbData)
                         logger.debug("Applied filter ${filter.uuid}")
                     }
 
-                    if (activeEffect.skipFramesIfBlank) {
+                    if (activeEffect.skipFramesIfBlank && activeEffect.status == LightEffectStatus.Playing) {
                         var allBlank = true
                         while (allBlank) {
                             for (data in rgbData) {

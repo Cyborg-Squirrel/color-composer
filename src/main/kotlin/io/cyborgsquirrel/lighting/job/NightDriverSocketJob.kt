@@ -173,7 +173,7 @@ class NightDriverSocketJob(
         }
     }
 
-    private fun setupSocket() {
+    private suspend fun setupSocket() {
         val httpSlashPattern = Regex("^(http|https)://")
         val httpSlashPatternResult = httpSlashPattern.find(clientEntity.address!!)
         val host = if (httpSlashPatternResult?.groups?.isNotEmpty() == true) {
@@ -182,13 +182,15 @@ class NightDriverSocketJob(
             clientEntity.address
         }
 
-        try {
-            socket?.close()
-        } catch (_: Exception) {
-        }
+        withContext(Dispatchers.IO) {
+            try {
+                socket?.close()
+            } catch (_: Exception) {
+            }
 
-        socket = Socket()
-        socket?.connect(InetSocketAddress(host, clientEntity.wsPort!!), 5000)
+            socket = Socket()
+            socket?.connect(InetSocketAddress(host, clientEntity.wsPort!!), 5000)
+        }
 
         if (socket?.isConnected == true) {
             state = StreamingJobState.ConnectedIdle
