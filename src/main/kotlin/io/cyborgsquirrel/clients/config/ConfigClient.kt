@@ -25,6 +25,7 @@ class ConfigClient(
             .port(client.apiPort!!)
             .path("configuration")
             .build()
+        // TODO: serialization of response to object
         httpClient.retrieve(uri.toString())
     }
 
@@ -33,6 +34,7 @@ class ConfigClient(
             .port(client.apiPort!!)
             .path("configuration")
             .build()
+        // Placeholder
         val requestMap = mapOf("a" to "b")
         val requestJson = objectMapper.writeValueAsString(requestMap)
         val request = HttpRequest.POST(uri.toString(), requestJson)
@@ -45,30 +47,9 @@ class ConfigClient(
             .port(client.apiPort!!)
             .path("time")
             .build()
-        // TODO: switch http call to blocking?
-//        val response = httpClient.toBlocking().retrieve(uri.toString())
-//        val timeObj = objectMapper.readValue(response, ClientTime::class.java)
 
-        val pub = httpClient.retrieve(uri.toString())
-        val future = CompletableFuture<ClientTime>()
-        pub.subscribe(object : Subscriber<String> {
-            override fun onSubscribe(s: Subscription?) {
-                s?.request(1)
-            }
-
-            override fun onError(t: Throwable?) {
-                future.completeExceptionally(t)
-            }
-
-            override fun onComplete() {}
-
-            override fun onNext(response: String?) {
-                val timeObj = objectMapper.readValue(response, ClientTime::class.java)
-                future.complete(timeObj)
-            }
-        })
-
-        val clientTime = future.get(3000, TimeUnit.SECONDS)
-        return clientTime
+        val response = httpClient.toBlocking().retrieve(uri.toString())
+        val timeObj = objectMapper.readValue(response, ClientTime::class.java)
+        return timeObj
     }
 }
