@@ -44,7 +44,7 @@ class MarqueeEffect(
 
         val nowMillis = timeHelper.millisSinceEpoch()
         if ((nowMillis - lastChangeMillis) / 1000f > 1 / settings.scrollAmountPerSecond.toFloat()) {
-            shiftAmount++
+            shiftAmount = (shiftAmount + 1) % numberOfLeds
             lastChangeMillis = nowMillis
         }
 

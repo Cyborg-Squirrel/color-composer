@@ -61,8 +61,8 @@ class NightDriverFrameDataSerializer {
 
         offset = commandBytesLen + channelBytesLen + lengthBytesLen + (timestampBytesLen * 2)
 
-        val r = 0
-        val g = 1
+        val r = 1
+        val g = 0
         val b = 2
         for (i in 0..<frameData.rgbData.size) {
             val rgbOffset = offset + (i * rgbLen)
