@@ -8,6 +8,7 @@ data class CreateClientRequest(
     val name: String,
     val address: String,
     val clientType: ClientType,
+    val colorOrder: String?,
     val apiPort: Int,
     val wsPort: Int
 )

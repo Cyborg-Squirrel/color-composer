@@ -22,6 +22,7 @@ class LedStripClientRepositoryTest(
         name = "Living Room",
         address = "192.168.50.200",
         clientType = ClientType.Pi,
+        colorOrder = "RGB",
         uuid = UUID.randomUUID().toString(),
         wsPort = 8888,
         apiPort = 80

@@ -20,7 +20,15 @@ class LedClientSetupApiService(
     fun getAllClients(): GetClientsResponse {
         val clientEntities = clientRepository.findAll()
         val responseClients = clientEntities.map {
-            GetClientResponse(it.name!!, it.address!!, it.uuid!!, it.apiPort!!, it.wsPort!!)
+            GetClientResponse(
+                it.name!!,
+                it.address!!,
+                it.uuid!!,
+                it.clientType.toString(),
+                it.colorOrder!!,
+                it.apiPort!!,
+                it.wsPort!!,
+            )
         }
         return GetClientsResponse(responseClients)
     }
@@ -33,8 +41,10 @@ class LedClientSetupApiService(
                 clientEntity.name!!,
                 clientEntity.address!!,
                 clientEntity.uuid!!,
+                clientEntity.clientType.toString(),
+                clientEntity.colorOrder!!,
                 clientEntity.apiPort!!,
-                clientEntity.wsPort!!
+                clientEntity.wsPort!!,
             )
 
             return clientResponse
@@ -48,11 +58,20 @@ class LedClientSetupApiService(
         return if (entityOptional.isPresent) {
             entityOptional.get().uuid!!
         } else {
+            // Default to RGB if no color order is specified - it is not required for Pi clients
+            val colorOrder = if (request.colorOrder != null) {
+                validateColorOrder(request.colorOrder)
+                request.colorOrder
+            } else {
+                "RGB"
+            }
+
             val clientEntity = clientRepository.save(
                 LedStripClientEntity(
                     name = request.name,
                     address = request.address,
                     clientType = request.clientType,
+                    colorOrder = colorOrder,
                     apiPort = request.apiPort,
                     wsPort = request.wsPort,
                     uuid = UUID.randomUUID().toString()
@@ -68,10 +87,15 @@ class LedClientSetupApiService(
         val entityOptional = clientRepository.findByUuid(uuid)
 
         if (entityOptional.isPresent) {
+            if (request.colorOrder != null) {
+                validateColorOrder(request.colorOrder)
+            }
+
             val entity = entityOptional.get()
             val newEntity = entity.copy(
                 name = request.name ?: entity.name,
                 address = request.address ?: entity.address,
+                colorOrder = request.colorOrder ?: entity.colorOrder,
                 apiPort = request.apiPort ?: entity.apiPort,
                 wsPort = request.wsPort ?: entity.wsPort,
             )
@@ -98,6 +122,19 @@ class LedClientSetupApiService(
             }
         } else {
             throw ClientRequestException("Could not delete client with uuid $uuid. It does not exist.")
+        }
+    }
+
+    private fun validateColorOrder(colorOrder: String) {
+        if (colorOrder.length > 3) {
+            throw ClientRequestException("Color order cannot be longer than 3. Example: RGB, GRB.")
+        } else {
+            val isValid = colorOrder.contains('R') && colorOrder.contains('G') && colorOrder.contains(
+                'B'
+            )
+            if (!isValid) {
+                throw ClientRequestException("Color order must contain only the characters RGB.")
+            }
         }
     }
 }

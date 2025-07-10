@@ -29,6 +29,9 @@ data class LedStripClientEntity(
     @Enumerated(EnumType.STRING)
     var clientType: ClientType?,
 
+    @MappedEntity("color_order")
+    var colorOrder: String?,
+
     var wsPort: Int? = null,
 
     var apiPort: Int? = null,
@@ -43,6 +46,7 @@ data class LedStripClientEntity(
         if (name != other.name) return false
         if (address != other.address) return false
         if (clientType != other.clientType) return false
+        if (colorOrder != other.colorOrder) return false
         if (uuid != other.uuid) return false
         if (apiPort != other.apiPort) return false
         if (wsPort != other.wsPort) return false
@@ -55,6 +59,7 @@ data class LedStripClientEntity(
         result = 31 * result + id.hashCode()
         result = 31 * result + (address ?: 0).hashCode()
         result = 31 * result + (clientType?.ordinal ?: 0).hashCode()
+        result = 31 * result + (colorOrder ?: 0).hashCode()
         result = 31 * result + (uuid ?: 0).hashCode()
         result = 31 * result + (apiPort ?: 0).hashCode()
         result = 31 * result + (wsPort ?: 0).hashCode()
@@ -62,6 +67,6 @@ data class LedStripClientEntity(
     }
 
     override fun toString(): String {
-        return "LedStripClientEntity(id=$id, name=$name, address=$address, clienType=$clientType, uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort)"
+        return "LedStripClientEntity(id=$id, name=$name, address=$address, clientType=$clientType, colorOrder=$colorOrder uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort)"
     }
 }

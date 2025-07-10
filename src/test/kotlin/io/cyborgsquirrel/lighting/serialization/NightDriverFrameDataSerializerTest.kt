@@ -26,7 +26,7 @@ class NightDriverFrameDataSerializerTest : StringSpec({
         // this value is a bitmask of which channels (pins) the NightDriver client should display the RGB values on
         val channelBitmask = 5
 
-        val encodedBytes = serializer.encode(rgbFrameData, channelBitmask)
+        val encodedBytes = serializer.encode(rgbFrameData, channelBitmask, "RGB")
 
         // Encoded bytes include:
         // Command (2)

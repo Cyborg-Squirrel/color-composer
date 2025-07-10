@@ -70,6 +70,7 @@ class LightEffectTriggerRepositoryTest(
                 name = "Living Room",
                 address = "192.168.1.1",
                 clientType = ClientType.Pi,
+                colorOrder = "RGB",
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
                 wsPort = 2222

@@ -14,8 +14,9 @@ class NightDriverFrameDataSerializer {
     /**
      * Encodes [RgbFrameData] into a [ByteArray]
      * [channelBitmask] is a bitmask of channels to display the RgbFrameData on
+     * [colorOrder] typically RGB or GRB, defines the color order in the frame packet
      */
-    fun encode(frameData: RgbFrameData, channelBitmask: Int): ByteArray {
+    fun encode(frameData: RgbFrameData, channelBitmask: Int, colorOrder: String): ByteArray {
         val rgbDataBytesLen = frameData.rgbData.size * 3
         val totalFrameBytes =
             commandBytesLen + channelBytesLen + lengthBytesLen + (timestampBytesLen * 2) + rgbDataBytesLen
@@ -61,9 +62,9 @@ class NightDriverFrameDataSerializer {
 
         offset = commandBytesLen + channelBytesLen + lengthBytesLen + (timestampBytesLen * 2)
 
-        val r = 1
-        val g = 0
-        val b = 2
+        val r = colorOrder.indexOfFirst { it == 'R' }
+        val g = colorOrder.indexOfFirst { it == 'G' }
+        val b = colorOrder.indexOfFirst { it == 'B' }
         for (i in 0..<frameData.rgbData.size) {
             val rgbOffset = offset + (i * rgbLen)
             encodedFrame[rgbOffset + r] = frameData.rgbData[i].red.toByte()

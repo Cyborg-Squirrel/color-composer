@@ -75,6 +75,7 @@ class ClientDiscoveryController(
                         name = client.name,
                         address = client.address,
                         clientType = ClientType.Pi,
+                        colorOrder = "RGB",
                         wsPort = client.wsPort,
                         apiPort = client.apiPort,
                         uuid = UUID.randomUUID().toString()

@@ -141,7 +141,8 @@ class NightDriverSocketJob(
                         val frameData = RgbFrameData(timestampMillis, rgbData)
 
                         // Serialize and send frame - options are not supported for NightDriver
-                        val encodedFrame = serializer.encode(frameData, strip.getPin().toInt())
+                        val encodedFrame =
+                            serializer.encode(frameData, strip.getPin().toInt(), clientEntity.colorOrder!!)
                         sendSocketFrame(encodedFrame)
 
                         val delayMillis = max((1000 / fps) - 10L, 1L)

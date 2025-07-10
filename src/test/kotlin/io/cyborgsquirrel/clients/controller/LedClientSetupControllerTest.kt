@@ -66,7 +66,7 @@ class LedClientSetupControllerTest(
         }
 
         "Creating clients" {
-            val createClientRequest = CreateClientRequest("Window lights", "192.168.5.5", ClientType.Pi, 80, 82)
+            val createClientRequest = CreateClientRequest("Window lights", "192.168.5.5", ClientType.Pi, "GRB", 80, 82)
             val createResponse = apiClient.create(createClientRequest)
             createResponse.status shouldBe HttpStatus.CREATED
 
@@ -79,13 +79,14 @@ class LedClientSetupControllerTest(
             clientEntity.name shouldBe createClientRequest.name
             clientEntity.address shouldBe createClientRequest.address
             clientEntity.clientType shouldBe createClientRequest.clientType
+            clientEntity.colorOrder shouldBe createClientRequest.colorOrder
             clientEntity.apiPort shouldBe createClientRequest.apiPort
             clientEntity.wsPort shouldBe createClientRequest.wsPort
         }
 
         "Updating clients" {
             val clientEntity = createLedStripClientEntity(clientRepository, "Window lights", "192.168.1.112", 112, 113)
-            val updatedClientRequest = UpdateClientRequest("Living room lights", "192.168.1.113", 115, 116)
+            val updatedClientRequest = UpdateClientRequest("Living room lights", "192.168.1.113", "GRB", 115, 116)
             val updateResponse = apiClient.update(clientEntity.uuid!!, updatedClientRequest)
             updateResponse.status shouldBe HttpStatus.NO_CONTENT
 
@@ -94,7 +95,8 @@ class LedClientSetupControllerTest(
             val updatedClientEntity = clientEntityOptional.get()
             updatedClientEntity.name shouldBe updatedClientRequest.name
             updatedClientEntity.address shouldBe updatedClientRequest.address
-            clientEntity.clientType shouldBe updatedClientEntity.clientType
+            updatedClientEntity.clientType shouldBe clientEntity.clientType
+            updatedClientEntity.colorOrder shouldBe updatedClientRequest.colorOrder
             updatedClientEntity.apiPort shouldBe updatedClientRequest.apiPort
             updatedClientEntity.wsPort shouldBe updatedClientRequest.wsPort
             updatedClientEntity.uuid shouldBe clientEntity.uuid

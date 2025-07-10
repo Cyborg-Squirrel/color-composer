@@ -28,6 +28,7 @@ class LedStripRepositoryTest(
             name = "Hallway client",
             address = "192.168.50.210",
             clientType = ClientType.Pi,
+            colorOrder = "RGB",
             uuid = UUID.randomUUID().toString(),
             wsPort = 8888,
             apiPort = 7777

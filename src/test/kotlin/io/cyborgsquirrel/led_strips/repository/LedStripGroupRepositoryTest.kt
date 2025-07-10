@@ -33,6 +33,7 @@ class LedStripGroupRepositoryTest(
             name = name,
             address = address,
             clientType = ClientType.Pi,
+            colorOrder = "RGB",
             uuid = UUID.randomUUID().toString(),
             wsPort = wsPort,
             apiPort = apiPort

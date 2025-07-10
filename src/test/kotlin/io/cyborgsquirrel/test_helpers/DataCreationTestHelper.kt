@@ -29,6 +29,7 @@ fun createLedStripClientEntity(
             name = name,
             address = address,
             clientType = ClientType.Pi,
+            colorOrder = "RGB",
             uuid = UUID.randomUUID().toString(),
             apiPort = apiPort,
             wsPort = wsPort
