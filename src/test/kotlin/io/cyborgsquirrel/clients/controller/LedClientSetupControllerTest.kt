@@ -30,10 +30,6 @@ class LedClientSetupControllerTest(
             clientRepository.deleteAll()
         }
 
-        "Fail on purpose" {
-            1 shouldBe 0
-        }
-
         "Requesting clients" {
             var response = apiClient.getClient(UUID.randomUUID().toString())
             response.status shouldBe HttpStatus.BAD_REQUEST
