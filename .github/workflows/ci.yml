@@ -27,5 +27,8 @@ jobs:
       - name: Build
         run: ./gradlew build -x test
 
+      # Run tests
+      # --rerun flag is needed to prevent gradle from skipping the task because it is up to date.
+      # --warning-mode none makes output less verbose. Check Build step for warnings.
       - name: Test
-        run: ./gradlew test --rerun
+        run: ./gradlew test --rerun --warning-mode none
