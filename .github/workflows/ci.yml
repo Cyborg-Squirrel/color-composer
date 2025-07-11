@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Give gradlew execution permissions
+        run: chmod +x gradlew
+
+      - name: Lint
+        run: ./gradlew lint
+
+      - name: Build
+        run: ./gradlew build -x test
