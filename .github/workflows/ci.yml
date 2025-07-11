@@ -25,7 +25,7 @@ jobs:
 
       # Build without tests to give clearer feedback if one of these steps fail
       - name: Build
-        run: ./gradlew build -x test
+        run: ./gradlew build -x test -x testResourcesClasses
 
       # Run tests
       # -i to include info level logging
