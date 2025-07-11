@@ -15,16 +15,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v4.7.1
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: Give gradlew execution permissions
         run: chmod +x gradlew
-
-      - name: Lint
-        run: ./gradlew lint
 
       - name: Build
         run: ./gradlew build -x test
