@@ -17,7 +17,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4.7.1
         with:
-          distribution: 'temurin'
+          distribution: 'corretto'
           java-version: '21'
 
       - name: Give gradlew execution permissions
