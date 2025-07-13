@@ -29,10 +29,10 @@ class StartupListener(
     override fun onApplicationEvent(event: ServerStartupEvent) {
         logger.info("Application started")
         try {
-            // Run background task
+            // Run background tasks
             taskScheduler.schedule(Duration.ofMillis(0), lightEffectInitJob)
             taskScheduler.schedule("1 0 * * ?", sunriseSunsetJob)
-//            taskScheduler.schedule(Duration.ofMillis(0), sunriseSunsetJob)
+            taskScheduler.schedule(Duration.ofMinutes(5), sunriseSunsetJob)
             h2WebServer.start()
         } catch (e: InterruptedException) {
             e.printStackTrace()
