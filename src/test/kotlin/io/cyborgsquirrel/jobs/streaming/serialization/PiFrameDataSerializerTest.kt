@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.serialization
+package io.cyborgsquirrel.jobs.streaming.serialization
 
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.lighting.model.RgbColor

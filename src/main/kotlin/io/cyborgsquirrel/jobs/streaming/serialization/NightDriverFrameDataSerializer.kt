@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.serialization
+package io.cyborgsquirrel.jobs.streaming.serialization
 
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.util.toLittleEndian

@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.limits
+package io.cyborgsquirrel.lighting.power_limits
 
 import io.cyborgsquirrel.lighting.model.RgbColor
 import jakarta.inject.Singleton
