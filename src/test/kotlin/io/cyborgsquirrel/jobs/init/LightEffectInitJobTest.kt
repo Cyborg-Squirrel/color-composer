@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.job
+package io.cyborgsquirrel.jobs.init
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
@@ -32,8 +32,8 @@ import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
-import io.cyborgsquirrel.lighting.job.streaming.StreamJobManager
-import io.cyborgsquirrel.lighting.limits.PowerLimiterService
+import io.cyborgsquirrel.jobs.streaming.StreamJobManager
+import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

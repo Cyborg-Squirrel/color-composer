@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.client
+package io.cyborgsquirrel.jobs.streaming.pi_client
 
 import io.micronaut.websocket.CloseReason
 import io.micronaut.websocket.WebSocketSession

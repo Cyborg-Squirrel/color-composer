@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.job.streaming
+package io.cyborgsquirrel.jobs.streaming
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DisposableHandle

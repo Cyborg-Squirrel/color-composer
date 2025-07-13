@@ -6,7 +6,7 @@ import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
 import io.cyborgsquirrel.clients.responses.GetClientResponse
 import io.cyborgsquirrel.clients.responses.GetClientsResponse
-import io.cyborgsquirrel.lighting.job.streaming.StreamJobManager
+import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import jakarta.inject.Singleton
 import java.util.*

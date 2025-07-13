@@ -1,14 +1,14 @@
-package io.cyborgsquirrel.lighting.job.streaming.nightdriver
+package io.cyborgsquirrel.jobs.streaming.nightdriver
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.job.streaming.ClientStreamingJob
-import io.cyborgsquirrel.lighting.job.streaming.StreamingJobState
+import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
+import io.cyborgsquirrel.jobs.streaming.StreamingJobState
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
-import io.cyborgsquirrel.lighting.serialization.NightDriverFrameDataSerializer
+import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverFrameDataSerializer
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory

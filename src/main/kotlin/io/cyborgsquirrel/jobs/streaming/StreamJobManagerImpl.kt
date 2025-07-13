@@ -1,12 +1,12 @@
-package io.cyborgsquirrel.lighting.job.streaming
+package io.cyborgsquirrel.jobs.streaming
 
 import io.cyborgsquirrel.clients.config.ConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.job.streaming.nightdriver.NightDriverSocketJob
-import io.cyborgsquirrel.lighting.job.streaming.pi_client.WebSocketJob
+import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketJob
+import io.cyborgsquirrel.jobs.streaming.pi_client.WebSocketJob
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.websocket.WebSocketClient

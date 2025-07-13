@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.lighting.job.streaming.nightdriver
+package io.cyborgsquirrel.jobs.streaming.nightdriver
 
 data class NightDriverTcpResponse(
     val size: Short,
