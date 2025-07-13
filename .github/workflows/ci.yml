@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4.7.1
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+
+      - name: Give gradlew execution permissions
+        run: chmod +x gradlew
+
+      # Build without tests to give clearer feedback if one of these steps fail
+      - name: Build
+        run: ./gradlew build -x test -x internalStartTestResourcesService
+
+      # Run tests
+      # -i to include info level logging
+      # --rerun flag is needed to prevent gradle from skipping the task because it is up to date.
+      # --warning-mode none makes output less verbose. Check Build step for warnings.
+      - name: Test
+        run: ./gradlew test -i --rerun --warning-mode none
