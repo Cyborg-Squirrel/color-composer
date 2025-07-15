@@ -24,44 +24,71 @@ class ChangingColorPalette(
     private val helper = GradientColorHelper()
     private var step = ChangingPaletteStep.ColorHold
 
-    private fun getColor(currentColor: RgbColor, nextColor: RgbColor): RgbColor {
-        val now = timeHelper.millisSinceEpoch()
+    override fun getPrimaryColor(index: Int): RgbColor {
+        val currentPalette = getCurrentPalette(index)
+        handleState()
         return when (step) {
-            ChangingPaletteStep.StartColorHold -> {
-                step = ChangingPaletteStep.ColorHold
-                holdStart = now
-                currentColor
+            ChangingPaletteStep.StartColorHold, ChangingPaletteStep.ColorHold, ChangingPaletteStep.StartTransition -> {
+                currentPalette.primaryColor
             }
 
-            ChangingPaletteStep.ColorHold -> {
-                if (now - holdStart >= settings.paletteHoldTime().toMillis()) {
-                    // Begin transition to next color
-                    step = ChangingPaletteStep.StartTransition
-                    transitionStart = 0L
+            ChangingPaletteStep.Transition -> transition(
+                currentPalette.primaryColor,
+                getNextPalette(index).primaryColor
+            )
+        }
+    }
+
+    override fun getSecondaryColor(index: Int): RgbColor {
+        val currentPalette = getCurrentPalette(index)
+        handleState()
+        return when (step) {
+            ChangingPaletteStep.StartColorHold, ChangingPaletteStep.ColorHold, ChangingPaletteStep.StartTransition -> {
+                currentPalette.secondaryColor
+            }
+
+            ChangingPaletteStep.Transition -> transition(
+                currentPalette.secondaryColor,
+                getNextPalette(index).secondaryColor
+            )
+        }
+    }
+
+    override fun getTertiaryColor(index: Int): RgbColor? {
+        val currentPalette = getCurrentPalette(index)
+        val nextPalette = if (step == ChangingPaletteStep.Transition) getNextPalette(index) else null
+        handleState()
+        return if (currentPalette.tertiaryColor != null && nextPalette?.tertiaryColor != null) {
+            when (step) {
+                ChangingPaletteStep.StartColorHold, ChangingPaletteStep.ColorHold, ChangingPaletteStep.StartTransition -> {
+                    currentPalette.tertiaryColor
                 }
 
-                currentColor
+                ChangingPaletteStep.Transition -> transition(
+                    currentPalette.tertiaryColor,
+                    nextPalette.tertiaryColor
+                )
             }
+        } else {
+            null
+        }
+    }
 
-            ChangingPaletteStep.StartTransition -> {
-                step = ChangingPaletteStep.Transition
-                transitionStart = now
-                currentColor
-            }
-
-            ChangingPaletteStep.Transition -> {
-                if (now - transitionStart > settings.paletteTransitionTime().toMillis()) {
-                    // Transition complete, return next color and hold
-                    step = ChangingPaletteStep.StartColorHold
-                    holdStart = 0L
-                    counter++
-                    nextColor
-                } else {
-                    // Blend between current and next palette
-                    val fractionComplete =
-                        (now - transitionStart).toFloat() / settings.paletteTransitionTime().toMillis()
-                    currentColor.interpolate(nextColor, fractionComplete)
+    override fun getOtherColors(index: Int): List<RgbColor> {
+        val currentPalette = getCurrentPalette(index)
+        val nextPaletteOtherColors =
+            if (step == ChangingPaletteStep.Transition) getNextPalette(index).otherColors else listOf()
+        handleState()
+        return currentPalette.otherColors.zip(nextPaletteOtherColors).map {
+            when (step) {
+                ChangingPaletteStep.StartColorHold, ChangingPaletteStep.ColorHold, ChangingPaletteStep.StartTransition -> {
+                    it.first
                 }
+
+                ChangingPaletteStep.Transition -> transition(
+                    it.first,
+                    it.second
+                )
             }
         }
     }
@@ -88,33 +115,44 @@ class ChangingColorPalette(
         }
     }
 
-    override fun getPrimaryColor(index: Int): RgbColor {
-        val currentPalette = getCurrentPalette(index)
-        val nextPalette = getNextPalette(index)
-        return getColor(currentPalette.primaryColor, nextPalette.primaryColor)
-    }
+    private fun handleState() {
+        val now = timeHelper.millisSinceEpoch()
+        when (step) {
+            ChangingPaletteStep.StartColorHold -> {
+                step = ChangingPaletteStep.ColorHold
+                holdStart = now
+            }
 
-    override fun getSecondaryColor(index: Int): RgbColor {
-        val currentPalette = getCurrentPalette(index)
-        val nextPalette = getNextPalette(index)
-        return getColor(currentPalette.secondaryColor, nextPalette.secondaryColor)
-    }
+            ChangingPaletteStep.ColorHold -> {
+                if (now - holdStart >= settings.paletteHoldTime().toMillis()) {
+                    // Begin transition to next color
+                    step = ChangingPaletteStep.StartTransition
+                    transitionStart = 0L
+                }
+            }
 
-    override fun getTertiaryColor(index: Int): RgbColor? {
-        val currentPalette = getCurrentPalette(index)
-        val nextPalette = getNextPalette(index)
-        return if (currentPalette.tertiaryColor != null && nextPalette.tertiaryColor != null) {
-            getColor(currentPalette.tertiaryColor, nextPalette.tertiaryColor)
-        } else {
-            null
+            ChangingPaletteStep.StartTransition -> {
+                step = ChangingPaletteStep.Transition
+                transitionStart = now
+            }
+
+            ChangingPaletteStep.Transition -> {}
         }
     }
 
-    override fun getOtherColors(index: Int): List<RgbColor> {
-        val currentPalette = getCurrentPalette(index)
-        val nextPalette = getNextPalette(index)
-        return currentPalette.otherColors.zip(nextPalette.otherColors).map {
-            getColor(it.first, it.second)
+    private fun transition(currentColor: RgbColor, nextColor: RgbColor): RgbColor {
+        val now = timeHelper.millisSinceEpoch()
+        return if (now - transitionStart > settings.paletteTransitionTime().toMillis()) {
+            // Transition complete, return next color and hold
+            step = ChangingPaletteStep.StartColorHold
+            holdStart = 0L
+            counter++
+            nextColor
+        } else {
+            // Blend between current and next palette
+            val fractionComplete =
+                (now - transitionStart).toFloat() / settings.paletteTransitionTime().toMillis()
+            currentColor.interpolate(nextColor, fractionComplete)
         }
     }
 }
