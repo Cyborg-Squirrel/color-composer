@@ -249,7 +249,6 @@ class EffectControllerTest(
             stripUuid = null,
             paletteUuid = null,
             name = "New effect name",
-            status = LightEffectStatusCommand.Play,
         )
         val updateRequestHttpResponse = apiClient.updateEffect(effectEntity.uuid!!, updateRequest)
         updateRequestHttpResponse.status shouldBe HttpStatus.NO_CONTENT
@@ -262,7 +261,8 @@ class EffectControllerTest(
         effectEntities.first().uuid shouldBe effectEntity.uuid
         effectEntities.first().settings shouldBe updateRequest.settings
         effectEntities.first().palette shouldBe palette
-        effectEntities.first().status shouldBe LightEffectStatus.Playing
+        // Update effect API doesn't support this - need to use updateEffectStatuses (/status) instead
+        effectEntities.first().status shouldBe LightEffectStatus.Idle
     }
 
     "Deleting an effect" {
