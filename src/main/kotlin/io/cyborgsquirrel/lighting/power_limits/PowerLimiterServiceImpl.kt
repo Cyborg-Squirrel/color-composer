@@ -46,14 +46,12 @@ class PowerLimiterServiceImpl : PowerLimiterService {
         return rgbList
     }
 
-    // Each RGB pixel uses 60mA at 100% brightness with R, G, and B set to max.
-    // Default to 500mA power limit brightness if it is not set.
     override fun getDefaultBrightness(strip: LedStrip): Int {
         val powerLimit = strip.getPowerLimitMilliAmps()
         return if (powerLimit != null) {
-            powerLimit / strip.getLength() * 60
+            powerLimit / strip.getLength() * POWER_PER_LED * 3
         } else {
-            500 / strip.getLength() * 60
+            500 / strip.getLength() * POWER_PER_LED * 3
         }
     }
 
