@@ -86,6 +86,7 @@ class LedStripApiService(
                             newStripEntity.length!!,
                             newStripEntity.height,
                             newStripEntity.blendMode!!,
+                            newStripEntity.powerLimit,
                         )
                     )
                     if (it != newEffect) {

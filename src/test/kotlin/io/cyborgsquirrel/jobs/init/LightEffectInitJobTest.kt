@@ -140,6 +140,7 @@ class LightEffectInitJobTest(
         activeEffectList.first().status shouldBe lightEffect.status
         activeEffectList.first().effectUuid shouldBe lightEffect.uuid
         activeEffectList.first().strip.getBlendMode() shouldBe strip.blendMode
+        activeEffectList.first().strip.getPowerLimitMilliAmps() shouldBe strip.powerLimit
     }
 
     "Init light effect with trigger - happy path" {
@@ -207,6 +208,7 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
         activeEffectList.first().effectUuid shouldBe lightEffect.uuid
+        activeEffectList.first().strip.getPowerLimitMilliAmps() shouldBe strip.powerLimit
 
         val triggers = triggerManager.getTriggers()
 
@@ -284,6 +286,7 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
         activeEffectList.first().effectUuid shouldBe lightEffect.uuid
+        activeEffectList.first().strip.getPowerLimitMilliAmps() shouldBe strip.powerLimit
 
         val filters = activeEffectList.first().filters
 
@@ -357,6 +360,7 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getName() shouldBe group.name
         activeEffectList.first().status shouldBe lightEffect.status
         activeEffectList.first().effectUuid shouldBe lightEffect.uuid
+        activeEffectList.first().strip.getPowerLimitMilliAmps() shouldBe strip.powerLimit
     }
 }) {
     @MockBean(StreamJobManager::class)

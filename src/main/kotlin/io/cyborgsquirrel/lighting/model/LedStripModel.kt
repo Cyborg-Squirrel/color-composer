@@ -9,6 +9,8 @@ import io.cyborgsquirrel.lighting.enums.BlendMode
  * [pin] - the data pin on the client the strip is connected to
  * [length] - how many pixels are in the strip
  * [reversed] - flag indicating whether RGB values should be reversed
+ * [blendMode] - the mode for handling multiple effects running on the same strip if they overlap
+ * [powerLimit] - the power limit in milliamps
  */
 data class LedStripModel(
     private val name: String,
@@ -17,29 +19,20 @@ data class LedStripModel(
     private val length: Int,
     private val height: Int,
     private val blendMode: BlendMode,
+    private val powerLimit: Int?
 ) : LedStrip {
 
-    override fun getName(): String {
-        return name
-    }
+    override fun getName(): String = name
 
-    override fun getUuid(): String {
-        return uuid
-    }
+    override fun getUuid(): String = uuid
 
-    override fun getPin(): String {
-        return pin
-    }
+    override fun getPin(): String = pin
 
-    override fun getLength(): Int {
-        return length
-    }
+    override fun getLength(): Int = length
 
-    override fun getHeight(): Int {
-        return height
-    }
+    override fun getHeight(): Int = height
 
-    override fun getBlendMode(): BlendMode {
-        return blendMode
-    }
+    override fun getBlendMode(): BlendMode = blendMode
+
+    override fun getPowerLimitMilliAmps(): Int? = powerLimit
 }

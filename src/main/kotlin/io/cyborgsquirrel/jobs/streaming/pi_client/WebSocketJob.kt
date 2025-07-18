@@ -1,6 +1,8 @@
 package io.cyborgsquirrel.jobs.streaming.pi_client
 
 import io.cyborgsquirrel.clients.config.ConfigClient
+import io.cyborgsquirrel.clients.config.PiClientConfig
+import io.cyborgsquirrel.clients.config.PiClientConfigList
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
@@ -12,6 +14,7 @@ import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.jobs.streaming.serialization.PiFrameDataSerializer
+import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
@@ -31,6 +34,7 @@ import java.util.concurrent.TimeUnit
 class WebSocketJob(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
+    private val powerLimiterService: PowerLimiterService,
     private val triggerManager: TriggerManager,
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
@@ -66,6 +70,7 @@ class WebSocketJob(
     private val fps = 35
     private val bufferTimeInMilliseconds = 500L
     private var shouldRun = true
+    private var settingsSyncRequired = true
     private var state = StreamingJobState.InsufficientData
 
     override fun start(scope: CoroutineScope): Job {
@@ -93,7 +98,8 @@ class WebSocketJob(
                                 stripEntity.pin!!,
                                 stripEntity.length!!,
                                 stripEntity.height,
-                                stripEntity.blendMode!!
+                                stripEntity.blendMode!!,
+                                stripEntity.powerLimit!!,
                             )
                             timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
                             state = StreamingJobState.WaitingForConnection
@@ -110,9 +116,28 @@ class WebSocketJob(
                     delay(50)
                 }
 
+                StreamingJobState.SettingsSync -> {
+                    logger.info("Syncing settings with $clientEntity...")
+                    settingsSyncRequired = false
+                    val clientConfig = configClient.getConfigs(clientEntity)
+                    val defaultBrightness = powerLimiterService.getDefaultBrightness(strip)
+                    val serverConfig =
+                        PiClientConfig(strip.getUuid(), strip.getPin(), strip.getLength(), defaultBrightness)
+                    val matching = clientConfig.configList.size == 1 && clientConfig.configList.first() == serverConfig
+
+                    if (!matching) {
+                        logger.info("Settings out of sync for $clientEntity - server config: $serverConfig")
+                        configClient.setConfigs(clientEntity, PiClientConfigList(listOf(serverConfig)))
+                    }
+
+                    state = StreamingJobState.ConnectedIdle
+                }
+
                 StreamingJobState.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
-                    state = if (lastTimeSyncPerformedAt == 0L) {
+                    state = if (settingsSyncRequired) {
+                        StreamingJobState.SettingsSync
+                    } else if (lastTimeSyncPerformedAt == 0L) {
                         StreamingJobState.TimeSyncRequired
                     } else {
                         StreamingJobState.RenderingEffect
@@ -121,6 +146,7 @@ class WebSocketJob(
 
                 StreamingJobState.DisconnectedIdle -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
+                    settingsSyncRequired = true
                     state = StreamingJobState.WaitingForConnection
                     setupSocket()
                 }
@@ -232,7 +258,7 @@ class WebSocketJob(
         }
     }
 
-    private fun syncClientTime() {
+    private suspend fun syncClientTime() {
         // Don't sync more often than every 3 seconds if we end up looping on time sync for some reason
         if (timeSinceLastSync > 1000 * 3) {
             val requestTimestamp = timeHelper.millisSinceEpoch()
@@ -296,6 +322,7 @@ class WebSocketJob(
     }
 
     override fun onDataUpdate() {
+        settingsSyncRequired = true
         client?.close()
         state = StreamingJobState.InsufficientData
     }

@@ -1,17 +1,15 @@
 package io.cyborgsquirrel.clients.config
 
-import io.cyborgsquirrel.clients.model.ClientTime
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.model.ClientTime
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
-import org.reactivestreams.Subscriber
-import org.reactivestreams.Subscription
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Singleton
 class ConfigClient(
@@ -20,35 +18,39 @@ class ConfigClient(
     private val timeHelper: TimeHelper,
 ) {
 
-    fun getConfig(client: LedStripClientEntity) {
+    suspend fun getConfigs(client: LedStripClientEntity): PiClientConfigList {
         val uri = UriBuilder.of(client.address)
             .port(client.apiPort!!)
             .path("configuration")
             .build()
-        // TODO: serialization of response to object
-        httpClient.retrieve(uri.toString())
+        val response = withContext(Dispatchers.IO) {
+            httpClient.toBlocking().retrieve(uri.toString())
+        }
+        val configList = objectMapper.readValue(response, PiClientConfigList::class.java)
+        return configList
     }
 
-    fun setConfig(client: LedStripClientEntity) {
+    suspend fun setConfigs(client: LedStripClientEntity, configList: PiClientConfigList) {
         val uri = UriBuilder.of(client.address)
             .port(client.apiPort!!)
             .path("configuration")
             .build()
-        // Placeholder
-        val requestMap = mapOf("a" to "b")
-        val requestJson = objectMapper.writeValueAsString(requestMap)
-        val request = HttpRequest.POST(uri.toString(), requestJson)
+        val request = HttpRequest.POST(uri.toString(), configList)
 
-        httpClient.exchange(request)
+        withContext(Dispatchers.IO) {
+            httpClient.toBlocking().exchange(request, PiClientConfig::class.java)
+        }
     }
 
-    fun getClientTime(client: LedStripClientEntity): ClientTime {
+    suspend fun getClientTime(client: LedStripClientEntity): ClientTime {
         val uri = UriBuilder.of(client.address)
             .port(client.apiPort!!)
             .path("time")
             .build()
 
-        val response = httpClient.toBlocking().retrieve(uri.toString())
+        val response = withContext(Dispatchers.IO) {
+            httpClient.toBlocking().retrieve(uri.toString())
+        }
         val timeObj = objectMapper.readValue(response, ClientTime::class.java)
         return timeObj
     }

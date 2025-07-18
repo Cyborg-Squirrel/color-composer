@@ -43,6 +43,9 @@ data class LedStripGroupModel(
         return blendMode
     }
 
+    // TODO
+    override fun getPowerLimitMilliAmps(): Int? = null
+
     fun getStartingIndexOf(lightUuid: String): Int {
         var index = 0
         for (strip in strips) {

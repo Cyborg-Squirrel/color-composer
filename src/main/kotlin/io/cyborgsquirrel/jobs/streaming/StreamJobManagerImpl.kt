@@ -7,6 +7,7 @@ import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketJob
 import io.cyborgsquirrel.jobs.streaming.pi_client.WebSocketJob
+import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.websocket.WebSocketClient
@@ -19,6 +20,7 @@ import java.util.concurrent.Semaphore
 class StreamJobManagerImpl(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
+    private val powerLimiterService: PowerLimiterService,
     private val triggerManager: TriggerManager,
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
@@ -37,6 +39,7 @@ class StreamJobManagerImpl(
                     WebSocketJob(
                         webSocketClient,
                         renderer,
+                        powerLimiterService,
                         triggerManager,
                         clientRepository,
                         timeHelper,

@@ -2,7 +2,7 @@ package io.cyborgsquirrel.lighting.model
 
 import io.cyborgsquirrel.lighting.enums.BlendMode
 
-interface LedStrip {
+sealed interface LedStrip {
     fun getName(): String
 
     fun getUuid(): String
@@ -14,4 +14,6 @@ interface LedStrip {
     fun getHeight(): Int
 
     fun getBlendMode(): BlendMode
+
+    fun getPowerLimitMilliAmps(): Int?
 }
