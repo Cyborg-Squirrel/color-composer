@@ -168,11 +168,6 @@ class EffectApiService(
                 )
             }
 
-            if (updateEffectRequest.status != null) {
-                val newStatus = effectStatusFromCommand(updateEffectRequest.status)
-                effectEntity = effectEntity.copy(status = newStatus)
-            }
-
             if (updateEffectRequest.stripUuid != null && updateEffectRequest.stripUuid != effectEntity.strip?.uuid) {
                 val stripEntityOptional = stripRepository.findByUuid(updateEffectRequest.stripUuid)
                 if (stripEntityOptional.isPresent) {
@@ -212,7 +207,7 @@ class EffectApiService(
 
                 var activeEffect = activeEffectOptional.get()
                 val onlyPaletteChange =
-                    updateEffectRequest.stripUuid == null && updateEffectRequest.paletteUuid != null && updateEffectRequest.name == null && updateEffectRequest.settings == null && updateEffectRequest.status == null
+                    updateEffectRequest.stripUuid == null && updateEffectRequest.paletteUuid != null && updateEffectRequest.name == null && updateEffectRequest.settings == null
                 if (onlyPaletteChange && palette != null) {
                     // If the palette is the only update, don't create a new ActiveEffect with copy()
                     // This retains the state of the effect and just swaps the palette.
