@@ -48,13 +48,15 @@ class PowerLimiterServiceImpl : PowerLimiterService {
 
     override fun getDefaultBrightness(strip: LedStripEntity): Int {
         val powerLimit = strip.powerLimit
+        // 50% brightness is pretty bright
+        val maxDefaultBrightness = 50
         val brightness = if (powerLimit != null) {
             (powerLimit.toFloat() / (strip.length!! * POWER_PER_LED * 3)) * 100
         } else {
             (500f / (strip.length!! * POWER_PER_LED * 3)) * 100
         }
 
-        return min(brightness.toInt(), 100)
+        return min(brightness.toInt(), maxDefaultBrightness)
     }
 
     companion object {

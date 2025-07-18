@@ -7,6 +7,5 @@ data class UpdateEffectRequest(
     val stripUuid: String?,
     val paletteUuid: String?,
     val name: String?,
-    val settings: Map<String, Any>?,
-    val status: LightEffectStatusCommand?
+    val settings: Map<String, Any>?
 )

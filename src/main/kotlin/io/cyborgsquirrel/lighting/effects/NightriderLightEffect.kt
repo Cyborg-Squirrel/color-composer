@@ -29,7 +29,7 @@ class NightriderLightEffect(
     private var location = 0
     private var iterations = 0
     private var buffer = listOf<RgbColor>()
-    private var lastChangeMillis = timeHelper.millisSinceEpoch()
+    private var lastChangeMillis = 0L
 
     override fun getNextStep(): List<RgbColor> {
         val nowMillis = timeHelper.millisSinceEpoch()
