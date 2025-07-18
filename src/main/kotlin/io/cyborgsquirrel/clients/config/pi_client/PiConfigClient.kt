@@ -1,8 +1,7 @@
-package io.cyborgsquirrel.clients.config
+package io.cyborgsquirrel.clients.config.pi_client
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.model.ClientTime
-import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.uri.UriBuilder
@@ -12,10 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Singleton
-class ConfigClient(
+class PiConfigClient(
     private val httpClient: HttpClient,
     private val objectMapper: ObjectMapper,
-    private val timeHelper: TimeHelper,
 ) {
 
     suspend fun getConfigs(client: LedStripClientEntity): PiClientConfigList {

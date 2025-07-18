@@ -100,6 +100,8 @@ class LedStripApiService(
                         activeLightEffectRegistry.addOrUpdateEffect(it)
                     }
                 }
+
+                streamJobManager.notifyJobOfDataUpdate(entity.client!!)
             }
         } else {
             throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")
@@ -117,7 +119,7 @@ class LedStripApiService(
                 effects.forEach {
                     activeLightEffectRegistry.removeEffect(it)
                 }
-                streamJobManager.updateJob(entity.client!!)
+                streamJobManager.notifyJobOfDataUpdate(entity.client!!)
             } else {
                 throw ClientRequestException("Could not delete strip with uuid $uuid. Please delete or reassign its effects and group memberships first.")
             }

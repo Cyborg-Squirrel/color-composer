@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.jobs.streaming
 
-import io.cyborgsquirrel.clients.config.ConfigClient
+import io.cyborgsquirrel.clients.config.pi_client.PiConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
@@ -24,7 +24,7 @@ class StreamJobManagerImpl(
     private val triggerManager: TriggerManager,
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
-    private val configClient: ConfigClient,
+    private val piConfigClient: PiConfigClient,
 ) : StreamJobManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val jobMap = mutableMapOf<String, Pair<ClientStreamingJob, Job>>()
@@ -43,7 +43,7 @@ class StreamJobManagerImpl(
                         triggerManager,
                         clientRepository,
                         timeHelper,
-                        configClient,
+                        piConfigClient,
                         client
                     )
                 }
@@ -74,7 +74,7 @@ class StreamJobManagerImpl(
         }
     }
 
-    override fun updateJob(client: LedStripClientEntity) {
+    override fun notifyJobOfDataUpdate(client: LedStripClientEntity) {
         logger.info("Updating websocket job for $client")
         try {
             lock.acquire()

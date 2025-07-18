@@ -1,13 +1,12 @@
 package io.cyborgsquirrel.jobs.streaming.pi_client
 
-import io.cyborgsquirrel.clients.config.ConfigClient
-import io.cyborgsquirrel.clients.config.PiClientConfig
+import io.cyborgsquirrel.clients.config.pi_client.PiConfigClient
+import io.cyborgsquirrel.clients.config.pi_client.PiClientConfig
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
 import io.cyborgsquirrel.jobs.streaming.StreamingJobState
-import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
@@ -38,7 +37,7 @@ class WebSocketJob(
     private val triggerManager: TriggerManager,
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
-    private val configClient: ConfigClient,
+    private val piConfigClient: PiConfigClient,
     private var clientEntity: LedStripClientEntity,
 ) : ClientStreamingJob {
 
@@ -110,7 +109,7 @@ class WebSocketJob(
                 StreamingJobState.SettingsSync -> {
                     logger.info("Syncing settings with $clientEntity")
                     settingsSyncRequired = false
-                    val clientConfig = configClient.getConfigs(clientEntity)
+                    val clientConfig = piConfigClient.getConfigs(clientEntity)
                     val serverConfig = PiClientConfig(strip.uuid!!, strip.pin!!, strip.length!!, strip.brightness!!)
                     val matching = clientConfig.configList.size == 1 && clientConfig.configList.first() == serverConfig
 
@@ -118,9 +117,9 @@ class WebSocketJob(
                         logger.info("Settings out of sync for $clientEntity - server config: $serverConfig")
 
                         for (config in clientConfig.configList) {
-                            configClient.deleteConfig(clientEntity, config)
+                            piConfigClient.deleteConfig(clientEntity, config)
                         }
-                        configClient.addConfig(clientEntity, serverConfig)
+                        piConfigClient.addConfig(clientEntity, serverConfig)
                     }
 
                     state = StreamingJobState.ConnectedIdle
@@ -255,7 +254,7 @@ class WebSocketJob(
         // Don't sync more often than every 3 seconds if we end up looping on time sync for some reason
         if (timeSinceLastSync > 1000 * 3) {
             val requestTimestamp = timeHelper.millisSinceEpoch()
-            val clientTime = configClient.getClientTime(clientEntity)
+            val clientTime = piConfigClient.getClientTime(clientEntity)
             val responseTimestamp = timeHelper.millisSinceEpoch()
 
             // Assume request and response take the same amount of time for the network to transmit
