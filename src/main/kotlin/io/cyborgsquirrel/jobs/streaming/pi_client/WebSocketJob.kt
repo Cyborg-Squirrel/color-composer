@@ -2,7 +2,6 @@ package io.cyborgsquirrel.jobs.streaming.pi_client
 
 import io.cyborgsquirrel.clients.config.ConfigClient
 import io.cyborgsquirrel.clients.config.PiClientConfig
-import io.cyborgsquirrel.clients.config.PiClientConfigList
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
@@ -117,7 +116,7 @@ class WebSocketJob(
                 }
 
                 StreamingJobState.SettingsSync -> {
-                    logger.info("Syncing settings with $clientEntity...")
+                    logger.info("Syncing settings with $clientEntity")
                     settingsSyncRequired = false
                     val clientConfig = configClient.getConfigs(clientEntity)
                     val defaultBrightness = powerLimiterService.getDefaultBrightness(strip)
@@ -127,7 +126,11 @@ class WebSocketJob(
 
                     if (!matching) {
                         logger.info("Settings out of sync for $clientEntity - server config: $serverConfig")
-                        configClient.setConfigs(clientEntity, PiClientConfigList(listOf(serverConfig)))
+
+                        for (config in clientConfig.configList) {
+                            configClient.deleteConfig(clientEntity, config)
+                        }
+                        configClient.addConfig(clientEntity, serverConfig)
                     }
 
                     state = StreamingJobState.ConnectedIdle

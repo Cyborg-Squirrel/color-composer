@@ -19,10 +19,7 @@ class ConfigClient(
 ) {
 
     suspend fun getConfigs(client: LedStripClientEntity): PiClientConfigList {
-        val uri = UriBuilder.of(client.address)
-            .port(client.apiPort!!)
-            .path("configuration")
-            .build()
+        val uri = getConfigurationUriBuilder(client).build()
         val response = withContext(Dispatchers.IO) {
             httpClient.toBlocking().retrieve(uri.toString())
         }
@@ -30,15 +27,32 @@ class ConfigClient(
         return configList
     }
 
-    suspend fun setConfigs(client: LedStripClientEntity, configList: PiClientConfigList) {
-        val uri = UriBuilder.of(client.address)
-            .port(client.apiPort!!)
-            .path("configuration")
-            .build()
-        val request = HttpRequest.POST(uri.toString(), configList)
+    suspend fun addConfig(client: LedStripClientEntity, config: PiClientConfig) {
+        val uri = getConfigurationUriBuilder(client).build()
+        val request = HttpRequest.POST(uri.toString(), config)
 
         withContext(Dispatchers.IO) {
-            httpClient.toBlocking().exchange(request, PiClientConfig::class.java)
+            httpClient.toBlocking().exchange(request, String::class.java)
+        }
+    }
+
+    suspend fun updateConfig(client: LedStripClientEntity, config: PiClientConfig) {
+        val uri = getConfigurationUriBuilder(client).build()
+        val request = HttpRequest.DELETE<String>(uri.toString())
+
+        withContext(Dispatchers.IO) {
+            httpClient.toBlocking().exchange(request, String::class.java)
+        }
+    }
+
+    suspend fun deleteConfig(client: LedStripClientEntity, config: PiClientConfig) {
+        val uri = getConfigurationUriBuilder(client)
+            .queryParam("uuid", config.uuid)
+            .build()
+        val request = HttpRequest.DELETE<String>(uri.toString())
+
+        withContext(Dispatchers.IO) {
+            httpClient.toBlocking().exchange(request, String::class.java)
         }
     }
 
@@ -53,5 +67,11 @@ class ConfigClient(
         }
         val timeObj = objectMapper.readValue(response, ClientTime::class.java)
         return timeObj
+    }
+
+    private fun getConfigurationUriBuilder(client: LedStripClientEntity): UriBuilder {
+        return UriBuilder.of(client.address)
+            .port(client.apiPort!!)
+            .path("configuration")
     }
 }
