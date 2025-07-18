@@ -83,7 +83,8 @@ class LightEffectTriggerRepositoryTest(
                 name = "Strip A",
                 pin = PiClientPin.D18.pinName,
                 length = 60,
-                blendMode = BlendMode.Average
+                blendMode = BlendMode.Average,
+                brightness = 25,
             )
         )
         val lightEffectSettingsJson = objectToMap(objectMapper, nightriderLightEffectSettings)

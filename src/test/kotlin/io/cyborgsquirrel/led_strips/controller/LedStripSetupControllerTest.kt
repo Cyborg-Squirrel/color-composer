@@ -53,7 +53,7 @@ class LedStripSetupControllerTest(
             getStripsResponse.strips.isEmpty() shouldBe true
 
             // Request a single strip
-            val strip = saveLedStrip(stripRepository, client, "Strip A", 50, PiClientPin.D21.pinName)
+            val strip = saveLedStrip(stripRepository, client, "Strip A", 50, PiClientPin.D21.pinName, 100)
             response = apiClient.getStrip(strip.uuid!!)
             response.status shouldBe HttpStatus.OK
             val getStripResponse = response.body() as GetLedStripResponse
@@ -63,6 +63,7 @@ class LedStripSetupControllerTest(
             getStripResponse.height shouldBe strip.height
             getStripResponse.powerLimit shouldBe strip.powerLimit
             getStripResponse.blendMode shouldBe strip.blendMode
+            getStripResponse.brightness shouldBe strip.brightness
 
             // Request strips for client
             response = apiClient.getStripsForClient(client.uuid!!)
@@ -76,6 +77,7 @@ class LedStripSetupControllerTest(
             getStripsResponse.strips.first().height shouldBe strip.height
             getStripsResponse.strips.first().powerLimit shouldBe strip.powerLimit
             getStripsResponse.strips.first().blendMode shouldBe strip.blendMode
+            getStripsResponse.strips.first().brightness shouldBe strip.brightness
         }
 
         "Creating LED strips" {
@@ -87,7 +89,7 @@ class LedStripSetupControllerTest(
                     "Porch underglow strip",
                     "D10",
                     240,
-                    blendMode = BlendMode.Additive
+                    blendMode = BlendMode.Additive,
                 )
             var response = apiClient.createStrip(request)
 
@@ -101,12 +103,23 @@ class LedStripSetupControllerTest(
             stripOptional.get().height shouldBe 1
             stripOptional.get().blendMode shouldBe request.blendMode
             stripOptional.get().powerLimit shouldBe null
+            // Default brightness for 240 LEDs at 500mA
+            stripOptional.get().brightness shouldBe 3
 
             stripRepository.deleteAll()
 
             // Create with optional fields specified
             request =
-                CreateLedStripRequest(client.uuid!!, "Porch under-glow strip", "D10", 180, 2, 4000, BlendMode.Average)
+                CreateLedStripRequest(
+                    client.uuid!!,
+                    "Porch under-glow strip",
+                    "D10",
+                    180,
+                    2,
+                    4000,
+                    60,
+                    BlendMode.Average
+                )
             response = apiClient.createStrip(request)
             response.status shouldBe HttpStatus.CREATED
             uuid = response.body() as String
@@ -118,11 +131,12 @@ class LedStripSetupControllerTest(
             stripOptional.get().height shouldBe request.height
             stripOptional.get().blendMode shouldBe request.blendMode
             stripOptional.get().powerLimit shouldBe request.powerLimit
+            stripOptional.get().brightness shouldBe request.brightness
         }
 
         "Updating strips" {
             val client = createLedStripClientEntity(clientRepository, "Porch lights", "192.168.50.50", 50, 51)
-            val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
+            val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 100)
             val newBlendMode = if (strip.blendMode == BlendMode.Additive) BlendMode.Average else BlendMode.Additive
             val request = UpdateLedStripRequest(
                 name = "Ceiling strip",
@@ -130,7 +144,8 @@ class LedStripSetupControllerTest(
                 length = 180,
                 height = 3,
                 blendMode = newBlendMode,
-                powerLimit = 10000
+                powerLimit = 10000,
+                brightness = 85,
             )
 
             val response = apiClient.updateStrip(strip.uuid!!, request)
@@ -143,6 +158,7 @@ class LedStripSetupControllerTest(
             updatedStripOptional.get().height shouldBe request.height
             updatedStripOptional.get().blendMode shouldBe request.blendMode
             updatedStripOptional.get().powerLimit shouldBe request.powerLimit
+            updatedStripOptional.get().brightness shouldBe request.brightness
         }
 
         "Deleting strips" {
@@ -151,7 +167,7 @@ class LedStripSetupControllerTest(
             response.status shouldBe HttpStatus.BAD_REQUEST
 
             val client = createLedStripClientEntity(clientRepository, "Porch lights", "192.168.50.50", 50, 51)
-            var strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
+            var strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 100)
 
             // Deleting a strip which does exist and has no effects
             response = apiClient.deleteStrip(strip.uuid!!)
@@ -160,7 +176,7 @@ class LedStripSetupControllerTest(
             stripOptional.isPresent shouldBe false
 
             // Deleting a strip which has a light effect - bad request
-            strip = saveLedStrip(stripRepository, client, "Strip B", 144, PiClientPin.D21.pinName)
+            strip = saveLedStrip(stripRepository, client, "Strip B", 144, PiClientPin.D21.pinName, 80)
             saveLightEffect(effectRepository, objectMapper, strip)
             response = apiClient.deleteStrip(UUID.randomUUID().toString())
             response.status shouldBe HttpStatus.BAD_REQUEST

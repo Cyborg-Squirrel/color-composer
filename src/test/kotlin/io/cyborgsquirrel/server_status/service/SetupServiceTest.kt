@@ -41,14 +41,14 @@ class SetupServiceTest(
 
     "No effects setup - one client and one strip setup" {
         val client = createLedStripClientEntity(clientRepository, "Bedroom", "192.168.50.210", 8888, 7777)
-        saveLedStrip(stripRepository, client, "Bedroom lights", 120, PiClientPin.D12.pinName)
+        saveLedStrip(stripRepository, client, "Bedroom lights", 120, PiClientPin.D12.pinName, 50)
         val setupStatus = setupStatusCheckService.getSetupStatus()
         setupStatus shouldBe SetupStatus.NoEffects
     }
 
     "Everything setup" {
         val client = createLedStripClientEntity(clientRepository, "Bedroom", "192.168.50.210", 8888, 7777)
-        val strip = saveLedStrip(stripRepository, client, "Bedroom lights", 120, PiClientPin.D10.pinName)
+        val strip = saveLedStrip(stripRepository, client, "Bedroom lights", 120, PiClientPin.D10.pinName, 50)
         saveLightEffect(effectRepository, objectMapper, strip)
         val setupStatus = setupStatusCheckService.getSetupStatus()
         setupStatus shouldBe SetupStatus.SetupComplete

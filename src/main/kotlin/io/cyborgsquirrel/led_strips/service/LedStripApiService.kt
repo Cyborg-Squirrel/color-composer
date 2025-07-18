@@ -32,7 +32,7 @@ class LedStripApiService(
         if (clientEntityOptional.isPresent) {
             val clientEntity = clientEntityOptional.get()
             validatePin(clientEntity, request.pin)
-            val stripEntity = LedStripEntity(
+            var stripEntity = LedStripEntity(
                 client = clientEntity,
                 uuid = UUID.randomUUID().toString(),
                 name = request.name,
@@ -40,8 +40,14 @@ class LedStripApiService(
                 length = request.length,
                 height = request.height ?: 1,
                 powerLimit = request.powerLimit,
+                brightness = request.brightness,
                 blendMode = request.blendMode ?: BlendMode.Additive
             )
+
+            if (request.brightness == null) {
+                val brightness = limitService.getDefaultBrightness(stripEntity)
+                stripEntity = stripEntity.copy(brightness = brightness)
+            }
 
             stripRepository.save(stripEntity)
             if (stripEntity.powerLimit != null) limitService.setLimit(stripEntity.uuid!!, stripEntity.powerLimit!!)
@@ -68,7 +74,8 @@ class LedStripApiService(
                 length = request.length ?: entity.length,
                 height = request.height ?: entity.height,
                 powerLimit = request.powerLimit ?: entity.powerLimit,
-                blendMode = request.blendMode ?: entity.blendMode
+                blendMode = request.blendMode ?: entity.blendMode,
+                brightness = request.brightness ?: entity.brightness,
             )
 
             if (newEntity != entity) {
@@ -86,7 +93,7 @@ class LedStripApiService(
                             newStripEntity.length!!,
                             newStripEntity.height,
                             newStripEntity.blendMode!!,
-                            newStripEntity.powerLimit,
+                            newStripEntity.brightness!!,
                         )
                     )
                     if (it != newEffect) {

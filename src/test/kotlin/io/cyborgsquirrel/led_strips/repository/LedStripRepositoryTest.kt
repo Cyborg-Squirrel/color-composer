@@ -35,7 +35,7 @@ class LedStripRepositoryTest(
         )
     )
 
-    fun createLedStripEntity(name: String, uuid: String, length: Int): LedStripEntity {
+    fun createLedStripEntity(name: String, uuid: String, length: Int, brightness: Int): LedStripEntity {
         return ledStripRepository.save(
             LedStripEntity(
                 client = clientEntity,
@@ -44,6 +44,7 @@ class LedStripRepositoryTest(
                 uuid = uuid,
                 length = length,
                 blendMode = BlendMode.Average,
+                brightness = brightness,
             )
         )
     }
@@ -84,7 +85,8 @@ class LedStripRepositoryTest(
 
     "Create a led strip entity" {
         val ledStripId = UUID.randomUUID().toString()
-        val ledStripEntity = createLedStripEntity(name = "Kitchen lights A", uuid = ledStripId, length = 120)
+        val ledStripEntity =
+            createLedStripEntity(name = "Kitchen lights A", uuid = ledStripId, length = 120, brightness = 50)
 
         val retrievedLedStripOptional = ledStripRepository.findById(ledStripEntity.id)
         retrievedLedStripOptional.isPresent shouldBe true
@@ -92,7 +94,8 @@ class LedStripRepositoryTest(
 
     "Query a strip with a join" {
         val ledStripUuid = UUID.randomUUID().toString()
-        val ledStripEntity = createLedStripEntity(name = "Kitchen lights A", uuid = ledStripUuid, length = 120)
+        val ledStripEntity =
+            createLedStripEntity(name = "Kitchen lights A", uuid = ledStripUuid, length = 120, brightness = 50)
 
         val groupUuid = UUID.randomUUID().toString()
         val groupEntity = createLedStripGroupEntity(name = "Kitchen Group", uuid = groupUuid)
@@ -116,6 +119,7 @@ class LedStripRepositoryTest(
                 inverted shouldBe savedGroupMembers.first().inverted
                 groupIndex shouldBe savedGroupMembers.first().groupIndex
             }
+            brightness shouldBe ledStripEntity.brightness
         }
     }
 })

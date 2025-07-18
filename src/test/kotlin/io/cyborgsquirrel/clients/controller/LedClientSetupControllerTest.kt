@@ -104,7 +104,7 @@ class LedClientSetupControllerTest(
 
         "Delete clients" {
             val clientEntity = createLedStripClientEntity(clientRepository, "Window lights", "192.168.50.67", 80, 90)
-            val strip = saveLedStrip(stripRepository, clientEntity, "Window light", 60, PiClientPin.D10.pinName)
+            val strip = saveLedStrip(stripRepository, clientEntity, "Window light", 60, PiClientPin.D10.pinName, 100)
 
             var deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
             deleteResponse.status shouldBe HttpStatus.BAD_REQUEST

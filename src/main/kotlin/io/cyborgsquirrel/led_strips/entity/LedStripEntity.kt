@@ -42,6 +42,8 @@ data class LedStripEntity(
     @MappedEntity("power_limit")
     var powerLimit: Int? = null,
 
+    var brightness: Int? = null,
+
     @MappedEntity("blend_mode")
     @Enumerated(EnumType.STRING)
     var blendMode: BlendMode? = null,

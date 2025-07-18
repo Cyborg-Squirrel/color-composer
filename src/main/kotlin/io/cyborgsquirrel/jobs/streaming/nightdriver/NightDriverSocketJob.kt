@@ -81,7 +81,7 @@ class NightDriverSocketJob(
                                 stripEntity.length!!,
                                 stripEntity.height,
                                 stripEntity.blendMode!!,
-                                powerLimit = 0
+                                stripEntity.brightness!!,
                             )
                             state = StreamingJobState.DisconnectedIdle
                         } else {

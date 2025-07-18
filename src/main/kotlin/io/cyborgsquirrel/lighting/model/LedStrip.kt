@@ -15,5 +15,5 @@ sealed interface LedStrip {
 
     fun getBlendMode(): BlendMode
 
-    fun getPowerLimitMilliAmps(): Int?
+    fun getBrightness(): Int?
 }

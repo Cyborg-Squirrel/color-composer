@@ -8,5 +8,6 @@ data class UpdateLedStripRequest(
     val length: Int?,
     val height: Int?,
     val powerLimit: Int?,
+    val brightness: Int?,
     val blendMode: BlendMode?
 )

@@ -113,7 +113,8 @@ class LightEffectInitJobTest(
                 name = "Strip A",
                 pin = PiClientPin.D12.pinName,
                 length = 60,
-                blendMode = BlendMode.Average
+                blendMode = BlendMode.Average,
+                brightness = 25,
             )
         )
         val settingsJson = objectToMap(objectMapper, lightEffectSettings)
@@ -140,7 +141,6 @@ class LightEffectInitJobTest(
         activeEffectList.first().status shouldBe lightEffect.status
         activeEffectList.first().effectUuid shouldBe lightEffect.uuid
         activeEffectList.first().strip.getBlendMode() shouldBe strip.blendMode
-        activeEffectList.first().strip.getPowerLimitMilliAmps() shouldBe strip.powerLimit
     }
 
     "Init light effect with trigger - happy path" {
@@ -172,7 +172,8 @@ class LightEffectInitJobTest(
                 name = "Strip A",
                 pin = PiClientPin.D10.pinName,
                 length = 60,
-                blendMode = BlendMode.Average
+                blendMode = BlendMode.Average,
+                brightness = 25,
             )
         )
         val lightEffectSettingsJson = objectToMap(objectMapper, lightEffectSettings)
@@ -208,7 +209,6 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
         activeEffectList.first().effectUuid shouldBe lightEffect.uuid
-        activeEffectList.first().strip.getPowerLimitMilliAmps() shouldBe strip.powerLimit
 
         val triggers = triggerManager.getTriggers()
 
@@ -250,7 +250,8 @@ class LightEffectInitJobTest(
                 name = "Strip A",
                 pin = PiClientPin.D10.pinName,
                 length = 60,
-                blendMode = BlendMode.Average
+                blendMode = BlendMode.Average,
+                brightness = 25,
             )
         )
         val lightEffectSettingsJson = objectToMap(objectMapper, lightEffectSettings)
@@ -286,7 +287,6 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getName() shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
         activeEffectList.first().effectUuid shouldBe lightEffect.uuid
-        activeEffectList.first().strip.getPowerLimitMilliAmps() shouldBe strip.powerLimit
 
         val filters = activeEffectList.first().filters
 
@@ -328,7 +328,8 @@ class LightEffectInitJobTest(
                 name = "Strip A",
                 pin = PiClientPin.D21.pinName,
                 length = 60,
-                blendMode = BlendMode.Average
+                blendMode = BlendMode.Average,
+                brightness = 25,
             )
         )
         val group = ledStripGroupRepository.save(
@@ -360,7 +361,6 @@ class LightEffectInitJobTest(
         activeEffectList.first().strip.getName() shouldBe group.name
         activeEffectList.first().status shouldBe lightEffect.status
         activeEffectList.first().effectUuid shouldBe lightEffect.uuid
-        activeEffectList.first().strip.getPowerLimitMilliAmps() shouldBe strip.powerLimit
     }
 }) {
     @MockBean(StreamJobManager::class)

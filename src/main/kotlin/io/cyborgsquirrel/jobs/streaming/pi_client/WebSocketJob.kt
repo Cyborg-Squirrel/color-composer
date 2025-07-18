@@ -13,6 +13,7 @@ import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.jobs.streaming.serialization.PiFrameDataSerializer
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
@@ -45,7 +46,7 @@ class WebSocketJob(
     private var client: LedStripWebSocketClient? = null
 
     // Client data
-    private lateinit var strip: LedStripModel
+    private lateinit var strip: LedStripEntity
 
     // Serialization
     private val serializer = PiFrameDataSerializer()
@@ -90,16 +91,7 @@ class WebSocketJob(
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            val stripEntity = clientEntity.strips.first()
-                            strip = LedStripModel(
-                                stripEntity.name!!,
-                                stripEntity.uuid!!,
-                                stripEntity.pin!!,
-                                stripEntity.length!!,
-                                stripEntity.height,
-                                stripEntity.blendMode!!,
-                                stripEntity.powerLimit!!,
-                            )
+                            strip = clientEntity.strips.first()
                             timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
                             state = StreamingJobState.WaitingForConnection
                             setupSocket()
@@ -119,9 +111,7 @@ class WebSocketJob(
                     logger.info("Syncing settings with $clientEntity")
                     settingsSyncRequired = false
                     val clientConfig = configClient.getConfigs(clientEntity)
-                    val defaultBrightness = powerLimiterService.getDefaultBrightness(strip)
-                    val serverConfig =
-                        PiClientConfig(strip.getUuid(), strip.getPin(), strip.getLength(), defaultBrightness)
+                    val serverConfig = PiClientConfig(strip.uuid!!, strip.pin!!, strip.length!!, strip.brightness!!)
                     val matching = clientConfig.configList.size == 1 && clientConfig.configList.first() == serverConfig
 
                     if (!matching) {
@@ -185,7 +175,7 @@ class WebSocketJob(
                         state = StreamingJobState.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
-                        val frameOptional = renderer.renderFrame(strip.getUuid(), 0)
+                        val frameOptional = renderer.renderFrame(strip.uuid!!, 0)
                         if (frameOptional.isEmpty) {
                             // Send a keep-alive frame to clear the strip and prevent the WebSocket from timing out
                             if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
@@ -213,7 +203,7 @@ class WebSocketJob(
                             val options = optionsBuilder.build()
 
                             // Serialize and send frame
-                            val encodedFrame = serializer.encode(frameData, strip.getPin(), options)
+                            val encodedFrame = serializer.encode(frameData, strip.pin!!, options)
 
                             withContext(Dispatchers.IO) {
                                 client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
@@ -246,7 +236,7 @@ class WebSocketJob(
 
     private suspend fun sendClearFrame() {
         val rgbData = mutableListOf<RgbColor>()
-        for (i in 0..<strip.getLength()) {
+        for (i in 0..<strip.length!!) {
             rgbData.add(RgbColor.Blank)
         }
 
@@ -254,7 +244,7 @@ class WebSocketJob(
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
-        val frame = serializer.encode(frameData, strip.getPin(), options)
+        val frame = serializer.encode(frameData, strip.pin!!, options)
 
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
