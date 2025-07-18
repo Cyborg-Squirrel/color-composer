@@ -73,13 +73,15 @@ class NightDriverSocketJob(
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
                             val stripEntity = clientEntity.strips.first()
+                            // Night Driver manages the power limit so 0 is acceptable here
                             strip = LedStripModel(
                                 stripEntity.name!!,
                                 stripEntity.uuid!!,
                                 stripEntity.pin!!,
                                 stripEntity.length!!,
                                 stripEntity.height,
-                                stripEntity.blendMode!!
+                                stripEntity.blendMode!!,
+                                stripEntity.brightness!!,
                             )
                             state = StreamingJobState.DisconnectedIdle
                         } else {
@@ -99,6 +101,11 @@ class NightDriverSocketJob(
                 StreamingJobState.DisconnectedIdle -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
                     setupSocket()
+                }
+
+                StreamingJobState.SettingsSync -> {
+                    // Not supported by NightDriver - we should never end up in this state
+                    throw Exception("Unexpected state! $state")
                 }
 
                 StreamingJobState.BufferFullWaiting -> {

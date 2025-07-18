@@ -1,12 +1,13 @@
 package io.cyborgsquirrel.jobs.streaming
 
-import io.cyborgsquirrel.clients.config.ConfigClient
+import io.cyborgsquirrel.clients.config.pi_client.PiConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketJob
 import io.cyborgsquirrel.jobs.streaming.pi_client.WebSocketJob
+import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.websocket.WebSocketClient
@@ -19,10 +20,11 @@ import java.util.concurrent.Semaphore
 class StreamJobManagerImpl(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
+    private val powerLimiterService: PowerLimiterService,
     private val triggerManager: TriggerManager,
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
-    private val configClient: ConfigClient,
+    private val piConfigClient: PiConfigClient,
 ) : StreamJobManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val jobMap = mutableMapOf<String, Pair<ClientStreamingJob, Job>>()
@@ -37,10 +39,11 @@ class StreamJobManagerImpl(
                     WebSocketJob(
                         webSocketClient,
                         renderer,
+                        powerLimiterService,
                         triggerManager,
                         clientRepository,
                         timeHelper,
-                        configClient,
+                        piConfigClient,
                         client
                     )
                 }
@@ -71,7 +74,7 @@ class StreamJobManagerImpl(
         }
     }
 
-    override fun updateJob(client: LedStripClientEntity) {
+    override fun notifyJobOfDataUpdate(client: LedStripClientEntity) {
         logger.info("Updating websocket job for $client")
         try {
             lock.acquire()

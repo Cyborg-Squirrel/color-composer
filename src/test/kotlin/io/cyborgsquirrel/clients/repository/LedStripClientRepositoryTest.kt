@@ -35,6 +35,7 @@ class LedStripClientRepositoryTest(
         length = 60,
         uuid = UUID.randomUUID().toString(),
         blendMode = BlendMode.Layer,
+        brightness = 50,
     )
 
     fun assertClientsAreEqual(expected: LedStripClientEntity, actual: LedStripClientEntity) {

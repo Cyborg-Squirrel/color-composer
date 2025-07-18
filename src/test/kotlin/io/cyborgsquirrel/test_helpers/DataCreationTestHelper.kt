@@ -39,7 +39,7 @@ fun createLedStripClientEntity(
 fun saveLedStrip(
     stripRepository: H2LedStripRepository,
     client: LedStripClientEntity,
-    name: String, length: Int, pin: String
+    name: String, length: Int, pin: String, brightness: Int,
 ): LedStripEntity =
     stripRepository.save(
         LedStripEntity(
@@ -49,6 +49,7 @@ fun saveLedStrip(
             pin = pin,
             length = length,
             blendMode = BlendMode.Average,
+            brightness = brightness
         )
     )
 

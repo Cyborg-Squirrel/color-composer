@@ -3,11 +3,11 @@ package io.cyborgsquirrel.lighting.rendering
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
-import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
-import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.LedStripGroupModel
 import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
+import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -82,8 +82,6 @@ class LightEffectRendererImpl(
                 is LedStripGroupModel -> {
                     // TODO strip group rendering
                 }
-
-                else -> {}
             }
         }
 

@@ -49,6 +49,7 @@ class LedStripGroupRepositoryTest(
                 pin = pin,
                 length = length,
                 blendMode = BlendMode.Average,
+                brightness = 33,
             )
         )
 

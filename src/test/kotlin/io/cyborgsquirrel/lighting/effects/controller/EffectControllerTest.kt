@@ -50,7 +50,7 @@ class EffectControllerTest(
 
     "Getting all effects" {
         val client = createLedStripClientEntity(clientRepository, "Porch lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 100)
         val paletteSettings = objectToMap(
             objectMapper,
             StaticPaletteSettings(
@@ -99,8 +99,8 @@ class EffectControllerTest(
 
     "Getting effects for a strip" {
         val client = createLedStripClientEntity(clientRepository, "Living Room lights", "192.168.50.50", 50, 51)
-        val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName)
-        val stripB = saveLedStrip(stripRepository, client, "Strip B", 100, PiClientPin.D21.pinName)
+        val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName, 100)
+        val stripB = saveLedStrip(stripRepository, client, "Strip B", 100, PiClientPin.D21.pinName, 75)
         val strips = listOf(stripA, stripB)
         val paletteSettings = objectToMap(
             objectMapper,
@@ -168,7 +168,7 @@ class EffectControllerTest(
 
     "Create an effect" {
         val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 80)
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         val request = CreateEffectRequest(
             strip.uuid!!,
@@ -194,7 +194,7 @@ class EffectControllerTest(
 
     "Updating an effect" {
         val client = createLedStripClientEntity(clientRepository, "Bedroom lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 66)
         val paletteSettings = objectToMap(
             objectMapper,
             TimeOfDayPaletteSettings(
@@ -267,7 +267,7 @@ class EffectControllerTest(
 
     "Deleting an effect" {
         val client = createLedStripClientEntity(clientRepository, "Christmas Tree lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 50)
         val paletteSettings = objectToMap(
             objectMapper,
             ChangingStaticPaletteSettings(

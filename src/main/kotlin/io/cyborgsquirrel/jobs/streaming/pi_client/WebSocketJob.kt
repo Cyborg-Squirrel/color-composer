@@ -1,17 +1,19 @@
 package io.cyborgsquirrel.jobs.streaming.pi_client
 
-import io.cyborgsquirrel.clients.config.ConfigClient
+import io.cyborgsquirrel.clients.config.pi_client.PiConfigClient
+import io.cyborgsquirrel.clients.config.pi_client.PiClientConfig
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
 import io.cyborgsquirrel.jobs.streaming.StreamingJobState
-import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.jobs.streaming.serialization.PiFrameDataSerializer
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
+import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
@@ -31,10 +33,11 @@ import java.util.concurrent.TimeUnit
 class WebSocketJob(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
+    private val powerLimiterService: PowerLimiterService,
     private val triggerManager: TriggerManager,
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
-    private val configClient: ConfigClient,
+    private val piConfigClient: PiConfigClient,
     private var clientEntity: LedStripClientEntity,
 ) : ClientStreamingJob {
 
@@ -42,7 +45,7 @@ class WebSocketJob(
     private var client: LedStripWebSocketClient? = null
 
     // Client data
-    private lateinit var strip: LedStripModel
+    private lateinit var strip: LedStripEntity
 
     // Serialization
     private val serializer = PiFrameDataSerializer()
@@ -66,6 +69,7 @@ class WebSocketJob(
     private val fps = 35
     private val bufferTimeInMilliseconds = 500L
     private var shouldRun = true
+    private var settingsSyncRequired = true
     private var state = StreamingJobState.InsufficientData
 
     override fun start(scope: CoroutineScope): Job {
@@ -86,15 +90,7 @@ class WebSocketJob(
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            val stripEntity = clientEntity.strips.first()
-                            strip = LedStripModel(
-                                stripEntity.name!!,
-                                stripEntity.uuid!!,
-                                stripEntity.pin!!,
-                                stripEntity.length!!,
-                                stripEntity.height,
-                                stripEntity.blendMode!!
-                            )
+                            strip = clientEntity.strips.first()
                             timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
                             state = StreamingJobState.WaitingForConnection
                             setupSocket()
@@ -110,9 +106,30 @@ class WebSocketJob(
                     delay(50)
                 }
 
+                StreamingJobState.SettingsSync -> {
+                    logger.info("Syncing settings with $clientEntity")
+                    settingsSyncRequired = false
+                    val clientConfig = piConfigClient.getConfigs(clientEntity)
+                    val serverConfig = PiClientConfig(strip.uuid!!, strip.pin!!, strip.length!!, strip.brightness!!)
+                    val matching = clientConfig.configList.size == 1 && clientConfig.configList.first() == serverConfig
+
+                    if (!matching) {
+                        logger.info("Settings out of sync for $clientEntity - server config: $serverConfig")
+
+                        for (config in clientConfig.configList) {
+                            piConfigClient.deleteConfig(clientEntity, config)
+                        }
+                        piConfigClient.addConfig(clientEntity, serverConfig)
+                    }
+
+                    state = StreamingJobState.ConnectedIdle
+                }
+
                 StreamingJobState.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
-                    state = if (lastTimeSyncPerformedAt == 0L) {
+                    state = if (settingsSyncRequired) {
+                        StreamingJobState.SettingsSync
+                    } else if (lastTimeSyncPerformedAt == 0L) {
                         StreamingJobState.TimeSyncRequired
                     } else {
                         StreamingJobState.RenderingEffect
@@ -121,6 +138,7 @@ class WebSocketJob(
 
                 StreamingJobState.DisconnectedIdle -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
+                    settingsSyncRequired = true
                     state = StreamingJobState.WaitingForConnection
                     setupSocket()
                 }
@@ -156,7 +174,7 @@ class WebSocketJob(
                         state = StreamingJobState.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
-                        val frameOptional = renderer.renderFrame(strip.getUuid(), 0)
+                        val frameOptional = renderer.renderFrame(strip.uuid!!, 0)
                         if (frameOptional.isEmpty) {
                             // Send a keep-alive frame to clear the strip and prevent the WebSocket from timing out
                             if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
@@ -184,7 +202,7 @@ class WebSocketJob(
                             val options = optionsBuilder.build()
 
                             // Serialize and send frame
-                            val encodedFrame = serializer.encode(frameData, strip.getPin(), options)
+                            val encodedFrame = serializer.encode(frameData, strip.pin!!, options)
 
                             withContext(Dispatchers.IO) {
                                 client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
@@ -217,7 +235,7 @@ class WebSocketJob(
 
     private suspend fun sendClearFrame() {
         val rgbData = mutableListOf<RgbColor>()
-        for (i in 0..<strip.getLength()) {
+        for (i in 0..<strip.length!!) {
             rgbData.add(RgbColor.Blank)
         }
 
@@ -225,18 +243,18 @@ class WebSocketJob(
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
-        val frame = serializer.encode(frameData, strip.getPin(), options)
+        val frame = serializer.encode(frameData, strip.pin!!, options)
 
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
         }
     }
 
-    private fun syncClientTime() {
+    private suspend fun syncClientTime() {
         // Don't sync more often than every 3 seconds if we end up looping on time sync for some reason
         if (timeSinceLastSync > 1000 * 3) {
             val requestTimestamp = timeHelper.millisSinceEpoch()
-            val clientTime = configClient.getClientTime(clientEntity)
+            val clientTime = piConfigClient.getClientTime(clientEntity)
             val responseTimestamp = timeHelper.millisSinceEpoch()
 
             // Assume request and response take the same amount of time for the network to transmit
@@ -296,6 +314,7 @@ class WebSocketJob(
     }
 
     override fun onDataUpdate() {
+        settingsSyncRequired = true
         client?.close()
         state = StreamingJobState.InsufficientData
     }

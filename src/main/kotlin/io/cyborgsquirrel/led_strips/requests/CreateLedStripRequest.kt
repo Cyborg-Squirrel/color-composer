@@ -11,5 +11,6 @@ data class CreateLedStripRequest(
     val length: Int,
     val height: Int? = null,
     val powerLimit: Int? = null,
+    val brightness: Int? = null,
     val blendMode: BlendMode?
 )

@@ -34,6 +34,7 @@ class LedStripSetupController(
                     length = s.length!!,
                     height = s.height,
                     powerLimit = s.powerLimit,
+                    brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
                 )
             }
@@ -56,6 +57,7 @@ class LedStripSetupController(
                     length = s.length!!,
                     height = s.height,
                     powerLimit = s.powerLimit,
+                    brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
                 )
             }

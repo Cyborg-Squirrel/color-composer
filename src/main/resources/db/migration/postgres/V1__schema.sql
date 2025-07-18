@@ -34,6 +34,7 @@ CREATE TABLE led_strips
     height      INT NOT NULL,
     power_limit INT,
     blend_mode  VARCHAR(50) NOT NULL,
+    brightness  INT NOT NULL,
     client_id   INT NOT NULL,
     FOREIGN KEY (client_id) REFERENCES led_strip_clients
 );

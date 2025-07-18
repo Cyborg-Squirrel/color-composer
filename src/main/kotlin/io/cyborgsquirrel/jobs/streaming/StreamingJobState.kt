@@ -10,6 +10,9 @@ enum class StreamingJobState {
     // LedClient is connected but no effects are being rendered
     ConnectedIdle,
 
+    // Send the strip configuration to the client
+    SettingsSync,
+
     // LedClient is disconnected
     DisconnectedIdle,
 

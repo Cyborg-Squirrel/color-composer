@@ -82,8 +82,8 @@ class EffectFilterControllerTest(
 
     "Getting filters for an effect" {
         val client = createLedStripClientEntity(clientRepository, "Living Room lights", "192.168.50.50", 50, 51)
-        val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName)
-        val stripB = saveLedStrip(stripRepository, client, "Strip B", 100, PiClientPin.D21.pinName)
+        val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName, 50)
+        val stripB = saveLedStrip(stripRepository, client, "Strip B", 100, PiClientPin.D21.pinName, 50)
         val strips = listOf(stripA, stripB)
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         var effectEntity = LightEffectEntity(
@@ -121,7 +121,7 @@ class EffectFilterControllerTest(
 
     "Create a filter" {
         val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 50)
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
@@ -163,7 +163,7 @@ class EffectFilterControllerTest(
 
     "Updating a filter" {
         val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.50.50", 50, 51)
-        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 50)
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(

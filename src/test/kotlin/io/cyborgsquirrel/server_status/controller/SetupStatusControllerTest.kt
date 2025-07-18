@@ -50,7 +50,7 @@ class SetupStatusControllerTest(
 
         "Setup status - clients and strips configured, no effects" {
             val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.1.12", 1111, 2222)
-            saveLedStrip(stripRepository, client, "Hallway lights", 240, PiClientPin.D21.pinName)
+            saveLedStrip(stripRepository, client, "Hallway lights", 240, PiClientPin.D21.pinName, 50)
             val statusResponse = apiClient.setupStatus()
             val response = statusResponse.body() as SetupStatusResponse
             response.status shouldBe SetupStatus.NoEffects
@@ -58,7 +58,7 @@ class SetupStatusControllerTest(
 
         "Setup status - everything configured" {
             val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.1.12", 1111, 2222)
-            val strip = saveLedStrip(stripRepository, client, "Hallway lights", 240, PiClientPin.D10.pinName)
+            val strip = saveLedStrip(stripRepository, client, "Hallway lights", 240, PiClientPin.D10.pinName, 50)
             saveLightEffect(effectRepository, objectMapper, strip)
             val statusResponse = apiClient.setupStatus()
             val response = statusResponse.body() as SetupStatusResponse

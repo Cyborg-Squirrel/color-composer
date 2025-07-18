@@ -55,14 +55,15 @@ class CreateLightingService(
                 stripEntity.pin!!,
                 stripEntity.length!!,
                 stripEntity.height,
-                stripEntity.blendMode!!
+                stripEntity.blendMode!!,
+                stripEntity.brightness!!,
             )
         } else if (groupEntity != null) {
             // Query to do JOIN (effect entity JOIN doesn't capture led strips if it points to a group)
             val stripMemberEntities = groupMemberLedStripRepository.findByGroup(groupEntity)
             val stripEntities = stripMemberEntities.mapNotNull { it.strip }
             val stripModels = stripEntities.map {
-                LedStripModel(it.name!!, it.uuid!!, it.pin!!, it.length!!, it.height, it.blendMode!!)
+                LedStripModel(it.name!!, it.uuid!!, it.pin!!, it.length!!, it.height, it.blendMode!!, it.brightness!!)
             }
             return LedStripGroupModel(
                 groupEntity.name!!,

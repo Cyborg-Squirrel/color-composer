@@ -113,7 +113,8 @@ class LightEffectInitJobTest(
                 name = "Strip A",
                 pin = PiClientPin.D12.pinName,
                 length = 60,
-                blendMode = BlendMode.Average
+                blendMode = BlendMode.Average,
+                brightness = 25,
             )
         )
         val settingsJson = objectToMap(objectMapper, lightEffectSettings)
@@ -171,7 +172,8 @@ class LightEffectInitJobTest(
                 name = "Strip A",
                 pin = PiClientPin.D10.pinName,
                 length = 60,
-                blendMode = BlendMode.Average
+                blendMode = BlendMode.Average,
+                brightness = 25,
             )
         )
         val lightEffectSettingsJson = objectToMap(objectMapper, lightEffectSettings)
@@ -248,7 +250,8 @@ class LightEffectInitJobTest(
                 name = "Strip A",
                 pin = PiClientPin.D10.pinName,
                 length = 60,
-                blendMode = BlendMode.Average
+                blendMode = BlendMode.Average,
+                brightness = 25,
             )
         )
         val lightEffectSettingsJson = objectToMap(objectMapper, lightEffectSettings)
@@ -325,7 +328,8 @@ class LightEffectInitJobTest(
                 name = "Strip A",
                 pin = PiClientPin.D21.pinName,
                 length = 60,
-                blendMode = BlendMode.Average
+                blendMode = BlendMode.Average,
+                brightness = 25,
             )
         )
         val group = ledStripGroupRepository.save(

@@ -1,9 +1,10 @@
 package io.cyborgsquirrel.lighting.power_limits
 
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.model.RgbColor
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
-import java.lang.Float.min
+import kotlin.math.min
 
 @Singleton
 class PowerLimiterServiceImpl : PowerLimiterService {
@@ -43,6 +44,17 @@ class PowerLimiterServiceImpl : PowerLimiterService {
         }
 
         return rgbList
+    }
+
+    override fun getDefaultBrightness(strip: LedStripEntity): Int {
+        val powerLimit = strip.powerLimit
+        val brightness = if (powerLimit != null) {
+            (powerLimit.toFloat() / (strip.length!! * POWER_PER_LED * 3)) * 100
+        } else {
+            (500f / (strip.length!! * POWER_PER_LED * 3)) * 100
+        }
+
+        return min(brightness.toInt(), 100)
     }
 
     companion object {
