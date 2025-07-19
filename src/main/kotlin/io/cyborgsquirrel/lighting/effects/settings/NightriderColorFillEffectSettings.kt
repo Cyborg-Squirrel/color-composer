@@ -6,6 +6,7 @@ import io.micronaut.serde.annotation.Serdeable
 data class NightriderColorFillEffectSettings(
     val wrap: Boolean = false,
     val updatesPerSecond: Int,
+    val brightnessScaling: Float,
 ) : NightriderEffectSettings() {
 
     override fun wrap() = wrap

@@ -6,6 +6,6 @@ sealed class NightriderEffectSettings : LightEffectSettings() {
     abstract fun updatesPerSecond(): Int
 
     companion object {
-        fun default() = NightriderColorFillEffectSettings(false, 35)
+        fun default() = NightriderColorFillEffectSettings(false, 35, 0.2f)
     }
 }

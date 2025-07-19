@@ -16,6 +16,7 @@ import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.test_helpers.normalizeNumberTypes
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -43,7 +44,11 @@ class LightEffectRepositoryTest(
         newEntity.group?.id shouldBe expectedEntity.group?.id
         newEntity.uuid shouldBe expectedEntity.uuid
         newEntity.name shouldBe expectedEntity.name
-        newEntity.settings shouldBe expectedEntity.settings
+        newEntity.settings!!.map { normalizeNumberTypes(it.value) } shouldBe expectedEntity.settings!!.map {
+            normalizeNumberTypes(
+                it.value
+            )
+        }
     }
 
     afterTest {

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 import kotlin.math.abs
 import kotlin.math.log
 import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Light effect where a light travels from one end of the strip to the other
@@ -68,15 +69,10 @@ class NightriderLightEffect(
             }
 
             for (i in 0..<settings.trailLength) {
-                val color = getColor(i, iterations).scale(dotScaleFactor)
+                val color = getColor(i + cometBuffer.size + location, iterations).scale(dotScaleFactor)
                 val interpolationFactor = when (settings.trailFadeCurve) {
-                    FadeCurve.Linear -> i.toFloat() / settings.trailLength
-                    FadeCurve.Logarithmic -> max(
-                        log(
-                            ((i + 1).toFloat() / settings.trailLength) * settings.trailLength,
-                            settings.trailLength.toFloat()
-                        ), 0f
-                    )
+                    FadeCurve.Linear -> min((i + 1).toFloat() / settings.trailLength, 1f)
+                    FadeCurve.Logarithmic -> max(log(i + 1f, settings.trailLength.toFloat()), 0.05f)
                 }
                 val interpolatedColor = if (reflect) color.interpolate(
                     RgbColor.Blank,
@@ -106,11 +102,20 @@ class NightriderLightEffect(
 
     private fun renderNightriderColorFill(): List<RgbColor> {
         val rgbList = mutableListOf<RgbColor>()
+        val brightnessScaling = if (settings is NightriderColorFillEffectSettings) settings.brightnessScaling else 1f
         val startingColorCallback: (Int) -> RgbColor =
-            { location -> if (reflect) getColor(location, iterations - 1) else getColor(location, iterations) }
+            { location ->
+                if (reflect) getColor(location, iterations - 1).scale(brightnessScaling) else getColor(
+                    location,
+                    iterations
+                ).scale(brightnessScaling)
+            }
         val endingColorCallback: (Int) -> RgbColor = { location ->
             if (iterations > 0) {
-                if (reflect) getColor(location, iterations) else getColor(location, iterations - 1)
+                if (reflect) getColor(location, iterations).scale(brightnessScaling) else getColor(
+                    location,
+                    iterations - 1
+                ).scale(brightnessScaling)
             } else {
                 RgbColor.Blank
             }
@@ -120,8 +125,8 @@ class NightriderLightEffect(
         rgbList.addAll(getBeginningColors(startingColorCallback))
 
         // The scrolling dot + trail behind it
-        rgbList.add(getColor(location, iterations).scale(1.5f))
-        rgbList.add(getColor(location + 1, iterations).scale(1.5f))
+        rgbList.add(getColor(location, iterations))
+        rgbList.add(getColor(location + 1, iterations))
 
         return completeFrame(rgbList, endingColorCallback)
     }
