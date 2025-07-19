@@ -12,7 +12,6 @@ import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
-import io.cyborgsquirrel.lighting.effects.requests.LightEffectStatusCommand
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
@@ -20,6 +19,7 @@ import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
+import io.cyborgsquirrel.test_helpers.normalizeNumberTypes
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.kotest.core.spec.style.StringSpec
@@ -92,7 +92,11 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settings shouldBe effectEntity.settings
+        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings!!.map {
+            normalizeNumberTypes(
+                it.value
+            )
+        }
         effectFromApi.stripUuid shouldBe strip.uuid
         effectFromApi.paletteUuid shouldBe palette.uuid
     }
@@ -161,7 +165,11 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settings shouldBe effectEntity.settings
+        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings!!.map {
+            normalizeNumberTypes(
+                it.value
+            )
+        }
         effectFromApi.stripUuid shouldBe effectEntity.strip?.uuid
         effectFromApi.paletteUuid shouldBe palette?.uuid
     }
@@ -188,7 +196,11 @@ class EffectControllerTest(
         effectEntity.strip?.uuid shouldBe request.stripUuid
         effectEntity.name shouldBe request.name
         effectEntity.uuid shouldBe effectUuid
-        effectEntity.settings shouldBe request.settings
+        effectEntity.settings!!.map { normalizeNumberTypes(it.value) } shouldBe request.settings.map {
+            normalizeNumberTypes(
+                it.value
+            )
+        }
         effectEntity.palette shouldBe null
     }
 
@@ -259,7 +271,11 @@ class EffectControllerTest(
         effectEntities.first().strip?.uuid shouldBe strip.uuid
         effectEntities.first().name shouldBe updateRequest.name
         effectEntities.first().uuid shouldBe effectEntity.uuid
-        effectEntities.first().settings shouldBe updateRequest.settings
+        effectEntities.first().settings!!.map { normalizeNumberTypes(it.value) } shouldBe updateRequest.settings!!.map {
+            normalizeNumberTypes(
+                it.value
+            )
+        }
         effectEntities.first().palette shouldBe palette
         // Update effect API doesn't support this - need to use updateEffectStatuses (/status) instead
         effectEntities.first().status shouldBe LightEffectStatus.Idle
