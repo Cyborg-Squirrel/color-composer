@@ -25,21 +25,29 @@ class MarqueeEffect(
         var drawingDot = true
         var dotStart = 0
         var spaceStart = 0
+        var done = false
+        var i = 0
 
-        for (i in 0..<numberOfLeds) {
+        while (!done) {
             if (drawingDot) {
                 if (i - dotStart >= settings.dotLength) {
                     drawingDot = false
+                    done = !dotList.first() && i >= numberOfLeds
                     spaceStart = i
                 }
-                dotList.add(drawingDot)
             } else {
                 if (i - spaceStart >= settings.spaceBetweenDots) {
                     drawingDot = true
+                    done = dotList.first() && i >= numberOfLeds
                     dotStart = i
                 }
+            }
+
+            if (!done) {
                 dotList.add(drawingDot)
             }
+
+            i++
         }
 
         val nowMillis = timeHelper.millisSinceEpoch()
