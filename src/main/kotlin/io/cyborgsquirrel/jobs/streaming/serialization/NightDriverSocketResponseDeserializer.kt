@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.jobs.streaming.serialization
 
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
+import io.micronaut.core.serialize.exceptions.SerializationException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -12,6 +13,10 @@ class NightDriverSocketResponseDeserializer {
         buffer = buffer.order(ByteOrder.LITTLE_ENDIAN)
         val size = buffer.getShort()
         buffer.clear()
+
+        if (size.toInt() != NightDriverSocketResponse.SIZE_IN_BYTES) {
+            throw SerializationException("Unexpected size for NightDriverSocketResponse $size should be ${NightDriverSocketResponse.SIZE_IN_BYTES}")
+        }
 
         offset += 4
         buffer = ByteBuffer.wrap(bytes.sliceArray(offset..offset + 3))
