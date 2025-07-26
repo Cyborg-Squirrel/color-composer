@@ -8,6 +8,10 @@ import java.nio.ByteOrder
 class NightDriverSocketResponseDeserializer {
 
     fun deserialize(bytes: ByteArray): NightDriverSocketResponse {
+        if (bytes.size != NightDriverSocketResponse.SIZE_IN_BYTES) {
+            throw SerializationException("Unexpected size for NightDriverSocketResponse ${bytes.size} should be ${NightDriverSocketResponse.SIZE_IN_BYTES}")
+        }
+
         var offset = 0
         var buffer = ByteBuffer.wrap(bytes.sliceArray(offset..offset + 3))
         buffer = buffer.order(ByteOrder.LITTLE_ENDIAN)
