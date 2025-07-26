@@ -9,6 +9,7 @@ import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverFrameDataSerializer
+import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverSocketResponseDeserializer
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
@@ -36,10 +37,13 @@ class NightDriverSocketJob(
 
     // Serialization
     private val serializer = NightDriverFrameDataSerializer()
+    private val deserializer = NightDriverSocketResponseDeserializer()
 
     // Time tracking
     private var timestampMillis = 0L
-    private val bufferTimeMillis = 150L
+    private val bufferTimeMillis = 250L
+    private val deserializeTcpResponseIntervalMillis = 100L
+    private var lastTcpResponseDeserializedAtMillis = 0L
 
     // State/logic
     private var exponentialReconnectionBackoffValue = 1
@@ -47,6 +51,7 @@ class NightDriverSocketJob(
     private val fps = 35
     private var shouldRun = true
     private var state = StreamingJobState.InsufficientData
+    private var lastResponse: NightDriverSocketResponse? = null
 
     override fun start(scope: CoroutineScope): Job {
         return scope.launch {
@@ -138,6 +143,11 @@ class NightDriverSocketJob(
                         } else if (timestampMillis - (bufferTimeMillis * 2) > now) {
                             // Wait for the duration of one frame so we don't overload the NightDriver client
                             delay(1000 / fps.toLong())
+                        } else if (lastResponse != null) {
+                            if (lastResponse!!.newestPacketMillis() > bufferTimeMillis) {
+                                // Wait for the duration of one frame so we don't overload the NightDriver client
+                                delay(1000 / fps.toLong())
+                            }
                         }
 
                         timestampMillis += 1000 / fps
@@ -170,7 +180,16 @@ class NightDriverSocketJob(
             withContext(Dispatchers.IO) {
                 val availableBytes = socket?.getInputStream()?.available()?.toLong()
                 if (availableBytes != null && availableBytes > 0L) {
-                    socket?.getInputStream()?.skip(availableBytes)
+                    val now = timeHelper.millisSinceEpoch()
+                    if (now - lastTcpResponseDeserializedAtMillis >= deserializeTcpResponseIntervalMillis) {
+                        lastTcpResponseDeserializedAtMillis = now
+                        val bytes = ByteArray(NightDriverSocketResponse.SIZE_IN_BYTES)
+                        socket?.getInputStream()?.read(bytes)
+                        lastResponse = deserializer.deserialize(bytes)
+                        logger.debug("Night Driver client {} status {}", clientEntity, lastResponse)
+                    } else {
+                        socket?.getInputStream()?.skip(availableBytes)
+                    }
                 }
 
                 socket?.getOutputStream()?.write(frame)
