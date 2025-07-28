@@ -202,7 +202,8 @@ class WebSocketJob(
                             val options = optionsBuilder.build()
 
                             // Serialize and send frame
-                            val encodedFrame = serializer.encode(frameData, strip.pin!!, options)
+                            val encodedFrame =
+                                serializer.encode(frameData, strip.pin!!, options, clientEntity.colorOrder!!)
 
                             withContext(Dispatchers.IO) {
                                 client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
@@ -243,7 +244,7 @@ class WebSocketJob(
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
-        val frame = serializer.encode(frameData, strip.pin!!, options)
+        val frame = serializer.encode(frameData, strip.pin!!, options, clientEntity.colorOrder!!)
 
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)

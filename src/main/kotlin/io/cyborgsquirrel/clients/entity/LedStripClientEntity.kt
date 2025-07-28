@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.clients.entity
 
 import io.cyborgsquirrel.clients.enums.ClientType
+import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id
@@ -30,7 +31,8 @@ data class LedStripClientEntity(
     var clientType: ClientType?,
 
     @MappedEntity("color_order")
-    var colorOrder: String?,
+    @Enumerated(EnumType.STRING)
+    var colorOrder: ColorOrder?,
 
     var wsPort: Int? = null,
 
