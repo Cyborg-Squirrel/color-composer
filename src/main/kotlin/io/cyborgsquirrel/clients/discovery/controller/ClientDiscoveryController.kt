@@ -7,6 +7,7 @@ import io.cyborgsquirrel.clients.discovery.model.DiscoveredClientsResponseList
 import io.cyborgsquirrel.clients.discovery.model.DiscoveryStatusResponse
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
+import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.requests.SelectClientRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
@@ -75,7 +76,7 @@ class ClientDiscoveryController(
                         name = client.name,
                         address = client.address,
                         clientType = ClientType.Pi,
-                        colorOrder = "RGB",
+                        colorOrder = ColorOrder.RGB,
                         wsPort = client.wsPort,
                         apiPort = client.apiPort,
                         uuid = UUID.randomUUID().toString()

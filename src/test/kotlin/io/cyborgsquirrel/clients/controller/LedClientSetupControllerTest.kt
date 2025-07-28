@@ -2,6 +2,7 @@ package io.cyborgsquirrel.clients.controller
 
 import io.cyborgsquirrel.clients.api.LedClientSetupApi
 import io.cyborgsquirrel.clients.enums.ClientType
+import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
@@ -66,7 +67,8 @@ class LedClientSetupControllerTest(
         }
 
         "Creating clients" {
-            val createClientRequest = CreateClientRequest("Window lights", "192.168.5.5", ClientType.Pi, "GRB", 80, 82)
+            val createClientRequest =
+                CreateClientRequest("Window lights", "192.168.5.5", ClientType.Pi, ColorOrder.GRB, 80, 82)
             val createResponse = apiClient.create(createClientRequest)
             createResponse.status shouldBe HttpStatus.CREATED
 
@@ -86,7 +88,8 @@ class LedClientSetupControllerTest(
 
         "Updating clients" {
             val clientEntity = createLedStripClientEntity(clientRepository, "Window lights", "192.168.1.112", 112, 113)
-            val updatedClientRequest = UpdateClientRequest("Living room lights", "192.168.1.113", "GRB", 115, 116)
+            val updatedClientRequest =
+                UpdateClientRequest("Living room lights", "192.168.1.113", ColorOrder.GRB, 115, 116)
             val updateResponse = apiClient.update(clientEntity.uuid!!, updatedClientRequest)
             updateResponse.status shouldBe HttpStatus.NO_CONTENT
 

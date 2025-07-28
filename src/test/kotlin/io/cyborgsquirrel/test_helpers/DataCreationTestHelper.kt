@@ -4,6 +4,7 @@ import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
+import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
@@ -29,7 +30,7 @@ fun createLedStripClientEntity(
             name = name,
             address = address,
             clientType = ClientType.Pi,
-            colorOrder = "RGB",
+            colorOrder = ColorOrder.RGB,
             uuid = UUID.randomUUID().toString(),
             apiPort = apiPort,
             wsPort = wsPort

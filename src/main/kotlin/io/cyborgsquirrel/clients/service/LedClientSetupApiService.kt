@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.clients.service
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
@@ -59,12 +60,7 @@ class LedClientSetupApiService(
             entityOptional.get().uuid!!
         } else {
             // Default to RGB if no color order is specified - it is not required for Pi clients
-            val colorOrder = if (request.colorOrder != null) {
-                validateColorOrder(request.colorOrder)
-                request.colorOrder
-            } else {
-                "RGB"
-            }
+            val colorOrder = request.colorOrder ?: ColorOrder.RGB
 
             val clientEntity = clientRepository.save(
                 LedStripClientEntity(
@@ -87,10 +83,6 @@ class LedClientSetupApiService(
         val entityOptional = clientRepository.findByUuid(uuid)
 
         if (entityOptional.isPresent) {
-            if (request.colorOrder != null) {
-                validateColorOrder(request.colorOrder)
-            }
-
             val entity = entityOptional.get()
             val newEntity = entity.copy(
                 name = request.name ?: entity.name,
@@ -122,19 +114,6 @@ class LedClientSetupApiService(
             }
         } else {
             throw ClientRequestException("Could not delete client with uuid $uuid. It does not exist.")
-        }
-    }
-
-    private fun validateColorOrder(colorOrder: String) {
-        if (colorOrder.length > 3) {
-            throw ClientRequestException("Color order cannot be longer than 3. Example: RGB, GRB.")
-        } else {
-            val isValid = colorOrder.contains('R') && colorOrder.contains('G') && colorOrder.contains(
-                'B'
-            )
-            if (!isValid) {
-                throw ClientRequestException("Color order must contain only the characters RGB.")
-            }
         }
     }
 }

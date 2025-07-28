@@ -4,6 +4,7 @@ import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
+import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
@@ -28,7 +29,7 @@ class LedStripRepositoryTest(
             name = "Hallway client",
             address = "192.168.50.210",
             clientType = ClientType.Pi,
-            colorOrder = "RGB",
+            colorOrder = ColorOrder.RGB,
             uuid = UUID.randomUUID().toString(),
             wsPort = 8888,
             apiPort = 7777

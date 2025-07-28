@@ -3,6 +3,7 @@ package io.cyborgsquirrel.clients.repository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
+import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.lighting.enums.BlendMode
@@ -22,7 +23,7 @@ class LedStripClientRepositoryTest(
         name = "Living Room",
         address = "192.168.50.200",
         clientType = ClientType.Pi,
-        colorOrder = "RGB",
+        colorOrder = ColorOrder.RGB,
         uuid = UUID.randomUUID().toString(),
         wsPort = 8888,
         apiPort = 80
