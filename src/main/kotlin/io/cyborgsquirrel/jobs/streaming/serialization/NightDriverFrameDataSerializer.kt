@@ -1,6 +1,5 @@
 package io.cyborgsquirrel.jobs.streaming.serialization
 
-import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.util.toLittleEndian
 
@@ -15,9 +14,8 @@ class NightDriverFrameDataSerializer {
     /**
      * Encodes [RgbFrameData] into a [ByteArray]
      * [channelBitmask] is a bitmask of channels to display the RgbFrameData on
-     * [colorOrder] typically RGB or GRB, defines the color order in the frame packet
      */
-    fun encode(frameData: RgbFrameData, channelBitmask: Int, colorOrder: ColorOrder): ByteArray {
+    fun encode(frameData: RgbFrameData, channelBitmask: Int): ByteArray {
         val rgbDataBytesLen = frameData.rgbData.size * 3
         val totalFrameBytes =
             commandBytesLen + channelBytesLen + lengthBytesLen + (timestampBytesLen * 2) + rgbDataBytesLen
@@ -63,14 +61,11 @@ class NightDriverFrameDataSerializer {
 
         offset = commandBytesLen + channelBytesLen + lengthBytesLen + (timestampBytesLen * 2)
 
-        val r = colorOrder.name.indexOfFirst { it == 'R' }
-        val g = colorOrder.name.indexOfFirst { it == 'G' }
-        val b = colorOrder.name.indexOfFirst { it == 'B' }
         for (i in 0..<frameData.rgbData.size) {
             val rgbOffset = offset + (i * rgbLen)
-            encodedFrame[rgbOffset + r] = frameData.rgbData[i].red.toByte()
-            encodedFrame[rgbOffset + g] = frameData.rgbData[i].green.toByte()
-            encodedFrame[rgbOffset + b] = frameData.rgbData[i].blue.toByte()
+            encodedFrame[rgbOffset + 0] = frameData.rgbData[i].red.toByte()
+            encodedFrame[rgbOffset + 1] = frameData.rgbData[i].green.toByte()
+            encodedFrame[rgbOffset + 2] = frameData.rgbData[i].blue.toByte()
         }
 
         return encodedFrame

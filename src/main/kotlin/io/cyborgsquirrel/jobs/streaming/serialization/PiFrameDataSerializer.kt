@@ -1,6 +1,5 @@
 package io.cyborgsquirrel.jobs.streaming.serialization
 
-import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.RgbFrameOptions
 import io.cyborgsquirrel.util.toLittleEndian
@@ -16,15 +15,14 @@ class PiFrameDataSerializer {
      * Encodes [RgbFrameData] into a [ByteArray] with no [RgbFrameOptions] set
      * [pin] is the data pin the LED strip is connected to which will render this frame
      */
-    fun encode(frameData: RgbFrameData, pin: String): ByteArray =
-        encode(frameData, pin, RgbFrameOptions.blank(), ColorOrder.RGB)
+    fun encode(frameData: RgbFrameData, pin: String): ByteArray = encode(frameData, pin, RgbFrameOptions.blank())
 
     /**
      * Encodes [RgbFrameData] into a [ByteArray] with the specified [RgbFrameOptions]
      * [pin] is the data pin the LED strip is connected to which will render this frame
      * [colorOrder] is the color order for the strip (RGB, GRB, etc.)
      */
-    fun encode(frameData: RgbFrameData, pin: String, options: RgbFrameOptions, colorOrder: ColorOrder): ByteArray {
+    fun encode(frameData: RgbFrameData, pin: String, options: RgbFrameOptions): ByteArray {
         val rgbDataBytesLen = frameData.rgbData.size * 3
         val totalFrameBytes = commandByteLen + pinBytesLen + timestampBytesLen + rgbDataBytesLen
         val encodedFrame = ByteArray(totalFrameBytes)
@@ -57,14 +55,11 @@ class PiFrameDataSerializer {
 
         offset = commandByteLen + pinBytesLen + timestampBytesLen
 
-        val r = colorOrder.name.indexOfFirst { it == 'R' }
-        val g = colorOrder.name.indexOfFirst { it == 'G' }
-        val b = colorOrder.name.indexOfFirst { it == 'B' }
         for (i in 0..<frameData.rgbData.size) {
             val rgbOffset = offset + (i * rgbLen)
-            encodedFrame[rgbOffset + r] = frameData.rgbData[i].red.toByte()
-            encodedFrame[rgbOffset + g] = frameData.rgbData[i].green.toByte()
-            encodedFrame[rgbOffset + b] = frameData.rgbData[i].blue.toByte()
+            encodedFrame[rgbOffset + 0] = frameData.rgbData[i].red.toByte()
+            encodedFrame[rgbOffset + 1] = frameData.rgbData[i].green.toByte()
+            encodedFrame[rgbOffset + 2] = frameData.rgbData[i].blue.toByte()
         }
 
         return encodedFrame

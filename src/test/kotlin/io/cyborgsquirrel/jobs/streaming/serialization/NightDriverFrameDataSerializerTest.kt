@@ -27,7 +27,7 @@ class NightDriverFrameDataSerializerTest : StringSpec({
         // this value is a bitmask of which channels (pins) the NightDriver client should display the RGB values on
         val channelBitmask = 5
 
-        val encodedBytes = serializer.encode(rgbFrameData, channelBitmask, ColorOrder.RGB)
+        val encodedBytes = serializer.encode(rgbFrameData, channelBitmask)
 
         // Encoded bytes include:
         // Command (2)
@@ -77,69 +77,6 @@ class NightDriverFrameDataSerializerTest : StringSpec({
         for (data in rgbData) {
             encodedBytes[byteDataIndex] shouldBe data.red.toByte()
             encodedBytes[byteDataIndex + 1] shouldBe data.green.toByte()
-            encodedBytes[byteDataIndex + 2] shouldBe data.blue.toByte()
-            byteDataIndex += 3
-        }
-    }
-
-    "Serialize a frame in GRB order" {
-        val serializer = NightDriverFrameDataSerializer()
-        val rgbFrameData = RgbFrameData(timestamp, rgbData)
-
-        // NightDriver uses channels instead of pins like the Raspberry Pi
-        // this value is a bitmask of which channels (pins) the NightDriver client should display the RGB values on
-        val channelBitmask = 5
-
-        val encodedBytes = serializer.encode(rgbFrameData, channelBitmask, ColorOrder.GRB)
-
-        // Encoded bytes include:
-        // Command (2)
-        // Channel (2)
-        // RGB data length (4)
-        // Seconds (8)
-        // Microseconds (8)
-        // Four RgbPixels which are three bytes each (12)
-        encodedBytes.size shouldBe 36
-
-        // Command byte
-        encodedBytes[0] shouldBe 3
-        encodedBytes[1] shouldBe 0x00
-
-        // Channel bytes
-        encodedBytes[2] shouldBe 0x05
-        encodedBytes[3] shouldBe 0x00
-
-        // RGB data length
-        encodedBytes[4] shouldBe 0x04
-        encodedBytes[5] shouldBe 0x00
-        encodedBytes[6] shouldBe 0x00
-        encodedBytes[7] shouldBe 0x00
-
-        // Seconds bytes
-        encodedBytes[8] shouldBe -0x16
-        encodedBytes[9] shouldBe -0x02
-        encodedBytes[10] shouldBe -0x03
-        encodedBytes[11] shouldBe 0x66
-        encodedBytes[12] shouldBe 0x00
-        encodedBytes[13] shouldBe 0x00
-        encodedBytes[14] shouldBe 0x00
-        encodedBytes[15] shouldBe 0x00
-
-        // Microseconds bytes
-        encodedBytes[16] shouldBe -0x60
-        encodedBytes[17] shouldBe -0x1B
-        encodedBytes[18] shouldBe 0x06
-        encodedBytes[19] shouldBe 0x00
-        encodedBytes[20] shouldBe 0x00
-        encodedBytes[21] shouldBe 0x00
-        encodedBytes[22] shouldBe 0x00
-        encodedBytes[23] shouldBe 0x00
-
-        var byteDataIndex = 24
-        // RgbPixel bytes
-        for (data in rgbData) {
-            encodedBytes[byteDataIndex] shouldBe data.green.toByte()
-            encodedBytes[byteDataIndex + 1] shouldBe data.red.toByte()
             encodedBytes[byteDataIndex + 2] shouldBe data.blue.toByte()
             byteDataIndex += 3
         }
