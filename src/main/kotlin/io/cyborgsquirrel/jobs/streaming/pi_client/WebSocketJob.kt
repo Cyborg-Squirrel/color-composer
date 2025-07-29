@@ -110,7 +110,13 @@ class WebSocketJob(
                     logger.info("Syncing settings with $clientEntity")
                     settingsSyncRequired = false
                     val clientConfig = piConfigClient.getConfigs(clientEntity)
-                    val serverConfig = PiClientConfig(strip.uuid!!, strip.pin!!, strip.length!!, strip.brightness!!)
+                    val serverConfig = PiClientConfig(
+                        strip.uuid!!,
+                        strip.pin!!,
+                        strip.length!!,
+                        strip.brightness!!,
+                        clientEntity.colorOrder!!
+                    )
                     val matching = clientConfig.configList.size == 1 && clientConfig.configList.first() == serverConfig
 
                     if (!matching) {
@@ -202,8 +208,7 @@ class WebSocketJob(
                             val options = optionsBuilder.build()
 
                             // Serialize and send frame
-                            val encodedFrame =
-                                serializer.encode(frameData, strip.pin!!, options, clientEntity.colorOrder!!)
+                            val encodedFrame = serializer.encode(frameData, strip.pin!!, options)
 
                             withContext(Dispatchers.IO) {
                                 client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
@@ -244,7 +249,7 @@ class WebSocketJob(
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
-        val frame = serializer.encode(frameData, strip.pin!!, options, clientEntity.colorOrder!!)
+        val frame = serializer.encode(frameData, strip.pin!!, options)
 
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
