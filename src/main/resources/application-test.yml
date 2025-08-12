@@ -6,6 +6,9 @@ micronaut:
       ws:
         compression:
           enabled: false # Default is true, results in NoClassDefFoundError: com/jcraft/jzlib/Deflater
+  server:
+    cors:
+      enabled: true
 
 datasources:
   default:
