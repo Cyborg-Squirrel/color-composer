@@ -21,13 +21,34 @@ class LedStripSetupController(
     private val stripSetupService: LedStripApiService,
 ) : LedStripSetupApi {
 
-    override fun getStripsForClient(@QueryValue clientUuid: String): HttpResponse<Any> {
-        val clientEntityOptional = clientRepository.findByUuid(clientUuid)
-        return if (clientEntityOptional.isPresent) {
-            val clientEntity = clientEntityOptional.get()
-            val stripResponseList = clientEntity.strips.map { s ->
+    override fun getStrips(@QueryValue clientUuid: String?): HttpResponse<Any> {
+        if (clientUuid != null) {
+            val clientEntityOptional = clientRepository.findByUuid(clientUuid)
+            return if (clientEntityOptional.isPresent) {
+                val clientEntity = clientEntityOptional.get()
+                val stripResponseList = clientEntity.strips.map { s ->
+                    GetLedStripResponse(
+                        clientUuid = clientUuid,
+                        name = s.name!!,
+                        uuid = s.uuid!!,
+                        pin = s.pin!!,
+                        length = s.length!!,
+                        height = s.height,
+                        powerLimit = s.powerLimit,
+                        brightness = s.brightness!!,
+                        blendMode = s.blendMode!!,
+                    )
+                }
+                HttpResponse.ok(GetLedStripsResponse(stripResponseList))
+            } else {
+                HttpResponse.badRequest("No client exists with uuid $clientUuid!")
+            }
+        } else {
+            val clientEntities = clientRepository.queryAll()
+            val stripEntities = clientEntities.map { it.strips }.flatten()
+            val stripResponseList = stripEntities.map { s ->
                 GetLedStripResponse(
-                    clientUuid = clientUuid,
+                    clientUuid = s.client!!.uuid!!,
                     name = s.name!!,
                     uuid = s.uuid!!,
                     pin = s.pin!!,
@@ -38,9 +59,8 @@ class LedStripSetupController(
                     blendMode = s.blendMode!!,
                 )
             }
-            HttpResponse.ok(GetLedStripsResponse(stripResponseList))
-        } else {
-            HttpResponse.badRequest("No client exists with uuid $clientUuid!")
+
+            return HttpResponse.ok(GetLedStripsResponse(stripResponseList))
         }
     }
 

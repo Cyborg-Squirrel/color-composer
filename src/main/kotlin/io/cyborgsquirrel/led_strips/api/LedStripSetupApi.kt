@@ -7,7 +7,7 @@ import io.micronaut.http.annotation.*
 
 interface LedStripSetupApi {
     @Get
-    fun getStripsForClient(@QueryValue clientUuid: String): HttpResponse<Any>
+    fun getStrips(@QueryValue clientUuid: String?): HttpResponse<Any>
 
     @Get("/{uuid}")
     fun getStrip(uuid: String): HttpResponse<Any>
