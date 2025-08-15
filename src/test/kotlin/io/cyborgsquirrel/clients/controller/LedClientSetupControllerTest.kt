@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.clients.controller
 
-import io.cyborgsquirrel.clients.api.LedClientSetupApi
+import io.cyborgsquirrel.clients.api.LedClientApi
 import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
@@ -22,7 +22,7 @@ import java.util.*
 
 @MicronautTest
 class LedClientSetupControllerTest(
-    @Client private val apiClient: LedClientSetupApi,
+    @Client private val apiClient: LedClientApi,
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
 ) :

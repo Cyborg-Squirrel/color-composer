@@ -5,7 +5,7 @@ import io.cyborgsquirrel.clients.requests.UpdateClientRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 
-interface LedClientSetupApi {
+interface LedClientApi {
     @Get("/{uuid}")
     fun getClient(uuid: String): HttpResponse<Any>
 
