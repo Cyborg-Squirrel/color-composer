@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.clients.controller
 
 import io.cyborgsquirrel.clients.api.LedClientSetupApi
+import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
@@ -53,6 +54,7 @@ class LedClientSetupControllerTest(
             singleClientResponse.address shouldBe client.address
             singleClientResponse.wsPort shouldBe client.wsPort
             singleClientResponse.apiPort shouldBe client.apiPort
+            singleClientResponse.status shouldBe ClientStatus.SetupIncomplete
 
             response = apiClient.getAllClients()
             response.status shouldBe HttpStatus.OK
