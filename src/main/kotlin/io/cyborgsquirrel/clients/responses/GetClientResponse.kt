@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.clients.responses
 
+import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.micronaut.serde.annotation.Serdeable
 
@@ -11,5 +12,6 @@ data class GetClientResponse(
     val clientType: String,
     val colorOrder: ColorOrder,
     val apiPort: Int,
-    val wsPort: Int
+    val wsPort: Int,
+    val status: ClientStatus
 )

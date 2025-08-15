@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.clients.service
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
@@ -19,7 +20,7 @@ class LedClientSetupApiService(
 ) {
 
     fun getAllClients(): GetClientsResponse {
-        val clientEntities = clientRepository.findAll()
+        val clientEntities = clientRepository.queryAll()
         val responseClients = clientEntities.map {
             GetClientResponse(
                 it.name!!,
@@ -29,6 +30,7 @@ class LedClientSetupApiService(
                 it.colorOrder!!,
                 it.apiPort!!,
                 it.wsPort!!,
+                getStatus(it)
             )
         }
         return GetClientsResponse(responseClients)
@@ -46,6 +48,7 @@ class LedClientSetupApiService(
                 clientEntity.colorOrder!!,
                 clientEntity.apiPort!!,
                 clientEntity.wsPort!!,
+                getStatus(clientEntity)
             )
 
             return clientResponse
@@ -114,6 +117,15 @@ class LedClientSetupApiService(
             }
         } else {
             throw ClientRequestException("Could not delete client with uuid $uuid. It does not exist.")
+        }
+    }
+
+    private fun getStatus(client: LedStripClientEntity): ClientStatus {
+        // TODO: Other client statuses
+        return if (client.strips.isEmpty()) {
+            ClientStatus.SetupIncomplete
+        } else {
+            ClientStatus.Idle
         }
     }
 }
