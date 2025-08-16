@@ -9,6 +9,8 @@ import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
 import io.cyborgsquirrel.clients.responses.GetClientResponse
 import io.cyborgsquirrel.clients.responses.GetClientsResponse
+import io.cyborgsquirrel.clients.status.ClientStatusInfo
+import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
@@ -17,7 +19,11 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.annotation.Client
+import io.micronaut.test.annotation.MockBean
+import io.micronaut.test.extensions.kotest5.MicronautKotest5Extension.getMock
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
+import io.mockk.every
+import io.mockk.mockk
 import java.util.*
 
 @MicronautTest
@@ -25,8 +31,14 @@ class LedClientSetupControllerTest(
     @Client private val apiClient: LedClientApi,
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
+    private val clientStatusService: ClientStatusService
 ) :
     StringSpec({
+        lateinit var mockClientStatusService: ClientStatusService
+
+        beforeTest {
+            mockClientStatusService = getMock(clientStatusService)
+        }
 
         afterTest {
             clientRepository.deleteAll()
@@ -43,6 +55,11 @@ class LedClientSetupControllerTest(
 
             val client = createLedStripClientEntity(clientRepository, "Window lights", "192.168.1.53", 33, 44)
 
+            val mockedStatus = ClientStatus.SetupIncomplete
+            every {
+                mockClientStatusService.getStatusForClient(client)
+            } returns Optional.of(ClientStatusInfo.inactive(mockedStatus))
+
             response = apiClient.getClient(UUID.randomUUID().toString())
             response.status shouldBe HttpStatus.BAD_REQUEST
 
@@ -54,7 +71,7 @@ class LedClientSetupControllerTest(
             singleClientResponse.address shouldBe client.address
             singleClientResponse.wsPort shouldBe client.wsPort
             singleClientResponse.apiPort shouldBe client.apiPort
-            singleClientResponse.status shouldBe ClientStatus.SetupIncomplete
+            singleClientResponse.status shouldBe mockedStatus
 
             response = apiClient.getAllClients()
             response.status shouldBe HttpStatus.OK
@@ -122,4 +139,9 @@ class LedClientSetupControllerTest(
             deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
             deleteResponse.status shouldBe HttpStatus.BAD_REQUEST
         }
-    })
+    }) {
+    @MockBean(ClientStatusService::class)
+    fun clientStatusService(): ClientStatusService {
+        return mockk()
+    }
+}

@@ -50,8 +50,12 @@ class NightDriverSocketJob(
     private val exponentialReconnectionBackoffValueMax = 8
     private val fps = 35
     private var shouldRun = true
-    private var state = StreamingJobState.InsufficientData
+    private var state = StreamingJobState.SetupIncomplete
     private var lastResponse: NightDriverSocketResponse? = null
+
+    fun getLatestResponse() = lastResponse
+
+    override fun getCurrentState() = state
 
     override fun start(scope: CoroutineScope): Job {
         return scope.launch {
@@ -66,13 +70,13 @@ class NightDriverSocketJob(
     private suspend fun processState() {
         try {
             // Check if NightDriver socket is still connected
-            if (state != StreamingJobState.InsufficientData && socket?.isConnected == false) {
+            if (state != StreamingJobState.SetupIncomplete && socket?.isConnected == false) {
                 delay(250)
                 state = StreamingJobState.DisconnectedIdle
             }
 
             when (state) {
-                StreamingJobState.InsufficientData -> {
+                StreamingJobState.SetupIncomplete -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
@@ -195,7 +199,7 @@ class NightDriverSocketJob(
                 socket?.getOutputStream()?.flush()
             }
         } catch (sockEx: SocketException) {
-            if (state != StreamingJobState.InsufficientData) {
+            if (state != StreamingJobState.SetupIncomplete) {
                 state = StreamingJobState.DisconnectedIdle
             }
         }
@@ -223,7 +227,7 @@ class NightDriverSocketJob(
         if (socket?.isConnected == true) {
             state = StreamingJobState.ConnectedIdle
         } else {
-            if (state != StreamingJobState.InsufficientData) {
+            if (state != StreamingJobState.SetupIncomplete) {
                 state = StreamingJobState.DisconnectedIdle
             }
         }
@@ -236,7 +240,7 @@ class NightDriverSocketJob(
 
     override fun onDataUpdate() {
         socket?.close()
-        state = StreamingJobState.InsufficientData
+        state = StreamingJobState.SetupIncomplete
     }
 
     companion object {

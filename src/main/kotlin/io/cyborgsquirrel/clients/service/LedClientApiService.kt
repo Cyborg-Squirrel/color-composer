@@ -1,27 +1,30 @@
 package io.cyborgsquirrel.clients.service
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
-import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
 import io.cyborgsquirrel.clients.responses.GetClientResponse
 import io.cyborgsquirrel.clients.responses.GetClientsResponse
+import io.cyborgsquirrel.clients.status.ClientStatusInfo
+import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import jakarta.inject.Singleton
 import java.util.*
 
 @Singleton
-class LedClientSetupApiService(
+class LedClientApiService(
     private val clientRepository: H2LedStripClientRepository,
     private val streamJobManager: StreamJobManager,
+    private val clientStatusService: ClientStatusService,
 ) {
 
     fun getAllClients(): GetClientsResponse {
         val clientEntities = clientRepository.queryAll()
         val responseClients = clientEntities.map {
+            val statusInfo = getStatusInfo(it)
             GetClientResponse(
                 it.name!!,
                 it.address!!,
@@ -30,7 +33,8 @@ class LedClientSetupApiService(
                 it.colorOrder!!,
                 it.apiPort!!,
                 it.wsPort!!,
-                getStatus(it)
+                statusInfo.status,
+                statusInfo.activeEffects,
             )
         }
         return GetClientsResponse(responseClients)
@@ -40,6 +44,7 @@ class LedClientSetupApiService(
         val clientEntityOptional = clientRepository.findByUuid(uuid)
         if (clientEntityOptional.isPresent) {
             val clientEntity = clientEntityOptional.get()
+            val statusInfo = getStatusInfo(clientEntity)
             val clientResponse = GetClientResponse(
                 clientEntity.name!!,
                 clientEntity.address!!,
@@ -48,7 +53,8 @@ class LedClientSetupApiService(
                 clientEntity.colorOrder!!,
                 clientEntity.apiPort!!,
                 clientEntity.wsPort!!,
-                getStatus(clientEntity)
+                statusInfo.status,
+                statusInfo.activeEffects,
             )
 
             return clientResponse
@@ -120,12 +126,12 @@ class LedClientSetupApiService(
         }
     }
 
-    private fun getStatus(client: LedStripClientEntity): ClientStatus {
-        // TODO: Other client statuses
-        return if (client.strips.isEmpty()) {
-            ClientStatus.SetupIncomplete
+    private fun getStatusInfo(client: LedStripClientEntity): ClientStatusInfo {
+        val statusOptional = clientStatusService.getStatusForClient(client)
+        return if (statusOptional.isPresent) {
+            statusOptional.get()
         } else {
-            ClientStatus.Idle
+            ClientStatusInfo.error()
         }
     }
 }

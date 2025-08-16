@@ -70,7 +70,7 @@ class WebSocketJob(
     private val bufferTimeInMilliseconds = 500L
     private var shouldRun = true
     private var settingsSyncRequired = true
-    private var state = StreamingJobState.InsufficientData
+    private var state = StreamingJobState.SetupIncomplete
 
     override fun start(scope: CoroutineScope): Job {
         return scope.launch {
@@ -82,10 +82,12 @@ class WebSocketJob(
         }
     }
 
+    override fun getCurrentState() = state
+
     private suspend fun processState() {
         try {
             when (state) {
-                StreamingJobState.InsufficientData -> {
+                StreamingJobState.SetupIncomplete -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
@@ -300,7 +302,7 @@ class WebSocketJob(
             override fun onNext(client: LedStripWebSocketClient?) {
                 state = StreamingJobState.ConnectedIdle
                 client?.registerOnDisconnectedCallback({
-                    if (state != StreamingJobState.InsufficientData) {
+                    if (state != StreamingJobState.SetupIncomplete) {
                         state = StreamingJobState.DisconnectedIdle
                     }
                 })
@@ -322,7 +324,7 @@ class WebSocketJob(
     override fun onDataUpdate() {
         settingsSyncRequired = true
         client?.close()
-        state = StreamingJobState.InsufficientData
+        state = StreamingJobState.SetupIncomplete
     }
 
     companion object {

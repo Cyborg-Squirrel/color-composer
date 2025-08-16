@@ -6,6 +6,7 @@ import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketJob
+import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
 import io.cyborgsquirrel.jobs.streaming.pi_client.WebSocketJob
 import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
@@ -114,6 +115,17 @@ class StreamJobManagerImpl(
             ex.printStackTrace()
         } finally {
             lock.release()
+        }
+    }
+
+    override fun getJobState(client: LedStripClientEntity) = jobMap[client.uuid]?.first?.getCurrentState()
+
+    override fun getLatestNightDriverResponse(client: LedStripClientEntity): NightDriverSocketResponse? {
+        val job = jobMap[client.uuid]?.first
+        return if (job is NightDriverSocketJob) {
+            return job.getLatestResponse()
+        } else {
+            null
         }
     }
 

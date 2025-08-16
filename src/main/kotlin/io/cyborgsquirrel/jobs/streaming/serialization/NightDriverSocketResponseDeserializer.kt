@@ -13,7 +13,7 @@ class NightDriverSocketResponseDeserializer {
         }
 
         var offset = 0
-        var buffer = ByteBuffer.wrap(bytes.sliceArray(offset..offset + 3))
+        var buffer = ByteBuffer.wrap(bytes.sliceArray(0..3))
         buffer = buffer.order(ByteOrder.LITTLE_ENDIAN)
         val size = buffer.getShort()
         buffer.clear()
