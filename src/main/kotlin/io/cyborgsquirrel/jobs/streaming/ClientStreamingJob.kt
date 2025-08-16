@@ -8,5 +8,7 @@ interface ClientStreamingJob: DisposableHandle {
 
     fun start(scope: CoroutineScope): Job
 
+    fun getCurrentState(): StreamingJobState
+
     fun onDataUpdate()
 }

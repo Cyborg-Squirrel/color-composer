@@ -3,14 +3,14 @@ package io.cyborgsquirrel.clients.controller
 import io.cyborgsquirrel.clients.api.LedClientApi
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
-import io.cyborgsquirrel.clients.service.LedClientSetupApiService
+import io.cyborgsquirrel.clients.service.LedClientApiService
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 
 @Controller("/client")
-class LedClientController(private val service: LedClientSetupApiService) : LedClientApi {
+class LedClientController(private val service: LedClientApiService) : LedClientApi {
 
     override fun getClient(uuid: String): HttpResponse<Any> {
         return try {
