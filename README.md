@@ -1,60 +1,26 @@
-## Micronaut 4.6.2 Documentation
+# Color Composer
 
-- [User Guide](https://docs.micronaut.io/4.6.2/guide/index.html)
-- [API Reference](https://docs.micronaut.io/4.6.2/api/index.html)
-- [Configuration Reference](https://docs.micronaut.io/4.6.2/guide/configurationreference.html)
-- [Micronaut Guides](https://guides.micronaut.io/index.html)
----
+## Description
 
-- [Shadow Gradle Plugin](https://plugins.gradle.org/plugin/com.github.johnrengelman.shadow)
-- [Micronaut Gradle Plugin documentation](https://micronaut-projects.github.io/micronaut-gradle-plugin/latest/)
-- [GraalVM Gradle Plugin documentation](https://graalvm.github.io/native-build-tools/latest/gradle-plugin.html)
-## Feature micronaut-aot documentation
+Color Composer is a API server backend used for making light effects using WS2812/NeoPixel LED strips. It is written in Kotlin and uses the [Micronaut Framework](https://guides.micronaut.io/index.html) and uses Postgres as a database.
 
-- [Micronaut AOT documentation](https://micronaut-projects.github.io/micronaut-aot/latest/guide/)
+Color Composer does not interface with LEDs directly. Instead it sends color data to a [Pi Client](https://github.com/Cyborg-Squirrel/color-composer-client) or [NightDriver client](https://github.com/PlummersSoftwareLLC/NightDriverStrip/).
 
+[Color Compser Web](https://github.com/Cyborg-Squirrel/color-composer-web) is the frontend for Color Composer.
 
-## Feature websocket documentation
+## Requirements
 
-- [Micronaut Websocket documentation](https://docs.micronaut.io/latest/guide/#websocket)
+*   JDK 21 or newer
+*   A Postgres installation
 
+## Installation
 
-## Feature ksp documentation
+1. Configure your Postgres instance. Credentials can be passed as command line arguments or defined in the application.yaml file.
+2. Build a Jar. This project uses the shadow plugin which packages all dependencies into a single Jar for ease of use. [Docker](https://guides.micronaut.io/latest/micronaut-docker-image-gradle-kotlin.html) images can also be built.
+3. Run the Jar.
 
-- [Micronaut Kotlin Symbol Processing (KSP) documentation](https://docs.micronaut.io/latest/guide/#kotlin)
+## Contributing
 
-- [https://kotlinlang.org/docs/ksp-overview.html](https://kotlinlang.org/docs/ksp-overview.html)
-
-
-## Feature serialization-jackson documentation
-
-- [Micronaut Serialization Jackson Core documentation](https://micronaut-projects.github.io/micronaut-serialization/latest/guide/)
-
-
-## Feature jdbc-hikari documentation
-
-- [Micronaut Hikari JDBC Connection Pool documentation](https://micronaut-projects.github.io/micronaut-sql/latest/guide/index.html#jdbc)
-
-
-## Feature validation documentation
-
-- [Micronaut Validation documentation](https://micronaut-projects.github.io/micronaut-validation/latest/guide/)
-
-
-## Feature kotest documentation
-
-- [Micronaut Test Kotest5 documentation](https://micronaut-projects.github.io/micronaut-test/latest/guide/#kotest5)
-
-- [https://kotest.io/](https://kotest.io/)
-
-
-## Feature test-resources documentation
-
-- [Micronaut Test Resources documentation](https://micronaut-projects.github.io/micronaut-test-resources/latest/guide/)
-
-
-## Feature http-client documentation
-
-- [Micronaut HTTP Client documentation](https://docs.micronaut.io/latest/guide/index.html#nettyHttpClient)
-
-
+* Create a pull request
+* Explain your changes
+* Add unit tests
