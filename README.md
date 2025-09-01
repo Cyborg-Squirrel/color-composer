@@ -40,3 +40,4 @@ Triggers can be configured to start a light effect at a set time, or run one for
 * Create a pull request
 * Explain your changes
 * Add unit tests
+* The GitHub workflow must pass
