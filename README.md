@@ -1,60 +1,42 @@
-## Micronaut 4.6.2 Documentation
+# Color Composer
 
-- [User Guide](https://docs.micronaut.io/4.6.2/guide/index.html)
-- [API Reference](https://docs.micronaut.io/4.6.2/api/index.html)
-- [Configuration Reference](https://docs.micronaut.io/4.6.2/guide/configurationreference.html)
-- [Micronaut Guides](https://guides.micronaut.io/index.html)
----
+## Description
 
-- [Shadow Gradle Plugin](https://plugins.gradle.org/plugin/com.github.johnrengelman.shadow)
-- [Micronaut Gradle Plugin documentation](https://micronaut-projects.github.io/micronaut-gradle-plugin/latest/)
-- [GraalVM Gradle Plugin documentation](https://graalvm.github.io/native-build-tools/latest/gradle-plugin.html)
-## Feature micronaut-aot documentation
+Color Composer is a API server used for making light effects using WS2812/NeoPixel LED strips. It is written in Kotlin and uses the [Micronaut Framework](https://guides.micronaut.io/index.html) and uses Postgres as a database.
 
-- [Micronaut AOT documentation](https://micronaut-projects.github.io/micronaut-aot/latest/guide/)
+Color Composer does not interface with LEDs directly. Instead it sends color data to a [Pi Client](https://github.com/Cyborg-Squirrel/color-composer-client) or [NightDriver client](https://github.com/PlummersSoftwareLLC/NightDriverStrip/).
 
+[Color Compser Web](https://github.com/Cyborg-Squirrel/color-composer-web) is the frontend for Color Composer.
 
-## Feature websocket documentation
+## Features
 
-- [Micronaut Websocket documentation](https://docs.micronaut.io/latest/guide/#websocket)
+#### Client-Server model
 
+This enables a single interface for controlling multiple clients.
 
-## Feature ksp documentation
+#### Effects
 
-- [Micronaut Kotlin Symbol Processing (KSP) documentation](https://docs.micronaut.io/latest/guide/#kotlin)
+There are currently six effects. Light effects support custom palettes, and effects can be layered to produce new effects. Layering can be customized to make effects take precidence so one effect's colors show instead of another's if they light up the same LED or instead, average RGB values.
 
-- [https://kotlinlang.org/docs/ksp-overview.html](https://kotlinlang.org/docs/ksp-overview.html)
+A TODO feature is LED strip groups which will enable light effects to treat multiple strips as a single strip.
 
+#### Triggers
 
-## Feature serialization-jackson documentation
+Triggers can be configured to start a light effect at a set time, or run one for a specified number of interations. If a location is specified in the location_configs table then data from the [https://sunrise-sunset.org](https://sunrise-sunset.org/) API is fetched and can be used to set a start time of sunrise or sunset.
 
-- [Micronaut Serialization Jackson Core documentation](https://micronaut-projects.github.io/micronaut-serialization/latest/guide/)
+## Requirements
 
+*   JDK 21 or newer
+*   A Postgres installation
 
-## Feature jdbc-hikari documentation
+## Installation
 
-- [Micronaut Hikari JDBC Connection Pool documentation](https://micronaut-projects.github.io/micronaut-sql/latest/guide/index.html#jdbc)
+1. Configure your Postgres instance. Credentials can be passed as command line arguments or defined in the application.yaml file.
+2. Build a Jar. This project uses the shadow plugin which packages all dependencies into a single Jar for ease of use. [Docker](https://guides.micronaut.io/latest/micronaut-docker-image-gradle-kotlin.html) images can also be built.
+3. Run the Jar.
 
+## Contributing
 
-## Feature validation documentation
-
-- [Micronaut Validation documentation](https://micronaut-projects.github.io/micronaut-validation/latest/guide/)
-
-
-## Feature kotest documentation
-
-- [Micronaut Test Kotest5 documentation](https://micronaut-projects.github.io/micronaut-test/latest/guide/#kotest5)
-
-- [https://kotest.io/](https://kotest.io/)
-
-
-## Feature test-resources documentation
-
-- [Micronaut Test Resources documentation](https://micronaut-projects.github.io/micronaut-test-resources/latest/guide/)
-
-
-## Feature http-client documentation
-
-- [Micronaut HTTP Client documentation](https://docs.micronaut.io/latest/guide/index.html#nettyHttpClient)
-
-
+* Create a pull request
+* Explain your changes
+* Add unit tests
