@@ -12,15 +12,17 @@ Color Composer does not interface with LEDs directly. Instead it sends color dat
 
 #### Client-Server model
 
-This enables a single web interface for controlling multiple clients. A TODO feature is LED strip groups which will enable light effects to treat multiple strips as a single strip.
+This enables a single interface for controlling multiple clients.
 
 #### Effects
 
-There are currently six effects. Light effects support custom palettes, and effects can be layered to produce new effects. Layering can be customized to have effects take precidence so one effect's colors show instead of another if they light up the same LED or, average RGB values.
+There are currently six effects. Light effects support custom palettes, and effects can be layered to produce new effects. Layering can be customized to make effects take precidence so one effect's colors show instead of another's if they light up the same LED or instead, average RGB values.
+
+A TODO feature is LED strip groups which will enable light effects to treat multiple strips as a single strip.
 
 #### Triggers
 
-Light effects can be triggered to run at a set time, or for a set number of interations. If a location is specified in the location_configs table then data from the [https://sunrise-sunset.org](https://sunrise-sunset.org/) API is fetched and can be used to set a dynamic start time (sunrise, noon, sunset).
+Triggers can be configured to start a light effect at a set time, or run one for a specified number of interations. If a location is specified in the location_configs table then data from the [https://sunrise-sunset.org](https://sunrise-sunset.org/) API is fetched and can be used to set a start time of sunrise or sunset.
 
 ## Requirements
 
