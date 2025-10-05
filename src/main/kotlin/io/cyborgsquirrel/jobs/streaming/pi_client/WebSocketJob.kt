@@ -28,12 +28,11 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
 /**
- * Background job for streaming effects to clients
+ * Background job for streaming light effects to Raspberry Pi clients
  */
 class WebSocketJob(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
-    private val powerLimiterService: PowerLimiterService,
     private val triggerManager: TriggerManager,
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
