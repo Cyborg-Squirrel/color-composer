@@ -19,7 +19,7 @@ import java.net.SocketException
 import kotlin.math.max
 
 /**
- * Background job for streaming effects to clients
+ * Background job for streaming light effects to NightDriver clients
  */
 class NightDriverSocketJob(
     private val renderer: LightEffectRenderer,
