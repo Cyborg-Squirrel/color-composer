@@ -29,6 +29,16 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Background job for streaming light effects to Raspberry Pi clients
+ *
+ * Communicates with the Raspberry Pi client with the following steps
+ * 1. Checks if the Pi client and LED strips are configured.
+ * If at any point one or both of these is deleted the job returns to this step.
+ * 2. A WebSocket connection is established.
+ * 3. Syncs settings if a settings sync hasn't been performed. This step ensures the Pi client has the same configuration
+ * as the Color Composer server.
+ * 4. Syncs time with the Pi client. This step may be done again if during the rendering process a time de-sync is detected.
+ * 5. Effect rendering. The light effect RGB data is streamed to the Pi client's WebSocket. If the buffer is full the
+ * job goes to the [StreamingJobState.BufferFullWaiting] state to wait for the Pi to render one or more frames.
  */
 class WebSocketJob(
     private val webSocketClient: WebSocketClient,
@@ -71,6 +81,10 @@ class WebSocketJob(
     private var settingsSyncRequired = true
     private var state = StreamingJobState.SetupIncomplete
 
+    /**
+     * Starts the job which will run in the background using a Kotlin Coroutine.
+     * Returns the Job instance.
+     */
     override fun start(scope: CoroutineScope): Job {
         return scope.launch {
             logger.info("Start")
