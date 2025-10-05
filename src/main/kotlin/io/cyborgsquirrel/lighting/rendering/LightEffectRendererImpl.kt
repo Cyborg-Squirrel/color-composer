@@ -23,6 +23,21 @@ class LightEffectRendererImpl(
     // the frame for other LED strips.
     private var stripGroupFrameBuffer = mutableListOf<RenderedFrameModel>()
 
+    /**
+     * Renders all light effects for the specified LED strip [lightUuid].
+     *
+     * First all light effects in the Playing state for the [lightUuid] are rendered. Then the rendered frame data is
+     * put through the filters if any are configured. If the skip blank frames configuration is set, frames will be
+     * skipped if all effects end up producing blank frame data. Last, the light effects are layered on top of each other.
+     * The layering algorithm may just use one effect's colors, or mix them, depending on the blend mode.
+     *
+     * The [sequenceNumber] is used in the case of LED strip groups, where multiple jobs rendering to multiple
+     * clients will request the same color data. The first job to call this method renders the frame, the subsequent
+     * callers read the buffer if the [sequenceNumber] matches.
+     *
+     * Returns an optional RGB data frame. If no effects are configured, or no effects are playing then the optional
+     * will be empty.
+     */
     override fun renderFrame(lightUuid: String, sequenceNumber: Short): Optional<RenderedFrameModel> {
         val activeEffects = effectRepository.getAllEffectsForStrip(lightUuid)
             .filter { it.status == LightEffectStatus.Playing || it.status == LightEffectStatus.Paused }

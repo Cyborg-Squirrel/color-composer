@@ -20,6 +20,13 @@ import kotlin.math.max
 
 /**
  * Background job for streaming light effects to NightDriver clients
+ *
+ * Communicates with the NightDriver client with the following steps
+ * 1. Checks if the NightDriver client and LED strips are configured.
+ * If at any point one or both of these is deleted the job returns to this step.
+ * 2. A TCP socket connection is established. Note: this is NOT a WebSocket.
+ * 3. Effect rendering. The light effect RGB data is streamed to the NightDriver client. If the buffer is full the
+ * job pauses to wait for the NightDriver client to render one or more frames.
  */
 class NightDriverSocketJob(
     private val renderer: LightEffectRenderer,
@@ -57,6 +64,10 @@ class NightDriverSocketJob(
 
     override fun getCurrentState() = state
 
+    /**
+     * Starts the job which will run in the background using a Kotlin Coroutine.
+     * Returns the Job instance.
+     */
     override fun start(scope: CoroutineScope): Job {
         return scope.launch {
             logger.info("Start")
