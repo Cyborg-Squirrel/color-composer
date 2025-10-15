@@ -6,6 +6,12 @@ import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import kotlin.math.min
 
+/**
+ * A service for limiting the brightness of RGB values sent to Raspberry Pi clients.
+ *
+ * Rendering light effects to NightDriver clients have a built-in power limit, but may still use this service to
+ * produce the same output as Pi clients.
+ */
 @Singleton
 class PowerLimiterServiceImpl : PowerLimiterService {
     private var powerLimits = mutableMapOf<String, Int>()

@@ -12,6 +12,12 @@ import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Semaphore
 
+/**
+ * Server startup job to initialize from the last saved state.
+ *
+ * This job reads configured effects, filters, palettes, triggers, and clients from the database. Then registers each
+ * with the corresponding service (e.g. [TriggerManager], [ActiveLightEffectRegistry], [StreamJobManager]).
+ */
 @Singleton
 class LightEffectInitJob(
     private val clientRepository: H2LedStripClientRepository,
