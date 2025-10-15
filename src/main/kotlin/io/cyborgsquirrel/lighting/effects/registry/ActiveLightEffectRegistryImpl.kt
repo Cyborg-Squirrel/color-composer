@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Semaphore
 
+/**
+ * A service for memory storage of [ActiveLightEffect]s.
+ */
 @Singleton
 class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
     private var effectList = mutableListOf<ActiveLightEffect>()

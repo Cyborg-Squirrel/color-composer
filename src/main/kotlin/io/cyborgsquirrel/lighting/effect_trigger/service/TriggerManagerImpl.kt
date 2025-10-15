@@ -13,6 +13,9 @@ import io.cyborgsquirrel.util.time.TimeHelper
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 
+/**
+ * A service class for starting and stopping [ActiveLightEffect]s when a trigger condition is met.
+ */
 @Singleton
 class TriggerManagerImpl(
     private val effectRepository: ActiveLightEffectRegistry,
