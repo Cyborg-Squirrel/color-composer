@@ -226,6 +226,7 @@ class NightDriverSocketJob(
             if (clientEntityOptional.isPresent) {
                 val clientEntity = clientEntityOptional.get()
                 clientEntity.lastSeenAt = currentTimeAsMillis
+                lastSeenAt = currentTimeAsMillis
                 clientRepository.save(clientEntity)
             }
         }
