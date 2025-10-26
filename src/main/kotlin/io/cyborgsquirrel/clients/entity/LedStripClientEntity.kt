@@ -6,6 +6,7 @@ import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity
+import io.micronaut.data.annotation.MappedProperty
 import io.micronaut.data.annotation.Relation
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -38,6 +39,7 @@ data class LedStripClientEntity(
 
     var apiPort: Int? = null,
 
+    @MappedProperty("last_seen_at")
     var lastSeenAt: Long = 0,
 ) {
     // Overrides to prevent infinite looping
