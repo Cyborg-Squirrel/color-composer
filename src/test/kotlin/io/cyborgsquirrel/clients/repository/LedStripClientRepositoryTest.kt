@@ -11,6 +11,8 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
+import java.sql.Timestamp
+import java.time.Instant
 import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
@@ -26,7 +28,8 @@ class LedStripClientRepositoryTest(
         colorOrder = ColorOrder.RGB,
         uuid = UUID.randomUUID().toString(),
         wsPort = 8888,
-        apiPort = 80
+        apiPort = 80,
+        lastSeenAt = Timestamp.from(Instant.now()).time,
     )
 
     val demoLedStripEntity = LedStripEntity(

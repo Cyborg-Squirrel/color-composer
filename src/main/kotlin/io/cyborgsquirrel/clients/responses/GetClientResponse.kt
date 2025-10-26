@@ -13,6 +13,7 @@ data class GetClientResponse(
     val colorOrder: ColorOrder,
     val apiPort: Int,
     val wsPort: Int,
+    val lastSeenAt: Long,
     val status: ClientStatus,
     val activeEffects: Int
 )

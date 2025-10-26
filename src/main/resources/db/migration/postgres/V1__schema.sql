@@ -14,14 +14,15 @@ DROP TABLE IF EXISTS location_configs;
 
 CREATE TABLE led_strip_clients
 (
-    id          SERIAL primary key NOT NULL,
-    name        VARCHAR(255) NOT NULL,
-    uuid        VARCHAR(50) NOT NULL UNIQUE,
-    address     VARCHAR(255) NOT NULL,
-    client_type VARCHAR(50) NOT NULL,
-    color_order VARCHAR(4) NOT NULL,
-    ws_port     INT NOT NULL,
-    api_port    INT NOT NULL
+    id           SERIAL primary key NOT NULL,
+    name         VARCHAR(255) NOT NULL,
+    uuid         VARCHAR(50) NOT NULL UNIQUE,
+    address      VARCHAR(255) NOT NULL,
+    client_type  VARCHAR(50) NOT NULL,
+    color_order  VARCHAR(4) NOT NULL,
+    ws_port      INT NOT NULL,
+    api_port     INT NOT NULL,
+    last_seen_at BIGINT NOT NULL
 );
 
 CREATE TABLE led_strips

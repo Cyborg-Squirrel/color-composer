@@ -51,6 +51,7 @@ class NightDriverSocketJob(
     private val bufferTimeMillis = 250L
     private val deserializeTcpResponseIntervalMillis = 100L
     private var lastTcpResponseDeserializedAtMillis = 0L
+    private var lastSeenAt = 0L
 
     // State/logic
     private var exponentialReconnectionBackoffValue = 1
@@ -145,6 +146,7 @@ class NightDriverSocketJob(
 
                 StreamingJobState.RenderingEffect -> {
                     triggerManager.processTriggers()
+                    updateLastSeenAt()
                     val frameOptional = renderer.renderFrame(strip.getUuid(), 0)
                     if (frameOptional.isEmpty) {
                         delay(150)
@@ -212,6 +214,20 @@ class NightDriverSocketJob(
         } catch (sockEx: SocketException) {
             if (state != StreamingJobState.SetupIncomplete) {
                 state = StreamingJobState.DisconnectedIdle
+            }
+        }
+    }
+
+    private fun updateLastSeenAt() {
+        val currentTimeAsMillis = timeHelper.millisSinceEpoch()
+        val timeSinceLastSeenAtSaved = currentTimeAsMillis - lastSeenAt
+        if (timeSinceLastSeenAtSaved > 15 * 1000) {
+            val clientEntityOptional = clientRepository.findById(clientEntity.id)
+            if (clientEntityOptional.isPresent) {
+                val clientEntity = clientEntityOptional.get()
+                clientEntity.lastSeenAt = currentTimeAsMillis
+                lastSeenAt = currentTimeAsMillis
+                clientRepository.save(clientEntity)
             }
         }
     }
