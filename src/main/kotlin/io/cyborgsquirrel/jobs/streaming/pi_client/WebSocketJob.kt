@@ -67,6 +67,7 @@ class WebSocketJob(
     private var lastKeepaliveFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
     private var timestampMillis = 0L
     private var sleepMillis = 0L
+    private var lastSeenAt = 0L
 
     // Difference in millis between the client and server.
     // Negative values mean the client's clock is behind the server, positive values mean the client's clock is ahead.
@@ -184,6 +185,7 @@ class WebSocketJob(
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     val timeDesynced =
                         timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset
+                    updateLastSeenAt(currentTimeAsMillis)
                     if (timeDesynced) {
                         logger.info(
                             "Re-syncing time with client $client - (client time offset ${clientTimeOffset}ms frame timestamp: ${
@@ -251,6 +253,18 @@ class WebSocketJob(
             ex.printStackTrace()
             delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
             if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
+        }
+    }
+
+    private fun updateLastSeenAt(currentTimeAsMillis: Long) {
+        val timeSinceLastSeenAtSaved = currentTimeAsMillis - lastSeenAt
+        if (timeSinceLastSeenAtSaved > 15 * 1000) {
+            val clientEntityOptional = clientRepository.findById(clientEntity.id)
+            if (clientEntityOptional.isPresent) {
+                val clientEntity = clientEntityOptional.get()
+                clientEntity.lastSeenAt = currentTimeAsMillis
+                clientRepository.save(clientEntity)
+            }
         }
     }
 

@@ -37,6 +37,8 @@ data class LedStripClientEntity(
     var wsPort: Int? = null,
 
     var apiPort: Int? = null,
+
+    var lastSeenAt: Long = 0,
 ) {
     // Overrides to prevent infinite looping
 
@@ -52,6 +54,7 @@ data class LedStripClientEntity(
         if (uuid != other.uuid) return false
         if (apiPort != other.apiPort) return false
         if (wsPort != other.wsPort) return false
+        if (lastSeenAt != other.lastSeenAt) return false
 
         return true
     }
@@ -65,10 +68,11 @@ data class LedStripClientEntity(
         result = 31 * result + (uuid ?: 0).hashCode()
         result = 31 * result + (apiPort ?: 0).hashCode()
         result = 31 * result + (wsPort ?: 0).hashCode()
+        result = 31 * result + lastSeenAt.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "LedStripClientEntity(id=$id, name=$name, address=$address, clientType=$clientType, colorOrder=$colorOrder uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort)"
+        return "LedStripClientEntity(id=$id, name=$name, address=$address, clientType=$clientType, colorOrder=$colorOrder uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort, lastSeenAt=$lastSeenAt)"
     }
 }

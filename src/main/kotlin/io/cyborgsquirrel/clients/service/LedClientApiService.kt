@@ -33,6 +33,7 @@ class LedClientApiService(
                 it.colorOrder!!,
                 it.apiPort!!,
                 it.wsPort!!,
+                it.lastSeenAt,
                 statusInfo.status,
                 statusInfo.activeEffects,
             )
@@ -53,6 +54,7 @@ class LedClientApiService(
                 clientEntity.colorOrder!!,
                 clientEntity.apiPort!!,
                 clientEntity.wsPort!!,
+                clientEntity.lastSeenAt,
                 statusInfo.status,
                 statusInfo.activeEffects,
             )
