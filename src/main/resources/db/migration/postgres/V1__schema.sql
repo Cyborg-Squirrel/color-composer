@@ -22,7 +22,7 @@ CREATE TABLE led_strip_clients
     color_order  VARCHAR(4) NOT NULL,
     ws_port      INT NOT NULL,
     api_port     INT NOT NULL,
-    last_seen    BIGINT NOT NULL
+    last_seen_at BIGINT NOT NULL
 );
 
 CREATE TABLE led_strips
