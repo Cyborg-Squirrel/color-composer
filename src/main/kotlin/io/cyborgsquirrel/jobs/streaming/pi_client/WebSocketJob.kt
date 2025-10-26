@@ -261,10 +261,10 @@ class WebSocketJob(
         if (timeSinceLastSeenAtSaved > 15 * 1000) {
             val clientEntityOptional = clientRepository.findById(clientEntity.id)
             if (clientEntityOptional.isPresent) {
-                val clientEntity = clientEntityOptional.get()
-                clientEntity.lastSeenAt = currentTimeAsMillis
+                val ce = clientEntityOptional.get()
+                ce.lastSeenAt = currentTimeAsMillis
                 lastSeenAt = currentTimeAsMillis
-                clientRepository.save(clientEntity)
+                clientEntity = clientRepository.update(ce)
             }
         }
     }
