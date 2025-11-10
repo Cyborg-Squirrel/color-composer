@@ -84,7 +84,7 @@ class NightDriverSocketJob(
             // Check if NightDriver socket is still connected
             if (state != StreamingJobState.SetupIncomplete && socket?.isConnected == false) {
                 delay(250)
-                state = StreamingJobState.DisconnectedIdle
+                state = StreamingJobState.Offline
             }
 
             when (state) {
@@ -104,7 +104,7 @@ class NightDriverSocketJob(
                                 stripEntity.blendMode!!,
                                 stripEntity.brightness!!,
                             )
-                            state = StreamingJobState.DisconnectedIdle
+                            state = StreamingJobState.Offline
                         } else {
                             delay(5000)
                         }
@@ -119,7 +119,7 @@ class NightDriverSocketJob(
                     state = StreamingJobState.RenderingEffect
                 }
 
-                StreamingJobState.DisconnectedIdle -> {
+                StreamingJobState.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
                     setupSocket()
                 }
@@ -213,15 +213,16 @@ class NightDriverSocketJob(
             }
         } catch (sockEx: SocketException) {
             if (state != StreamingJobState.SetupIncomplete) {
-                state = StreamingJobState.DisconnectedIdle
+                state = StreamingJobState.Offline
             }
         }
     }
 
     private fun updateLastSeenAt() {
+        val oneMinuteInMillis = 60 * 1000
         val currentTimeAsMillis = timeHelper.millisSinceEpoch()
         val timeSinceLastSeenAtSaved = currentTimeAsMillis - lastSeenAt
-        if (timeSinceLastSeenAtSaved > 15 * 1000) {
+        if (timeSinceLastSeenAtSaved > oneMinuteInMillis) {
             val clientEntityOptional = clientRepository.findById(clientEntity.id)
             if (clientEntityOptional.isPresent) {
                 val ce = clientEntityOptional.get()
@@ -255,7 +256,7 @@ class NightDriverSocketJob(
             state = StreamingJobState.ConnectedIdle
         } else {
             if (state != StreamingJobState.SetupIncomplete) {
-                state = StreamingJobState.DisconnectedIdle
+                state = StreamingJobState.Offline
             }
         }
     }

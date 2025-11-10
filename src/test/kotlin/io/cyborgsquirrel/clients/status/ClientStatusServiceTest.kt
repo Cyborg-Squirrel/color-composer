@@ -34,13 +34,13 @@ class ClientStatusServiceTest(
     "Disconnected status" {
         every {
             mockJobsManager.getJobState(any())
-        } returns StreamingJobState.DisconnectedIdle
+        } returns StreamingJobState.Offline
         val mockClientEntity = mockk<LedStripClientEntity>()
         var statusInfoOptional = service.getStatusForClient(mockClientEntity)
 
         statusInfoOptional.isPresent shouldBe true
         var statusInfo = statusInfoOptional.get()
-        statusInfo.status shouldBe ClientStatus.Disconnected
+        statusInfo.status shouldBe ClientStatus.Offline
 
         every {
             mockJobsManager.getJobState(any())
@@ -50,7 +50,7 @@ class ClientStatusServiceTest(
 
         statusInfoOptional.isPresent shouldBe true
         statusInfo = statusInfoOptional.get()
-        statusInfo.status shouldBe ClientStatus.Disconnected
+        statusInfo.status shouldBe ClientStatus.Offline
     }
 
     "Idle status" {

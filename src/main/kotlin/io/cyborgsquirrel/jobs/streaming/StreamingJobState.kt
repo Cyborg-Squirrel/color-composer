@@ -13,8 +13,8 @@ enum class StreamingJobState {
     // Send the strip configuration to the client
     SettingsSync,
 
-    // LedClient is disconnected
-    DisconnectedIdle,
+    // LedClient is offline
+    Offline,
 
     // Client's frame buffer is full, server pausing until it's time to send more frames
     BufferFullWaiting,
