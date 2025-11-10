@@ -14,7 +14,7 @@ enum class ClientStatus {
     Active,
 
     // Client is disconnected and reconnect attempts are not being attempted
-    Disconnected,
+    Offline,
 
     // Client is in an error state
     Error,

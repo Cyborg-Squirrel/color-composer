@@ -20,8 +20,8 @@ class ClientStatusServiceImpl(
         if (clientJobState != null) {
             return when (clientJobState) {
                 StreamingJobState.SetupIncomplete -> Optional.of(ClientStatusInfo.inactive(ClientStatus.SetupIncomplete))
-                StreamingJobState.WaitingForConnection -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Disconnected))
-                StreamingJobState.DisconnectedIdle -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Disconnected))
+                StreamingJobState.WaitingForConnection -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Offline))
+                StreamingJobState.DisconnectedIdle -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Offline))
                 StreamingJobState.ConnectedIdle -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Idle))
                 else -> {
                     val strips = clientEntity.strips
