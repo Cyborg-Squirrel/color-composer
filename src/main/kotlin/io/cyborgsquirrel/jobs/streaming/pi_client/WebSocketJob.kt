@@ -175,7 +175,7 @@ class WebSocketJob(
                     timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
                     logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
-                    // If we disconnect during the time sync don't set the state to connected
+                    // If we disconnect during the time sync don't set the state to rendering
                     if (state != StreamingJobState.DisconnectedIdle) {
                         state = StreamingJobState.RenderingEffect
                     }
@@ -257,8 +257,9 @@ class WebSocketJob(
     }
 
     private fun updateLastSeenAt(currentTimeAsMillis: Long) {
+        val oneMinuteInMillis = 60 * 1000
         val timeSinceLastSeenAtSaved = currentTimeAsMillis - lastSeenAt
-        if (timeSinceLastSeenAtSaved > 15 * 1000) {
+        if (timeSinceLastSeenAtSaved > oneMinuteInMillis) {
             val clientEntityOptional = clientRepository.findById(clientEntity.id)
             if (clientEntityOptional.isPresent) {
                 val ce = clientEntityOptional.get()

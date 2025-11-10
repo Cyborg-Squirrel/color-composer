@@ -219,9 +219,10 @@ class NightDriverSocketJob(
     }
 
     private fun updateLastSeenAt() {
+        val oneMinuteInMillis = 60 * 1000
         val currentTimeAsMillis = timeHelper.millisSinceEpoch()
         val timeSinceLastSeenAtSaved = currentTimeAsMillis - lastSeenAt
-        if (timeSinceLastSeenAtSaved > 15 * 1000) {
+        if (timeSinceLastSeenAtSaved > oneMinuteInMillis) {
             val clientEntityOptional = clientRepository.findById(clientEntity.id)
             if (clientEntityOptional.isPresent) {
                 val ce = clientEntityOptional.get()
