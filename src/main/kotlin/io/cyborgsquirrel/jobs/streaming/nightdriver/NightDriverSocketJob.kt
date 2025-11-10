@@ -84,7 +84,7 @@ class NightDriverSocketJob(
             // Check if NightDriver socket is still connected
             if (state != StreamingJobState.SetupIncomplete && socket?.isConnected == false) {
                 delay(250)
-                state = StreamingJobState.DisconnectedIdle
+                state = StreamingJobState.Offline
             }
 
             when (state) {
@@ -104,7 +104,7 @@ class NightDriverSocketJob(
                                 stripEntity.blendMode!!,
                                 stripEntity.brightness!!,
                             )
-                            state = StreamingJobState.DisconnectedIdle
+                            state = StreamingJobState.Offline
                         } else {
                             delay(5000)
                         }
@@ -119,7 +119,7 @@ class NightDriverSocketJob(
                     state = StreamingJobState.RenderingEffect
                 }
 
-                StreamingJobState.DisconnectedIdle -> {
+                StreamingJobState.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
                     setupSocket()
                 }
@@ -213,7 +213,7 @@ class NightDriverSocketJob(
             }
         } catch (sockEx: SocketException) {
             if (state != StreamingJobState.SetupIncomplete) {
-                state = StreamingJobState.DisconnectedIdle
+                state = StreamingJobState.Offline
             }
         }
     }
@@ -256,7 +256,7 @@ class NightDriverSocketJob(
             state = StreamingJobState.ConnectedIdle
         } else {
             if (state != StreamingJobState.SetupIncomplete) {
-                state = StreamingJobState.DisconnectedIdle
+                state = StreamingJobState.Offline
             }
         }
     }

@@ -13,7 +13,6 @@ import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.jobs.streaming.serialization.PiFrameDataSerializer
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
@@ -158,7 +157,7 @@ class WebSocketJob(
                     }
                 }
 
-                StreamingJobState.DisconnectedIdle -> {
+                StreamingJobState.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
                     settingsSyncRequired = true
                     state = StreamingJobState.WaitingForConnection
@@ -176,7 +175,7 @@ class WebSocketJob(
                     logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
                     // If we disconnect during the time sync don't set the state to rendering
-                    if (state != StreamingJobState.DisconnectedIdle) {
+                    if (state != StreamingJobState.Offline) {
                         state = StreamingJobState.RenderingEffect
                     }
                 }
@@ -322,7 +321,7 @@ class WebSocketJob(
             }
 
             override fun onError(t: Throwable?) {
-                state = StreamingJobState.DisconnectedIdle
+                state = StreamingJobState.Offline
                 future.completeExceptionally(t)
             }
 
@@ -332,7 +331,7 @@ class WebSocketJob(
                 state = StreamingJobState.ConnectedIdle
                 client?.registerOnDisconnectedCallback({
                     if (state != StreamingJobState.SetupIncomplete) {
-                        state = StreamingJobState.DisconnectedIdle
+                        state = StreamingJobState.Offline
                     }
                 })
                 future.complete(client)
