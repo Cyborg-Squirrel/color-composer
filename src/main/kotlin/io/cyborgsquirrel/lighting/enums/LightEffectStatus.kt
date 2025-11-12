@@ -13,3 +13,7 @@ enum class LightEffectStatus {
     // No longer being rendered, will start from the beginning if the user reactivates it
     Stopped,
 }
+
+fun LightEffectStatus.isActive(): Boolean {
+    return this == LightEffectStatus.Playing || this == LightEffectStatus.Paused
+}

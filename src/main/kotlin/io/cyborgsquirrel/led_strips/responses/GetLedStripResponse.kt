@@ -13,5 +13,6 @@ data class GetLedStripResponse(
     val height: Int,
     val powerLimit: Int?,
     val brightness: Int,
-    val blendMode: BlendMode
+    val blendMode: BlendMode,
+    val activeEffects: Int,
 )
