@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.rendering
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.lighting.model.LedStripGroupModel
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
@@ -40,7 +41,7 @@ class LightEffectRendererImpl(
      */
     override fun renderFrame(lightUuid: String, sequenceNumber: Short): Optional<RenderedFrameModel> {
         val activeEffects = effectRepository.getAllEffectsForStrip(lightUuid)
-            .filter { it.status == LightEffectStatus.Playing || it.status == LightEffectStatus.Paused }
+            .filter { it.status.isActive() }
             .sortedBy { it.priority }
         if (activeEffects.isEmpty()) {
             // No active effects for the specified LED strip

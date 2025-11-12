@@ -8,6 +8,8 @@ import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.led_strips.responses.GetLedStripResponse
 import io.cyborgsquirrel.led_strips.responses.GetLedStripsResponse
 import io.cyborgsquirrel.led_strips.service.LedStripApiService
+import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
@@ -19,12 +21,14 @@ class LedStripSetupController(
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
     private val stripSetupService: LedStripApiService,
+    private val activeLightEffectRegistry: ActiveLightEffectRegistry,
 ) : LedStripSetupApi {
 
     override fun getStrips(@QueryValue clientUuid: String?): HttpResponse<Any> {
         if (clientUuid != null) {
             val clientEntityOptional = clientRepository.findByUuid(clientUuid)
             return if (clientEntityOptional.isPresent) {
+                val activeEffects = activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() }
                 val clientEntity = clientEntityOptional.get()
                 val stripResponseList = clientEntity.strips.map { s ->
                     GetLedStripResponse(
@@ -37,6 +41,7 @@ class LedStripSetupController(
                         powerLimit = s.powerLimit,
                         brightness = s.brightness!!,
                         blendMode = s.blendMode!!,
+                        activeEffects = activeEffects.filter { it.strip.getUuid() == s.uuid }.size
                     )
                 }
                 HttpResponse.ok(GetLedStripsResponse(stripResponseList))
@@ -46,6 +51,7 @@ class LedStripSetupController(
         } else {
             val clientEntities = clientRepository.queryAll()
             val stripEntities = clientEntities.map { it.strips }.flatten()
+            val activeEffects = activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() }
             val stripResponseList = stripEntities.map { s ->
                 GetLedStripResponse(
                     clientUuid = s.client!!.uuid!!,
@@ -57,6 +63,7 @@ class LedStripSetupController(
                     powerLimit = s.powerLimit,
                     brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
+                    activeEffects = activeEffects.filter { it.strip.getUuid() == s.uuid }.size,
                 )
             }
 
@@ -67,6 +74,7 @@ class LedStripSetupController(
     override fun getStrip(uuid: String): HttpResponse<Any> {
         val entityOptional = stripRepository.findByUuid(uuid)
         return if (entityOptional.isPresent) {
+            val activeEffects = activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() }
             val entity = entityOptional.get()
             val response = entity.let { s ->
                 GetLedStripResponse(
@@ -79,6 +87,7 @@ class LedStripSetupController(
                     powerLimit = s.powerLimit,
                     brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
+                    activeEffects = activeEffects.filter { it.strip.getUuid() == s.uuid }.size,
                 )
             }
             HttpResponse.ok(response)

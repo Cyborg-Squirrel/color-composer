@@ -5,7 +5,7 @@ import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.jobs.streaming.StreamingJobState
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
-import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.lighting.enums.isActive
 import jakarta.inject.Singleton
 import java.util.*
 
@@ -28,7 +28,7 @@ class ClientStatusServiceImpl(
                     var activeEffects = 0
                     for (strip in strips) {
                         val effectsForStrip = activeLightEffectRegistry.getAllEffectsForStrip(strip.uuid!!)
-                            .filter { it.status == LightEffectStatus.Playing || it.status == LightEffectStatus.Paused }
+                            .filter { it.status.isActive() }
                         activeEffects += effectsForStrip.size
                     }
 
