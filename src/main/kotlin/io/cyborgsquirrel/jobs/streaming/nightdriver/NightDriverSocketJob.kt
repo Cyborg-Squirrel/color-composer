@@ -49,7 +49,7 @@ class NightDriverSocketJob(
 
     // Time tracking
     private var timestampMillis = 0L
-    private val bufferTimeMillis = 333L
+    private val bufferTimeMillis = 500L
     private var lastSeenAt = 0L
 
     // State/logic
