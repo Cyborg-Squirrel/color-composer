@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
+import java.time.LocalDateTime
 import kotlin.math.max
 
 /**
@@ -48,9 +49,7 @@ class NightDriverSocketJob(
 
     // Time tracking
     private var timestampMillis = 0L
-    private val bufferTimeMillis = 250L
-    private val deserializeTcpResponseIntervalMillis = 100L
-    private var lastTcpResponseDeserializedAtMillis = 0L
+    private val bufferTimeMillis = 333L
     private var lastSeenAt = 0L
 
     // State/logic
@@ -60,6 +59,7 @@ class NightDriverSocketJob(
     private var shouldRun = true
     private var state = StreamingJobState.SetupIncomplete
     private var lastResponse: NightDriverSocketResponse? = null
+    private var lastResponseReceivedAt = 0L
 
     fun getLatestResponse() = lastResponse
 
@@ -94,7 +94,6 @@ class NightDriverSocketJob(
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
                             val stripEntity = clientEntity.strips.first()
-                            // Night Driver manages the power limit so 0 is acceptable here
                             strip = LedStripModel(
                                 stripEntity.name!!,
                                 stripEntity.uuid!!,
@@ -157,11 +156,10 @@ class NightDriverSocketJob(
                         if (timestampMillis <= now) {
                             logger.info("Timestamp is less than or equal to now, catching it up.")
                             timestampMillis = now + bufferTimeMillis
-                        } else if (timestampMillis - (bufferTimeMillis * 2) > now) {
-                            // Wait for the duration of one frame so we don't overload the NightDriver client
-                            delay(1000 / fps.toLong())
                         } else if (lastResponse != null) {
-                            if (lastResponse!!.newestPacketMillis() > bufferTimeMillis) {
+                            if (lastResponse?.bufferSize == lastResponse?.bufferPosition ||
+                                lastResponse!!.newestPacketMillis() > bufferTimeMillis
+                            ) {
                                 // Wait for the duration of one frame so we don't overload the NightDriver client
                                 delay(1000 / fps.toLong())
                             }
@@ -176,7 +174,7 @@ class NightDriverSocketJob(
 
                         // Serialize and send frame - options are not supported for NightDriver
                         val encodedFrame = serializer.encode(frameData, strip.getPin().toInt())
-                        sendSocketFrame(encodedFrame)
+                        sendSocketFrame(encodedFrame, now)
 
                         val delayMillis = max((1000 / fps) - 10L, 1L)
                         delay(delayMillis)
@@ -191,30 +189,28 @@ class NightDriverSocketJob(
         }
     }
 
-    private suspend fun sendSocketFrame(frame: ByteArray) {
+    private suspend fun sendSocketFrame(frame: ByteArray, nowAsMillisSinceEpoch: Long) {
         try {
+            if (lastResponseReceivedAt > 0 && lastResponseReceivedAt + 5000 < nowAsMillisSinceEpoch) {
+                logger.warn("No response received from $clientEntity for 5 seconds")
+                resetStateOnError()
+                return
+            }
             withContext(Dispatchers.IO) {
                 val availableBytes = socket?.getInputStream()?.available()?.toLong()
                 if (availableBytes != null && availableBytes > 0L) {
-                    val now = timeHelper.millisSinceEpoch()
-                    if (now - lastTcpResponseDeserializedAtMillis >= deserializeTcpResponseIntervalMillis) {
-                        lastTcpResponseDeserializedAtMillis = now
-                        val bytes = ByteArray(NightDriverSocketResponse.SIZE_IN_BYTES)
-                        socket?.getInputStream()?.read(bytes)
-                        lastResponse = deserializer.deserialize(bytes)
-                        logger.debug("Night Driver client {} status {}", clientEntity, lastResponse)
-                    } else {
-                        socket?.getInputStream()?.skip(availableBytes)
-                    }
+                    lastResponseReceivedAt = nowAsMillisSinceEpoch
+                    val bytes = ByteArray(NightDriverSocketResponse.SIZE_IN_BYTES)
+                    socket?.getInputStream()?.read(bytes)
+                    lastResponse = deserializer.deserialize(bytes)
+                    logger.debug("Night Driver client {} status {}", clientEntity, lastResponse)
                 }
 
                 socket?.getOutputStream()?.write(frame)
                 socket?.getOutputStream()?.flush()
             }
         } catch (sockEx: SocketException) {
-            if (state != StreamingJobState.SetupIncomplete) {
-                state = StreamingJobState.Offline
-            }
+            resetStateOnError()
         }
     }
 
@@ -253,11 +249,16 @@ class NightDriverSocketJob(
         }
 
         if (socket?.isConnected == true) {
+            logger.info("Connected to $clientEntity")
             state = StreamingJobState.ConnectedIdle
         } else {
-            if (state != StreamingJobState.SetupIncomplete) {
-                state = StreamingJobState.Offline
-            }
+            resetStateOnError()
+        }
+    }
+
+    private fun resetStateOnError() {
+        if (state != StreamingJobState.SetupIncomplete) {
+            state = StreamingJobState.Offline
         }
     }
 
