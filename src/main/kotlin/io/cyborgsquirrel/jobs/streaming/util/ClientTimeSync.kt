@@ -62,7 +62,7 @@ class ClientTimeSync(private val timeHelper: TimeHelper) {
         clientTimeOffset = adjustedClientTime - responseTimestamp
 
         lastTimeSyncPerformedAt = responseTimestamp
-        logger.info("Client time sync complete. Offset in millis: $clientTimeOffset")
+        logger.info("Client time sync complete. Total client time offset: $clientTimeOffset. Network latency: $networkLatency.")
     }
 
     companion object {
