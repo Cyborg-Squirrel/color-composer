@@ -12,12 +12,14 @@ import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
+import io.micronaut.http.exceptions.ConnectionClosedException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.time.delay
 import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
+import kotlin.math.min
 
 /**
  * Background job for streaming light effects to NightDriver clients
@@ -88,12 +90,6 @@ class NightDriverSocketJob(
 
     private suspend fun processState() {
         try {
-            // Check if NightDriver socket is still connected
-            if (state != StreamingJobState.SetupIncomplete && socket?.isConnected == false) {
-                delay(250)
-                state = StreamingJobState.Offline
-            }
-
             when (state) {
                 StreamingJobState.SetupIncomplete -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
@@ -120,7 +116,6 @@ class NightDriverSocketJob(
                 }
 
                 StreamingJobState.ConnectedIdle -> {
-                    exponentialReconnectionBackoffValue = 1
                     // Clear lastResponse when a connection is made in case this is a re-connection to avoid using stale data
                     lastResponse = null
                     // Socket connection = response from Night Driver
@@ -194,8 +189,17 @@ class NightDriverSocketJob(
 
                             // Sleep for the duration of 40% of one frame to avoid overloading the Night Driver client
                             delay((millisPerFrame * 0.4).toLong())
-                            if (lastResponse != null) {
+                            if (socket?.isConnected == false) {
+                                resetStateOnError()
+                            } else if (lastResponseReceivedAt + 5000 < now) {
+                                logger.info("Last response from $clientEntity was more than 5 seconds ago.")
+                                resetStateOnError()
+                                // Wait before reconnection. Don't wait more than 5 minutes.
+                                delay(min(now - lastResponseReceivedAt, 5 * 60 * 1000))
+                            } else if (lastResponse != null) {
                                 updateLastSeenAt(now)
+                                // Reset the exponential backoff value once we're both connected AND have received a response
+                                exponentialReconnectionBackoffValue = 1
                                 val millisOfFramesBuffered = lastResponse!!.bufferPosition * millisPerFrame
                                 val clientBufferFull = lastResponse!!.bufferPosition == lastResponse!!.bufferSize
                                 if (millisOfFramesBuffered > bufferTimeMillis || clientBufferFull) {
@@ -203,9 +207,6 @@ class NightDriverSocketJob(
                                     sleepMillis = millisPerFrame / 2
                                     state = StreamingJobState.BufferFullWaiting
                                 }
-                            } else if (lastResponseReceivedAt + 5000 < now) {
-                                logger.warn("No response received from $clientEntity for 5 seconds")
-                                resetStateOnError()
                             }
                         }
                     }
@@ -230,8 +231,8 @@ class NightDriverSocketJob(
                 if (availableBytes != null && availableBytes > 0L) {
                     val bytes = ByteArray(NightDriverSocketResponse.SIZE_IN_BYTES)
                     socket?.getInputStream()?.read(bytes)
-                    lastResponseReceivedAt = timeHelper.millisSinceEpoch()
                     lastResponse = deserializer.deserialize(bytes)
+                    lastResponseReceivedAt = timeHelper.millisSinceEpoch()
                     logger.debug("Night Driver client {} status {}", clientEntity, lastResponse)
                     logger.debug("Client clock {}", timeHelper.dateTimeFromMillis(lastResponse!!.currentClockMillis()))
                 }
