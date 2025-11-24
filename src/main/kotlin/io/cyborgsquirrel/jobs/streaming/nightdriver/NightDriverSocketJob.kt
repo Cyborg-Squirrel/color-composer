@@ -12,9 +12,7 @@ import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
-import io.micronaut.http.exceptions.ConnectionClosedException
 import kotlinx.coroutines.*
-import kotlinx.coroutines.time.delay
 import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -62,6 +60,7 @@ class NightDriverSocketJob(
     // State/logic
     private var exponentialReconnectionBackoffValue = 1
     private val exponentialReconnectionBackoffValueMax = 8
+
     private val fps = 35
     private val millisPerFrame: Long
         get() = 1000L / fps
@@ -120,7 +119,7 @@ class NightDriverSocketJob(
                     lastResponse = null
                     // Socket connection = response from Night Driver
                     lastResponseReceivedAt = timeHelper.millisSinceEpoch()
-                    state = StreamingJobState.TimeSyncRequired
+                    state = StreamingJobState.RenderingEffect
                 }
 
                 StreamingJobState.Offline -> {
@@ -144,9 +143,8 @@ class NightDriverSocketJob(
                 }
 
                 StreamingJobState.TimeSyncRequired -> {
-                    val now = timeHelper.millisSinceEpoch()
-                    timestampMillis = now + clientTimeOffset + bufferTimeMillis
-                    state = StreamingJobState.RenderingEffect
+                    // Not supported by NightDriver - we should never end up in this state
+                    throw Exception("Unexpected state! $state")
                 }
 
                 StreamingJobState.RenderingEffect -> {
@@ -159,7 +157,7 @@ class NightDriverSocketJob(
                         state = StreamingJobState.BufferFullWaiting
                     } else {
                         val now = timeHelper.millisSinceEpoch()
-                        timestampMillis += millisPerFrame
+                        timestampMillis = now + clientTimeOffset + millisPerFrame
                         logger.debug("Frame timestamp {}", timeHelper.dateTimeFromMillis(timestampMillis))
 
                         // Assemble RGB data
@@ -169,7 +167,7 @@ class NightDriverSocketJob(
 
                         // Serialize and send frame - options are not supported for NightDriver
                         val encodedFrame = serializer.encode(frameData, strip.getPin().toInt())
-                        // Do time sync once every five minutes
+                        // Sync time once every 5 minutes
                         val isTimeSyncFrame = lastTimeSyncPerformedAt + (1000 * 60 * 5) < now
 
                         if (isTimeSyncFrame) {
@@ -182,31 +180,30 @@ class NightDriverSocketJob(
                                     -1
                                 }
                             }
-
-                            state = StreamingJobState.TimeSyncRequired
                         } else {
                             sendSocketFrame(encodedFrame)
+                        }
 
-                            // Sleep for the duration of 40% of one frame to avoid overloading the Night Driver client
-                            delay((millisPerFrame * 0.4).toLong())
-                            if (socket?.isConnected == false) {
-                                resetStateOnError()
-                            } else if (lastResponseReceivedAt + 5000 < now) {
-                                logger.info("Last response from $clientEntity was more than 5 seconds ago.")
-                                resetStateOnError()
-                                // Wait before reconnection. Don't wait more than 5 minutes.
-                                delay(min(now - lastResponseReceivedAt, 5 * 60 * 1000))
-                            } else if (lastResponse != null) {
-                                updateLastSeenAt(now)
-                                // Reset the exponential backoff value once we're both connected AND have received a response
-                                exponentialReconnectionBackoffValue = 1
-                                val millisOfFramesBuffered = lastResponse!!.bufferPosition * millisPerFrame
-                                val clientBufferFull = lastResponse!!.bufferPosition == lastResponse!!.bufferSize
-                                if (millisOfFramesBuffered > bufferTimeMillis || clientBufferFull) {
-                                    logger.debug("Client buffer full, waiting.")
-                                    sleepMillis = millisPerFrame / 2
-                                    state = StreamingJobState.BufferFullWaiting
-                                }
+                        // Sleep for the duration of half of one frame to avoid overloading the Night Driver client
+                        delay(millisPerFrame / 2)
+                        if (socket?.isConnected == false) {
+                            resetStateOnError()
+                        } else if (lastResponseReceivedAt + 5000 < now) {
+                            logger.info("Last response from $clientEntity was more than 5 seconds ago.")
+                            resetStateOnError()
+                        } else if (lastResponse != null) {
+                            updateLastSeenAt(now)
+                            // Reset the exponential backoff value once we're both connected AND have received a response
+                            exponentialReconnectionBackoffValue = 1
+                            val millisOfFramesBuffered = lastResponse!!.bufferPosition * millisPerFrame
+                            val clientBufferFull = lastResponse!!.bufferPosition == lastResponse!!.bufferSize
+                            if (millisOfFramesBuffered > bufferTimeMillis || clientBufferFull) {
+                                logger.debug("Client buffer full, waiting.")
+                                sleepMillis = millisPerFrame / 2
+                                state = StreamingJobState.BufferFullWaiting
+                            } else if (lastResponse!!.frameDrawing > fps) {
+                                sleepMillis = millisPerFrame / 2
+                                state = StreamingJobState.BufferFullWaiting
                             }
                         }
                     }
