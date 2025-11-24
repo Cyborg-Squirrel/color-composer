@@ -12,6 +12,7 @@ import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.jobs.streaming.serialization.PiFrameDataSerializer
+import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
@@ -59,18 +60,14 @@ class WebSocketJob(
     private val serializer = PiFrameDataSerializer()
 
     // Time tracking
+    private val clientTimeSync = ClientTimeSync(timeHelper)
     private val timeDesyncToleranceMillis = 5
-    private var lastTimeSyncPerformedAt = 0L
     private val timeSinceLastSync: Long
-        get() = timeHelper.millisSinceEpoch() - lastTimeSyncPerformedAt
+        get() = timeHelper.millisSinceEpoch() - clientTimeSync.lastTimeSyncPerformedAt
     private var lastKeepaliveFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
     private var timestampMillis = 0L
     private var sleepMillis = 0L
     private var lastSeenAt = 0L
-
-    // Difference in millis between the client and server.
-    // Negative values mean the client's clock is behind the server, positive values mean the client's clock is ahead.
-    private var clientTimeOffset: Long = 0L
 
     // State/logic
     private var exponentialReconnectionBackoffValue = 1
@@ -106,7 +103,7 @@ class WebSocketJob(
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
                             strip = clientEntity.strips.first()
-                            timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeOffset
+                            timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeSync.clientTimeOffset
                             state = StreamingJobState.WaitingForConnection
                             setupSocket()
                         } else {
@@ -150,7 +147,7 @@ class WebSocketJob(
                     exponentialReconnectionBackoffValue = 1
                     state = if (settingsSyncRequired) {
                         StreamingJobState.SettingsSync
-                    } else if (lastTimeSyncPerformedAt == 0L) {
+                    } else if (clientTimeSync.lastTimeSyncPerformedAt == 0L) {
                         StreamingJobState.TimeSyncRequired
                     } else {
                         StreamingJobState.RenderingEffect
@@ -170,8 +167,12 @@ class WebSocketJob(
                 }
 
                 StreamingJobState.TimeSyncRequired -> {
-                    syncClientTime()
-                    timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
+                    // Don't sync more often than every 3 seconds if we end up looping on time sync for some reason
+                    if (timeSinceLastSync > 1000 * 3) {
+                        clientTimeSync.doTimeSync { piConfigClient.getClientTime(clientEntity).millisSinceEpoch }
+                    }
+
+                    timestampMillis = timeHelper.millisSinceEpoch() + clientTimeSync.clientTimeOffset
                     logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
                     // If we disconnect during the time sync don't set the state to rendering
@@ -183,11 +184,11 @@ class WebSocketJob(
                 StreamingJobState.RenderingEffect -> {
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     val timeDesynced =
-                        timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeOffset
+                        timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeSync.clientTimeOffset
                     updateLastSeenAt(currentTimeAsMillis)
                     if (timeDesynced) {
                         logger.info(
-                            "Re-syncing time with client $client - (client time offset ${clientTimeOffset}ms frame timestamp: ${
+                            "Re-syncing time with client $client - (client time offset ${clientTimeSync.clientTimeOffset}ms frame timestamp: ${
                                 timeHelper.dateTimeFromMillis(
                                     timestampMillis
                                 )
@@ -207,7 +208,7 @@ class WebSocketJob(
                                 delay(250)
                             }
 
-                            timestampMillis = timeHelper.millisSinceEpoch() + clientTimeOffset
+                            timestampMillis = timeHelper.millisSinceEpoch() + clientTimeSync.clientTimeOffset
                         } else {
                             // Time tracking - reset last keep-alive timestamp to ensure if effects are stopped the empty
                             // frame logic will immediately send sendClearFrame() to clear the strip.
@@ -283,24 +284,6 @@ class WebSocketJob(
 
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
-        }
-    }
-
-    private suspend fun syncClientTime() {
-        // Don't sync more often than every 3 seconds if we end up looping on time sync for some reason
-        if (timeSinceLastSync > 1000 * 3) {
-            val requestTimestamp = timeHelper.millisSinceEpoch()
-            val clientTime = piConfigClient.getClientTime(clientEntity)
-            val responseTimestamp = timeHelper.millisSinceEpoch()
-
-            // Assume request and response take the same amount of time for the network to transmit
-            // Divide by 2 so we only count the transmission time going one way
-            val requestResponseDuration = (responseTimestamp - requestTimestamp) / 2
-            val adjustedClientTime = clientTime.millisSinceEpoch - requestResponseDuration
-            clientTimeOffset = adjustedClientTime - responseTimestamp
-
-            lastTimeSyncPerformedAt = responseTimestamp
-            logger.info("Client time sync complete. Offset in millis: $clientTimeOffset")
         }
     }
 
