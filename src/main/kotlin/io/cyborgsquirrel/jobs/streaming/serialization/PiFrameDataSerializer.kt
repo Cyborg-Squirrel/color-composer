@@ -20,7 +20,7 @@ class PiFrameDataSerializer {
     /**
      * Encodes [RgbFrameData] into a [ByteArray] with the specified [RgbFrameOptions]
      * [pin] is the data pin the LED strip is connected to which will render this frame
-     * [colorOrder] is the color order for the strip (RGB, GRB, etc.)
+     * [options] is the serialization options for the frame
      */
     fun encode(frameData: RgbFrameData, pin: String, options: RgbFrameOptions): ByteArray {
         val rgbDataBytesLen = frameData.rgbData.size * 3

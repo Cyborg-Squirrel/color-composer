@@ -9,4 +9,4 @@ package io.cyborgsquirrel.lighting.model
  * [rgbData] are the NeoPixel RGB values to be displayed on the strip in the order
  * they should be displayed.
  */
-data class RgbFrameData(val timestamp: Long = 0,val rgbData: List<RgbColor>)
+data class RgbFrameData(val timestamp: Long = 0, val rgbData: List<RgbColor>)

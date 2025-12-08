@@ -1,20 +1,27 @@
 package io.cyborgsquirrel.led_strips.service
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
+import io.cyborgsquirrel.led_strips.responses.GetLedStripResponse
+import io.cyborgsquirrel.led_strips.responses.GetLedStripsResponse
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
+import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import jakarta.inject.Singleton
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 @Singleton
 class LedStripApiService(
@@ -23,9 +30,90 @@ class LedStripApiService(
     private val clientRepository: H2LedStripClientRepository,
     private val limitService: PowerLimiterService,
     private val streamJobManager: StreamJobManager,
+    private val clientStatusService: ClientStatusService,
 ) {
 
     private val validPiPins = listOf("D10", "D12", "D18", "D21")
+
+    fun getStrip(uuid: String): GetLedStripResponse {
+        val entityOptional = stripRepository.findByUuid(uuid)
+        return if (entityOptional.isPresent) {
+            val activeEffects = activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() }
+            val entity = entityOptional.get()
+            val response = entity.let { s ->
+                GetLedStripResponse(
+                    clientUuid = s.client!!.uuid!!,
+                    name = s.name!!,
+                    uuid = s.uuid!!,
+                    pin = s.pin!!,
+                    length = s.length!!,
+                    height = s.height,
+                    powerLimit = s.powerLimit,
+                    brightness = s.brightness!!,
+                    blendMode = s.blendMode!!,
+                    activeEffects = activeEffects.filter { it.strip.getUuid() == s.uuid }.size,
+                )
+            }
+            response
+        } else {
+            throw ClientRequestException("No LED strip exists with uuid $uuid!")
+        }
+    }
+
+    fun getStrips(clientUuid: String?): GetLedStripsResponse {
+        if (clientUuid != null) {
+            val clientEntityOptional = clientRepository.findByUuid(clientUuid)
+            return if (clientEntityOptional.isPresent) {
+                val activeEffects = activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() }
+                val clientEntity = clientEntityOptional.get()
+                val clientStatusOptional = clientStatusService.getStatusForClient(clientEntity)
+                val stripResponseList = clientEntity.strips.map { s ->
+                    GetLedStripResponse(
+                        clientUuid = clientUuid,
+                        name = s.name!!,
+                        uuid = s.uuid!!,
+                        pin = s.pin!!,
+                        length = s.length!!,
+                        height = s.height,
+                        powerLimit = s.powerLimit,
+                        brightness = s.brightness!!,
+                        blendMode = s.blendMode!!,
+                        activeEffects = getActiveEffectsForStrip(
+                            clientStatusOptional.getOrNull()?.status,
+                            activeEffects,
+                            s.uuid
+                        )
+                    )
+                }
+                GetLedStripsResponse(stripResponseList)
+            } else {
+                throw ClientRequestException("No client exists with uuid $clientUuid!")
+            }
+        } else {
+            val clientEntities = clientRepository.queryAll()
+            val stripEntities = clientEntities.map { it.strips }.flatten()
+            val stripResponseList = stripEntities.map { s ->
+                GetLedStripResponse(
+                    clientUuid = s.client!!.uuid!!,
+                    name = s.name!!,
+                    uuid = s.uuid!!,
+                    pin = s.pin!!,
+                    length = s.length!!,
+                    height = s.height,
+                    powerLimit = s.powerLimit,
+                    brightness = s.brightness!!,
+                    blendMode = s.blendMode!!,
+                    activeEffects = getActiveEffectsForStrip(
+                        clientStatusService.getStatusForClient(s.client!!)
+                            .getOrNull()?.status,
+                        activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() }, s.uuid
+                    ),
+                )
+            }
+
+            return GetLedStripsResponse(stripResponseList)
+        }
+    }
 
     fun createStrip(request: CreateLedStripRequest): String {
         val clientEntityOptional = clientRepository.findByUuid(request.clientUuid)
@@ -140,6 +228,11 @@ class LedStripApiService(
         }
     }
 
+    private fun isPinUnique(clientEntity: LedStripClientEntity, pin: String): Boolean {
+        val occupiedPins = clientEntity.strips.map { it.pin }
+        return !occupiedPins.contains(pin)
+    }
+
     private fun validatePin(clientEntity: LedStripClientEntity, pin: String) {
         val isPinValid = when (clientEntity.clientType) {
             ClientType.Pi -> validPiPins.contains(pin)
@@ -151,8 +244,23 @@ class LedStripApiService(
             throw ClientRequestException("Pin $pin is not a valid pin. Must be a channel (1-16) for a NightDriver client or D10, D12, D18, or D21 for a Pi client.")
         }
 
+        val isPinUnique = isPinUnique(clientEntity, pin)
+        if (!isPinUnique) {
+            throw ClientRequestException("Pin $pin is already in use for this client.")
+        }
+
         if (clientEntity.strips.map { it.pin }.contains(pin)) {
             throw ClientRequestException("Pin $pin is already used by a LED strip connected to client ${clientEntity.uuid}.")
         }
+    }
+
+    // The effect could be configured as Playing but the client is offline. If the client is offline
+    // we should report 0 active effects.
+    private fun getActiveEffectsForStrip(
+        clientStatus: ClientStatus?,
+        activeEffects: List<ActiveLightEffect>,
+        stripUuid: String?
+    ): Int {
+        return if (clientStatus == ClientStatus.Active) activeEffects.filter { it.strip.getUuid() == stripUuid }.size else 0
     }
 }
