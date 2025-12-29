@@ -17,7 +17,6 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.lighting.model.LedStripModel
-import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import jakarta.inject.Singleton
 import java.util.*
@@ -28,12 +27,12 @@ class LedStripApiService(
     private val activeLightEffectRegistry: ActiveLightEffectRegistry,
     private val stripRepository: H2LedStripRepository,
     private val clientRepository: H2LedStripClientRepository,
-    private val limitService: PowerLimiterService,
     private val streamJobManager: StreamJobManager,
     private val clientStatusService: ClientStatusService,
 ) {
 
     private val validPiPins = listOf("D10", "D12", "D18", "D21")
+    private val defaultBrightness = 20
 
     fun getStrip(uuid: String): GetLedStripResponse {
         val entityOptional = stripRepository.findByUuid(uuid)
@@ -48,7 +47,6 @@ class LedStripApiService(
                     pin = s.pin!!,
                     length = s.length!!,
                     height = s.height,
-                    powerLimit = s.powerLimit,
                     brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
                     activeEffects = activeEffects.filter { it.strip.getUuid() == s.uuid }.size,
@@ -75,7 +73,6 @@ class LedStripApiService(
                         pin = s.pin!!,
                         length = s.length!!,
                         height = s.height,
-                        powerLimit = s.powerLimit,
                         brightness = s.brightness!!,
                         blendMode = s.blendMode!!,
                         activeEffects = getActiveEffectsForStrip(
@@ -100,7 +97,6 @@ class LedStripApiService(
                     pin = s.pin!!,
                     length = s.length!!,
                     height = s.height,
-                    powerLimit = s.powerLimit,
                     brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
                     activeEffects = getActiveEffectsForStrip(
@@ -120,26 +116,17 @@ class LedStripApiService(
         if (clientEntityOptional.isPresent) {
             val clientEntity = clientEntityOptional.get()
             validatePin(clientEntity, request.pin)
-            var stripEntity = LedStripEntity(
+            val stripEntity = LedStripEntity(
                 client = clientEntity,
                 uuid = UUID.randomUUID().toString(),
                 name = request.name,
                 pin = request.pin,
                 length = request.length,
                 height = request.height ?: 1,
-                powerLimit = request.powerLimit,
-                brightness = request.brightness,
+                brightness = request.brightness ?: defaultBrightness,
                 blendMode = request.blendMode ?: BlendMode.Additive
             )
-
-            if (request.brightness == null) {
-                val brightness = limitService.getDefaultBrightness(stripEntity)
-                stripEntity = stripEntity.copy(brightness = brightness)
-            }
-
             stripRepository.save(stripEntity)
-            if (stripEntity.powerLimit != null) limitService.setLimit(stripEntity.uuid!!, stripEntity.powerLimit!!)
-
             return stripEntity.uuid!!
         } else {
             throw ClientRequestException("No client exists with uuid ${request.clientUuid}!")
@@ -161,16 +148,12 @@ class LedStripApiService(
                 pin = request.pin ?: entity.pin,
                 length = request.length ?: entity.length,
                 height = request.height ?: entity.height,
-                powerLimit = request.powerLimit ?: entity.powerLimit,
                 blendMode = request.blendMode ?: entity.blendMode,
                 brightness = request.brightness ?: entity.brightness,
             )
 
             if (newEntity != entity) {
                 val newStripEntity = stripRepository.update(newEntity)
-
-                if (request.powerLimit != null) limitService.setLimit(uuid, request.powerLimit)
-
                 val effects = activeLightEffectRegistry.getAllEffectsForStrip(uuid)
                 effects.forEach {
                     val newEffect = it.copy(
@@ -202,7 +185,6 @@ class LedStripApiService(
             val entity = entityOptional.get()
             if (entity.effects.isEmpty() && entity.members.isEmpty()) {
                 stripRepository.deleteById(entity.id)
-                limitService.removeLimit(uuid)
                 val effects = activeLightEffectRegistry.getAllEffectsForStrip(uuid)
                 effects.forEach {
                     activeLightEffectRegistry.removeEffect(it)

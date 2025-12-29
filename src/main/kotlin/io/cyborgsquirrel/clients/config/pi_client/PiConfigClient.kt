@@ -16,17 +16,17 @@ class PiConfigClient(
     private val objectMapper: ObjectMapper,
 ) {
 
-    suspend fun getConfigs(client: LedStripClientEntity): PiClientConfigList {
-        val uri = getConfigurationUriBuilder(client).build()
+    suspend fun getStripConfigs(client: LedStripClientEntity): PiClientStripsConfigList {
+        val uri = getStripsConfigurationUriBuilder(client).build()
         val response = withContext(Dispatchers.IO) {
             httpClient.toBlocking().retrieve(uri.toString())
         }
-        val configList = objectMapper.readValue(response, PiClientConfigList::class.java)
+        val configList = objectMapper.readValue(response, PiClientStripsConfigList::class.java)
         return configList
     }
 
-    suspend fun addConfig(client: LedStripClientEntity, config: PiClientConfig) {
-        val uri = getConfigurationUriBuilder(client).build()
+    suspend fun addStripConfig(client: LedStripClientEntity, config: PiClientStripConfig) {
+        val uri = getStripsConfigurationUriBuilder(client).build()
         val request = HttpRequest.POST(uri.toString(), config)
 
         withContext(Dispatchers.IO) {
@@ -34,17 +34,17 @@ class PiConfigClient(
         }
     }
 
-    suspend fun updateConfig(client: LedStripClientEntity, config: PiClientConfig) {
-        val uri = getConfigurationUriBuilder(client).build()
-        val request = HttpRequest.DELETE<String>(uri.toString())
+    suspend fun updateStripConfig(client: LedStripClientEntity, config: PiClientStripConfig) {
+        val uri = getStripsConfigurationUriBuilder(client).build()
+        val request = HttpRequest.PATCH(uri.toString(), config)
 
         withContext(Dispatchers.IO) {
             httpClient.toBlocking().exchange(request, String::class.java)
         }
     }
 
-    suspend fun deleteConfig(client: LedStripClientEntity, config: PiClientConfig) {
-        val uri = getConfigurationUriBuilder(client)
+    suspend fun deleteStripConfig(client: LedStripClientEntity, config: PiClientStripConfig) {
+        val uri = getStripsConfigurationUriBuilder(client)
             .queryParam("uuid", config.uuid)
             .build()
         val request = HttpRequest.DELETE<String>(uri.toString())
@@ -67,9 +67,24 @@ class PiConfigClient(
         return timeObj
     }
 
-    private fun getConfigurationUriBuilder(client: LedStripClientEntity): UriBuilder {
+    suspend fun updateClientConfig(client: LedStripClientEntity, settings: PiClientSettings) {
+        val uri = getGlobalSettingsUriBuilder(client).build()
+        val request = HttpRequest.PATCH(uri.toString(), settings)
+
+        withContext(Dispatchers.IO) {
+            httpClient.toBlocking().exchange(request, String::class.java)
+        }
+    }
+
+    private fun getStripsConfigurationUriBuilder(client: LedStripClientEntity): UriBuilder {
         return UriBuilder.of(client.address)
             .port(client.apiPort!!)
-            .path("configuration")
+            .path("strips-config")
+    }
+
+    private fun getGlobalSettingsUriBuilder(client: LedStripClientEntity): UriBuilder {
+        return UriBuilder.of(client.address)
+            .port(client.apiPort!!)
+            .path("settings")
     }
 }

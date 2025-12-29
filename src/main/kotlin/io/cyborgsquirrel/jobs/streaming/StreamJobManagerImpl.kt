@@ -8,7 +8,6 @@ import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketJob
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
 import io.cyborgsquirrel.jobs.streaming.pi_client.WebSocketJob
-import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.websocket.WebSocketClient

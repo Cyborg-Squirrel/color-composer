@@ -41,6 +41,10 @@ data class LedStripClientEntity(
 
     @MappedProperty("last_seen_at")
     var lastSeenAt: Long = 0,
+
+    // Limit in mA
+    @MappedEntity("power_limit")
+    var powerLimit: Int? = null,
 ) {
     // Overrides to prevent infinite looping
 
@@ -57,6 +61,7 @@ data class LedStripClientEntity(
         if (apiPort != other.apiPort) return false
         if (wsPort != other.wsPort) return false
         if (lastSeenAt != other.lastSeenAt) return false
+        if (powerLimit != other.powerLimit) return false
 
         return true
     }
@@ -71,10 +76,11 @@ data class LedStripClientEntity(
         result = 31 * result + (apiPort ?: 0).hashCode()
         result = 31 * result + (wsPort ?: 0).hashCode()
         result = 31 * result + lastSeenAt.hashCode()
+        result = 31 * result + powerLimit.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "LedStripClientEntity(id=$id, name=$name, address=$address, clientType=$clientType, colorOrder=$colorOrder uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort, lastSeenAt=$lastSeenAt)"
+        return "LedStripClientEntity(id=$id, name=$name, address=$address, clientType=$clientType, colorOrder=$colorOrder uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort, lastSeenAt=$lastSeenAt, powerLimit=$powerLimit)"
     }
 }

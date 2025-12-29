@@ -7,7 +7,6 @@ import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.lighting.model.LedStripGroupModel
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
-import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
@@ -16,7 +15,6 @@ import java.util.*
 @Singleton
 class LightEffectRendererImpl(
     private val effectRepository: ActiveLightEffectRegistry,
-    private val powerLimiterService: PowerLimiterService,
 ) : LightEffectRenderer {
 
     // LED strip groups get rendered if the provided LED strip uuid
@@ -131,11 +129,10 @@ class LightEffectRendererImpl(
             }
         }
 
-        val powerLimitedRenderedRgbData = powerLimiterService.applyLimit(renderedRgbData, lightUuid)
         val effectStatuses = activeEffects.map { it.status }.toSet()
         val allEffectsPaused = effectStatuses.size == 1 && effectStatuses.first() == LightEffectStatus.Paused
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame groups
-        return Optional.of(RenderedFrameModel(0, lightUuid, powerLimitedRenderedRgbData, -1, allEffectsPaused))
+        return Optional.of(RenderedFrameModel(0, lightUuid, renderedRgbData, -1, allEffectsPaused))
     }
 
     companion object {

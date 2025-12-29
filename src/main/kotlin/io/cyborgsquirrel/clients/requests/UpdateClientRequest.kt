@@ -9,5 +9,6 @@ data class UpdateClientRequest(
     val address: String?,
     val colorOrder: ColorOrder?,
     val apiPort: Int?,
-    val wsPort: Int?
+    val wsPort: Int?,
+    val powerLimit: Int?
 )

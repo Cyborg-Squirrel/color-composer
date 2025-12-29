@@ -15,5 +15,6 @@ data class GetClientResponse(
     val wsPort: Int,
     val lastSeenAt: Long,
     val status: ClientStatus,
-    val activeEffects: Int
+    val activeEffects: Int,
+    val powerLimit: Int?
 )

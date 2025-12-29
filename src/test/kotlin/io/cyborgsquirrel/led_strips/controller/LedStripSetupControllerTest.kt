@@ -15,6 +15,7 @@ import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.cyborgsquirrel.test_helpers.saveLightEffect
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.serde.ObjectMapper
@@ -61,7 +62,6 @@ class LedStripSetupControllerTest(
             getStripResponse.uuid shouldBe strip.uuid
             getStripResponse.length shouldBe strip.length
             getStripResponse.height shouldBe strip.height
-            getStripResponse.powerLimit shouldBe strip.powerLimit
             getStripResponse.blendMode shouldBe strip.blendMode
             getStripResponse.brightness shouldBe strip.brightness
 
@@ -75,7 +75,6 @@ class LedStripSetupControllerTest(
             getStripsResponse.strips.first().pin shouldBe strip.pin
             getStripsResponse.strips.first().length shouldBe strip.length
             getStripsResponse.strips.first().height shouldBe strip.height
-            getStripsResponse.strips.first().powerLimit shouldBe strip.powerLimit
             getStripsResponse.strips.first().blendMode shouldBe strip.blendMode
             getStripsResponse.strips.first().brightness shouldBe strip.brightness
         }
@@ -102,9 +101,7 @@ class LedStripSetupControllerTest(
             stripOptional.get().length shouldBe request.length
             stripOptional.get().height shouldBe 1
             stripOptional.get().blendMode shouldBe request.blendMode
-            stripOptional.get().powerLimit shouldBe null
-            // Default brightness for 240 LEDs at 500mA
-            stripOptional.get().brightness shouldBe 3
+            stripOptional.get().brightness shouldNotBe null
 
             stripRepository.deleteAll()
 
@@ -130,7 +127,6 @@ class LedStripSetupControllerTest(
             stripOptional.get().length shouldBe request.length
             stripOptional.get().height shouldBe request.height
             stripOptional.get().blendMode shouldBe request.blendMode
-            stripOptional.get().powerLimit shouldBe request.powerLimit
             stripOptional.get().brightness shouldBe request.brightness
         }
 
@@ -157,7 +153,6 @@ class LedStripSetupControllerTest(
             updatedStripOptional.get().length shouldBe request.length
             updatedStripOptional.get().height shouldBe request.height
             updatedStripOptional.get().blendMode shouldBe request.blendMode
-            updatedStripOptional.get().powerLimit shouldBe request.powerLimit
             updatedStripOptional.get().brightness shouldBe request.brightness
         }
 
