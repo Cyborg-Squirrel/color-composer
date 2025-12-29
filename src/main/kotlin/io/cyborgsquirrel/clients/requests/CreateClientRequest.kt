@@ -11,5 +11,6 @@ data class CreateClientRequest(
     val clientType: ClientType,
     val colorOrder: ColorOrder?,
     val apiPort: Int,
-    val wsPort: Int
+    val wsPort: Int,
+    val powerLimit: Int?
 )

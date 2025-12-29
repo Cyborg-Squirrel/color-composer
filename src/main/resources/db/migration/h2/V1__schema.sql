@@ -20,7 +20,8 @@ CREATE TABLE led_strip_clients
     color_order  VARCHAR(4) NOT NULL,
     ws_port      INT NOT NULL,
     api_port     INT NOT NULL,
-    last_seen_at BIGINT NOT NULL
+    last_seen_at BIGINT NOT NULL,
+    power_limit  INT
 );
 
 CREATE TABLE led_strips
@@ -31,7 +32,6 @@ CREATE TABLE led_strips
     pin         VARCHAR(50) NOT NULL,
     length      INT NOT NULL,
     height      INT NOT NULL,
-    power_limit INT,
     blend_mode  VARCHAR(50) NOT NULL,
     brightness  INT NOT NULL,
     client_id   INT NOT NULL,

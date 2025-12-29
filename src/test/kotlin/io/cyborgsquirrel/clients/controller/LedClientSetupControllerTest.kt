@@ -87,7 +87,7 @@ class LedClientSetupControllerTest(
 
         "Creating clients" {
             val createClientRequest =
-                CreateClientRequest("Window lights", "192.168.5.5", ClientType.Pi, ColorOrder.GRB, 80, 82)
+                CreateClientRequest("Window lights", "192.168.5.5", ClientType.Pi, ColorOrder.GRB, 80, 82, 500)
             val createResponse = apiClient.create(createClientRequest)
             createResponse.status shouldBe HttpStatus.CREATED
 
@@ -103,12 +103,13 @@ class LedClientSetupControllerTest(
             clientEntity.colorOrder shouldBe createClientRequest.colorOrder
             clientEntity.apiPort shouldBe createClientRequest.apiPort
             clientEntity.wsPort shouldBe createClientRequest.wsPort
+            clientEntity.powerLimit shouldBe createClientRequest.powerLimit
         }
 
         "Updating clients" {
             val clientEntity = createLedStripClientEntity(clientRepository, "Window lights", "192.168.1.112", 112, 113)
             val updatedClientRequest =
-                UpdateClientRequest("Living room lights", "192.168.1.113", ColorOrder.GRB, 115, 116)
+                UpdateClientRequest("Living room lights", "192.168.1.113", ColorOrder.GRB, 115, 116, 333)
             val updateResponse = apiClient.update(clientEntity.uuid!!, updatedClientRequest)
             updateResponse.status shouldBe HttpStatus.NO_CONTENT
 
@@ -122,6 +123,7 @@ class LedClientSetupControllerTest(
             updatedClientEntity.apiPort shouldBe updatedClientRequest.apiPort
             updatedClientEntity.wsPort shouldBe updatedClientRequest.wsPort
             updatedClientEntity.uuid shouldBe clientEntity.uuid
+            updatedClientEntity.powerLimit shouldBe clientEntity.powerLimit
         }
 
         "Delete clients" {

@@ -34,7 +34,6 @@ import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunction
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
-import io.cyborgsquirrel.lighting.power_limits.PowerLimiterService
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -60,7 +59,6 @@ class LightEffectInitJobTest(
     private val objectMapper: ObjectMapper,
     private val triggerManager: TriggerManager,
     private val effectFactory: CreateLightingService,
-    private val limiterService: PowerLimiterService,
     private val streamJobManager: StreamJobManager
 ) : StringSpec({
 
@@ -92,7 +90,6 @@ class LightEffectInitJobTest(
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
-            limiterService,
             websocketManagerMock
         )
 
@@ -151,7 +148,6 @@ class LightEffectInitJobTest(
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
-            limiterService,
             websocketManagerMock
         )
 
@@ -229,7 +225,6 @@ class LightEffectInitJobTest(
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
-            limiterService,
             websocketManagerMock
         )
 
@@ -307,7 +302,6 @@ class LightEffectInitJobTest(
             activeLightEffectRegistry,
             triggerManager,
             effectFactory,
-            limiterService,
             websocketManagerMock
         )
 

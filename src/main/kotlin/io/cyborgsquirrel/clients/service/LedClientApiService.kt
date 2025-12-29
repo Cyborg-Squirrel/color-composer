@@ -36,6 +36,7 @@ class LedClientApiService(
                 it.lastSeenAt,
                 statusInfo.status,
                 statusInfo.activeEffects,
+                it.powerLimit
             )
         }
         return GetClientsResponse(responseClients)
@@ -57,6 +58,7 @@ class LedClientApiService(
                 clientEntity.lastSeenAt,
                 statusInfo.status,
                 statusInfo.activeEffects,
+                clientEntity.powerLimit
             )
 
             return clientResponse
@@ -81,7 +83,8 @@ class LedClientApiService(
                     colorOrder = colorOrder,
                     apiPort = request.apiPort,
                     wsPort = request.wsPort,
-                    uuid = UUID.randomUUID().toString()
+                    uuid = UUID.randomUUID().toString(),
+                    powerLimit = request.powerLimit ?: 0
                 )
             )
 
