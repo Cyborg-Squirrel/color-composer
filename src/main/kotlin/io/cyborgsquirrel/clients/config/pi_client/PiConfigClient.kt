@@ -67,7 +67,16 @@ class PiConfigClient(
         return timeObj
     }
 
-    suspend fun updateClientConfig(client: LedStripClientEntity, settings: PiClientSettings) {
+    suspend fun getClientSettings(client: LedStripClientEntity): PiClientSettings {
+        val uri = getGlobalSettingsUriBuilder(client).build()
+        val response = withContext(Dispatchers.IO) {
+            httpClient.toBlocking().retrieve(uri.toString())
+        }
+        val configList = objectMapper.readValue(response, PiClientSettings::class.java)
+        return configList
+    }
+
+    suspend fun updateClientSettings(client: LedStripClientEntity, settings: PiClientSettings) {
         val uri = getGlobalSettingsUriBuilder(client).build()
         val request = HttpRequest.PATCH(uri.toString(), settings)
 
