@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.jobs.streaming.pi_client
 
+import io.cyborgsquirrel.clients.config.pi_client.PiClientSettings
 import io.cyborgsquirrel.clients.config.pi_client.PiConfigClient
 import io.cyborgsquirrel.clients.config.pi_client.PiClientStripConfig
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
@@ -103,7 +104,8 @@ class WebSocketJob(
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
                             strip = clientEntity.strips.first()
-                            timestampMillis = timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeSync.clientTimeOffset
+                            timestampMillis =
+                                timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeSync.clientTimeOffset
                             state = StreamingJobState.WaitingForConnection
                             setupSocket()
                         } else {
@@ -118,30 +120,7 @@ class WebSocketJob(
                     delay(50)
                 }
 
-                StreamingJobState.SettingsSync -> {
-                    logger.info("Syncing settings with $clientEntity")
-                    settingsSyncRequired = false
-                    val clientConfig = piConfigClient.getStripConfigs(clientEntity)
-                    val serverConfig = PiClientStripConfig(
-                        strip.uuid!!,
-                        strip.pin!!,
-                        strip.length!!,
-                        strip.brightness!!,
-                        clientEntity.colorOrder!!
-                    )
-                    val matching = clientConfig.configList.size == 1 && clientConfig.configList.first() == serverConfig
-
-                    if (!matching) {
-                        logger.info("Settings out of sync for $clientEntity - server config: $serverConfig")
-
-                        for (config in clientConfig.configList) {
-                            piConfigClient.deleteStripConfig(clientEntity, config)
-                        }
-                        piConfigClient.addStripConfig(clientEntity, serverConfig)
-                    }
-
-                    state = StreamingJobState.ConnectedIdle
-                }
+                StreamingJobState.SettingsSync -> doClientSettingsSync()
 
                 StreamingJobState.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
@@ -254,6 +233,45 @@ class WebSocketJob(
             delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
             if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
         }
+    }
+
+    private suspend fun doClientSettingsSync() {
+        logger.info("Syncing settings with $clientEntity")
+        settingsSyncRequired = false
+        val clientStripConfigs = piConfigClient.getStripConfigs(clientEntity)
+        val clientSettings = piConfigClient.getClientSettings(clientEntity)
+        val serverConfig = PiClientStripConfig(
+            strip.uuid!!,
+            strip.pin!!,
+            strip.length!!,
+            strip.brightness!!,
+            clientEntity.colorOrder!!
+        )
+
+        val stripConfigMatch =
+            clientStripConfigs.configList.size == 1 && clientStripConfigs.configList.first() == serverConfig
+
+        if (!stripConfigMatch) {
+            logger.info("Strip settings out of sync for $clientEntity - server config: $serverConfig")
+
+            for (config in clientStripConfigs.configList) {
+                piConfigClient.deleteStripConfig(clientEntity, config)
+            }
+            piConfigClient.addStripConfig(clientEntity, serverConfig)
+        }
+
+        val clientSettingsMatch = clientSettings.powerLimit == clientEntity.powerLimit
+
+        if (!clientSettingsMatch) {
+            logger.info("Settings out of sync for $clientEntity - server config: $serverConfig")
+
+            piConfigClient.updateClientSettings(
+                clientEntity,
+                PiClientSettings(clientEntity.powerLimit ?: 0)
+            )
+        }
+
+        state = StreamingJobState.ConnectedIdle
     }
 
     private fun updateLastSeenAt(currentTimeAsMillis: Long) {
