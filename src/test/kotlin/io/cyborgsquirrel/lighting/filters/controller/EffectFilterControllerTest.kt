@@ -12,7 +12,6 @@ import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
-import io.cyborgsquirrel.lighting.filters.BrightnessFadeFilter
 import io.cyborgsquirrel.lighting.filters.LightEffectFilterConstants
 import io.cyborgsquirrel.lighting.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.filters.api.EffectFilterApi
@@ -24,8 +23,8 @@ import io.cyborgsquirrel.lighting.filters.requests.CreateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.requests.UpdateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.responses.GetFilterResponse
 import io.cyborgsquirrel.lighting.filters.responses.GetFiltersResponse
-import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
-import io.cyborgsquirrel.lighting.filters.settings.BrightnessFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.objectToMap
@@ -60,12 +59,12 @@ class EffectFilterControllerTest(
     }
 
     "Getting filter by uuid" {
-        val defaultBrightnessSettings = objectToMap(objectMapper, BrightnessFilterSettings(0.5f))
+        val defaultBrightnessSettings = objectToMap(objectMapper, IntensityFilterSettings(0.5f))
         val filterEntity = LightEffectFilterEntity(
             name = "Half brightness filter",
             uuid = UUID.randomUUID().toString(),
             settings = defaultBrightnessSettings,
-            type = LightEffectFilterConstants.BRIGHTNESS_FILTER_NAME
+            type = LightEffectFilterConstants.INTENSITY_FILTER_NAME
         )
         filterRepository.save(filterEntity)
 
@@ -75,7 +74,7 @@ class EffectFilterControllerTest(
         val getAllFilterResponse = getAllFilterHttpResponse.body() as GetFilterResponse
 
         getAllFilterResponse.name shouldBe filterEntity.name
-        getAllFilterResponse.type shouldBe LightEffectFilterConstants.BRIGHTNESS_FILTER_NAME
+        getAllFilterResponse.type shouldBe LightEffectFilterConstants.INTENSITY_FILTER_NAME
         getAllFilterResponse.uuid shouldBe filterEntity.uuid
         getAllFilterResponse.settings shouldBe filterEntity.settings
     }
@@ -133,11 +132,11 @@ class EffectFilterControllerTest(
         )
 
         val effectUuid = (createEffectHttpResponse.body() as String)
-        val brightnessFadeFilterSettings = BrightnessFadeFilterSettings(0.25f, 1.0f, Duration.ofSeconds(15))
-        val settingsAsMap = objectToMap(objectMapper, brightnessFadeFilterSettings)
+        val intensityFadeFilterSettings = IntensityFadeFilterSettings(0.25f, 1.0f, Duration.ofSeconds(15))
+        val settingsAsMap = objectToMap(objectMapper, intensityFadeFilterSettings)
         val request = CreateEffectFilterRequest(
             "My brightness fade filter",
-            LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME,
+            LightEffectFilterConstants.INTENSITY_FADE_FILTER_NAME,
             settingsAsMap
         )
 

@@ -18,8 +18,8 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.*
 import io.cyborgsquirrel.lighting.filters.*
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
-import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
-import io.cyborgsquirrel.lighting.filters.settings.BrightnessFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.lighting.model.LedStrip
 import io.cyborgsquirrel.lighting.model.LedStripGroupModel
@@ -307,22 +307,22 @@ class CreateLightingService(
 
     fun createEffectFilter(effectType: String, uuid: String, settings: Map<String, Any>): LightEffectFilter {
         return when (effectType) {
-            LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME -> {
-                BrightnessFadeFilter(
+            LightEffectFilterConstants.INTENSITY_FADE_FILTER_NAME -> {
+                IntensityFadeFilter(
                     timeHelper = timeHelper,
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings),
-                        BrightnessFadeFilterSettings::class.java
+                        IntensityFadeFilterSettings::class.java
                     ),
                     uuid = uuid
                 )
             }
 
-            LightEffectFilterConstants.BRIGHTNESS_FILTER_NAME -> {
-                BrightnessFilter(
+            LightEffectFilterConstants.INTENSITY_FILTER_NAME -> {
+                IntensityFilter(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings),
-                        BrightnessFilterSettings::class.java
+                        IntensityFilterSettings::class.java
                     ),
                     uuid = uuid
                 )

@@ -26,13 +26,13 @@ import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.filters.BrightnessFadeFilter
+import io.cyborgsquirrel.lighting.filters.IntensityFadeFilter
 import io.cyborgsquirrel.lighting.filters.LightEffectFilterConstants
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
-import io.cyborgsquirrel.lighting.filters.settings.BrightnessFadeFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
@@ -64,7 +64,7 @@ class LightEffectInitJobTest(
 
     val lightEffectSettings = SpectrumEffectSettings.default(60).copy(10)
     val iterationTriggerSettings = EffectIterationTriggerSettings(25)
-    val fadeFilterSettings = BrightnessFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(20))
+    val fadeFilterSettings = IntensityFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(20))
     lateinit var websocketManagerMock: StreamJobManager
 
     beforeTest {
@@ -265,7 +265,7 @@ class LightEffectInitJobTest(
         val filter = filterRepository.save(
             LightEffectFilterEntity(
                 uuid = UUID.randomUUID().toString(),
-                type = LightEffectFilterConstants.BRIGHTNESS_FADE_FILTER_NAME,
+                type = LightEffectFilterConstants.INTENSITY_FADE_FILTER_NAME,
                 name = "25x trigger",
                 settings = fadeTriggerSettingsJson,
             )
@@ -287,12 +287,12 @@ class LightEffectInitJobTest(
         val filters = activeEffectList.first().filters
 
         filters.size shouldBe 1
-        filters.first()::class shouldBe BrightnessFadeFilter::class
+        filters.first()::class shouldBe IntensityFadeFilter::class
         filters.first().uuid shouldBe filter.uuid
-        (filters.first() as BrightnessFadeFilter).settings::class shouldBe fadeFilterSettings::class
-        (filters.first() as BrightnessFadeFilter).settings.startingBrightness shouldBe fadeFilterSettings.startingBrightness
-        (filters.first() as BrightnessFadeFilter).settings.endingBrightness shouldBe fadeFilterSettings.endingBrightness
-        (filters.first() as BrightnessFadeFilter).settings.fadeDuration shouldBe fadeFilterSettings.fadeDuration
+        (filters.first() as IntensityFadeFilter).settings::class shouldBe fadeFilterSettings::class
+        (filters.first() as IntensityFadeFilter).settings.startingIntensity shouldBe fadeFilterSettings.startingIntensity
+        (filters.first() as IntensityFadeFilter).settings.endingIntensity shouldBe fadeFilterSettings.endingIntensity
+        (filters.first() as IntensityFadeFilter).settings.fadeDuration shouldBe fadeFilterSettings.fadeDuration
     }
 
     "Init light effect one group - happy path" {

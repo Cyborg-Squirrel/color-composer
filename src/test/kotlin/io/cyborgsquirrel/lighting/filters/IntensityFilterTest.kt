@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.filters
 
-import io.cyborgsquirrel.lighting.filters.settings.BrightnessFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.BehaviorSpec
@@ -8,18 +8,18 @@ import io.kotest.matchers.shouldBe
 import java.util.*
 
 @AnnotationSpec.Test
-class BrightnessFilterTest : BehaviorSpec({
+class IntensityFilterTest : BehaviorSpec({
 
-    given("A brightness filter set to 0.5") {
-        val filter = BrightnessFilter(BrightnessFilterSettings(0.5f), UUID.randomUUID().toString())
+    given("An intensity filter set to 0.5") {
+        val filter = IntensityFilter(IntensityFilterSettings(0.5f), UUID.randomUUID().toString())
         and("A list of RgbColors") {
             val rgbList = listOf(RgbColor.Red, RgbColor.Green, RgbColor.Blue)
             `when`("The filter is applied to a list of RgbColors") {
-                val brightnessReducedList = filter.apply(rgbList)
+                val intensityReducedList = filter.apply(rgbList)
                 then("The filter shall return an identical length list dimmed by a factor of 0.5") {
-                    brightnessReducedList.size shouldBe rgbList.size
+                    intensityReducedList.size shouldBe rgbList.size
                     for (i in rgbList.indices) {
-                        brightnessReducedList[i] shouldBe rgbList[i].scale(0.5f)
+                        intensityReducedList[i] shouldBe rgbList[i].scale(0.5f)
                     }
                 }
             }
