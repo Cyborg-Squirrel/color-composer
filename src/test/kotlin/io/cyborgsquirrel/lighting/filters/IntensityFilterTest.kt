@@ -10,7 +10,7 @@ import java.util.*
 @AnnotationSpec.Test
 class IntensityFilterTest : BehaviorSpec({
 
-    given("A Intensity filter set to 0.5") {
+    given("An intensity filter set to 0.5") {
         val filter = IntensityFilter(IntensityFilterSettings(0.5f), UUID.randomUUID().toString())
         and("A list of RgbColors") {
             val rgbList = listOf(RgbColor.Red, RgbColor.Green, RgbColor.Blue)
