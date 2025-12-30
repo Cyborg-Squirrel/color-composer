@@ -4,8 +4,8 @@ import io.micronaut.serde.annotation.Serdeable
 import java.time.Duration
 
 @Serdeable
-data class BrightnessFadeFilterSettings(
-    val startingBrightness: Float,
-    val endingBrightness: Float,
+data class IntensityFadeFilterSettings(
+    val startingIntensity: Float,
+    val endingIntensity: Float,
     val fadeDuration: Duration,
 )
