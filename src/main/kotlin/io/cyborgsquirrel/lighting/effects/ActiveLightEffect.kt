@@ -12,10 +12,4 @@ data class ActiveLightEffect(
     val effect: LightEffect,
     val strip: LedStrip,
     val filters: List<LightEffectFilter>
-) {
-    fun settingsEqual(other: ActiveLightEffect) =
-        priority == other.priority && skipFramesIfBlank == other.skipFramesIfBlank && status == other.status
-
-    fun filtersEqual(other: ActiveLightEffect) =
-        filters.map { it.uuid }.sorted() == other.filters.map { it.uuid }.sorted()
-}
+)
