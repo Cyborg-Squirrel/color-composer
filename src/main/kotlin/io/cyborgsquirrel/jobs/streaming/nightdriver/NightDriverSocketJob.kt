@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
-import kotlin.math.min
 
 /**
  * Background job for streaming light effects to NightDriver clients
@@ -41,7 +40,7 @@ class NightDriverSocketJob(
     private var socket: Socket? = null
 
     // Client data
-    private lateinit var strip: LedStripModel
+    private var strips = mutableListOf<LedStripModel>()
 
     // Serialization
     private val serializer = NightDriverFrameDataSerializer()
@@ -95,16 +94,19 @@ class NightDriverSocketJob(
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            val stripEntity = clientEntity.strips.first()
-                            strip = LedStripModel(
-                                stripEntity.name!!,
-                                stripEntity.uuid!!,
-                                stripEntity.pin!!,
-                                stripEntity.length!!,
-                                stripEntity.height,
-                                stripEntity.blendMode!!,
-                                stripEntity.brightness!!,
-                            )
+                            val newStrips = clientEntity.strips.map {
+                                LedStripModel(
+                                    it.name!!,
+                                    it.uuid!!,
+                                    it.pin!!,
+                                    it.length!!,
+                                    it.height,
+                                    it.blendMode!!,
+                                    it.brightness!!,
+                                )
+                            }
+                            strips.clear()
+                            strips.addAll(newStrips)
                             state = StreamingJobState.Offline
                         } else {
                             delay(5000)
@@ -149,9 +151,9 @@ class NightDriverSocketJob(
 
                 StreamingJobState.RenderingEffect -> {
                     triggerManager.processTriggers()
-                    val frameOptional = renderer.renderFrame(strip.getUuid(), 0)
+                    val frameList = renderer.renderFrames(strips.map { it.getUuid() }, 0)
 
-                    if (frameOptional.isEmpty) {
+                    if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
                         sleepMillis = millisPerFrame * 2
                         state = StreamingJobState.BufferFullWaiting
@@ -161,27 +163,34 @@ class NightDriverSocketJob(
                         logger.debug("Frame timestamp {}", timeHelper.dateTimeFromMillis(timestampMillis))
 
                         // Assemble RGB data
-                        val frame = frameOptional.get()
-                        val rgbData = frame.frameData
-                        val frameData = RgbFrameData(timestampMillis, rgbData)
+                        val encodedFrames = mutableListOf<ByteArray>()
+                        for (frame in frameList) {
+                            val strip = strips.first { it.getUuid() == frame.stripUuid }
+                            val rgbData = frame.frameData
+                            val frameData = RgbFrameData(timestampMillis, rgbData)
 
-                        // Serialize and send frame - options are not supported for NightDriver
-                        val encodedFrame = serializer.encode(frameData, strip.getPin().toInt())
-                        // Sync time once every 5 minutes
-                        val isTimeSyncFrame = lastTimeSyncPerformedAt + (1000 * 60 * 5) < now
+                            // Serialize and send frame - options are not supported for NightDriver
+                            val encodedFrame = serializer.encode(frameData, strip.getPin().toInt())
+                            encodedFrames.add(encodedFrame)
+                        }
 
-                        if (isTimeSyncFrame) {
-                            clientTimeSync.doTimeSync {
-                                sendSocketFrame(encodedFrame)
-                                if (lastResponse != null) {
-                                    lastTimeSyncPerformedAt = now
-                                    lastResponse!!.currentClockMillis()
-                                } else {
-                                    -1
+                        for (encodedFrame in encodedFrames) {
+                            // Sync time once every 5 minutes
+                            val isTimeSyncFrame = lastTimeSyncPerformedAt + (1000 * 60 * 5) < now
+
+                            if (isTimeSyncFrame) {
+                                clientTimeSync.doTimeSync {
+                                    sendSocketFrame(encodedFrame)
+                                    if (lastResponse != null) {
+                                        lastTimeSyncPerformedAt = now
+                                        lastResponse!!.currentClockMillis()
+                                    } else {
+                                        -1
+                                    }
                                 }
+                            } else {
+                                sendSocketFrame(encodedFrame)
                             }
-                        } else {
-                            sendSocketFrame(encodedFrame)
                         }
 
                         // Sleep for the duration of half of one frame to avoid overloading the Night Driver client
@@ -196,10 +205,11 @@ class NightDriverSocketJob(
                             // Reset the exponential backoff value once we're both connected AND have received a response
                             exponentialReconnectionBackoffValue = 1
                             val millisOfFramesBuffered = lastResponse!!.bufferPosition * millisPerFrame
-                            val clientBufferFull = lastResponse!!.bufferPosition == lastResponse!!.bufferSize
+                            val clientBufferFull =
+                                lastResponse!!.bufferPosition + strips.size >= lastResponse!!.bufferSize
                             if (millisOfFramesBuffered > bufferTimeMillis || clientBufferFull) {
                                 logger.debug("Client buffer full, waiting.")
-                                sleepMillis = millisPerFrame / 2
+                                sleepMillis = millisPerFrame
                                 state = StreamingJobState.BufferFullWaiting
                             } else if (lastResponse!!.frameDrawing > fps) {
                                 sleepMillis = millisPerFrame / 2

@@ -4,12 +4,11 @@ import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import java.util.*
 
 /**
- * Interface for processing and generating frames based on active light effects.
- *
- * This interface is utilized to sequentially render frames corresponding to light effects associated
- * with a specific led strip identifier (UUID).
+ * Interface for processing and generating frames for active light effects.
  */
 interface LightEffectRenderer {
 
-    fun renderFrame(lightUuid: String, sequenceNumber: Short): Optional<RenderedFrameModel>
+    fun renderFrames(stripUuids: List<String>, sequenceNumber: Short): List<RenderedFrameModel>
+
+    fun renderFrame(stripUuid: String, sequenceNumber: Short): Optional<RenderedFrameModel>
 }
