@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.rendering
 
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
@@ -23,9 +24,9 @@ class LightEffectRendererImpl(
     private var stripGroupFrameBuffer = mutableListOf<RenderedFrameModel>()
 
     /**
-     * Renders all light effects for the specified LED strip [lightUuid].
+     * Renders all light effects for the specified LED strips [stripUuids].
      *
-     * First all light effects in the Playing state for the [lightUuid] are rendered. Then the rendered frame data is
+     * First all light effects in the Playing state for the [stripUuids] are rendered. Then the rendered frame data is
      * put through the filters if any are configured. If the skip blank frames configuration is set, frames will be
      * skipped if all effects end up producing blank frame data. Last, the light effects are layered on top of each other.
      * The layering algorithm may just use one effect's colors, or mix them, depending on the blend mode.
@@ -37,15 +38,44 @@ class LightEffectRendererImpl(
      * Returns an optional RGB data frame. If no effects are configured, or no effects are playing then the optional
      * will be empty.
      */
-    override fun renderFrame(lightUuid: String, sequenceNumber: Short): Optional<RenderedFrameModel> {
-        val activeEffects = effectRepository.getAllEffectsForStrip(lightUuid)
-            .filter { it.status.isActive() }
-            .sortedBy { it.priority }
-        if (activeEffects.isEmpty()) {
-            // No active effects for the specified LED strip
-            return Optional.empty()
+    override fun renderFrames(stripUuids: List<String>, sequenceNumber: Short): List<RenderedFrameModel> {
+        val effectsMap = mutableMapOf<String, List<ActiveLightEffect>>()
+        for (stripUuid in stripUuids) {
+            val activeEffects = effectRepository.getAllEffectsForStrip(stripUuid).filter { it.status.isActive() }
+                .sortedBy { it.priority }
+            if (activeEffects.isNotEmpty()) {
+                effectsMap[stripUuid] = activeEffects
+            }
         }
 
+        // Nothing to render so we can return an empty list
+        if (effectsMap.isEmpty()) {
+            return listOf()
+        }
+
+        val renderedFrames = effectsMap.values.map {
+            renderFrame(it)
+        }.filter { it.isPresent }.map {
+            it.get()
+        }
+
+        return renderedFrames
+    }
+
+    override fun renderFrame(
+        stripUuid: String,
+        sequenceNumber: Short
+    ): Optional<RenderedFrameModel> {
+        val activeEffects = effectRepository.getAllEffectsForStrip(stripUuid).filter { it.status.isActive() }
+            .sortedBy { it.priority }
+        return if (activeEffects.isEmpty()) {
+            Optional.empty()
+        } else {
+            renderFrame(activeEffects)
+        }
+    }
+
+    private fun renderFrame(activeEffects: List<ActiveLightEffect>): Optional<RenderedFrameModel> {
         val allEffectsRgbData = mutableListOf<List<RgbColor>>()
         for (activeEffect in activeEffects) {
             when (activeEffect.strip) {
@@ -56,11 +86,9 @@ class LightEffectRendererImpl(
                     } else {
                         activeEffect.effect.getBuffer()
                     }
-                    logger.debug("Rendered effect {}", activeEffect)
                     for (filter in activeEffect.filters) {
                         logger.debug("Applying filter ${filter.uuid}")
                         rgbData = filter.apply(rgbData)
-                        logger.debug("Applied filter ${filter.uuid}")
                     }
 
                     if (activeEffect.skipFramesIfBlank && activeEffect.status == LightEffectStatus.Playing) {
@@ -71,18 +99,11 @@ class LightEffectRendererImpl(
                             }
 
                             if (allBlank) {
-                                logger.debug("All frames are blank and effect is set to skip blank frames")
                                 logger.debug(
-                                    "Rendering next frame for effect {} {}",
-                                    activeEffect.effect,
+                                    "All frames are blank and effect {} is set to skip blank frames",
                                     activeEffect.effectUuid
                                 )
                                 rgbData = activeEffect.effect.getNextStep()
-                                logger.debug(
-                                    "Rendered next frame for effect {} {}",
-                                    activeEffect.effect,
-                                    activeEffect.effectUuid
-                                )
                                 for (filter in activeEffect.filters) {
                                     rgbData = filter.apply(rgbData)
                                 }
@@ -132,7 +153,11 @@ class LightEffectRendererImpl(
         val effectStatuses = activeEffects.map { it.status }.toSet()
         val allEffectsPaused = effectStatuses.size == 1 && effectStatuses.first() == LightEffectStatus.Paused
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame groups
-        return Optional.of(RenderedFrameModel(0, lightUuid, renderedRgbData, -1, allEffectsPaused))
+        return Optional.of(
+            RenderedFrameModel(
+                0, activeEffects.first().strip.getUuid(), renderedRgbData, -1, allEffectsPaused
+            )
+        )
     }
 
     companion object {
