@@ -3,10 +3,10 @@ package io.cyborgsquirrel.lighting.effect_palette.palette
 import io.cyborgsquirrel.lighting.effect_palette.helper.GradientColorHelper
 import io.cyborgsquirrel.lighting.effect_palette.settings.GradientPaletteSettings
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
-import io.cyborgsquirrel.lighting.model.LedStrip
+import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 
-class GradientColorPalette(private val settings: GradientPaletteSettings, uuid: String, strip: LedStrip) :
+class GradientColorPalette(private val settings: GradientPaletteSettings, uuid: String, strip: LedStripModel) :
     ColorPalette(uuid, strip) {
 
     private val helper = GradientColorHelper()

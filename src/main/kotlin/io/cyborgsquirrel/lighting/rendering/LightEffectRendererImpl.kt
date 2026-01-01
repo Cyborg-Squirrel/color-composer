@@ -78,52 +78,44 @@ class LightEffectRendererImpl(
     private fun renderFrame(activeEffects: List<ActiveLightEffect>): Optional<RenderedFrameModel> {
         val allEffectsRgbData = mutableListOf<List<RgbColor>>()
         for (activeEffect in activeEffects) {
-            when (activeEffect.strip) {
-                is LedStripModel -> {
-                    logger.debug("Rendering effect {}", activeEffect)
-                    var rgbData = if (activeEffect.status == LightEffectStatus.Playing) {
-                        activeEffect.effect.getNextStep()
-                    } else {
-                        activeEffect.effect.getBuffer()
-                    }
-                    for (filter in activeEffect.filters) {
-                        logger.debug("Applying filter ${filter.uuid}")
-                        rgbData = filter.apply(rgbData)
+            logger.debug("Rendering effect {}", activeEffect)
+            var rgbData = if (activeEffect.status == LightEffectStatus.Playing) {
+                activeEffect.effect.getNextStep()
+            } else {
+                activeEffect.effect.getBuffer()
+            }
+            for (filter in activeEffect.filters) {
+                logger.debug("Applying filter ${filter.uuid}")
+                rgbData = filter.apply(rgbData)
+            }
+
+            if (activeEffect.skipFramesIfBlank && activeEffect.status == LightEffectStatus.Playing) {
+                var allBlank = true
+                while (allBlank) {
+                    for (data in rgbData) {
+                        allBlank = allBlank && data == RgbColor.Blank
                     }
 
-                    if (activeEffect.skipFramesIfBlank && activeEffect.status == LightEffectStatus.Playing) {
-                        var allBlank = true
-                        while (allBlank) {
-                            for (data in rgbData) {
-                                allBlank = allBlank && data == RgbColor.Blank
-                            }
-
-                            if (allBlank) {
-                                logger.debug(
-                                    "All frames are blank and effect {} is set to skip blank frames",
-                                    activeEffect.effectUuid
-                                )
-                                rgbData = activeEffect.effect.getNextStep()
-                                for (filter in activeEffect.filters) {
-                                    rgbData = filter.apply(rgbData)
-                                }
-                            }
+                    if (allBlank) {
+                        logger.debug(
+                            "All frames are blank and effect {} is set to skip blank frames",
+                            activeEffect.effectUuid
+                        )
+                        rgbData = activeEffect.effect.getNextStep()
+                        for (filter in activeEffect.filters) {
+                            rgbData = filter.apply(rgbData)
                         }
                     }
-
-                    allEffectsRgbData.add(rgbData)
-                }
-
-                is LedStripPoolModel -> {
-                    // TODO strip pool rendering
                 }
             }
+
+            allEffectsRgbData.add(rgbData)
         }
 
         // If there are multiple effects, layer the RGB output on top of each other.
         val renderedRgbData = mutableListOf<RgbColor>()
-        val stripLength = activeEffects.first().strip.getLength()
-        val blendMode = activeEffects.first().strip.getBlendMode()
+        val stripLength = activeEffects.first().strip.length
+        val blendMode = activeEffects.first().strip.blendMode
         for (i in 0..<stripLength) {
             when (blendMode) {
                 BlendMode.Additive -> {
@@ -155,7 +147,7 @@ class LightEffectRendererImpl(
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame pools
         return Optional.of(
             RenderedFrameModel(
-                0, activeEffects.first().strip.getUuid(), renderedRgbData, -1, allEffectsPaused
+                0, activeEffects.first().strip.uuid, renderedRgbData, -1, allEffectsPaused
             )
         )
     }

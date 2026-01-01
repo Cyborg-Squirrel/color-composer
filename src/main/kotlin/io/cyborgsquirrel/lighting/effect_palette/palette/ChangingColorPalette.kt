@@ -6,7 +6,7 @@ import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingGradientPalett
 import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingPaletteSettings
 import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingStaticPaletteSettings
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
-import io.cyborgsquirrel.lighting.model.LedStrip
+import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 
@@ -14,7 +14,7 @@ class ChangingColorPalette(
     private val settings: ChangingPaletteSettings,
     private val timeHelper: TimeHelper,
     uuid: String,
-    strip: LedStrip,
+    strip: LedStripModel,
 ) :
     ColorPalette(uuid, strip) {
 

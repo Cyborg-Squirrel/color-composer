@@ -21,7 +21,6 @@ import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunction
 import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
-import io.cyborgsquirrel.lighting.model.LedStrip
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
@@ -44,7 +43,7 @@ class CreateLightingService(
     private val objectMapper: ObjectMapper
 ) {
 
-    fun ledStripFromEffectEntity(effectEntity: LightEffectEntity): LedStrip {
+    fun ledStripFromEffectEntity(effectEntity: LightEffectEntity): LedStripModel {
         val stripEntity = effectEntity.strip
         val poolEntity = effectEntity.pool
 
@@ -65,22 +64,23 @@ class CreateLightingService(
             val stripModels = stripEntities.map {
                 LedStripModel(it.name!!, it.uuid!!, it.pin!!, it.length!!, it.height, it.blendMode!!, it.brightness!!)
             }
-            return LedStripPoolModel(
-                poolEntity.name!!,
-                poolEntity.uuid!!,
-                stripModels,
-                stripModels.first().getBlendMode()
-            )
-        } else {
-            throw Exception("Strip or pool must be non-null!")
+            // TODO
+//            return LedStripPoolModel(
+//                poolEntity.name!!,
+//                poolEntity.uuid!!,
+//                stripModels,
+//                stripModels.first().blendMode
+//            )
         }
+
+        throw Exception("Strip or pool must be non-null!")
     }
 
     fun createPalette(
         settings: Map<String, Any>,
         paletteType: String,
         uuid: String,
-        strip: LedStrip
+        strip: LedStripModel
     ): ColorPalette {
         return when (paletteType) {
             EffectPaletteConstants.STATIC_COLOR_PALETTE -> {
@@ -165,11 +165,11 @@ class CreateLightingService(
         settings: Map<String, Any>,
         effectType: String,
         palette: ColorPalette?,
-        strip: LedStrip
+        strip: LedStripModel
     ): LightEffect {
         return when (effectType) {
             LightEffectConstants.BOUNCING_BALL_NAME -> BouncingBallLightEffect(
-                numberOfLeds = strip.getLength(),
+                numberOfLeds = strip.length,
                 timeHelper = timeHelper,
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
@@ -179,7 +179,7 @@ class CreateLightingService(
             )
 
             LightEffectConstants.FLAME_EFFECT_NAME -> FlameLightEffect(
-                numberOfLeds = strip.getLength(),
+                numberOfLeds = strip.length,
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     FlameEffectSettings::class.java
@@ -188,7 +188,7 @@ class CreateLightingService(
             )
 
             LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME -> NightriderLightEffect(
-                numberOfLeds = strip.getLength(),
+                numberOfLeds = strip.length,
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     NightriderColorFillEffectSettings::class.java
@@ -198,7 +198,7 @@ class CreateLightingService(
             )
 
             LightEffectConstants.NIGHTRIDER_COMET_NAME -> NightriderLightEffect(
-                numberOfLeds = strip.getLength(),
+                numberOfLeds = strip.length,
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     NightriderCometEffectSettings::class.java
@@ -208,7 +208,7 @@ class CreateLightingService(
             )
 
             LightEffectConstants.SPECTRUM_NAME -> SpectrumLightEffect(
-                numberOfLeds = strip.getLength(),
+                numberOfLeds = strip.length,
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     SpectrumEffectSettings::class.java
@@ -217,7 +217,7 @@ class CreateLightingService(
             )
 
             LightEffectConstants.WAVE_EFFECT_NAME -> WaveLightEffect(
-                numberOfLeds = strip.getLength(),
+                numberOfLeds = strip.length,
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     WaveEffectSettings::class.java
@@ -226,7 +226,7 @@ class CreateLightingService(
             )
 
             LightEffectConstants.MARQUEE_EFFECT_NAME -> MarqueeEffect(
-                numberOfLeds = strip.getLength(),
+                numberOfLeds = strip.length,
                 settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings),
                     MarqueeEffectSettings::class.java

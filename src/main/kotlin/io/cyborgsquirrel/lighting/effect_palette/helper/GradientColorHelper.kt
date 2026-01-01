@@ -1,14 +1,14 @@
 package io.cyborgsquirrel.lighting.effect_palette.helper
 
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
-import io.cyborgsquirrel.lighting.model.LedStrip
+import io.cyborgsquirrel.lighting.model.LedStripModel
 
 class GradientColorHelper {
 
-    fun getPalette(index: Int, strip: LedStrip, points: Map<Int, SettingsPalette>): SettingsPalette {
+    fun getPalette(index: Int, strip: LedStripModel, points: Map<Int, SettingsPalette>): SettingsPalette {
         var gradientStartPoint = points.keys.first()
         var gradientEndPoint = 0
-        val percentDone = (index / strip.getLength().toFloat()) * 100
+        val percentDone = (index / strip.length.toFloat()) * 100
 
         for (point in points.keys) {
             if (percentDone > point) {
