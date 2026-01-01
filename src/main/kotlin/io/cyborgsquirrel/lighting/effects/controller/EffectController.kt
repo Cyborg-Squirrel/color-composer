@@ -24,15 +24,15 @@ class EffectController(
         }
     }
 
-    override fun getEffectsForStrip(stripUuid: String?, groupUuid: String?): HttpResponse<Any> {
+    override fun getEffectsForStrip(stripUuid: String?, poolUuid: String?): HttpResponse<Any> {
         return try {
             if (!stripUuid.isNullOrBlank()) {
                 val response = effectApiService.getEffectsForStrip(stripUuid)
                 HttpResponse.ok(response)
-            } else if (!groupUuid.isNullOrBlank()) {
+            } else if (!poolUuid.isNullOrBlank()) {
                 TODO()
             } else {
-                HttpResponse.badRequest("A stripUuid or groupUuid must be specified!")
+                HttpResponse.badRequest("A stripUuid or poolUuid must be specified!")
             }
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)

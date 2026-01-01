@@ -21,7 +21,7 @@ data class LedStripEntity(
     var client: LedStripClientEntity? = null,
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "strip")
-    var members: Set<GroupMemberLedStripEntity> = setOf(),
+    var members: Set<PoolMemberLedStripEntity> = setOf(),
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "strip")
     var effects: Set<LightEffectEntity> = setOf(),

@@ -3,10 +3,10 @@ package io.cyborgsquirrel.lighting.model
 import io.cyborgsquirrel.lighting.enums.BlendMode
 
 /**
- * LED strip group model
+ * LED strip pool model
  * [strips] the list of member strips in order
  */
-data class LedStripGroupModel(
+data class LedStripPoolModel(
     private val name: String,
     private val uuid: String,
     private val strips: List<LedStripModel>,
@@ -35,7 +35,7 @@ data class LedStripGroupModel(
     }
 
     override fun getHeight(): Int {
-        // If a matrix LED is combined with a strip what should the height be? Should these two be allowed in the same group?
+        // If a matrix LED is combined with a strip what should the height be? Should these two be allowed in the same pool?
         TODO("Not yet implemented")
     }
 
@@ -58,7 +58,7 @@ data class LedStripGroupModel(
             index += strip.getLength()
         }
 
-        // Strip with uuid [lightUuid] isn't in the group
+        // Strip with uuid [lightUuid] isn't in the pool
         return -1
     }
 }

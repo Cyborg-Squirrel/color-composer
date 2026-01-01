@@ -1,13 +1,14 @@
 package io.cyborgsquirrel.led_strips.repository
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
+import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
+import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -18,8 +19,8 @@ import java.util.*
 class LedStripRepositoryTest(
     private val clientRepository: H2LedStripClientRepository,
     private val ledStripRepository: H2LedStripRepository,
-    private val ledStripGroupRepository: H2LedStripGroupRepository,
-    private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
+    private val ledStripPoolRepository: H2LedStripPoolRepository,
+    private val poolMemberLedStripRepository: H2PoolMemberLedStripRepository,
 ) : StringSpec({
 
     var clientEntity: LedStripClientEntity? = null
@@ -50,25 +51,26 @@ class LedStripRepositoryTest(
         )
     }
 
-    fun createLedStripGroupEntity(name: String, uuid: String): LedStripGroupEntity {
-        return ledStripGroupRepository.save(
-            LedStripGroupEntity(
+    fun createLedStripPoolEntity(name: String, uuid: String): LedStripPoolEntity {
+        return ledStripPoolRepository.save(
+            LedStripPoolEntity(
                 name = name,
-                uuid = uuid
+                uuid = uuid,
+                poolType = PoolType.Unified
             )
         )
     }
 
-    fun createGroupMembers(
-        groupEntity: LedStripGroupEntity,
+    fun createPoolMembers(
+        poolEntity: LedStripPoolEntity,
         ledStrips: List<LedStripEntity>
-    ): List<GroupMemberLedStripEntity> {
+    ): List<PoolMemberLedStripEntity> {
         return ledStrips.mapIndexed { index, ledStrip ->
-            GroupMemberLedStripEntity(
-                group = groupEntity,
+            PoolMemberLedStripEntity(
+                pool = poolEntity,
                 strip = ledStrip,
                 inverted = false,
-                groupIndex = index
+                poolIndex = index
             )
         }
     }
@@ -78,8 +80,8 @@ class LedStripRepositoryTest(
     }
 
     afterTest {
-        groupMemberLedStripRepository.deleteAll()
-        ledStripGroupRepository.deleteAll()
+        poolMemberLedStripRepository.deleteAll()
+        ledStripPoolRepository.deleteAll()
         ledStripRepository.deleteAll()
         clientRepository.deleteAll()
     }
@@ -98,11 +100,11 @@ class LedStripRepositoryTest(
         val ledStripEntity =
             createLedStripEntity(name = "Kitchen lights A", uuid = ledStripUuid, length = 120, brightness = 50)
 
-        val groupUuid = UUID.randomUUID().toString()
-        val groupEntity = createLedStripGroupEntity(name = "Kitchen Group", uuid = groupUuid)
+        val poolUuid = UUID.randomUUID().toString()
+        val poolEntity = createLedStripPoolEntity(name = "Kitchen pool", uuid = poolUuid)
 
-        val groupMembers = createGroupMembers(groupEntity, listOf(ledStripEntity))
-        val savedGroupMembers = groupMemberLedStripRepository.saveAll(groupMembers)
+        val poolMembers = createPoolMembers(poolEntity, listOf(ledStripEntity))
+        val savedPoolMembers = poolMemberLedStripRepository.saveAll(poolMembers)
 
         val retrievedLedStripOptional = ledStripRepository.findByUuid(ledStripUuid)
         retrievedLedStripOptional.isPresent shouldBe true
@@ -116,9 +118,9 @@ class LedStripRepositoryTest(
             client!!.name shouldBe clientEntity!!.name
             members.size shouldBe 1
             members.first().apply {
-                id shouldBe savedGroupMembers.first().id
-                inverted shouldBe savedGroupMembers.first().inverted
-                groupIndex shouldBe savedGroupMembers.first().groupIndex
+                id shouldBe savedPoolMembers.first().id
+                inverted shouldBe savedPoolMembers.first().inverted
+                poolIndex shouldBe savedPoolMembers.first().poolIndex
             }
             brightness shouldBe ledStripEntity.brightness
         }

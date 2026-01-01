@@ -7,5 +7,5 @@ import io.micronaut.data.model.query.builder.sql.Dialect
 
 @JdbcRepository(dialect = Dialect.POSTGRES)
 @Requires(property = "datasources.default.dialect", value = "POSTGRES")
-@Replaces(value = H2LedStripGroupRepository::class)
-interface PostgresLedStripGroupRepository : H2LedStripGroupRepository
+@Replaces(value = H2LedStripPoolRepository::class)
+interface PostgresLedStripPoolRepository : H2LedStripPoolRepository

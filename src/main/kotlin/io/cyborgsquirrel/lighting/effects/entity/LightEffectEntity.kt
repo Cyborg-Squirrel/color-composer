@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effects.entity
 
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
@@ -21,7 +21,7 @@ data class LightEffectEntity(
     var strip: LedStripEntity? = null,
 
     @Relation(value = Relation.Kind.MANY_TO_ONE)
-    var group: LedStripGroupEntity? = null,
+    var pool: LedStripPoolEntity? = null,
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "effect")
     var triggers: Set<LightEffectTriggerEntity> = setOf(),
@@ -52,7 +52,7 @@ data class LightEffectEntity(
 
         if (id != other.id) return false
         if (strip?.id != other.strip?.id) return false
-        if (group?.id != other.group?.id) return false
+        if (pool?.id != other.pool?.id) return false
         if (palette?.id != other.palette?.id) return false
         if (uuid != other.uuid) return false
         if (type != other.type) return false
@@ -67,7 +67,7 @@ data class LightEffectEntity(
         var result = uuid.hashCode()
         result = 31 * result + id.hashCode()
         result = 31 * result + (strip?.id ?: 0).hashCode()
-        result = 31 * result + (group?.id ?: 0).hashCode()
+        result = 31 * result + (pool?.id ?: 0).hashCode()
         result = 31 * result + (palette?.id ?: 0).hashCode()
         result = 31 * result + status.hashCode()
         result = 31 * result + type.hashCode()
@@ -77,6 +77,6 @@ data class LightEffectEntity(
     }
 
     override fun toString(): String {
-        return "LightEffectLedStripAssociationEntity(strip=${strip?.id}, group=${group?.id}, palette=${palette?.id} effectType=$type, name=$name, id=$id, uuid=$uuid, status=$status, settings=$settings)"
+        return "LightEffectLedStripAssociationEntity(strip=${strip?.id}, pool=${pool?.id}, palette=${palette?.id} effectType=$type, name=$name, id=$id, uuid=$uuid, status=$status, settings=$settings)"
     }
 }

@@ -191,7 +191,7 @@ class LedStripApiService(
                 }
                 streamJobManager.notifyJobOfDataUpdate(entity.client!!)
             } else {
-                throw ClientRequestException("Could not delete strip with uuid $uuid. Please delete or reassign its effects and group memberships first.")
+                throw ClientRequestException("Could not delete strip with uuid $uuid. Please delete or reassign its effects and pool member strips first.")
             }
         } else {
             throw ClientRequestException("Could not delete strip with uuid $uuid. It does not exist.")
