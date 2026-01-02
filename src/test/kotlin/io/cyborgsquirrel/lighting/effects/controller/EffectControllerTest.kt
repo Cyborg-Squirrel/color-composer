@@ -14,6 +14,7 @@ import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
+import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.RgbColor
@@ -97,7 +98,8 @@ class EffectControllerTest(
                 it.value
             )
         }
-        effectFromApi.stripUuid shouldBe strip.uuid
+        effectFromApi::class.java shouldBe GetStripEffectResponse::class.java
+        (effectFromApi as GetStripEffectResponse).stripUuid shouldBe strip.uuid
         effectFromApi.paletteUuid shouldBe palette.uuid
     }
 
@@ -170,7 +172,8 @@ class EffectControllerTest(
                 it.value
             )
         }
-        effectFromApi.stripUuid shouldBe effectEntity.strip?.uuid
+        effectFromApi::class.java shouldBe GetStripEffectResponse::class.java
+        (effectFromApi as GetStripEffectResponse).stripUuid shouldBe effectEntity.strip?.uuid
         effectFromApi.paletteUuid shouldBe palette?.uuid
     }
 
@@ -180,6 +183,7 @@ class EffectControllerTest(
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         val request = CreateEffectRequest(
             strip.uuid!!,
+            null,
             LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             "Rainbow Nightrider",
             defaultNrSettings

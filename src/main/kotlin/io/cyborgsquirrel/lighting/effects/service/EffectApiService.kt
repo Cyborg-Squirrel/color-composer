@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effects.service
 
+import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
@@ -13,6 +14,8 @@ import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
+import io.cyborgsquirrel.lighting.effects.responses.GetPoolEffectResponse
+import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.util.exception.ClientRequestException
@@ -22,6 +25,7 @@ import java.util.*
 @Singleton
 class EffectApiService(
     private val stripRepository: H2LedStripRepository,
+    private val poolRepository: H2LedStripPoolRepository,
     private val effectRepository: H2LightEffectRepository,
     private val triggerRepository: H2LightEffectTriggerRepository,
     private val filterRepository: H2LightEffectFilterRepository,
@@ -31,43 +35,80 @@ class EffectApiService(
 ) {
 
     fun createEffect(request: CreateEffectRequest): String {
-        val stripEntityOptional = stripRepository.findByUuid(request.stripUuid)
-        return if (stripEntityOptional.isPresent) {
-            val effectEntity = effectRepository.save(
-                LightEffectEntity(
-                    strip = stripEntityOptional.get(),
-                    uuid = UUID.randomUUID().toString(),
-                    name = request.name,
-                    type = request.effectType,
-                    status = LightEffectStatus.Idle,
-                    settings = request.settings
-                )
-            )
+        val stripUuid = request.stripUuid
+        val poolUuid = request.poolUuid
 
-            val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
-            val palette = if (effectEntity.palette != null) createLightingService.createPalette(
-                effectEntity.palette!!.settings!!, effectEntity.palette!!.type!!, effectEntity.palette!!.uuid!!, strip.length()
-            ) else null
-            val lightEffect = createLightingService.createEffect(
-                request.settings, request.effectType, palette, strip.length()
-            )
-
-            val activeEffect = ActiveLightEffect(
-                effectUuid = effectEntity.uuid!!,
-                // TODO add priority to persistence layer
-                priority = 0,
-                skipFramesIfBlank = true,
-                status = effectEntity.status!!,
-                strip = strip,
-                effect = lightEffect,
-                filters = listOf()
-            )
-            effectRegistry.addOrUpdateEffect(activeEffect)
-
-            effectEntity.uuid!!
-        } else {
-            throw ClientRequestException("No strip found with uuid ${request.stripUuid}!")
+        if (stripUuid != null && poolUuid != null) {
+            throw ClientRequestException("Cannot assign effect to both a strip and a strip pool. Please specify only either 'stripUuid' or 'poolUuid'.")
         }
+
+        val effectEntity = when {
+            stripUuid != null -> {
+                val stripEntityOptional = stripRepository.findByUuid(stripUuid)
+                if (stripEntityOptional.isPresent) {
+                    effectRepository.save(
+                        LightEffectEntity(
+                            strip = stripEntityOptional.get(),
+                            uuid = UUID.randomUUID().toString(),
+                            name = request.name,
+                            type = request.effectType,
+                            status = LightEffectStatus.Idle,
+                            settings = request.settings
+                        )
+                    )
+                } else {
+                    throw ClientRequestException("No strip found with uuid ${request.stripUuid}!")
+                }
+            }
+
+            poolUuid != null -> {
+                val poolEntityOptional = poolRepository.findByUuid(poolUuid)
+                if (poolEntityOptional.isPresent) {
+                    effectRepository.save(
+                        LightEffectEntity(
+                            pool = poolEntityOptional.get(),
+                            uuid = UUID.randomUUID().toString(),
+                            name = request.name,
+                            type = request.effectType,
+                            status = LightEffectStatus.Idle,
+                            settings = request.settings
+                        )
+                    )
+                } else {
+                    throw ClientRequestException("No pool found with uuid ${request.stripUuid}!")
+                }
+            }
+
+            else -> {
+                throw ClientRequestException("'stripUuid' or 'poolUuid' must be specified!")
+            }
+        }
+
+        // Common post‑creation logic
+        val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
+        val palette = if (effectEntity.palette != null) createLightingService.createPalette(
+            effectEntity.palette!!.settings!!,
+            effectEntity.palette!!.type!!,
+            effectEntity.palette!!.uuid!!,
+            strip.length()
+        ) else null
+        val lightEffect = createLightingService.createEffect(
+            effectEntity.settings!!, effectEntity.type!!, palette, strip.length()
+        )
+
+        val activeEffect = ActiveLightEffect(
+            effectUuid = effectEntity.uuid!!,
+            // TODO add priority to persistence layer
+            priority = 0,
+            skipFramesIfBlank = true,
+            status = effectEntity.status!!,
+            strip = strip,
+            effect = lightEffect,
+            filters = listOf()
+        )
+
+        effectRegistry.addOrUpdateEffect(activeEffect)
+        return effectEntity.uuid!!
     }
 
     fun getEffectsForStrip(stripUuid: String): GetEffectsResponse {
@@ -76,7 +117,7 @@ class EffectApiService(
             val stripEntity = stripEntityOptional.get()
             val effectEntities = effectRepository.findByStrip(stripEntity)
             val effectList = effectEntities.map {
-                GetEffectResponse(
+                GetStripEffectResponse(
                     name = it.name!!,
                     uuid = it.uuid!!,
                     stripUuid = stripEntity.uuid!!,
@@ -93,38 +134,49 @@ class EffectApiService(
         }
     }
 
+    fun getEffectsForPool(poolUuid: String): GetEffectsResponse {
+        val poolEntityOptional = poolRepository.findByUuid(poolUuid)
+        return if (poolEntityOptional.isPresent) {
+            val poolEntity = poolEntityOptional.get()
+            val effectEntities = effectRepository.findByPool(poolEntity)
+            val effectList = effectEntities.map {
+                GetPoolEffectResponse(
+                    name = it.name!!,
+                    uuid = it.uuid!!,
+                    poolUuid = poolEntity.uuid!!,
+                    paletteUuid = it.palette?.uuid,
+                    settings = it.settings!!,
+                    status = it.status!!,
+                    type = it.type!!,
+                )
+            }
+
+            GetEffectsResponse(effectList)
+        } else {
+            throw ClientRequestException("Could not get effects. Pool with uuid $poolUuid does not exist!")
+        }
+    }
+
     fun getAllEffects(): GetEffectsResponse {
         // TODO strip vs strip pool differentiation, strip pool support
         val effectEntities = effectRepository.queryAll()
-        val effectList = effectEntities.map {
-            GetEffectResponse(
-                name = it.name!!,
-                uuid = it.uuid!!,
-                stripUuid = it.strip!!.uuid!!,
-                paletteUuid = it.palette?.uuid,
-                settings = it.settings!!,
-                status = it.status!!,
-                type = it.type!!,
-            )
+        val effectList: List<GetEffectResponse?> = effectEntities.map {
+            getEffectResponseForEffect(it)
         }
 
-        return GetEffectsResponse(effectList)
+        return GetEffectsResponse(effectList.filterNotNull())
     }
 
     fun getEffectWithUuid(uuid: String): GetEffectResponse {
-        // TODO strip vs strip pool differentiation, strip pool support
         val effectEntityOptional = effectRepository.findByUuid(uuid)
         if (effectEntityOptional.isPresent) {
             val effectEntity = effectEntityOptional.get()
-            return GetEffectResponse(
-                name = effectEntity.name!!,
-                uuid = effectEntity.uuid!!,
-                stripUuid = effectEntity.strip!!.uuid!!,
-                paletteUuid = effectEntity.palette?.uuid,
-                settings = effectEntity.settings!!,
-                status = effectEntity.status!!,
-                type = effectEntity.type!!,
-            )
+            val response =  getEffectResponseForEffect(effectEntity)
+            if (response != null) {
+                return response
+            }
+
+            throw ClientRequestException("Error fetching effect with uuid $uuid!")
         } else {
             throw ClientRequestException("Effect with uuid $uuid does not exist!")
         }
@@ -258,6 +310,33 @@ class EffectApiService(
             LightEffectStatusCommand.Play -> LightEffectStatus.Playing
             LightEffectStatusCommand.Pause -> LightEffectStatus.Paused
             LightEffectStatusCommand.Stop -> LightEffectStatus.Stopped
+        }
+    }
+
+    private fun getEffectResponseForEffect(lightEffectEntity: LightEffectEntity): GetEffectResponse? {
+        return if (lightEffectEntity.strip != null) {
+            GetStripEffectResponse(
+                name = lightEffectEntity.name!!,
+                uuid = lightEffectEntity.uuid!!,
+                stripUuid = lightEffectEntity.strip!!.uuid!!,
+                paletteUuid = lightEffectEntity.palette?.uuid,
+                settings = lightEffectEntity.settings!!,
+                status = lightEffectEntity.status!!,
+                type = lightEffectEntity.type!!,
+            )
+        } else if (lightEffectEntity.pool != null) {
+            GetPoolEffectResponse(
+                name = lightEffectEntity.name!!,
+                uuid = lightEffectEntity.uuid!!,
+                poolUuid = lightEffectEntity.pool!!.uuid!!,
+                paletteUuid = lightEffectEntity.palette?.uuid,
+                settings = lightEffectEntity.settings!!,
+                status = lightEffectEntity.status!!,
+                type = lightEffectEntity.type!!,
+            )
+        } else {
+            // TODO throw Exception? For now let the user get all effects even if there is one with an invalid config.
+            null
         }
     }
 }

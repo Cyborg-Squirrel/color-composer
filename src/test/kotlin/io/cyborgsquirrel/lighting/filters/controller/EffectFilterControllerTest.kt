@@ -125,6 +125,7 @@ class EffectFilterControllerTest(
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
                 strip.uuid!!,
+                null,
                 LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
                 "Super cool effect",
                 defaultNrSettings
@@ -167,6 +168,7 @@ class EffectFilterControllerTest(
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
                 strip.uuid!!,
+                null,
                 LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
                 "Super cool effect",
                 defaultNrSettings

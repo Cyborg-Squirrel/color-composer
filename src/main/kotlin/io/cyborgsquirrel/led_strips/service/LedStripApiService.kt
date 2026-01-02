@@ -49,7 +49,7 @@ class LedStripApiService(
                     height = s.height,
                     brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
-                    activeEffects = activeEffects.filter { it.strip.uuid() == s.uuid }.size,
+                    activeEffects = activeEffects.filter { it.strip.uuid == s.uuid }.size,
                 )
             }
             response
@@ -239,6 +239,6 @@ class LedStripApiService(
     private fun getActiveEffectsForStrip(
         clientStatus: ClientStatus?, activeEffects: List<ActiveLightEffect>, stripUuid: String?
     ): Int {
-        return if (clientStatus == ClientStatus.Active) activeEffects.filter { it.strip.uuid() == stripUuid }.size else 0
+        return if (clientStatus == ClientStatus.Active) activeEffects.filter { it.strip.uuid == stripUuid }.size else 0
     }
 }

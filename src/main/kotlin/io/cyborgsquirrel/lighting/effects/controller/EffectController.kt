@@ -30,7 +30,8 @@ class EffectController(
                 val response = effectApiService.getEffectsForStrip(stripUuid)
                 HttpResponse.ok(response)
             } else if (!poolUuid.isNullOrBlank()) {
-                TODO()
+                val response = effectApiService.getEffectsForPool(poolUuid)
+                HttpResponse.ok(response)
             } else {
                 HttpResponse.badRequest("A stripUuid or poolUuid must be specified!")
             }
