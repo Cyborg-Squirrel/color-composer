@@ -97,7 +97,7 @@ class PaletteApiService(
                         paletteEntity.settings!!,
                         paletteEntity.type!!,
                         paletteEntity.uuid!!,
-                        strip
+                        strip.length()
                     )
                     activeEffect.effect.updatePalette(palette)
                 }

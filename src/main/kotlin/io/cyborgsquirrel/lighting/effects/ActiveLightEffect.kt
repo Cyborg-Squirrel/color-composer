@@ -10,6 +10,6 @@ data class ActiveLightEffect(
     val skipFramesIfBlank: Boolean,
     val status: LightEffectStatus,
     val effect: LightEffect,
-    val strip: LedStripModel,
-    val filters: List<LightEffectFilter>
+    val filters: List<LightEffectFilter>,
+    val strip: LedStripModel
 )

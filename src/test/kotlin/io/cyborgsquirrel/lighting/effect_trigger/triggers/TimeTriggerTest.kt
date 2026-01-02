@@ -8,7 +8,7 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistryImpl
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.cyborgsquirrel.util.time.TimeHelperImpl
 import io.kotest.core.spec.style.BehaviorSpec
@@ -39,7 +39,7 @@ class TimeTriggerTest(
         mockTimeHelper = getMock(timeHelper)
         mockActiveLightEffectRegistry = getMock(activeLightEffectRegistry)
 
-        val mockStrip = mockk<LedStripModel>()
+        val mockStrip = mockk<SingleLedStripModel>()
         val effect = SpectrumLightEffect(60, SpectrumEffectSettings.default(60), null)
         activeEffect = ActiveLightEffect(
             UUID.randomUUID().toString(),
@@ -47,8 +47,8 @@ class TimeTriggerTest(
             true,
             LightEffectStatus.Idle,
             effect,
+            listOf(),
             mockStrip,
-            listOf()
         )
 
         every {
@@ -70,11 +70,7 @@ class TimeTriggerTest(
         val time = LocalTime.of(17, 1)
         mockResponses(date, time)
         val settings = TimeTriggerSettings(
-            LocalTime.of(17, 0),
-            null,
-            Duration.ofMinutes(30),
-            Int.MAX_VALUE,
-            TriggerType.StartEffect
+            LocalTime.of(17, 0), null, Duration.ofMinutes(30), Int.MAX_VALUE, TriggerType.StartEffect
         )
         val trigger = TimeTrigger(mockTimeHelper, settings, UUID.randomUUID().toString(), activeEffect.effectUuid)
         and("The trigger condition is met") {

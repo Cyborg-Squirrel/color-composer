@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.model
 
+import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.lighting.enums.BlendMode
 
 /**
@@ -7,17 +8,23 @@ import io.cyborgsquirrel.lighting.enums.BlendMode
  * [strips] the list of member strips in order
  */
 data class LedStripPoolModel(
-    private val name: String,
-    private val uuid: String,
-    private val strips: List<LedStripModel>,
-    private val blendMode: BlendMode,
-) {
-    fun getLength(): Int {
-        var len = 0
-        for (strip in strips) {
-            len += strip.length
+    val name: String,
+    val uuid: String,
+    val poolType: PoolType,
+    val strips: List<SingleLedStripModel>,
+    val blendMode: BlendMode,
+): LedStripModel() {
+    override fun uuid() = uuid
+
+    override fun name() = name
+
+    override fun length(): Int {
+        if (poolType == PoolType.Sync) {
+            return strips.first().length
         }
 
-        return len
+        return strips.sumOf { it.length }
     }
+
+    override fun blendMode() = blendMode
 }

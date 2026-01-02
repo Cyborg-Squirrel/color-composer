@@ -46,10 +46,10 @@ class EffectApiService(
 
             val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
             val palette = if (effectEntity.palette != null) createLightingService.createPalette(
-                effectEntity.palette!!.settings!!, effectEntity.palette!!.type!!, effectEntity.palette!!.uuid!!, strip
+                effectEntity.palette!!.settings!!, effectEntity.palette!!.type!!, effectEntity.palette!!.uuid!!, strip.length()
             ) else null
             val lightEffect = createLightingService.createEffect(
-                request.settings, request.effectType, palette, strip
+                request.settings, request.effectType, palette, strip.length()
             )
 
             val activeEffect = ActiveLightEffect(
@@ -199,10 +199,10 @@ class EffectApiService(
                     effectEntity.palette!!.settings!!,
                     effectEntity.palette!!.type!!,
                     effectEntity.palette!!.uuid!!,
-                    strip
+                    strip.length()
                 ) else null
                 val lightEffect = createLightingService.createEffect(
-                    effectEntity.settings!!, effectEntity.type!!, palette, strip
+                    effectEntity.settings!!, effectEntity.type!!, palette, strip.length()
                 )
 
                 var activeEffect = activeEffectOptional.get()

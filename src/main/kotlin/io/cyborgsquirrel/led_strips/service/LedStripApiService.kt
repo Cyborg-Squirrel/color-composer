@@ -16,7 +16,7 @@ import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.isActive
-import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import jakarta.inject.Singleton
 import java.util.*
@@ -49,7 +49,7 @@ class LedStripApiService(
                     height = s.height,
                     brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
-                    activeEffects = activeEffects.filter { it.strip.uuid == s.uuid }.size,
+                    activeEffects = activeEffects.filter { it.strip.uuid() == s.uuid }.size,
                 )
             }
             response
@@ -76,9 +76,7 @@ class LedStripApiService(
                         brightness = s.brightness!!,
                         blendMode = s.blendMode!!,
                         activeEffects = getActiveEffectsForStrip(
-                            clientStatusOptional.getOrNull()?.status,
-                            activeEffects,
-                            s.uuid
+                            clientStatusOptional.getOrNull()?.status, activeEffects, s.uuid
                         )
                     )
                 }
@@ -100,9 +98,9 @@ class LedStripApiService(
                     brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
                     activeEffects = getActiveEffectsForStrip(
-                        clientStatusService.getStatusForClient(s.client!!)
-                            .getOrNull()?.status,
-                        activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() }, s.uuid
+                        clientStatusService.getStatusForClient(s.client!!).getOrNull()?.status,
+                        activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() },
+                        s.uuid
                     ),
                 )
             }
@@ -157,7 +155,7 @@ class LedStripApiService(
                 val effects = activeLightEffectRegistry.getAllEffectsForStrip(uuid)
                 effects.forEach {
                     val newEffect = it.copy(
-                        strip = LedStripModel(
+                        strip = SingleLedStripModel(
                             newStripEntity.name!!,
                             newStripEntity.uuid!!,
                             newStripEntity.pin!!,
@@ -239,10 +237,8 @@ class LedStripApiService(
     // The effect could be configured as Playing but the client is offline. If the client is offline
     // we should report 0 active effects.
     private fun getActiveEffectsForStrip(
-        clientStatus: ClientStatus?,
-        activeEffects: List<ActiveLightEffect>,
-        stripUuid: String?
+        clientStatus: ClientStatus?, activeEffects: List<ActiveLightEffect>, stripUuid: String?
     ): Int {
-        return if (clientStatus == ClientStatus.Active) activeEffects.filter { it.strip.uuid == stripUuid }.size else 0
+        return if (clientStatus == ClientStatus.Active) activeEffects.filter { it.strip.uuid() == stripUuid }.size else 0
     }
 }

@@ -2,13 +2,14 @@ package io.cyborgsquirrel.jobs.init
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
+import java.lang.Exception
 import java.util.concurrent.Semaphore
 
 /**
@@ -43,13 +44,13 @@ class LightEffectInitJob(
                         effectEntity.palette!!.settings!!,
                         effectEntity.palette!!.type!!,
                         effectEntity.palette!!.uuid!!,
-                        strip
+                        strip.length()
                     ) else null
                     val lightEffect = createLightingService.createEffect(
                         effectEntity.settings!!,
                         effectEntity.type!!,
                         palette,
-                        strip
+                        strip.length()
                     )
                     val filters = createLightingService.createEffectFilterFromEntity(effectEntity)
                     val activeEffect = ActiveLightEffect(
@@ -60,8 +61,9 @@ class LightEffectInitJob(
                         status = effectEntity.status!!,
                         strip = strip,
                         effect = lightEffect,
-                        filters = filters
+                        filters = filters,
                     )
+
 
                     activeLightEffectRegistry.addOrUpdateEffect(activeEffect)
 
@@ -80,7 +82,7 @@ class LightEffectInitJob(
 
                 completed = true
             }
-        } catch (ex: java.lang.Exception) {
+        } catch (ex: Exception) {
             logger.error("Error initializing light effects from database!", ex)
         } finally {
             lock.release()

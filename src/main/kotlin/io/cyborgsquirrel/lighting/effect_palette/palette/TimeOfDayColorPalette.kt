@@ -3,7 +3,6 @@ package io.cyborgsquirrel.lighting.effect_palette.palette
 import io.cyborgsquirrel.lighting.effect_palette.helper.TimePaletteHelper
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
 import io.cyborgsquirrel.lighting.effect_palette.settings.TimeOfDayPaletteSettings
-import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.model.SunriseSunsetModel
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
@@ -23,8 +22,8 @@ class TimeOfDayColorPalette(
     private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
     private val objectMapper: ObjectMapper,
     uuid: String,
-    strip: LedStripModel,
-) : ColorPalette(uuid, strip) {
+    numberOfLeds: Int,
+) : ColorPalette(uuid, numberOfLeds) {
 
     init {
         fetchLocationSunriseSunsetData()

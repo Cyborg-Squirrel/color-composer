@@ -5,8 +5,6 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.isActive
-import io.cyborgsquirrel.lighting.model.LedStripPoolModel
-import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import jakarta.inject.Singleton
@@ -114,8 +112,8 @@ class LightEffectRendererImpl(
 
         // If there are multiple effects, layer the RGB output on top of each other.
         val renderedRgbData = mutableListOf<RgbColor>()
-        val stripLength = activeEffects.first().strip.length
-        val blendMode = activeEffects.first().strip.blendMode
+        val stripLength = activeEffects.first().strip.length()
+        val blendMode = activeEffects.first().strip.blendMode()
         for (i in 0..<stripLength) {
             when (blendMode) {
                 BlendMode.Additive -> {
@@ -147,7 +145,7 @@ class LightEffectRendererImpl(
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame pools
         return Optional.of(
             RenderedFrameModel(
-                0, activeEffects.first().strip.uuid, renderedRgbData, -1, allEffectsPaused
+                0, activeEffects.first().strip.uuid(), renderedRgbData, -1, allEffectsPaused
             )
         )
     }

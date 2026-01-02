@@ -3,11 +3,10 @@ package io.cyborgsquirrel.lighting.effect_palette.palette
 import io.cyborgsquirrel.lighting.effect_palette.helper.GradientColorHelper
 import io.cyborgsquirrel.lighting.effect_palette.settings.GradientPaletteSettings
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
-import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 
-class GradientColorPalette(private val settings: GradientPaletteSettings, uuid: String, strip: LedStripModel) :
-    ColorPalette(uuid, strip) {
+class GradientColorPalette(private val settings: GradientPaletteSettings, uuid: String, numberOfLeds: Int) :
+    ColorPalette(uuid, numberOfLeds) {
 
     private val helper = GradientColorHelper()
     private val cache = mutableMapOf<Int, SettingsPalette>()
@@ -17,7 +16,7 @@ class GradientColorPalette(private val settings: GradientPaletteSettings, uuid: 
         if (cachedColor != null) {
             return cachedColor.primaryColor
         } else {
-            val palette = helper.getPalette(index, strip, settings.points)
+            val palette = helper.getPalette(index, numberOfLeds, settings.points)
             cache[index] = palette
             return palette.primaryColor
         }
@@ -28,7 +27,7 @@ class GradientColorPalette(private val settings: GradientPaletteSettings, uuid: 
         if (cachedColor != null) {
             return cachedColor.secondaryColor
         } else {
-            val palette = helper.getPalette(index, strip, settings.points)
+            val palette = helper.getPalette(index, numberOfLeds, settings.points)
             cache[index] = palette
             return palette.secondaryColor
         }
@@ -39,7 +38,7 @@ class GradientColorPalette(private val settings: GradientPaletteSettings, uuid: 
         if (cachedColor != null) {
             return cachedColor.tertiaryColor
         } else {
-            val palette = helper.getPalette(index, strip, settings.points)
+            val palette = helper.getPalette(index, numberOfLeds, settings.points)
             cache[index] = palette
             return palette.tertiaryColor
         }
@@ -50,7 +49,7 @@ class GradientColorPalette(private val settings: GradientPaletteSettings, uuid: 
         if (cachedColor != null) {
             return cachedColor.otherColors
         } else {
-            val palette = helper.getPalette(index, strip, settings.points)
+            val palette = helper.getPalette(index, numberOfLeds, settings.points)
             cache[index] = palette
             return palette.otherColors
         }
