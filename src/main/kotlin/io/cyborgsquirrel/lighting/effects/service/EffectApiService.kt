@@ -94,7 +94,7 @@ class EffectApiService(
     }
 
     fun getAllEffects(): GetEffectsResponse {
-        // TODO strip vs strip group differentiation, strip group support
+        // TODO strip vs strip pool differentiation, strip pool support
         val effectEntities = effectRepository.queryAll()
         val effectList = effectEntities.map {
             GetEffectResponse(
@@ -112,7 +112,7 @@ class EffectApiService(
     }
 
     fun getEffectWithUuid(uuid: String): GetEffectResponse {
-        // TODO strip vs strip group differentiation, strip group support
+        // TODO strip vs strip pool differentiation, strip pool support
         val effectEntityOptional = effectRepository.findByUuid(uuid)
         if (effectEntityOptional.isPresent) {
             val effectEntity = effectEntityOptional.get()

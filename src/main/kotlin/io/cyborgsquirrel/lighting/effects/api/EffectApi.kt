@@ -13,7 +13,7 @@ interface EffectApi {
     fun getAllEffects(): HttpResponse<GetEffectsResponse>
 
     @Get
-    fun getEffectsForStrip(@QueryValue stripUuid: String?, @QueryValue groupUuid: String?): HttpResponse<Any>
+    fun getEffectsForStrip(@QueryValue stripUuid: String?, @QueryValue poolUuid: String?): HttpResponse<Any>
 
     @Get("/{uuid}")
     fun getEffect(uuid: String) : HttpResponse<Any>

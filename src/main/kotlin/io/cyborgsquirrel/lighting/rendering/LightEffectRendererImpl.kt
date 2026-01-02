@@ -5,7 +5,7 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.isActive
-import io.cyborgsquirrel.lighting.model.LedStripGroupModel
+import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
@@ -18,10 +18,10 @@ class LightEffectRendererImpl(
     private val effectRepository: ActiveLightEffectRegistry,
 ) : LightEffectRenderer {
 
-    // LED strip groups get rendered if the provided LED strip uuid
-    // is a member of the group. To avoid re-rendering effects, buffer
+    // LED strip pools get rendered if the provided LED strip uuid
+    // is a member of the pool. To avoid re-rendering effects, buffer
     // the frame for other LED strips.
-    private var stripGroupFrameBuffer = mutableListOf<RenderedFrameModel>()
+    private var stripPoolFrameBuffer = mutableListOf<RenderedFrameModel>()
 
     /**
      * Renders all light effects for the specified LED strips [stripUuids].
@@ -31,7 +31,7 @@ class LightEffectRendererImpl(
      * skipped if all effects end up producing blank frame data. Last, the light effects are layered on top of each other.
      * The layering algorithm may just use one effect's colors, or mix them, depending on the blend mode.
      *
-     * The [sequenceNumber] is used in the case of LED strip groups, where multiple jobs rendering to multiple
+     * The [sequenceNumber] is used in the case of LED strip pools, where multiple jobs rendering to multiple
      * clients will request the same color data. The first job to call this method renders the frame, the subsequent
      * callers read the buffer if the [sequenceNumber] matches.
      *
@@ -78,52 +78,44 @@ class LightEffectRendererImpl(
     private fun renderFrame(activeEffects: List<ActiveLightEffect>): Optional<RenderedFrameModel> {
         val allEffectsRgbData = mutableListOf<List<RgbColor>>()
         for (activeEffect in activeEffects) {
-            when (activeEffect.strip) {
-                is LedStripModel -> {
-                    logger.debug("Rendering effect {}", activeEffect)
-                    var rgbData = if (activeEffect.status == LightEffectStatus.Playing) {
-                        activeEffect.effect.getNextStep()
-                    } else {
-                        activeEffect.effect.getBuffer()
-                    }
-                    for (filter in activeEffect.filters) {
-                        logger.debug("Applying filter ${filter.uuid}")
-                        rgbData = filter.apply(rgbData)
+            logger.debug("Rendering effect {}", activeEffect)
+            var rgbData = if (activeEffect.status == LightEffectStatus.Playing) {
+                activeEffect.effect.getNextStep()
+            } else {
+                activeEffect.effect.getBuffer()
+            }
+            for (filter in activeEffect.filters) {
+                logger.debug("Applying filter ${filter.uuid}")
+                rgbData = filter.apply(rgbData)
+            }
+
+            if (activeEffect.skipFramesIfBlank && activeEffect.status == LightEffectStatus.Playing) {
+                var allBlank = true
+                while (allBlank) {
+                    for (data in rgbData) {
+                        allBlank = allBlank && data == RgbColor.Blank
                     }
 
-                    if (activeEffect.skipFramesIfBlank && activeEffect.status == LightEffectStatus.Playing) {
-                        var allBlank = true
-                        while (allBlank) {
-                            for (data in rgbData) {
-                                allBlank = allBlank && data == RgbColor.Blank
-                            }
-
-                            if (allBlank) {
-                                logger.debug(
-                                    "All frames are blank and effect {} is set to skip blank frames",
-                                    activeEffect.effectUuid
-                                )
-                                rgbData = activeEffect.effect.getNextStep()
-                                for (filter in activeEffect.filters) {
-                                    rgbData = filter.apply(rgbData)
-                                }
-                            }
+                    if (allBlank) {
+                        logger.debug(
+                            "All frames are blank and effect {} is set to skip blank frames",
+                            activeEffect.effectUuid
+                        )
+                        rgbData = activeEffect.effect.getNextStep()
+                        for (filter in activeEffect.filters) {
+                            rgbData = filter.apply(rgbData)
                         }
                     }
-
-                    allEffectsRgbData.add(rgbData)
-                }
-
-                is LedStripGroupModel -> {
-                    // TODO strip group rendering
                 }
             }
+
+            allEffectsRgbData.add(rgbData)
         }
 
         // If there are multiple effects, layer the RGB output on top of each other.
         val renderedRgbData = mutableListOf<RgbColor>()
-        val stripLength = activeEffects.first().strip.getLength()
-        val blendMode = activeEffects.first().strip.getBlendMode()
+        val stripLength = activeEffects.first().strip.length
+        val blendMode = activeEffects.first().strip.blendMode
         for (i in 0..<stripLength) {
             when (blendMode) {
                 BlendMode.Additive -> {
@@ -152,10 +144,10 @@ class LightEffectRendererImpl(
 
         val effectStatuses = activeEffects.map { it.status }.toSet()
         val allEffectsPaused = effectStatuses.size == 1 && effectStatuses.first() == LightEffectStatus.Paused
-        // TODO rendered RGB list layering, sequence number assignment to frames, render frame groups
+        // TODO rendered RGB list layering, sequence number assignment to frames, render frame pools
         return Optional.of(
             RenderedFrameModel(
-                0, activeEffects.first().strip.getUuid(), renderedRgbData, -1, allEffectsPaused
+                0, activeEffects.first().strip.uuid, renderedRgbData, -1, allEffectsPaused
             )
         )
     }

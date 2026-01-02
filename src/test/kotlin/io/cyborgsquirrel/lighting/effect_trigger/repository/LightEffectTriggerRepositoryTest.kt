@@ -1,8 +1,8 @@
 package io.cyborgsquirrel.lighting.effect_trigger.repository
 
-import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripGroupRepository
+import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
@@ -19,7 +19,6 @@ import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -35,8 +34,8 @@ class LightEffectTriggerRepositoryTest(
     private val lightEffectRepository: H2LightEffectRepository,
     private val clientRepository: H2LedStripClientRepository,
     private val ledStripRepository: H2LedStripRepository,
-    private val ledStripGroupRepository: H2LedStripGroupRepository,
-    private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
+    private val ledStripPoolRepository: H2LedStripPoolRepository,
+    private val poolMemberLedStripRepository: H2PoolMemberLedStripRepository,
     private val lightEffectTriggerRepository: H2LightEffectTriggerRepository,
 ) : StringSpec({
 
@@ -58,9 +57,9 @@ class LightEffectTriggerRepositoryTest(
 
     afterTest {
         lightEffectTriggerRepository.deleteAll()
-        groupMemberLedStripRepository.deleteAll()
+        poolMemberLedStripRepository.deleteAll()
         lightEffectRepository.deleteAll()
-        ledStripGroupRepository.deleteAll()
+        ledStripPoolRepository.deleteAll()
         ledStripRepository.deleteAll()
         clientRepository.deleteAll()
     }

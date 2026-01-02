@@ -151,7 +151,7 @@ class NightDriverSocketJob(
 
                 StreamingJobState.RenderingEffect -> {
                     triggerManager.processTriggers()
-                    val frameList = renderer.renderFrames(strips.map { it.getUuid() }, 0)
+                    val frameList = renderer.renderFrames(strips.map { it.uuid }, 0)
 
                     if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
@@ -165,12 +165,12 @@ class NightDriverSocketJob(
                         // Assemble RGB data
                         val encodedFrames = mutableListOf<ByteArray>()
                         for (frame in frameList) {
-                            val strip = strips.first { it.getUuid() == frame.stripUuid }
+                            val strip = strips.first { it.uuid == frame.stripUuid }
                             val rgbData = frame.frameData
                             val frameData = RgbFrameData(timestampMillis, rgbData)
 
                             // Serialize and send frame - options are not supported for NightDriver
-                            val encodedFrame = serializer.encode(frameData, strip.getPin().toInt())
+                            val encodedFrame = serializer.encode(frameData, strip.pin.toInt())
                             encodedFrames.add(encodedFrame)
                         }
 

@@ -13,26 +13,11 @@ import io.cyborgsquirrel.lighting.enums.BlendMode
  * [brightness] - the brightness 0-100
  */
 data class LedStripModel(
-    private val name: String,
-    private val uuid: String,
-    private val pin: String,
-    private val length: Int,
-    private val height: Int,
-    private val blendMode: BlendMode,
-    private val brightness: Int
-) : LedStrip {
-
-    override fun getName(): String = name
-
-    override fun getUuid(): String = uuid
-
-    override fun getPin(): String = pin
-
-    override fun getLength(): Int = length
-
-    override fun getHeight(): Int = height
-
-    override fun getBlendMode(): BlendMode = blendMode
-
-    override fun getBrightness(): Int = brightness
-}
+    val name: String,
+    val uuid: String,
+    val pin: String,
+    val length: Int,
+    val height: Int,
+    val blendMode: BlendMode,
+    val brightness: Int
+)

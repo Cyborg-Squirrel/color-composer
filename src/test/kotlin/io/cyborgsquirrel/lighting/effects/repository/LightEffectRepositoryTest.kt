@@ -1,22 +1,22 @@
 package io.cyborgsquirrel.lighting.effects.repository
 
-import io.cyborgsquirrel.led_strips.repository.H2GroupMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripGroupRepository
+import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
-import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
+import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
+import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.test_helpers.normalizeNumberTypes
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
@@ -31,8 +31,8 @@ class LightEffectRepositoryTest(
     private val lightEffectRepository: H2LightEffectRepository,
     private val clientRepository: H2LedStripClientRepository,
     private val ledStripRepository: H2LedStripRepository,
-    private val ledStripGroupRepository: H2LedStripGroupRepository,
-    private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
+    private val ledStripPoolRepository: H2LedStripPoolRepository,
+    private val poolMemberLedStripRepository: H2PoolMemberLedStripRepository,
 ) : StringSpec({
 
     val settings = NightriderEffectSettings.default()
@@ -42,7 +42,7 @@ class LightEffectRepositoryTest(
         expectedEntity: LightEffectEntity,
     ) {
         newEntity.strip?.id shouldBe expectedEntity.strip?.id
-        newEntity.group?.id shouldBe expectedEntity.group?.id
+        newEntity.pool?.id shouldBe expectedEntity.pool?.id
         newEntity.uuid shouldBe expectedEntity.uuid
         newEntity.name shouldBe expectedEntity.name
         newEntity.settings!!.map { normalizeNumberTypes(it.value) } shouldBe expectedEntity.settings!!.map {
@@ -53,9 +53,9 @@ class LightEffectRepositoryTest(
     }
 
     afterTest {
-        groupMemberLedStripRepository.deleteAll()
+        poolMemberLedStripRepository.deleteAll()
         lightEffectRepository.deleteAll()
-        ledStripGroupRepository.deleteAll()
+        ledStripPoolRepository.deleteAll()
         ledStripRepository.deleteAll()
         clientRepository.deleteAll()
     }
@@ -100,7 +100,7 @@ class LightEffectRepositoryTest(
         verifyLightEffectEntity(newEntities.first(), lightEffect)
     }
 
-    "Create a light effect entity for a group" {
+    "Create a light effect entity for a pool" {
         val client = clientRepository.save(
             LedStripClientEntity(
                 name = "Living Room",
@@ -123,18 +123,19 @@ class LightEffectRepositoryTest(
                 brightness = 25,
             )
         )
-        val group = ledStripGroupRepository.save(
-            LedStripGroupEntity(
+        val pool = ledStripPoolRepository.save(
+            LedStripPoolEntity(
                 name = "Living Room",
-                uuid = UUID.randomUUID().toString()
+                uuid = UUID.randomUUID().toString(),
+                poolType = PoolType.Unified
             )
         )
-        val groupMember = groupMemberLedStripRepository.save(
-            GroupMemberLedStripEntity(
-                group = group,
+        val poolMember = poolMemberLedStripRepository.save(
+            PoolMemberLedStripEntity(
+                pool = pool,
                 strip = strip,
                 inverted = false,
-                groupIndex = 1
+                poolIndex = 1
             )
         )
 
@@ -144,7 +145,7 @@ class LightEffectRepositoryTest(
                 settings = settingsJson,
                 type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
                 name = "My effect",
-                group = group,
+                pool = pool,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
             )
@@ -153,6 +154,6 @@ class LightEffectRepositoryTest(
         val newEntities = lightEffectRepository.queryAll()
         newEntities.size shouldBe 1
         verifyLightEffectEntity(newEntities.first(), lightEffect)
-        newEntities.first().group?.members?.first()?.id shouldBe groupMember.id
+        newEntities.first().pool?.members?.first()?.id shouldBe poolMember.id
     }
 })

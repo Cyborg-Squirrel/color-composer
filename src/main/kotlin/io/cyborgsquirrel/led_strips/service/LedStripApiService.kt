@@ -49,7 +49,7 @@ class LedStripApiService(
                     height = s.height,
                     brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
-                    activeEffects = activeEffects.filter { it.strip.getUuid() == s.uuid }.size,
+                    activeEffects = activeEffects.filter { it.strip.uuid == s.uuid }.size,
                 )
             }
             response
@@ -191,7 +191,7 @@ class LedStripApiService(
                 }
                 streamJobManager.notifyJobOfDataUpdate(entity.client!!)
             } else {
-                throw ClientRequestException("Could not delete strip with uuid $uuid. Please delete or reassign its effects and group memberships first.")
+                throw ClientRequestException("Could not delete strip with uuid $uuid. Please delete or reassign its effects and pool member strips first.")
             }
         } else {
             throw ClientRequestException("Could not delete strip with uuid $uuid. It does not exist.")
@@ -243,6 +243,6 @@ class LedStripApiService(
         activeEffects: List<ActiveLightEffect>,
         stripUuid: String?
     ): Int {
-        return if (clientStatus == ClientStatus.Active) activeEffects.filter { it.strip.getUuid() == stripUuid }.size else 0
+        return if (clientStatus == ClientStatus.Active) activeEffects.filter { it.strip.uuid == stripUuid }.size else 0
     }
 }

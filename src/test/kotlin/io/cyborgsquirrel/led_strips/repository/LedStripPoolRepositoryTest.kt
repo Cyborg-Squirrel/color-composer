@@ -1,13 +1,14 @@
 package io.cyborgsquirrel.led_strips.repository
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.led_strips.entity.GroupMemberLedStripEntity
+import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.cyborgsquirrel.led_strips.entity.LedStripGroupEntity
+import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
+import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -15,11 +16,11 @@ import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
-class LedStripGroupRepositoryTest(
+class LedStripPoolRepositoryTest(
     private val clientRepository: H2LedStripClientRepository,
     private val ledStripRepository: H2LedStripRepository,
-    private val ledStripGroupRepository: H2LedStripGroupRepository,
-    private val groupMemberLedStripRepository: H2GroupMemberLedStripRepository,
+    private val ledStripPoolRepository: H2LedStripPoolRepository,
+    private val poolMemberLedStripRepository: H2PoolMemberLedStripRepository,
 ) : StringSpec({
     lateinit var ledStripA: LedStripEntity
     lateinit var ledStripB: LedStripEntity
@@ -54,29 +55,30 @@ class LedStripGroupRepositoryTest(
             )
         )
 
-    fun createLedStripGroupEntity(name: String): LedStripGroupEntity =
-        ledStripGroupRepository.save(
-            LedStripGroupEntity(
+    fun createLedStripPoolEntity(name: String): LedStripPoolEntity =
+        ledStripPoolRepository.save(
+            LedStripPoolEntity(
                 name = name,
-                uuid = UUID.randomUUID().toString()
+                uuid = UUID.randomUUID().toString(),
+                poolType = PoolType.Unified
             )
         )
 
-    fun createGroupMember(
-        group: LedStripGroupEntity,
+    fun createPoolMember(
+        pool: LedStripPoolEntity,
         strip: LedStripEntity,
-        groupIndex: Int,
+        poolIndex: Int,
         inverted: Boolean
-    ): GroupMemberLedStripEntity = GroupMemberLedStripEntity(
-        group = group,
+    ): PoolMemberLedStripEntity = PoolMemberLedStripEntity(
+        pool = pool,
         strip = strip,
         inverted = inverted,
-        groupIndex = groupIndex
+        poolIndex = poolIndex
     )
 
-    fun GroupMemberLedStripEntity.matches(other: GroupMemberLedStripEntity) {
+    fun PoolMemberLedStripEntity.matches(other: PoolMemberLedStripEntity) {
         id shouldBe other.id
-        groupIndex shouldBe other.groupIndex
+        poolIndex shouldBe other.poolIndex
         inverted shouldBe other.inverted
     }
 
@@ -90,33 +92,33 @@ class LedStripGroupRepositoryTest(
     }
 
     afterTest {
-        groupMemberLedStripRepository.deleteAll()
-        ledStripGroupRepository.deleteAll()
+        poolMemberLedStripRepository.deleteAll()
+        ledStripPoolRepository.deleteAll()
         ledStripRepository.deleteAll()
         clientRepository.deleteAll()
     }
 
-    "Create a led strip group entity" {
-        val group = createLedStripGroupEntity("Hallway Group")
-        val groupFetched = ledStripGroupRepository.findById(group.id)
-        groupFetched.isPresent shouldBe true
+    "Create a led strip pool entity" {
+        val pool = createLedStripPoolEntity("Hallway Pool")
+        val poolFetched = ledStripPoolRepository.findById(pool.id)
+        poolFetched.isPresent shouldBe true
     }
 
-    "Query a group with a join" {
-        val group = createLedStripGroupEntity("Hallway Group")
-        val groupMembers = listOf(
-            createGroupMember(group, ledStripA, 0, false),
-            createGroupMember(group, ledStripB, 1, false)
+    "Query a pool with a join" {
+        val pool = createLedStripPoolEntity("Hallway Pool")
+        val poolMembers = listOf(
+            createPoolMember(pool, ledStripA, 0, false),
+            createPoolMember(pool, ledStripB, 1, false)
         )
-        val savedMembers = groupMemberLedStripRepository.saveAll(groupMembers)
+        val savedMembers = poolMemberLedStripRepository.saveAll(poolMembers)
 
-        val fetchedGroup = ledStripGroupRepository.queryById(group.id)
-        fetchedGroup.isPresent shouldBe true
+        val fetchedPool = ledStripPoolRepository.queryById(pool.id)
+        fetchedPool.isPresent shouldBe true
 
-        val groupEntity = fetchedGroup.get()
-        groupEntity.apply {
-            uuid shouldBe group.uuid
-            name shouldBe group.name
+        val poolEntity = fetchedPool.get()
+        poolEntity.apply {
+            uuid shouldBe pool.uuid
+            name shouldBe pool.name
             members.size shouldBe 2
             members.first().matches(savedMembers.first())
             members.last().matches(savedMembers.last())
