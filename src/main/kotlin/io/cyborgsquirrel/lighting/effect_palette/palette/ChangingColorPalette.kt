@@ -6,7 +6,6 @@ import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingGradientPalett
 import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingPaletteSettings
 import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingStaticPaletteSettings
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
-import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 
@@ -14,9 +13,9 @@ class ChangingColorPalette(
     private val settings: ChangingPaletteSettings,
     private val timeHelper: TimeHelper,
     uuid: String,
-    strip: LedStripModel,
+    numberOfLeds: Int,
 ) :
-    ColorPalette(uuid, strip) {
+    ColorPalette(uuid, numberOfLeds) {
 
     private var counter = 0
     private var holdStart = 0L
@@ -98,7 +97,7 @@ class ChangingColorPalette(
             is ChangingStaticPaletteSettings -> settings.palettes[counter % settings.palettes.size]
             is ChangingGradientPaletteSettings -> helper.getPalette(
                 index,
-                strip,
+                numberOfLeds,
                 settings.gradientList[counter % settings.gradientList.size]
             )
         }
@@ -109,7 +108,7 @@ class ChangingColorPalette(
             is ChangingStaticPaletteSettings -> settings.palettes[(counter + 1) % settings.palettes.size]
             is ChangingGradientPaletteSettings -> helper.getPalette(
                 index,
-                strip,
+                numberOfLeds,
                 settings.gradientList[(counter + 1) % settings.gradientList.size]
             )
         }

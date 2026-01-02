@@ -1,9 +1,8 @@
 package io.cyborgsquirrel.lighting.effect_palette.palette
 
-import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 
-sealed class ColorPalette(val uuid: String, val strip: LedStripModel) {
+sealed class ColorPalette(val uuid: String, val numberOfLeds: Int) {
     /**
      * Returns the primary color for the palette
      */

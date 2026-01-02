@@ -3,7 +3,6 @@ package io.cyborgsquirrel.lighting.effect_palette.palette
 import io.cyborgsquirrel.lighting.effect_palette.helper.TimePaletteHelper
 import io.cyborgsquirrel.lighting.effect_palette.settings.LocalTimePaletteSettings
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
-import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 import java.time.LocalDateTime
@@ -12,8 +11,8 @@ class LocalTimeColorPalette(
     private val settings: LocalTimePaletteSettings,
     private val timeHelper: TimeHelper,
     uuid: String,
-    strip: LedStripModel,
-) : ColorPalette(uuid, strip) {
+    numberOfLeds: Int,
+) : ColorPalette(uuid, numberOfLeds) {
 
     private val helper = TimePaletteHelper()
 

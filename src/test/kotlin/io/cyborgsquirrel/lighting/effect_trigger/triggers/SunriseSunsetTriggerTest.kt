@@ -8,7 +8,7 @@ import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistryImpl
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
 import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
 import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
@@ -61,7 +61,7 @@ class SunriseSunsetTriggerTest(
         mockSunriseSunsetTimeRepository = getMock(sunriseSunsetTimeRepository)
         mockActiveLightEffectRegistry = getMock(activeLightEffectRegistry)
 
-        val mockStrip = mockk<LedStripModel>()
+        val mockStrip = mockk<SingleLedStripModel>()
         val effect = SpectrumLightEffect(60, SpectrumEffectSettings.default(60), null)
         activeEffect = ActiveLightEffect(
             UUID.randomUUID().toString(),
@@ -69,8 +69,8 @@ class SunriseSunsetTriggerTest(
             true,
             LightEffectStatus.Idle,
             effect,
-            mockStrip,
-            listOf()
+            listOf(),
+            mockStrip
         )
 
         every {

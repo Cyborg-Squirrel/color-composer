@@ -8,7 +8,7 @@ import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverFrameDataSerial
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverSocketResponseDeserializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -40,7 +40,7 @@ class NightDriverSocketJob(
     private var socket: Socket? = null
 
     // Client data
-    private var strips = mutableListOf<LedStripModel>()
+    private var strips = mutableListOf<SingleLedStripModel>()
 
     // Serialization
     private val serializer = NightDriverFrameDataSerializer()
@@ -95,7 +95,7 @@ class NightDriverSocketJob(
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
                             val newStrips = clientEntity.strips.map {
-                                LedStripModel(
+                                SingleLedStripModel(
                                     it.name!!,
                                     it.uuid!!,
                                     it.pin!!,
