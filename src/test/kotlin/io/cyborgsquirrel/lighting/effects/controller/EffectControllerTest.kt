@@ -2,7 +2,12 @@ package io.cyborgsquirrel.lighting.effects.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
+import io.cyborgsquirrel.led_strips.enums.PoolType
+import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
+import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
+import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
@@ -14,6 +19,7 @@ import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
+import io.cyborgsquirrel.lighting.effects.responses.GetPoolEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
@@ -37,6 +43,8 @@ class EffectControllerTest(
     @Client private val apiClient: EffectApi,
     private val clientRepository: H2LedStripClientRepository,
     private val stripRepository: H2LedStripRepository,
+    private val poolRepository: H2LedStripPoolRepository,
+    private val poolMemberRepository: H2PoolMemberLedStripRepository,
     private val effectRepository: H2LightEffectRepository,
     private val paletteRepository: H2LightEffectPaletteRepository,
     private val objectMapper: ObjectMapper
@@ -45,6 +53,8 @@ class EffectControllerTest(
     afterEach {
         paletteRepository.deleteAll()
         effectRepository.deleteAll()
+        poolMemberRepository.deleteAll()
+        poolRepository.deleteAll()
         stripRepository.deleteAll()
         clientRepository.deleteAll()
     }
@@ -337,5 +347,97 @@ class EffectControllerTest(
         createEffectHttpResponse.status shouldBe HttpStatus.NO_CONTENT
         effectRepository.findAll().isEmpty() shouldBe true
         paletteRepository.findAll().isEmpty() shouldBe false
+    }
+
+    "Creating and reading an effect assigned to a LED strip pool" {
+        val client = createLedStripClientEntity(clientRepository, "Living Room lights", "192.168.50.50", 50, 51)
+        val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName, 100)
+        val stripB = saveLedStrip(stripRepository, client, "Strip B", 150, PiClientPin.D21.pinName, 80)
+
+        // Create a LED strip pool and add members
+        val pool = poolRepository.save(
+            LedStripPoolEntity(
+                uuid = UUID.randomUUID().toString(),
+                name = "Living Room Pool",
+                poolType = PoolType.Unified
+            )
+        )
+        poolMemberRepository.save(
+            PoolMemberLedStripEntity(strip = stripA, pool = pool, poolIndex = 0, inverted = false)
+        )
+        poolMemberRepository.save(
+            PoolMemberLedStripEntity(strip = stripB, pool = pool, poolIndex = 1, inverted = false)
+        )
+
+        val paletteSettings = objectToMap(
+            objectMapper,
+            StaticPaletteSettings(
+                SettingsPalette(
+                    primaryColor = RgbColor.Green,
+                    secondaryColor = RgbColor.Cyan,
+                    tertiaryColor = null,
+                    otherColors = listOf()
+                )
+            )
+        )
+        val palette = paletteRepository.save(
+            LightEffectPaletteEntity(
+                uuid = UUID.randomUUID().toString(),
+                settings = paletteSettings,
+                name = "Cool green palette",
+                type = EffectPaletteConstants.STATIC_COLOR_PALETTE,
+            )
+        )
+
+        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        val createEffectRequest = CreateEffectRequest(
+            stripUuid = null,
+            poolUuid = pool.uuid,
+            effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            name = "Pool Nightrider Effect",
+            settings = defaultNrSettings
+        )
+        val createEffectHttpResponse = apiClient.createEffect(createEffectRequest)
+        createEffectHttpResponse.status shouldBe HttpStatus.CREATED
+        val effectUuid = createEffectHttpResponse.body() as String
+
+        val effectEntities = effectRepository.queryAll()
+        effectEntities.size shouldBe 1
+
+        val createdEffect = effectEntities.first()
+        createdEffect.uuid shouldBe effectUuid
+        createdEffect.name shouldBe createEffectRequest.name
+        createdEffect.pool?.uuid shouldBe pool.uuid
+        createdEffect.strip shouldBe null
+        createdEffect.status shouldBe LightEffectStatus.Idle
+
+        val updateRequest = UpdateEffectRequest(
+            settings = defaultNrSettings,
+            stripUuid = null,
+            paletteUuid = palette.uuid,
+            name = null
+        )
+        val updateHttpResponse = apiClient.updateEffect(effectUuid, updateRequest)
+        updateHttpResponse.status shouldBe HttpStatus.NO_CONTENT
+
+        val updatedEffect = effectRepository.findByUuid(effectUuid).get()
+        updatedEffect.palette?.uuid shouldBe palette.uuid
+
+        val getEffectsHttpResponse = apiClient.getEffectsForStrip(null, pool.uuid)
+        getEffectsHttpResponse.status shouldBe HttpStatus.OK
+
+        val getEffectsResponse = getEffectsHttpResponse.body() as GetEffectsResponse
+        getEffectsResponse.effects.size shouldBe 1
+
+        val effectFromApi = getEffectsResponse.effects.first()
+        effectFromApi.name shouldBe createEffectRequest.name
+        effectFromApi.uuid shouldBe effectUuid
+        effectFromApi.status shouldBe LightEffectStatus.Idle
+        effectFromApi.paletteUuid shouldBe palette.uuid
+        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe createEffectRequest.settings.map {
+            normalizeNumberTypes(it.value)
+        }
+        effectFromApi::class.java shouldBe GetPoolEffectResponse::class.java
+        (effectFromApi as GetPoolEffectResponse).poolUuid shouldBe pool.uuid
     }
 })
