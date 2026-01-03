@@ -113,7 +113,7 @@ class LightEffectRendererImpl(
         // If there are multiple effects, layer the RGB output on top of each other.
         val renderedRgbData = mutableListOf<RgbColor>()
         val stripLength = activeEffects.first().strip.length()
-        val blendMode = activeEffects.first().strip.blendMode()
+        val blendMode = activeEffects.first().strip.blendMode
         for (i in 0..<stripLength) {
             when (blendMode) {
                 BlendMode.Additive -> {
@@ -145,7 +145,7 @@ class LightEffectRendererImpl(
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame pools
         return Optional.of(
             RenderedFrameModel(
-                0, activeEffects.first().strip.uuid(), renderedRgbData, -1, allEffectsPaused
+                0, activeEffects.first().strip.uuid, renderedRgbData, -1, allEffectsPaused
             )
         )
     }

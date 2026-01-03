@@ -125,9 +125,11 @@ class EffectFilterControllerTest(
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
                 strip.uuid!!,
+                null,
                 LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
                 "Super cool effect",
-                defaultNrSettings
+                defaultNrSettings,
+                null
             )
         )
 
@@ -167,9 +169,11 @@ class EffectFilterControllerTest(
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
                 strip.uuid!!,
+                null,
                 LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
                 "Super cool effect",
-                defaultNrSettings
+                defaultNrSettings,
+                null
             )
         )
         val effectUuid = createEffectHttpResponse.body() as String
@@ -219,24 +223,36 @@ class EffectFilterControllerTest(
         activeFilter.settings shouldBe updatedSettings
     }
 
-    // TODO delete filter test
-//    "Deleting an effect" {
-//        val client = createLedStripClientEntity(clientRepository, "Christmas Tree lights", "192.168.50.50", 50, 51)
-//        val strip = saveLedStrips(stripRepository, client, listOf("Strip A" to 200)).first()
-//        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
-//        var effectEntity = LightEffectEntity(
-//            strip = strip,
-//            name = "Super cool effect",
-//            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
-//            uuid = UUID.randomUUID().toString(),
-//            status = LightEffectStatus.Idle,
-//            settings = defaultNrSettings
-//        )
-//        effectEntity = effectRepository.save(effectEntity)
-//
-//        val createEffectHttpResponse = effectApiClient.deleteEffect(effectEntity.uuid!!)
-//        createEffectHttpResponse.status shouldBe HttpStatus.NO_CONTENT
-//        effectRepository.findAll().isEmpty() shouldBe true
-//        junctionRepository.findAll().isEmpty() shouldBe true
-//    }
+    "Delete a filter" {
+        val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.50.50", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 50)
+        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        val createEffectHttpResponse = effectApiClient.createEffect(
+            CreateEffectRequest(
+                strip.uuid!!,
+                null,
+                LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                "Super cool effect",
+                defaultNrSettings,
+                null
+            )
+        )
+        val effectUuid = createEffectHttpResponse.body() as String
+
+        val reflectionFilterSettings = ReflectionFilterSettings(ReflectionType.CopyOverCenter)
+        val settingsAsMap = objectToMap(objectMapper, reflectionFilterSettings)
+        val createRequest = CreateEffectFilterRequest(
+            "My brightness fade filter",
+            LightEffectFilterConstants.REFLECTION_FILTER_NAME,
+            settingsAsMap
+        )
+        val createFilterHttpResponse = apiClient.createEffectFilter(createRequest)
+        val filterUuid = createFilterHttpResponse.body() as String
+
+        val deleteResponse = apiClient.deleteEffectFilter(filterUuid)
+        val filterOptional = filterRepository.findByUuid(effectUuid)
+
+        filterOptional.isEmpty shouldBe true
+        deleteResponse.status shouldBe HttpStatus.NO_CONTENT
+    }
 })

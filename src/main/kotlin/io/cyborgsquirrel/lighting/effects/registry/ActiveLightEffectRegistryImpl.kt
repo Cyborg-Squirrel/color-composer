@@ -69,7 +69,7 @@ class ActiveLightEffectRegistryImpl : ActiveLightEffectRegistry {
         try {
             lock.acquire()
             effects.addAll(effectList.filter {
-                it.strip.uuid() == stripUuid
+                it.strip.uuid == stripUuid
             })
         } finally {
             lock.release()
