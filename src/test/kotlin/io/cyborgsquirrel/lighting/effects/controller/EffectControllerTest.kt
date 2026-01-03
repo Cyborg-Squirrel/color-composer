@@ -31,6 +31,7 @@ import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.serde.ObjectMapper
@@ -196,7 +197,8 @@ class EffectControllerTest(
             null,
             LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             "Rainbow Nightrider",
-            defaultNrSettings
+            defaultNrSettings,
+            paletteUuid = null,
         )
 
         val createEffectHttpResponse = apiClient.createEffect(request)
@@ -349,7 +351,7 @@ class EffectControllerTest(
         paletteRepository.findAll().isEmpty() shouldBe false
     }
 
-    "Creating and reading an effect assigned to a LED strip pool" {
+    "Create an effect for a LED strip pool" {
         val client = createLedStripClientEntity(clientRepository, "Living Room lights", "192.168.50.50", 50, 51)
         val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName, 100)
         val stripB = saveLedStrip(stripRepository, client, "Strip B", 150, PiClientPin.D21.pinName, 80)
@@ -395,7 +397,8 @@ class EffectControllerTest(
             poolUuid = pool.uuid,
             effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
             name = "Pool Nightrider Effect",
-            settings = defaultNrSettings
+            settings = defaultNrSettings,
+            paletteUuid = palette.uuid
         )
         val createEffectHttpResponse = apiClient.createEffect(createEffectRequest)
         createEffectHttpResponse.status shouldBe HttpStatus.CREATED
@@ -410,34 +413,332 @@ class EffectControllerTest(
         createdEffect.pool?.uuid shouldBe pool.uuid
         createdEffect.strip shouldBe null
         createdEffect.status shouldBe LightEffectStatus.Idle
+        createdEffect.palette shouldBe palette
+    }
 
-        val updateRequest = UpdateEffectRequest(
+    "Get effect by UUID" {
+        val client = createLedStripClientEntity(clientRepository, "Test Room", "192.168.50.52", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, PiClientPin.D10.pinName, 100)
+        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        val createEffectRequest = CreateEffectRequest(
+            stripUuid = strip.uuid,
+            poolUuid = null,
+            effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            name = "Get Test Effect",
             settings = defaultNrSettings,
-            stripUuid = null,
-            paletteUuid = palette.uuid,
-            name = null
+            paletteUuid = null,
         )
-        val updateHttpResponse = apiClient.updateEffect(effectUuid, updateRequest)
-        updateHttpResponse.status shouldBe HttpStatus.NO_CONTENT
+        val createEffectHttpResponse = apiClient.createEffect(createEffectRequest)
+        createEffectHttpResponse.status shouldBe HttpStatus.CREATED
+        val effectUuid = createEffectHttpResponse.body() as String
 
-        val updatedEffect = effectRepository.findByUuid(effectUuid).get()
-        updatedEffect.palette?.uuid shouldBe palette.uuid
+        val getEffectResponse = apiClient.getEffect(effectUuid)
+        getEffectResponse.status shouldBe HttpStatus.OK
+        val effect = getEffectResponse.body() as GetStripEffectResponse
+        effect.uuid shouldBe effectUuid
+        effect.name shouldBe "Get Test Effect"
+        effect.stripUuid shouldBe strip.uuid
+    }
 
-        val getEffectsHttpResponse = apiClient.getEffectsForStrip(null, pool.uuid)
-        getEffectsHttpResponse.status shouldBe HttpStatus.OK
+    "Create effect with invalid parameters returns 400" {
+        val invalidRequest = CreateEffectRequest(
+            stripUuid = null,
+            poolUuid = null,
+            effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            name = "Invalid Effect",
+            settings = emptyMap(),
+            paletteUuid = null,
+        )
+        val response = apiClient.createEffect(invalidRequest)
+        response.status shouldBe HttpStatus.BAD_REQUEST
+    }
 
-        val getEffectsResponse = getEffectsHttpResponse.body() as GetEffectsResponse
-        getEffectsResponse.effects.size shouldBe 1
+    "Get non-existent effect returns 404" {
+        val nonExistentUuid = UUID.randomUUID().toString()
+        val response = apiClient.getEffect(nonExistentUuid)
+        response.status shouldBe HttpStatus.NOT_FOUND
+    }
 
-        val effectFromApi = getEffectsResponse.effects.first()
-        effectFromApi.name shouldBe createEffectRequest.name
-        effectFromApi.uuid shouldBe effectUuid
-        effectFromApi.status shouldBe LightEffectStatus.Idle
-        effectFromApi.paletteUuid shouldBe palette.uuid
-        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe createEffectRequest.settings.map {
-            normalizeNumberTypes(it.value)
+    "Update non-existent effect returns 404" {
+        val nonExistentUuid = UUID.randomUUID().toString()
+        val updateRequest = UpdateEffectRequest(
+            name = "Non-existent Update",
+            settings = emptyMap(),
+            stripUuid = null,
+            paletteUuid = null
+        )
+        val response = apiClient.updateEffect(nonExistentUuid, updateRequest)
+        response.status shouldBe HttpStatus.NOT_FOUND
+    }
+
+    "Delete non-existent effect returns 404" {
+        val nonExistentUuid = UUID.randomUUID().toString()
+        val response = apiClient.deleteEffect(nonExistentUuid)
+        response.status shouldBe HttpStatus.NOT_FOUND
+    }
+
+    "Get effects for a LED strip pool" {
+        val client = createLedStripClientEntity(clientRepository, "Backyard lights", "192.168.50.55", 50, 51)
+        val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName, 100)
+        val stripB = saveLedStrip(stripRepository, client, "Strip B", 150, PiClientPin.D21.pinName, 80)
+
+        val pool = poolRepository.save(
+            LedStripPoolEntity(
+                uuid = UUID.randomUUID().toString(),
+                name = "Backyard Pool",
+                poolType = PoolType.Unified
+            )
+        )
+        poolMemberRepository.save(
+            PoolMemberLedStripEntity(strip = stripA, pool = pool, poolIndex = 0, inverted = false)
+        )
+        poolMemberRepository.save(
+            PoolMemberLedStripEntity(strip = stripB, pool = pool, poolIndex = 1, inverted = false)
+        )
+
+        val paletteSettings = objectToMap(
+            objectMapper,
+            StaticPaletteSettings(
+                SettingsPalette(
+                    primaryColor = RgbColor.Blue,
+                    secondaryColor = RgbColor.Blue,
+                    tertiaryColor = null,
+                    otherColors = listOf()
+                )
+            )
+        )
+        val palette = paletteRepository.save(
+            LightEffectPaletteEntity(
+                uuid = UUID.randomUUID().toString(),
+                settings = paletteSettings,
+                name = "Blue palette",
+                type = EffectPaletteConstants.STATIC_COLOR_PALETTE,
+            )
+        )
+
+        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        val effect1 = effectRepository.save(
+            LightEffectEntity(
+                pool = pool,
+                palette = palette,
+                name = "Pool Effect 1",
+                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Idle,
+                settings = defaultNrSettings
+            )
+        )
+        val effect2 = effectRepository.save(
+            LightEffectEntity(
+                pool = pool,
+                palette = palette,
+                name = "Pool Effect 2",
+                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Idle,
+                settings = defaultNrSettings
+            )
+        )
+
+        val getEffectsResponse = apiClient.getEffectsForStrip(null, pool.uuid)
+        getEffectsResponse.status shouldBe HttpStatus.OK
+
+        val effectsResponse = getEffectsResponse.body() as GetEffectsResponse
+        effectsResponse.effects.size shouldBe 2
+
+        val poolEffects = effectsResponse.effects.map { it as GetPoolEffectResponse }
+        poolEffects.map { it.poolUuid } shouldBe listOf(pool.uuid, pool.uuid)
+        poolEffects.map { it.uuid }.toSet() shouldBe setOf(effect1.uuid, effect2.uuid)
+        poolEffects.map { it.name }.toSet() shouldBe setOf("Pool Effect 1", "Pool Effect 2")
+    }
+
+    "Get a pool effect by UUID" {
+        val client = createLedStripClientEntity(clientRepository, "Garage lights", "192.168.50.56", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 100, PiClientPin.D10.pinName, 100)
+
+        val pool = poolRepository.save(
+            LedStripPoolEntity(
+                uuid = UUID.randomUUID().toString(),
+                name = "Garage Pool",
+                poolType = PoolType.Unified
+            )
+        )
+        poolMemberRepository.save(
+            PoolMemberLedStripEntity(strip = strip, pool = pool, poolIndex = 0, inverted = false)
+        )
+
+        val paletteSettings = objectToMap(
+            objectMapper,
+            StaticPaletteSettings(
+                SettingsPalette(
+                    primaryColor = RgbColor.Yellow,
+                    secondaryColor = RgbColor.Yellow,
+                    tertiaryColor = null,
+                    otherColors = listOf()
+                )
+            )
+        )
+        val palette = paletteRepository.save(
+            LightEffectPaletteEntity(
+                uuid = UUID.randomUUID().toString(),
+                settings = paletteSettings,
+                name = "Yellow palette",
+                type = EffectPaletteConstants.STATIC_COLOR_PALETTE,
+            )
+        )
+
+        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        val poolEffect = effectRepository.save(
+            LightEffectEntity(
+                pool = pool,
+                palette = palette,
+                name = "Garage Pool Effect",
+                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Idle,
+                settings = defaultNrSettings
+            )
+        )
+
+        val getEffectResponse = apiClient.getEffect(poolEffect.uuid!!)
+        getEffectResponse.status shouldBe HttpStatus.OK
+
+        val effect = getEffectResponse.body() as GetPoolEffectResponse
+        effect.uuid shouldBe poolEffect.uuid
+        effect.name shouldBe "Garage Pool Effect"
+        effect.poolUuid shouldBe pool.uuid
+        effect.paletteUuid shouldBe palette.uuid
+    }
+
+    "Update a pool effect" {
+        val client = createLedStripClientEntity(clientRepository, "Deck lights", "192.168.50.57", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 100, PiClientPin.D10.pinName, 100)
+
+        val pool = poolRepository.save(
+            LedStripPoolEntity(
+                uuid = UUID.randomUUID().toString(),
+                name = "Deck Pool",
+                poolType = PoolType.Unified
+            )
+        )
+        poolMemberRepository.save(
+            PoolMemberLedStripEntity(strip = strip, pool = pool, poolIndex = 0, inverted = false)
+        )
+
+        val paletteSettings = objectToMap(
+            objectMapper,
+            StaticPaletteSettings(
+                SettingsPalette(
+                    primaryColor = RgbColor.Purple,
+                    secondaryColor = RgbColor.Purple,
+                    tertiaryColor = null,
+                    otherColors = listOf()
+                )
+            )
+        )
+        val palette = paletteRepository.save(
+            LightEffectPaletteEntity(
+                uuid = UUID.randomUUID().toString(),
+                settings = paletteSettings,
+                name = "Purple palette",
+                type = EffectPaletteConstants.STATIC_COLOR_PALETTE,
+            )
+        )
+
+        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        var poolEffect = effectRepository.save(
+            LightEffectEntity(
+                pool = pool,
+                palette = palette,
+                name = "Original Pool Effect",
+                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Idle,
+                settings = defaultNrSettings
+            )
+        )
+
+        val updatedNrSettings = objectToMap(
+            objectMapper,
+            NightriderEffectSettings.default().copy(wrap = true)
+        )
+        val updateRequest = UpdateEffectRequest(
+            name = "Updated Pool Effect Name",
+            settings = updatedNrSettings,
+            stripUuid = null,
+            paletteUuid = null
+        )
+        val updateResponse = apiClient.updateEffect(poolEffect.uuid!!, updateRequest)
+        updateResponse.status shouldBe HttpStatus.NO_CONTENT
+
+        val effectEntities = effectRepository.queryAll()
+        effectEntities.size shouldBe 1
+
+        val updatedEffect = effectEntities.first()
+        updatedEffect.name shouldBe "Updated Pool Effect Name"
+        updatedEffect.uuid shouldBe poolEffect.uuid
+        updatedEffect.pool?.uuid shouldBe pool.uuid
+        updatedEffect.strip shouldBe null
+        updatedEffect.settings!!.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
+            normalizeNumberTypes(
+                it.value
+            )
         }
-        effectFromApi::class.java shouldBe GetPoolEffectResponse::class.java
-        (effectFromApi as GetPoolEffectResponse).poolUuid shouldBe pool.uuid
+    }
+
+    "Delete a pool effect" {
+        val client = createLedStripClientEntity(clientRepository, "Patio lights", "192.168.50.58", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 100, PiClientPin.D10.pinName, 100)
+
+        val pool = poolRepository.save(
+            LedStripPoolEntity(
+                uuid = UUID.randomUUID().toString(),
+                name = "Patio Pool",
+                poolType = PoolType.Unified
+            )
+        )
+        poolMemberRepository.save(
+            PoolMemberLedStripEntity(strip = strip, pool = pool, poolIndex = 0, inverted = false)
+        )
+
+        val paletteSettings = objectToMap(
+            objectMapper,
+            StaticPaletteSettings(
+                SettingsPalette(
+                    primaryColor = RgbColor.Orange,
+                    secondaryColor = RgbColor.Orange,
+                    tertiaryColor = null,
+                    otherColors = listOf()
+                )
+            )
+        )
+        val palette = paletteRepository.save(
+            LightEffectPaletteEntity(
+                uuid = UUID.randomUUID().toString(),
+                settings = paletteSettings,
+                name = "Orange palette",
+                type = EffectPaletteConstants.STATIC_COLOR_PALETTE,
+            )
+        )
+
+        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        val poolEffect = effectRepository.save(
+            LightEffectEntity(
+                pool = pool,
+                palette = palette,
+                name = "Patio Pool Effect",
+                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Idle,
+                settings = defaultNrSettings
+            )
+        )
+
+        val deleteResponse = apiClient.deleteEffect(poolEffect.uuid!!)
+        deleteResponse.status shouldBe HttpStatus.NO_CONTENT
+
+        effectRepository.findAll().isEmpty() shouldBe true
+        paletteRepository.findAll().isEmpty() shouldBe false
+        poolRepository.findAll().isEmpty() shouldBe false
     }
 })

@@ -19,6 +19,7 @@ import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import jakarta.inject.Singleton
 import java.util.*
 
@@ -42,6 +43,16 @@ class EffectApiService(
             throw ClientRequestException("Cannot assign effect to both a strip and a strip pool. Please specify only either 'stripUuid' or 'poolUuid'.")
         }
 
+        val paletteEntity = if (request.paletteUuid != null) {
+            val paletteOptional = paletteRepository.findByUuid(request.paletteUuid)
+            if (paletteOptional.isEmpty) {
+                throw ClientRequestException("Palette with uuid ${request.paletteUuid} doesn't exist")
+            }
+            paletteOptional.get()
+        } else {
+            null
+        }
+
         val effectEntity = when {
             stripUuid != null -> {
                 val stripEntityOptional = stripRepository.findByUuid(stripUuid)
@@ -53,7 +64,8 @@ class EffectApiService(
                             name = request.name,
                             type = request.effectType,
                             status = LightEffectStatus.Idle,
-                            settings = request.settings
+                            settings = request.settings,
+                            palette = paletteEntity
                         )
                     )
                 } else {
@@ -71,7 +83,8 @@ class EffectApiService(
                             name = request.name,
                             type = request.effectType,
                             status = LightEffectStatus.Idle,
-                            settings = request.settings
+                            settings = request.settings,
+                            palette = paletteEntity
                         )
                     )
                 } else {
@@ -176,9 +189,9 @@ class EffectApiService(
                 return response
             }
 
-            throw ClientRequestException("Error fetching effect with uuid $uuid!")
+            throw ResourceNotFoundException("Error fetching effect with uuid $uuid!")
         } else {
-            throw ClientRequestException("Effect with uuid $uuid does not exist!")
+            throw ResourceNotFoundException("Effect with uuid $uuid does not exist!")
         }
 
     }
@@ -200,7 +213,7 @@ class EffectApiService(
                 effectRegistry.removeEffect(activeEffectOptional.get())
             }
         } else {
-            throw ClientRequestException("Effect with uuid $effectUuid doesn't exist!")
+            throw ResourceNotFoundException("Effect with uuid $effectUuid doesn't exist!")
         }
     }
 
@@ -279,7 +292,7 @@ class EffectApiService(
                 }
             }
         } else {
-            throw ClientRequestException("Effect with uuid $uuid doesn't exist!")
+            throw ResourceNotFoundException("Effect with uuid $uuid doesn't exist!")
         }
     }
 

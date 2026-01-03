@@ -128,7 +128,8 @@ class EffectFilterControllerTest(
                 null,
                 LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
                 "Super cool effect",
-                defaultNrSettings
+                defaultNrSettings,
+                null
             )
         )
 
@@ -171,7 +172,8 @@ class EffectFilterControllerTest(
                 null,
                 LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
                 "Super cool effect",
-                defaultNrSettings
+                defaultNrSettings,
+                null
             )
         )
         val effectUuid = createEffectHttpResponse.body() as String

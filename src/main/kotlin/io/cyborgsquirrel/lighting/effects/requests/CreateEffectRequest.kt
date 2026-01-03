@@ -8,5 +8,6 @@ data class CreateEffectRequest(
     val poolUuid: String?,
     val effectType: String,
     val name: String,
-    val settings: Map<String, Any>
+    val settings: Map<String, Any>,
+    val paletteUuid: String?
 )

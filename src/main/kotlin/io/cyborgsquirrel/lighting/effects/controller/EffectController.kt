@@ -7,6 +7,7 @@ import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.service.EffectApiService
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 
@@ -46,6 +47,8 @@ class EffectController(
         return try {
             val response = effectApiService.getEffectWithUuid(uuid)
             HttpResponse.ok(response)
+        } catch (rnfe: ResourceNotFoundException) {
+            HttpResponse.notFound()
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {
@@ -70,6 +73,8 @@ class EffectController(
         return try {
             effectApiService.updateEffect(uuid, request)
             HttpResponse.noContent()
+        } catch (rnfe: ResourceNotFoundException) {
+            HttpResponse.notFound()
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {
@@ -92,6 +97,8 @@ class EffectController(
         return try {
             effectApiService.deleteEffect(uuid)
             HttpResponse.noContent()
+        } catch (rnfe: ResourceNotFoundException) {
+            HttpResponse.notFound()
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
         } catch (ex: Exception) {
