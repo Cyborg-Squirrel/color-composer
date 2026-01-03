@@ -97,7 +97,6 @@ class EffectApiService(
             }
         }
 
-        // Common post‑creation logic
         val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
         val palette = if (effectEntity.palette != null) createLightingService.createPalette(
             effectEntity.palette!!.settings!!,
@@ -233,7 +232,14 @@ class EffectApiService(
                 )
             }
 
-            if (updateEffectRequest.stripUuid != null && updateEffectRequest.stripUuid != effectEntity.strip?.uuid) {
+            val stripUuid = updateEffectRequest.stripUuid
+            val poolUuid = updateEffectRequest.poolUuid
+
+            if (stripUuid != null && poolUuid != null) {
+                throw ClientRequestException("Cannot assign effect to both a strip and a strip pool. Please specify only either 'stripUuid' or 'poolUuid'.")
+            }
+
+            if (stripUuid != null && updateEffectRequest.stripUuid != effectEntity.strip?.uuid) {
                 val stripEntityOptional = stripRepository.findByUuid(updateEffectRequest.stripUuid)
                 if (stripEntityOptional.isPresent) {
                     effectEntity = effectEntity.copy(
@@ -241,6 +247,15 @@ class EffectApiService(
                     )
                 } else {
                     throw ClientRequestException("No LED strip with uuid ${updateEffectRequest.stripUuid}")
+                }
+            } else if (poolUuid != null && updateEffectRequest.poolUuid != effectEntity.pool?.uuid) {
+                val poolEntityOptional = poolRepository.findByUuid(updateEffectRequest.poolUuid)
+                if (poolEntityOptional.isPresent) {
+                    effectEntity = effectEntity.copy(
+                        pool = poolEntityOptional.get()
+                    )
+                } else {
+                    throw ClientRequestException("No strip pool found with uuid ${updateEffectRequest.poolUuid}")
                 }
             }
 

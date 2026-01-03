@@ -259,7 +259,7 @@ class EffectControllerTest(
         val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
         val updatedNrSettings = objectToMap(
             objectMapper,
-            NightriderEffectSettings.default().copy(true)
+            NightriderEffectSettings.default().copy(wrap = true)
         )
         var effectEntity = LightEffectEntity(
             strip = strip,
@@ -275,6 +275,7 @@ class EffectControllerTest(
         val updateRequest = UpdateEffectRequest(
             settings = updatedNrSettings,
             stripUuid = null,
+            poolUuid = null,
             paletteUuid = null,
             name = "New effect name",
         )
@@ -465,6 +466,7 @@ class EffectControllerTest(
             name = "Non-existent Update",
             settings = emptyMap(),
             stripUuid = null,
+            poolUuid = null,
             paletteUuid = null
         )
         val response = apiClient.updateEffect(nonExistentUuid, updateRequest)
@@ -666,6 +668,7 @@ class EffectControllerTest(
             name = "Updated Pool Effect Name",
             settings = updatedNrSettings,
             stripUuid = null,
+            poolUuid = null,
             paletteUuid = null
         )
         val updateResponse = apiClient.updateEffect(poolEffect.uuid!!, updateRequest)
