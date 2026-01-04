@@ -76,7 +76,7 @@ class LightEffectInitJob(
 
                 val clients = clientRepository.queryAll()
                 for (client in clients) {
-                    streamJobManager.startWebsocketJob(client)
+                    streamJobManager.startStreamingJob(client)
                 }
 
                 completed = true

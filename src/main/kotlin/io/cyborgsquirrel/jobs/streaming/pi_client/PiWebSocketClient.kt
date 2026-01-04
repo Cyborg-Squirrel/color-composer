@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
 @ClientWebSocket
-abstract class LedStripWebSocketClient : AutoCloseable {
+abstract class PiWebSocketClient : AutoCloseable {
 
     private var session: WebSocketSession? = null
 
@@ -70,6 +70,6 @@ abstract class LedStripWebSocketClient : AutoCloseable {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(LedStripWebSocketClient::class.java)
+        private val logger = LoggerFactory.getLogger(PiWebSocketClient::class.java)
     }
 }

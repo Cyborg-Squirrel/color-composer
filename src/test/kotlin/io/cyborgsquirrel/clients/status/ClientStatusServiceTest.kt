@@ -3,7 +3,8 @@ package io.cyborgsquirrel.clients.status
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
-import io.cyborgsquirrel.jobs.streaming.StreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.PiStreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
@@ -34,7 +35,7 @@ class ClientStatusServiceTest(
     "Disconnected status" {
         every {
             mockJobsManager.getJobState(any())
-        } returns StreamingJobState.Offline
+        } returns PiStreamingJobState(StreamingJobStatus.Offline)
         val mockClientEntity = mockk<LedStripClientEntity>()
         var statusInfoOptional = service.getStatusForClient(mockClientEntity)
 
@@ -44,7 +45,7 @@ class ClientStatusServiceTest(
 
         every {
             mockJobsManager.getJobState(any())
-        } returns StreamingJobState.WaitingForConnection
+        } returns PiStreamingJobState(StreamingJobStatus.WaitingForConnection)
 
         statusInfoOptional = service.getStatusForClient(mockClientEntity)
 
@@ -56,7 +57,7 @@ class ClientStatusServiceTest(
     "Idle status" {
         every {
             mockJobsManager.getJobState(any())
-        } returns StreamingJobState.ConnectedIdle
+        } returns PiStreamingJobState(StreamingJobStatus.ConnectedIdle)
         every {
             mockActiveLightEffectService.getAllEffectsForStrip(any())
         } returns listOf()
@@ -86,7 +87,7 @@ class ClientStatusServiceTest(
     "Setup incomplete status" {
         every {
             mockJobsManager.getJobState(any())
-        } returns StreamingJobState.SetupIncomplete
+        } returns PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
         every {
             mockActiveLightEffectService.getAllEffectsForStrip(any())
         } returns listOf()
@@ -103,7 +104,7 @@ class ClientStatusServiceTest(
     "Active status" {
         every {
             mockJobsManager.getJobState(any())
-        } returns StreamingJobState.RenderingEffect
+        } returns PiStreamingJobState(StreamingJobStatus.RenderingEffect)
         every {
             mockActiveLightEffectService.getAllEffectsForStrip(any())
         } returns listOf()

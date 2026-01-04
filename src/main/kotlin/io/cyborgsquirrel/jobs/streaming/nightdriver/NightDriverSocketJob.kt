@@ -3,7 +3,9 @@ package io.cyborgsquirrel.jobs.streaming.nightdriver
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
-import io.cyborgsquirrel.jobs.streaming.StreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.NightDriverStreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.StreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverFrameDataSerializer
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverSocketResponseDeserializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
@@ -70,13 +72,11 @@ class NightDriverSocketJob(
     private val millisPerFrame: Long
         get() = 1000L / fps
     private var shouldRun = true
-    private var state = StreamingJobState.SetupIncomplete
+    private var status = StreamingJobStatus.SetupIncomplete
     private var lastResponse: NightDriverSocketResponse? = null
     private var lastResponseReceivedAt = 0L
 
     fun getLatestResponse() = lastResponse
-
-    override fun getCurrentState() = state
 
     /**
      * Starts the job which will run in the background using a Kotlin Coroutine.
@@ -93,10 +93,12 @@ class NightDriverSocketJob(
         }
     }
 
+    override fun getCurrentState() = NightDriverStreamingJobState(status, lastResponse)
+
     private suspend fun processState() {
         try {
-            when (state) {
-                StreamingJobState.SetupIncomplete -> {
+            when (status) {
+                StreamingJobStatus.SetupIncomplete -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
@@ -105,7 +107,7 @@ class NightDriverSocketJob(
                                 activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
                             strips.clear()
                             strips.addAll(newStrips)
-                            state = StreamingJobState.Offline
+                            status = StreamingJobStatus.Offline
                         } else {
                             delay(5000)
                         }
@@ -114,47 +116,47 @@ class NightDriverSocketJob(
                     }
                 }
 
-                StreamingJobState.ConnectedIdle -> {
+                StreamingJobStatus.ConnectedIdle -> {
                     // Clear lastResponse when a connection is made in case this is a re-connection to avoid using stale data
                     lastResponse = null
                     // Socket connection = response from Night Driver
                     lastResponseReceivedAt = timeHelper.millisSinceEpoch()
-                    state = StreamingJobState.RenderingEffect
+                    status = StreamingJobStatus.RenderingEffect
                 }
 
-                StreamingJobState.Offline -> {
+                StreamingJobStatus.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
                     setupSocket()
                 }
 
-                StreamingJobState.SettingsSync -> {
+                StreamingJobStatus.SettingsSync -> {
                     // Not supported by Night Driver - we should never end up in this state
-                    throw Exception("Unexpected state! $state")
+                    throw Exception("Unexpected state! $status")
                 }
 
-                StreamingJobState.BufferFullWaiting -> {
+                StreamingJobStatus.BufferFullWaiting -> {
                     delay(sleepMillis)
-                    state = StreamingJobState.RenderingEffect
+                    status = StreamingJobStatus.RenderingEffect
                 }
 
-                StreamingJobState.WaitingForConnection -> {
+                StreamingJobStatus.WaitingForConnection -> {
                     // Not supported by NightDriver - we should never end up in this state
-                    throw Exception("Unexpected state! $state")
+                    throw Exception("Unexpected state! $status")
                 }
 
-                StreamingJobState.TimeSyncRequired -> {
+                StreamingJobStatus.TimeSyncRequired -> {
                     // Not supported by NightDriver - we should never end up in this state
-                    throw Exception("Unexpected state! $state")
+                    throw Exception("Unexpected state! $status")
                 }
 
-                StreamingJobState.RenderingEffect -> {
+                StreamingJobStatus.RenderingEffect -> {
                     triggerManager.processTriggers()
                     val frameList = renderer.renderFrames(strips.map { it.uuid }, 0)
 
                     if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
                         sleepMillis = millisPerFrame * 2
-                        state = StreamingJobState.BufferFullWaiting
+                        status = StreamingJobStatus.BufferFullWaiting
                     } else {
                         val now = timeHelper.millisSinceEpoch()
                         timestampMillis = now + clientTimeOffset + millisPerFrame
@@ -208,17 +210,17 @@ class NightDriverSocketJob(
                             if (millisOfFramesBuffered > bufferTimeMillis || clientBufferFull) {
                                 logger.debug("Client buffer full, waiting.")
                                 sleepMillis = millisPerFrame
-                                state = StreamingJobState.BufferFullWaiting
+                                status = StreamingJobStatus.BufferFullWaiting
                             } else if (lastResponse!!.frameDrawing > fps) {
                                 sleepMillis = millisPerFrame / 2
-                                state = StreamingJobState.BufferFullWaiting
+                                status = StreamingJobStatus.BufferFullWaiting
                             }
                         }
                     }
                 }
             }
         } catch (ex: Exception) {
-            logger.error("Error $ex while processing state $state")
+            logger.error("Error $ex while processing state $status")
             ex.printStackTrace()
             delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
             if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
@@ -282,15 +284,15 @@ class NightDriverSocketJob(
 
         if (socket?.isConnected == true) {
             logger.info("Connected to $clientEntity")
-            state = StreamingJobState.ConnectedIdle
+            status = StreamingJobStatus.ConnectedIdle
         } else {
             resetStateOnError()
         }
     }
 
     private fun resetStateOnError() {
-        if (state != StreamingJobState.SetupIncomplete) {
-            state = StreamingJobState.Offline
+        if (status != StreamingJobStatus.SetupIncomplete) {
+            status = StreamingJobStatus.Offline
         }
     }
 

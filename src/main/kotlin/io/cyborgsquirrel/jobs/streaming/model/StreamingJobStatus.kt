@@ -1,6 +1,6 @@
-package io.cyborgsquirrel.jobs.streaming
+package io.cyborgsquirrel.jobs.streaming.model
 
-enum class StreamingJobState {
+enum class StreamingJobStatus {
     // The websocket job needs a client and strip, until it has both it is in this state
     SetupIncomplete,
 
