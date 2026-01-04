@@ -60,7 +60,8 @@ class LedStripPoolRepositoryTest(
             LedStripPoolEntity(
                 name = name,
                 uuid = UUID.randomUUID().toString(),
-                poolType = PoolType.Unified
+                poolType = PoolType.Unified,
+                blendMode = BlendMode.Average
             )
         )
 
@@ -122,6 +123,7 @@ class LedStripPoolRepositoryTest(
             members.size shouldBe 2
             members.first().matches(savedMembers.first())
             members.last().matches(savedMembers.last())
+            blendMode shouldBe pool.blendMode
         }
     }
 })

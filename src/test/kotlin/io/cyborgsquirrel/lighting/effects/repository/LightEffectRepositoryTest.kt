@@ -127,7 +127,8 @@ class LightEffectRepositoryTest(
             LedStripPoolEntity(
                 name = "Living Room",
                 uuid = UUID.randomUUID().toString(),
-                poolType = PoolType.Unified
+                poolType = PoolType.Unified,
+                blendMode = BlendMode.Average
             )
         )
         val poolMember = poolMemberLedStripRepository.save(

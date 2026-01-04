@@ -6,7 +6,7 @@ import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
@@ -46,7 +46,7 @@ class EffectFilterControllerTest(
     private val stripRepository: H2LedStripRepository,
     private val effectRepository: H2LightEffectRepository,
     private val filterRepository: H2LightEffectFilterRepository,
-    private val effectRegistry: ActiveLightEffectRegistry,
+    private val effectRegistry: ActiveLightEffectService,
     private val junctionRepository: H2LightEffectFilterJunctionRepository,
     private val objectMapper: ObjectMapper
 ) : StringSpec({

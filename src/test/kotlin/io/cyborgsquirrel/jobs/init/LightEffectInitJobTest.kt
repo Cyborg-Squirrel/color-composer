@@ -20,7 +20,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
@@ -43,7 +43,6 @@ import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.extensions.kotest5.MicronautKotest5Extension.getMock
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import io.mockk.mockk
-import org.junit.platform.engine.support.hierarchical.Node.SkipResult.skip
 import java.time.Duration
 import java.util.*
 
@@ -54,7 +53,7 @@ class LightEffectInitJobTest(
     private val ledStripRepository: H2LedStripRepository,
     private val ledStripPoolRepository: H2LedStripPoolRepository,
     private val poolMemberLedStripRepository: H2PoolMemberLedStripRepository,
-    private val activeLightEffectRegistry: ActiveLightEffectRegistry,
+    private val activeLightEffectService: ActiveLightEffectService,
     private val triggerRepository: H2LightEffectTriggerRepository,
     private val filterRepository: H2LightEffectFilterRepository,
     private val junctionRepository: H2LightEffectFilterJunctionRepository,
@@ -74,7 +73,7 @@ class LightEffectInitJobTest(
     }
 
     afterTest {
-        activeLightEffectRegistry.reset()
+        activeLightEffectService.removeAllEffects()
         junctionRepository.deleteAll()
         triggerRepository.deleteAll()
         filterRepository.deleteAll()
@@ -89,7 +88,7 @@ class LightEffectInitJobTest(
         val job = LightEffectInitJob(
             clientRepository,
             lightEffectRepository,
-            activeLightEffectRegistry,
+            activeLightEffectService,
             triggerManager,
             effectFactory,
             websocketManagerMock
@@ -131,7 +130,7 @@ class LightEffectInitJobTest(
 
         job.run()
 
-        val activeEffectList = activeLightEffectRegistry.getAllEffects()
+        val activeEffectList = activeLightEffectService.getAllEffects()
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
@@ -147,7 +146,7 @@ class LightEffectInitJobTest(
         val job = LightEffectInitJob(
             clientRepository,
             lightEffectRepository,
-            activeLightEffectRegistry,
+            activeLightEffectService,
             triggerManager,
             effectFactory,
             websocketManagerMock
@@ -199,7 +198,7 @@ class LightEffectInitJobTest(
 
         job.run()
 
-        val activeEffectList = activeLightEffectRegistry.getAllEffects()
+        val activeEffectList = activeLightEffectService.getAllEffects()
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
@@ -224,7 +223,7 @@ class LightEffectInitJobTest(
         val job = LightEffectInitJob(
             clientRepository,
             lightEffectRepository,
-            activeLightEffectRegistry,
+            activeLightEffectService,
             triggerManager,
             effectFactory,
             websocketManagerMock
@@ -276,7 +275,7 @@ class LightEffectInitJobTest(
 
         job.run()
 
-        val activeEffectList = activeLightEffectRegistry.getAllEffects()
+        val activeEffectList = activeLightEffectService.getAllEffects()
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
@@ -301,7 +300,7 @@ class LightEffectInitJobTest(
         val job = LightEffectInitJob(
             clientRepository,
             lightEffectRepository,
-            activeLightEffectRegistry,
+            activeLightEffectService,
             triggerManager,
             effectFactory,
             websocketManagerMock
@@ -333,7 +332,8 @@ class LightEffectInitJobTest(
             LedStripPoolEntity(
                 uuid = UUID.randomUUID().toString(),
                 name = "Living Room Pool",
-                poolType = PoolType.Unified
+                poolType = PoolType.Unified,
+                blendMode = BlendMode.Average
             )
         )
         poolMemberLedStripRepository.save(
@@ -353,7 +353,7 @@ class LightEffectInitJobTest(
 
         job.run()
 
-        val activeEffectList = activeLightEffectRegistry.getAllEffects()
+        val activeEffectList = activeLightEffectService.getAllEffects()
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class

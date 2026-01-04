@@ -45,7 +45,8 @@ CREATE TABLE led_strip_pools
     id         SERIAL primary key NOT NULL,
     name       VARCHAR(255) NOT NULL,
     uuid       VARCHAR(50) NOT NULL UNIQUE,
-    pool_type  VARCHAR(50) NOT NULL
+    pool_type  VARCHAR(50) NOT NULL,
+    blend_mode VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE pool_member_led_strips

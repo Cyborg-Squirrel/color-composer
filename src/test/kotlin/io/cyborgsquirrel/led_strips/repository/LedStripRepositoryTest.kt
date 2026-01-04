@@ -56,7 +56,8 @@ class LedStripRepositoryTest(
             LedStripPoolEntity(
                 name = name,
                 uuid = uuid,
-                poolType = PoolType.Unified
+                poolType = PoolType.Unified,
+                blendMode = BlendMode.Average
             )
         )
     }

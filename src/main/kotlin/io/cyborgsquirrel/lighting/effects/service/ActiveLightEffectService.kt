@@ -1,22 +1,25 @@
-package io.cyborgsquirrel.lighting.effects.registry
+package io.cyborgsquirrel.lighting.effects.service
 
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import java.util.*
 
-interface ActiveLightEffectRegistry {
+interface ActiveLightEffectService {
 
     fun addOrUpdateEffect(lightEffect: ActiveLightEffect)
 
     fun removeEffect(lightEffect: ActiveLightEffect)
 
-    fun findEffectsWithStatus(status: LightEffectStatus): List<ActiveLightEffect>
-
     fun getEffectWithUuid(uuid: String): Optional<ActiveLightEffect>
+
+    fun getEffectsForClient(clientUuid: String): List<ActiveLightEffect>
 
     fun getAllEffectsForStrip(stripUuid: String): List<ActiveLightEffect>
 
     fun getAllEffects(): List<ActiveLightEffect>
 
-    fun reset()
+    fun addListener(listener: ActiveEffectListUpdateCallback)
+
+    fun removeLister(listener: ActiveEffectListUpdateCallback)
+
+    fun removeAllEffects()
 }

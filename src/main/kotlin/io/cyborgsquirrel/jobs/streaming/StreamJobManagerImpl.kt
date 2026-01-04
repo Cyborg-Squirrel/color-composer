@@ -8,6 +8,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketJob
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
 import io.cyborgsquirrel.jobs.streaming.pi_client.WebSocketJob
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.websocket.WebSocketClient
@@ -24,6 +25,7 @@ class StreamJobManagerImpl(
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private val piConfigClient: PiConfigClient,
+    private val activeLightEffectService: ActiveLightEffectService
 ) : StreamJobManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val jobMap = mutableMapOf<String, Pair<ClientStreamingJob, Job>>()
@@ -42,7 +44,8 @@ class StreamJobManagerImpl(
                         clientRepository,
                         timeHelper,
                         piConfigClient,
-                        client
+                        client,
+                        activeLightEffectService
                     )
                 }
 
@@ -52,7 +55,8 @@ class StreamJobManagerImpl(
                         triggerManager,
                         clientRepository,
                         timeHelper,
-                        client
+                        client,
+                        activeLightEffectService
                     )
                 }
 
@@ -76,7 +80,6 @@ class StreamJobManagerImpl(
         logger.info("Updating websocket job for $client")
         try {
             lock.acquire()
-            jobMap[client.uuid!!]?.first?.onDataUpdate()
         } catch (ex: Exception) {
             ex.printStackTrace()
         } finally {
