@@ -83,6 +83,7 @@ class NightDriverSocketJob(
      * Returns the Job instance.
      */
     override fun start(scope: CoroutineScope): Job {
+        activeLightEffectService.addListener(this)
         return scope.launch {
             logger.info("Start")
             while (isActive && shouldRun) {
