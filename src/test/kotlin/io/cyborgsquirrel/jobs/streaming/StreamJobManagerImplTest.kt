@@ -8,6 +8,7 @@ import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -18,46 +19,42 @@ import kotlinx.coroutines.DisposableHandle
 import kotlinx.coroutines.Job
 
 class StreamJobManagerImplTest : StringSpec({
-    "start a job for a new client" {
-        val mockClientEntity = mockk<LedStripClientEntity>()
-        val mockStreamingJob = mockk<ClientStreamingJob>()
-        val mockStreamingJobFactory = mockk<StreamingJobFactory>()
-        val mockJob = mockk<Job>()
-        val mockDisposable = mockk<DisposableHandle>()
-        val expectedJobState = PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
+    val mockStreamingJobFactory = mockk<StreamingJobFactory>()
+    val mockStreamingJob = mockk<ClientStreamingJob>()
+    val mockJob = mockk<Job>()
+    val mockDisposable = mockk<DisposableHandle>()
 
-        every { mockClientEntity.uuid } returns "test-uuid"
-        every { mockClientEntity.clientType } returns ClientType.Pi
+    afterTest {
+        clearMocks(mockStreamingJobFactory, mockStreamingJob, mockJob, mockDisposable)
+    }
+    
+    fun setupCommonMocks(clientEntity: LedStripClientEntity, clientType: ClientType) {
+        every { clientEntity.uuid } returns "test-uuid"
+        every { clientEntity.clientType } returns clientType
         every { mockStreamingJobFactory.createJob(any()) } returns mockStreamingJob
         every { mockJob.invokeOnCompletion(any()) } returns mockDisposable
         every { mockStreamingJob.start(any()) } returns mockJob
-        every { mockStreamingJob.getCurrentState() } returns expectedJobState
+        every { mockStreamingJob.getCurrentState() } returns PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
         every { mockStreamingJob.dispose() } answers { }
-
+    }
+    
+    "start a job for a new client" {
+        val mockClientEntity = mockk<LedStripClientEntity>()
+        setupCommonMocks(mockClientEntity, ClientType.Pi)
+        
         val manager = StreamJobManagerImpl(mockStreamingJobFactory)
 
         manager.startStreamingJob(mockClientEntity)
 
         val jobState = manager.getJobState(mockClientEntity.uuid!!)
-        jobState shouldBe expectedJobState
+        jobState shouldBe PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
         verify { mockStreamingJobFactory.createJob(mockClientEntity) }
         verify { mockStreamingJob.start(any()) }
     }
 
     "stop a websocket job" {
         val mockClientEntity = mockk<LedStripClientEntity>()
-        val mockStreamingJob = mockk<ClientStreamingJob>()
-        val mockStreamingJobFactory = mockk<StreamingJobFactory>()
-        val mockJob = mockk<Job>()
-        val mockDisposable = mockk<DisposableHandle>()
-
-        every { mockClientEntity.uuid } returns "test-uuid"
-        every { mockClientEntity.clientType } returns ClientType.Pi
-        every { mockStreamingJobFactory.createJob(any()) } returns mockStreamingJob
-        every { mockJob.invokeOnCompletion(any()) } returns mockDisposable
-        every { mockStreamingJob.start(any()) } returns mockJob
-        every { mockStreamingJob.getCurrentState() } returns PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
-        every { mockStreamingJob.dispose() } answers { }
+        setupCommonMocks(mockClientEntity, ClientType.Pi)
         coEvery { mockJob.cancel() } answers { }
 
         val manager = StreamJobManagerImpl(mockStreamingJobFactory)
@@ -70,7 +67,6 @@ class StreamJobManagerImplTest : StringSpec({
         jobState shouldBe null
         verify { mockStreamingJob.dispose() }
         verify { mockJob.cancel() }
-        verify { mockStreamingJob.dispose() }
     }
 
     "handle multiple clients gracefully" {
@@ -78,7 +74,6 @@ class StreamJobManagerImplTest : StringSpec({
         val mockClientEntityB = mockk<LedStripClientEntity>()
         val mockStreamingJobA = mockk<ClientStreamingJob>()
         val mockStreamingJobB = mockk<ClientStreamingJob>()
-        val mockStreamingJobFactory = mockk<StreamingJobFactory>()
         val mockJobA = mockk<Job>()
         val mockJobB = mockk<Job>()
         val mockDisposableA = mockk<DisposableHandle>()
@@ -117,20 +112,11 @@ class StreamJobManagerImplTest : StringSpec({
 
     "handle job completion" {
         val mockClientEntity = mockk<LedStripClientEntity>()
-        val mockStreamingJob = mockk<ClientStreamingJob>()
-        val mockStreamingJobFactory = mockk<StreamingJobFactory>()
-        val mockJob = mockk<Job>()
-        val mockDisposable = mockk<DisposableHandle>()
+        setupCommonMocks(mockClientEntity, ClientType.Pi)
         val expectedJobState = PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
         val callbackSlot = slot<CompletionHandler>()
 
-        every { mockClientEntity.uuid } returns "test-uuid"
-        every { mockClientEntity.clientType } returns ClientType.Pi
-        every { mockStreamingJobFactory.createJob(any()) } returns mockStreamingJob
         every { mockJob.invokeOnCompletion(capture(callbackSlot)) } returns mockDisposable
-        every { mockStreamingJob.start(any()) } returns mockJob
-        every { mockStreamingJob.getCurrentState() } returns expectedJobState
-        every { mockStreamingJob.dispose() } answers { }
 
         val manager = StreamJobManagerImpl(mockStreamingJobFactory)
         manager.startStreamingJob(mockClientEntity)
@@ -148,6 +134,5 @@ class StreamJobManagerImplTest : StringSpec({
 
         jobState = manager.getJobState(mockClientEntity.uuid!!)
         jobState shouldBe null
-
     }
 })
