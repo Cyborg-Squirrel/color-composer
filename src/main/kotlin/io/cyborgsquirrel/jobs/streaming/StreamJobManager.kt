@@ -2,7 +2,6 @@ package io.cyborgsquirrel.jobs.streaming
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobState
-import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
 
 interface StreamJobManager {
@@ -12,7 +11,7 @@ interface StreamJobManager {
 
     fun stopAllJobs()
 
-    fun getJobState(client: LedStripClientEntity): StreamingJobState?
+    fun getJobState(clientUuid: String): StreamingJobState?
 
     fun getLatestNightDriverResponse(client: LedStripClientEntity): NightDriverSocketResponse?
 }

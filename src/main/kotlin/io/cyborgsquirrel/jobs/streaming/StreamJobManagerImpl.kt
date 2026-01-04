@@ -68,7 +68,7 @@ class StreamJobManagerImpl(
         }
     }
 
-    override fun getJobState(client: LedStripClientEntity) = jobMap[client.uuid]?.first?.getCurrentState()
+    override fun getJobState(clientUuid: String) = jobMap[clientUuid]?.first?.getCurrentState()
 
     override fun getLatestNightDriverResponse(client: LedStripClientEntity): NightDriverSocketResponse? {
         val job = jobMap[client.uuid]?.first

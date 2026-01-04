@@ -1,5 +1,5 @@
 package io.cyborgsquirrel.jobs.streaming.model
 
-class PiStreamingJobState(
+data class PiStreamingJobState(
     override val status: StreamingJobStatus
 ) : StreamingJobState(status)

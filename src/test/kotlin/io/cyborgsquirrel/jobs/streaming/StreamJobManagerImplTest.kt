@@ -2,11 +2,12 @@ package io.cyborgsquirrel.jobs.streaming
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
+import io.cyborgsquirrel.jobs.streaming.model.NightDriverStreamingJobState
 import io.cyborgsquirrel.jobs.streaming.model.PiStreamingJobState
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
+import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -21,21 +22,22 @@ class StreamJobManagerImplTest : StringSpec({
         val mockStreamingJobFactory = mockk<StreamingJobFactory>()
         val mockJob = mockk<Job>()
         val mockDisposable = mockk<DisposableHandle>()
-        
+        val expectedJobState = PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
+
         every { mockClientEntity.uuid } returns "test-uuid"
         every { mockClientEntity.clientType } returns ClientType.Pi
         every { mockStreamingJobFactory.createJob(any()) } returns mockStreamingJob
         every { mockJob.invokeOnCompletion(any()) } returns mockDisposable
         every { mockStreamingJob.start(any()) } returns mockJob
-        every { mockStreamingJob.getCurrentState() } returns PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
+        every { mockStreamingJob.getCurrentState() } returns expectedJobState
         every { mockStreamingJob.dispose() } answers { }
-        
+
         val manager = StreamJobManagerImpl(mockStreamingJobFactory)
-        
+
         manager.startStreamingJob(mockClientEntity)
-        
-        val jobState = manager.getJobState(mockClientEntity)
-        jobState shouldNotBe null
+
+        val jobState = manager.getJobState(mockClientEntity.uuid!!)
+        jobState shouldBe expectedJobState
         verify { mockStreamingJobFactory.createJob(mockClientEntity) }
         verify { mockStreamingJob.start(any()) }
     }
@@ -46,7 +48,7 @@ class StreamJobManagerImplTest : StringSpec({
         val mockStreamingJobFactory = mockk<StreamingJobFactory>()
         val mockJob = mockk<Job>()
         val mockDisposable = mockk<DisposableHandle>()
-        
+
         every { mockClientEntity.uuid } returns "test-uuid"
         every { mockClientEntity.clientType } returns ClientType.Pi
         every { mockStreamingJobFactory.createJob(any()) } returns mockStreamingJob
@@ -55,14 +57,17 @@ class StreamJobManagerImplTest : StringSpec({
         every { mockStreamingJob.getCurrentState() } returns PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
         every { mockStreamingJob.dispose() } answers { }
         coEvery { mockJob.cancel() } answers { }
-        
+
         val manager = StreamJobManagerImpl(mockStreamingJobFactory)
-        
+
         manager.startStreamingJob(mockClientEntity)
         manager.stopWebsocketJob(mockClientEntity)
-        
-        val jobState = manager.getJobState(mockClientEntity)
+
+        // Job state is null because it no longer exists
+        val jobState = manager.getJobState(mockClientEntity.uuid!!)
         jobState shouldBe null
+        verify { mockStreamingJob.dispose() }
+        verify { mockJob.cancel() }
         verify { mockStreamingJob.dispose() }
     }
 
@@ -76,7 +81,12 @@ class StreamJobManagerImplTest : StringSpec({
         val mockJobB = mockk<Job>()
         val mockDisposableA = mockk<DisposableHandle>()
         val mockDisposableB = mockk<DisposableHandle>()
-        
+        val expectedJobStateA = PiStreamingJobState(StreamingJobStatus.RenderingEffect)
+        val expectedJobStateB = NightDriverStreamingJobState(
+            StreamingJobStatus.RenderingEffect,
+            NightDriverSocketResponse(72, 1, 40, 1.0, 2.0, 3.0, 4.0, -45.0, 2, 1, 35, 1)
+        )
+
         every { mockClientEntityA.uuid } returns "test-uuid-1"
         every { mockClientEntityA.clientType } returns ClientType.Pi
         every { mockClientEntityB.uuid } returns "test-uuid-2"
@@ -87,19 +97,19 @@ class StreamJobManagerImplTest : StringSpec({
         every { mockJobB.invokeOnCompletion(any()) } returns mockDisposableB
         every { mockStreamingJobA.start(any()) } returns mockJobA
         every { mockStreamingJobB.start(any()) } returns mockJobB
-        every { mockStreamingJobA.getCurrentState() } returns PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
-        every { mockStreamingJobB.getCurrentState() } returns PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
+        every { mockStreamingJobA.getCurrentState() } returns expectedJobStateA
+        every { mockStreamingJobB.getCurrentState() } returns expectedJobStateB
         every { mockStreamingJobA.dispose() } answers { }
         every { mockStreamingJobB.dispose() } answers { }
-        
+
         val manager = StreamJobManagerImpl(mockStreamingJobFactory)
-        
+
         manager.startStreamingJob(mockClientEntityA)
         manager.startStreamingJob(mockClientEntityB)
-        
-        val jobState1 = manager.getJobState(mockClientEntityA)
-        val jobState2 = manager.getJobState(mockClientEntityB)
-        jobState1 shouldNotBe null
-        jobState2 shouldNotBe null
+
+        val jobState1 = manager.getJobState(mockClientEntityA.uuid!!)
+        val jobState2 = manager.getJobState(mockClientEntityB.uuid!!)
+        jobState1 shouldBe expectedJobStateA
+        jobState2 shouldBe expectedJobStateB
     }
 })
