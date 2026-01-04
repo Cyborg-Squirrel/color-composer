@@ -3,10 +3,11 @@ package io.cyborgsquirrel.clients.status
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
-import io.cyborgsquirrel.jobs.streaming.StreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.PiStreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -19,23 +20,24 @@ import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
 class ClientStatusServiceTest(
-    private val activeLightEffectRegistry: ActiveLightEffectRegistry,
+    private val activeLightEffectService: ActiveLightEffectService,
     private val jobsManager: StreamJobManager,
     private val service: ClientStatusService
 ) : StringSpec({
-    lateinit var mockActiveLightEffectRegistry: ActiveLightEffectRegistry
+    lateinit var mockActiveLightEffectService: ActiveLightEffectService
     lateinit var mockJobsManager: StreamJobManager
 
     beforeTest {
-        mockActiveLightEffectRegistry = getMock(activeLightEffectRegistry)
+        mockActiveLightEffectService = getMock(activeLightEffectService)
         mockJobsManager = getMock(jobsManager)
     }
 
     "Disconnected status" {
         every {
             mockJobsManager.getJobState(any())
-        } returns StreamingJobState.Offline
+        } returns PiStreamingJobState(StreamingJobStatus.Offline)
         val mockClientEntity = mockk<LedStripClientEntity>()
+        every { mockClientEntity.uuid } returns "ABC-XYZ"
         var statusInfoOptional = service.getStatusForClient(mockClientEntity)
 
         statusInfoOptional.isPresent shouldBe true
@@ -44,7 +46,7 @@ class ClientStatusServiceTest(
 
         every {
             mockJobsManager.getJobState(any())
-        } returns StreamingJobState.WaitingForConnection
+        } returns PiStreamingJobState(StreamingJobStatus.WaitingForConnection)
 
         statusInfoOptional = service.getStatusForClient(mockClientEntity)
 
@@ -56,9 +58,9 @@ class ClientStatusServiceTest(
     "Idle status" {
         every {
             mockJobsManager.getJobState(any())
-        } returns StreamingJobState.ConnectedIdle
+        } returns PiStreamingJobState(StreamingJobStatus.ConnectedIdle)
         every {
-            mockActiveLightEffectRegistry.getAllEffectsForStrip(any())
+            mockActiveLightEffectService.getAllEffectsForStrip(any())
         } returns listOf()
 
         val mockClientEntity = mockk<LedStripClientEntity>()
@@ -71,8 +73,9 @@ class ClientStatusServiceTest(
         every {
             mockClientEntity.strips
         } returns setOf(mockStrip)
+        every { mockClientEntity.uuid } returns "ABC-XYZ"
         every {
-            activeLightEffectRegistry.getAllEffectsForStrip(stripUuid)
+            activeLightEffectService.getAllEffectsForStrip(stripUuid)
         } returns listOf()
 
         val statusInfoOptional = service.getStatusForClient(mockClientEntity)
@@ -86,12 +89,13 @@ class ClientStatusServiceTest(
     "Setup incomplete status" {
         every {
             mockJobsManager.getJobState(any())
-        } returns StreamingJobState.SetupIncomplete
+        } returns PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
         every {
-            mockActiveLightEffectRegistry.getAllEffectsForStrip(any())
+            mockActiveLightEffectService.getAllEffectsForStrip(any())
         } returns listOf()
 
         val mockClientEntity = mockk<LedStripClientEntity>()
+        every { mockClientEntity.uuid } returns "ABC-XYZ"
         val statusInfoOptional = service.getStatusForClient(mockClientEntity)
 
         statusInfoOptional.isPresent shouldBe true
@@ -101,17 +105,18 @@ class ClientStatusServiceTest(
     }
 
     "Active status" {
-        every {
-            mockJobsManager.getJobState(any())
-        } returns StreamingJobState.RenderingEffect
-        every {
-            mockActiveLightEffectRegistry.getAllEffectsForStrip(any())
-        } returns listOf()
-
         val mockClientEntity = mockk<LedStripClientEntity>()
         val mockStrip = mockk<LedStripEntity>()
         val stripUuid = UUID.randomUUID().toString()
         val activeEffect = mockk<ActiveLightEffect>()
+
+        every {
+            mockJobsManager.getJobState(any())
+        } returns PiStreamingJobState(StreamingJobStatus.RenderingEffect)
+        every {
+            mockActiveLightEffectService.getAllEffectsForStrip(any())
+        } returns listOf()
+        every { mockClientEntity.uuid } returns "ABC-XYZ"
 
         every {
             mockStrip.uuid
@@ -120,7 +125,7 @@ class ClientStatusServiceTest(
             mockClientEntity.strips
         } returns setOf(mockStrip)
         every {
-            activeLightEffectRegistry.getAllEffectsForStrip(stripUuid)
+            activeLightEffectService.getAllEffectsForStrip(stripUuid)
         } returns listOf(activeEffect)
         every {
             activeEffect.status
@@ -134,8 +139,8 @@ class ClientStatusServiceTest(
         statusInfo.activeEffects shouldBe 1
     }
 }) {
-    @MockBean(ActiveLightEffectRegistry::class)
-    fun activeLightEffectRegistry(): ActiveLightEffectRegistry {
+    @MockBean(ActiveLightEffectService::class)
+    fun activeLightEffectRegistry(): ActiveLightEffectService {
         return mockk()
     }
 

@@ -88,7 +88,7 @@ class LedClientApiService(
                 )
             )
 
-            streamJobManager.startWebsocketJob(clientEntity)
+            streamJobManager.startStreamingJob(clientEntity)
             clientEntity.uuid!!
         }
     }
@@ -109,7 +109,7 @@ class LedClientApiService(
             if (newEntity != entity) {
                 streamJobManager.stopWebsocketJob(entity)
                 clientRepository.update(newEntity)
-                streamJobManager.startWebsocketJob(newEntity)
+                streamJobManager.startStreamingJob(newEntity)
             }
         } else {
             throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")

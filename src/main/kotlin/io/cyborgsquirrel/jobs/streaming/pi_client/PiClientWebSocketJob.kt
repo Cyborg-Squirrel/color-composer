@@ -7,14 +7,21 @@ import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
-import io.cyborgsquirrel.jobs.streaming.StreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.PiStreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.StreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.jobs.streaming.serialization.PiFrameDataSerializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
-import io.cyborgsquirrel.led_strips.entity.LedStripEntity
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
+import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripPoolModel
+import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
@@ -39,9 +46,9 @@ import java.util.concurrent.TimeUnit
  * as the Color Composer server.
  * 4. Syncs time with the Pi client. This step may be done again if during the rendering process a time de-sync is detected.
  * 5. Effect rendering. The light effect RGB data is streamed to the Pi client's WebSocket. If the buffer is full the
- * job goes to the [StreamingJobState.BufferFullWaiting] state to wait for the Pi to render one or more frames.
+ * job goes to the [StreamingJobStatus.BufferFullWaiting] state to wait for the Pi to render one or more frames.
  */
-class WebSocketJob(
+class PiClientWebSocketJob(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
     private val triggerManager: TriggerManager,
@@ -49,13 +56,14 @@ class WebSocketJob(
     private val timeHelper: TimeHelper,
     private val piConfigClient: PiConfigClient,
     private var clientEntity: LedStripClientEntity,
-) : ClientStreamingJob {
+    private var activeLightEffectService: ActiveLightEffectService,
+) : ClientStreamingJob, ActiveLightEffectChangeListener {
 
     // Pi WebSocket client
-    private var client: LedStripWebSocketClient? = null
+    private var client: PiWebSocketClient? = null
 
     // Client data
-    private lateinit var strip: LedStripEntity
+    private val strips = mutableListOf<LedStripModel>()
 
     // Serialization
     private val serializer = PiFrameDataSerializer()
@@ -77,13 +85,14 @@ class WebSocketJob(
     private val bufferTimeInMilliseconds = 500L
     private var shouldRun = true
     private var settingsSyncRequired = true
-    private var state = StreamingJobState.SetupIncomplete
+    private var status = StreamingJobStatus.SetupIncomplete
 
     /**
      * Starts the job which will run in the background using a Kotlin Coroutine.
      * Returns the Job instance.
      */
     override fun start(scope: CoroutineScope): Job {
+        activeLightEffectService.addListener(this)
         return scope.launch {
             logger.info("Start")
             while (isActive && shouldRun) {
@@ -93,59 +102,62 @@ class WebSocketJob(
         }
     }
 
-    override fun getCurrentState() = state
+    override fun getCurrentState() = PiStreamingJobState(status)
 
     private suspend fun processState() {
         try {
-            when (state) {
-                StreamingJobState.SetupIncomplete -> {
+            when (status) {
+                StreamingJobStatus.SetupIncomplete -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            strip = clientEntity.strips.first()
+                            val newStrips =
+                                activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
+                            strips.clear()
+                            strips.addAll(newStrips)
                             timestampMillis =
                                 timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeSync.clientTimeOffset
-                            state = StreamingJobState.WaitingForConnection
+                            status = StreamingJobStatus.WaitingForConnection
                             setupSocket()
                         } else {
                             delay(5000)
                         }
                     } else {
-                        delay(5000)
+                        dispose()
                     }
                 }
 
-                StreamingJobState.WaitingForConnection -> {
+                StreamingJobStatus.WaitingForConnection -> {
                     delay(50)
                 }
 
-                StreamingJobState.SettingsSync -> doClientSettingsSync()
+                StreamingJobStatus.SettingsSync -> doClientSettingsSync()
 
-                StreamingJobState.ConnectedIdle -> {
+                StreamingJobStatus.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
-                    state = if (settingsSyncRequired) {
-                        StreamingJobState.SettingsSync
+                    status = if (settingsSyncRequired) {
+                        StreamingJobStatus.SettingsSync
                     } else if (clientTimeSync.lastTimeSyncPerformedAt == 0L) {
-                        StreamingJobState.TimeSyncRequired
+                        StreamingJobStatus.TimeSyncRequired
                     } else {
-                        StreamingJobState.RenderingEffect
+                        StreamingJobStatus.RenderingEffect
                     }
                 }
 
-                StreamingJobState.Offline -> {
+                StreamingJobStatus.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
                     settingsSyncRequired = true
-                    state = StreamingJobState.WaitingForConnection
+                    status = StreamingJobStatus.WaitingForConnection
                     setupSocket()
                 }
 
-                StreamingJobState.BufferFullWaiting -> {
+                StreamingJobStatus.BufferFullWaiting -> {
                     delay(sleepMillis)
-                    state = StreamingJobState.RenderingEffect
+                    status = StreamingJobStatus.RenderingEffect
                 }
 
-                StreamingJobState.TimeSyncRequired -> {
+                StreamingJobStatus.TimeSyncRequired -> {
                     // Don't sync more often than every 3 seconds if we end up looping on time sync for some reason
                     if (timeSinceLastSync > 1000 * 3) {
                         clientTimeSync.doTimeSync { piConfigClient.getClientTime(clientEntity).millisSinceEpoch }
@@ -155,12 +167,12 @@ class WebSocketJob(
                     logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
                     // If we disconnect during the time sync don't set the state to rendering
-                    if (state != StreamingJobState.Offline) {
-                        state = StreamingJobState.RenderingEffect
+                    if (status != StreamingJobStatus.Offline) {
+                        status = StreamingJobStatus.RenderingEffect
                     }
                 }
 
-                StreamingJobState.RenderingEffect -> {
+                StreamingJobStatus.RenderingEffect -> {
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     val timeDesynced =
                         timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeSync.clientTimeOffset
@@ -173,10 +185,10 @@ class WebSocketJob(
                                 )
                             })"
                         )
-                        state = StreamingJobState.TimeSyncRequired
+                        status = StreamingJobStatus.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
-                        val frameOptional = renderer.renderFrame(strip.uuid!!, 0)
+                        val frameOptional = renderer.renderFrame((strips.first() as SingleLedStripModel).uuid, 0)
                         if (frameOptional.isEmpty) {
                             // Send a keep-alive frame to clear the strip and prevent the WebSocket from timing out
                             if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
@@ -204,7 +216,7 @@ class WebSocketJob(
                             val options = optionsBuilder.build()
 
                             // Serialize and send frame
-                            val encodedFrame = serializer.encode(frameData, strip.pin!!, options)
+                            val encodedFrame = serializer.encode(frameData, (strips.first() as SingleLedStripModel).pin, options)
 
                             withContext(Dispatchers.IO) {
                                 client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
@@ -215,20 +227,20 @@ class WebSocketJob(
                                 Timestamp.from(Instant.now().plusMillis(bufferTimeInMilliseconds)).time
                             if (nowPlusBufferMillis < timestampMillis) {
                                 sleepMillis = timestampMillis - nowPlusBufferMillis
-                                state = StreamingJobState.BufferFullWaiting
+                                status = StreamingJobStatus.BufferFullWaiting
                             } else if (frame.allEffectsPaused) {
                                 // Wait for the duration of one frame to reduce time spent rendering/sending frames
                                 // if all effects are paused.
                                 sleepMillis = (1000 / fps).toLong()
                                 timestampMillis += sleepMillis
-                                state = StreamingJobState.BufferFullWaiting
+                                status = StreamingJobStatus.BufferFullWaiting
                             }
                         }
                     }
                 }
             }
         } catch (ex: Exception) {
-            logger.error("Error $ex while processing state $state")
+            logger.error("Error $ex while processing state $status")
             ex.printStackTrace()
             delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
             if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
@@ -240,11 +252,12 @@ class WebSocketJob(
         settingsSyncRequired = false
         val clientStripConfigs = piConfigClient.getStripConfigs(clientEntity)
         val clientSettings = piConfigClient.getClientSettings(clientEntity)
+        val strip = (strips.first() as SingleLedStripModel)
         val serverConfig = PiClientStripConfig(
-            strip.uuid!!,
-            strip.pin!!,
-            strip.length!!,
-            strip.brightness!!,
+            strip.uuid,
+            strip.pin,
+            strip.length,
+            strip.brightness,
             clientEntity.colorOrder!!
         )
 
@@ -271,7 +284,7 @@ class WebSocketJob(
             )
         }
 
-        state = StreamingJobState.ConnectedIdle
+        status = StreamingJobStatus.ConnectedIdle
     }
 
     private fun updateLastSeenAt(currentTimeAsMillis: Long) {
@@ -290,7 +303,7 @@ class WebSocketJob(
 
     private suspend fun sendClearFrame() {
         val rgbData = mutableListOf<RgbColor>()
-        for (i in 0..<strip.length!!) {
+        for (i in 0..<(strips.first() as SingleLedStripModel).length) {
             rgbData.add(RgbColor.Blank)
         }
 
@@ -298,7 +311,7 @@ class WebSocketJob(
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
-        val frame = serializer.encode(frameData, strip.pin!!, options)
+        val frame = serializer.encode(frameData, (strips.first() as SingleLedStripModel).pin, options)
 
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
@@ -314,25 +327,25 @@ class WebSocketJob(
             "ws://${clientEntity.address!!}"
         }
         val uri = UriBuilder.of(websocketAddress).port(clientEntity.wsPort!!).build()
-        val future = CompletableFuture<LedStripWebSocketClient>()
-        val clientPublisher = webSocketClient.connect(LedStripWebSocketClient::class.java, uri)
-        clientPublisher.subscribe(object : Subscriber<LedStripWebSocketClient> {
+        val future = CompletableFuture<PiWebSocketClient>()
+        val clientPublisher = webSocketClient.connect(PiWebSocketClient::class.java, uri)
+        clientPublisher.subscribe(object : Subscriber<PiWebSocketClient> {
             override fun onSubscribe(s: Subscription?) {
                 s?.request(1)
             }
 
             override fun onError(t: Throwable?) {
-                state = StreamingJobState.Offline
+                status = StreamingJobStatus.Offline
                 future.completeExceptionally(t)
             }
 
             override fun onComplete() {}
 
-            override fun onNext(client: LedStripWebSocketClient?) {
-                state = StreamingJobState.ConnectedIdle
+            override fun onNext(client: PiWebSocketClient?) {
+                status = StreamingJobStatus.ConnectedIdle
                 client?.registerOnDisconnectedCallback({
-                    if (state != StreamingJobState.SetupIncomplete) {
-                        state = StreamingJobState.Offline
+                    if (status != StreamingJobStatus.SetupIncomplete) {
+                        status = StreamingJobStatus.Offline
                     }
                 })
                 future.complete(client)
@@ -344,19 +357,36 @@ class WebSocketJob(
         }
     }
 
+    override fun onUpdate(newEffects: List<ActiveLightEffect>) {
+        val matchingStrips = newEffects.filter {
+            val strip = it.strip
+            val clientUuid = clientEntity.uuid!!
+            when (strip) {
+                is SingleLedStripModel -> {
+                    strip.clientUuid == clientUuid
+                }
+
+                is LedStripPoolModel -> {
+                    strip.clientUuids().contains(clientUuid)
+                }
+            }
+        }.map { it.strip }
+
+        if (strips != matchingStrips) {
+            strips.clear()
+            strips.addAll(matchingStrips)
+            status = StreamingJobStatus.SettingsSync
+        }
+    }
+
     override fun dispose() {
+        activeLightEffectService.removeLister(this)
         shouldRun = false
         client?.unregisterOnDisconnectedCallback()
         client?.close()
     }
 
-    override fun onDataUpdate() {
-        settingsSyncRequired = true
-        client?.close()
-        state = StreamingJobState.SetupIncomplete
-    }
-
     companion object {
-        private val logger = LoggerFactory.getLogger(WebSocketJob::class.java)
+        private val logger = LoggerFactory.getLogger(PiClientWebSocketJob::class.java)
     }
 }

@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.rendering
 
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.isActive
@@ -13,7 +13,7 @@ import java.util.*
 
 @Singleton
 class LightEffectRendererImpl(
-    private val effectRepository: ActiveLightEffectRegistry,
+    private val effectRepository: ActiveLightEffectService,
 ) : LightEffectRenderer {
 
     // LED strip pools get rendered if the provided LED strip uuid

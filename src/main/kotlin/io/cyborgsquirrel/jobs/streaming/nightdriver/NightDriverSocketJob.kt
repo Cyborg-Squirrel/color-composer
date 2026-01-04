@@ -3,13 +3,20 @@ package io.cyborgsquirrel.jobs.streaming.nightdriver
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
-import io.cyborgsquirrel.jobs.streaming.StreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.NightDriverStreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.StreamingJobState
+import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverFrameDataSerializer
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverSocketResponseDeserializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.model.SingleLedStripModel
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.RgbFrameData
+import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlinx.coroutines.*
@@ -34,13 +41,14 @@ class NightDriverSocketJob(
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private var clientEntity: LedStripClientEntity,
-) : ClientStreamingJob {
+    private var activeLightEffectService: ActiveLightEffectService,
+) : ClientStreamingJob, ActiveLightEffectChangeListener {
 
     // NightDriver TCP connection
     private var socket: Socket? = null
 
     // Client data
-    private var strips = mutableListOf<SingleLedStripModel>()
+    private val strips = mutableListOf<LedStripModel>()
 
     // Serialization
     private val serializer = NightDriverFrameDataSerializer()
@@ -64,19 +72,18 @@ class NightDriverSocketJob(
     private val millisPerFrame: Long
         get() = 1000L / fps
     private var shouldRun = true
-    private var state = StreamingJobState.SetupIncomplete
+    private var status = StreamingJobStatus.SetupIncomplete
     private var lastResponse: NightDriverSocketResponse? = null
     private var lastResponseReceivedAt = 0L
 
     fun getLatestResponse() = lastResponse
-
-    override fun getCurrentState() = state
 
     /**
      * Starts the job which will run in the background using a Kotlin Coroutine.
      * Returns the Job instance.
      */
     override fun start(scope: CoroutineScope): Job {
+        activeLightEffectService.addListener(this)
         return scope.launch {
             logger.info("Start")
             while (isActive && shouldRun) {
@@ -86,77 +93,70 @@ class NightDriverSocketJob(
         }
     }
 
+    override fun getCurrentState() = NightDriverStreamingJobState(status, lastResponse)
+
     private suspend fun processState() {
         try {
-            when (state) {
-                StreamingJobState.SetupIncomplete -> {
+            when (status) {
+                StreamingJobStatus.SetupIncomplete -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            val newStrips = clientEntity.strips.map {
-                                SingleLedStripModel(
-                                    it.name!!,
-                                    it.uuid!!,
-                                    it.pin!!,
-                                    it.length!!,
-                                    it.height,
-                                    it.blendMode!!,
-                                    it.brightness!!,
-                                )
-                            }
+                            val newStrips =
+                                activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
                             strips.clear()
                             strips.addAll(newStrips)
-                            state = StreamingJobState.Offline
+                            status = StreamingJobStatus.Offline
                         } else {
                             delay(5000)
                         }
                     } else {
-                        delay(5000)
+                        dispose()
                     }
                 }
 
-                StreamingJobState.ConnectedIdle -> {
+                StreamingJobStatus.ConnectedIdle -> {
                     // Clear lastResponse when a connection is made in case this is a re-connection to avoid using stale data
                     lastResponse = null
                     // Socket connection = response from Night Driver
                     lastResponseReceivedAt = timeHelper.millisSinceEpoch()
-                    state = StreamingJobState.RenderingEffect
+                    status = StreamingJobStatus.RenderingEffect
                 }
 
-                StreamingJobState.Offline -> {
+                StreamingJobStatus.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
                     setupSocket()
                 }
 
-                StreamingJobState.SettingsSync -> {
+                StreamingJobStatus.SettingsSync -> {
                     // Not supported by Night Driver - we should never end up in this state
-                    throw Exception("Unexpected state! $state")
+                    throw Exception("Unexpected state! $status")
                 }
 
-                StreamingJobState.BufferFullWaiting -> {
+                StreamingJobStatus.BufferFullWaiting -> {
                     delay(sleepMillis)
-                    state = StreamingJobState.RenderingEffect
+                    status = StreamingJobStatus.RenderingEffect
                 }
 
-                StreamingJobState.WaitingForConnection -> {
+                StreamingJobStatus.WaitingForConnection -> {
                     // Not supported by NightDriver - we should never end up in this state
-                    throw Exception("Unexpected state! $state")
+                    throw Exception("Unexpected state! $status")
                 }
 
-                StreamingJobState.TimeSyncRequired -> {
+                StreamingJobStatus.TimeSyncRequired -> {
                     // Not supported by NightDriver - we should never end up in this state
-                    throw Exception("Unexpected state! $state")
+                    throw Exception("Unexpected state! $status")
                 }
 
-                StreamingJobState.RenderingEffect -> {
+                StreamingJobStatus.RenderingEffect -> {
                     triggerManager.processTriggers()
                     val frameList = renderer.renderFrames(strips.map { it.uuid }, 0)
 
                     if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
                         sleepMillis = millisPerFrame * 2
-                        state = StreamingJobState.BufferFullWaiting
+                        status = StreamingJobStatus.BufferFullWaiting
                     } else {
                         val now = timeHelper.millisSinceEpoch()
                         timestampMillis = now + clientTimeOffset + millisPerFrame
@@ -170,7 +170,7 @@ class NightDriverSocketJob(
                             val frameData = RgbFrameData(timestampMillis, rgbData)
 
                             // Serialize and send frame - options are not supported for NightDriver
-                            val encodedFrame = serializer.encode(frameData, strip.pin.toInt())
+                            val encodedFrame = serializer.encode(frameData, (strip as SingleLedStripModel).pin.toInt())
                             encodedFrames.add(encodedFrame)
                         }
 
@@ -210,17 +210,17 @@ class NightDriverSocketJob(
                             if (millisOfFramesBuffered > bufferTimeMillis || clientBufferFull) {
                                 logger.debug("Client buffer full, waiting.")
                                 sleepMillis = millisPerFrame
-                                state = StreamingJobState.BufferFullWaiting
+                                status = StreamingJobStatus.BufferFullWaiting
                             } else if (lastResponse!!.frameDrawing > fps) {
                                 sleepMillis = millisPerFrame / 2
-                                state = StreamingJobState.BufferFullWaiting
+                                status = StreamingJobStatus.BufferFullWaiting
                             }
                         }
                     }
                 }
             }
         } catch (ex: Exception) {
-            logger.error("Error $ex while processing state $state")
+            logger.error("Error $ex while processing state $status")
             ex.printStackTrace()
             delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
             if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
@@ -284,26 +284,43 @@ class NightDriverSocketJob(
 
         if (socket?.isConnected == true) {
             logger.info("Connected to $clientEntity")
-            state = StreamingJobState.ConnectedIdle
+            status = StreamingJobStatus.ConnectedIdle
         } else {
             resetStateOnError()
         }
     }
 
     private fun resetStateOnError() {
-        if (state != StreamingJobState.SetupIncomplete) {
-            state = StreamingJobState.Offline
+        if (status != StreamingJobStatus.SetupIncomplete) {
+            status = StreamingJobStatus.Offline
         }
     }
 
     override fun dispose() {
+        activeLightEffectService.removeLister(this)
         shouldRun = false
         socket?.close()
     }
 
-    override fun onDataUpdate() {
-        socket?.close()
-        state = StreamingJobState.SetupIncomplete
+    override fun onUpdate(newEffects: List<ActiveLightEffect>) {
+        val matchingStrips = newEffects.filter {
+            val strip = it.strip
+            val clientUuid = clientEntity.uuid!!
+            when (strip) {
+                is SingleLedStripModel -> {
+                    strip.clientUuid == clientUuid
+                }
+
+                is LedStripPoolModel -> {
+                    strip.clientUuids().contains(clientUuid)
+                }
+            }
+        }.map { it.strip }
+
+        if (strips != matchingStrips) {
+            strips.clear()
+            strips.addAll(matchingStrips)
+        }
     }
 
     companion object {

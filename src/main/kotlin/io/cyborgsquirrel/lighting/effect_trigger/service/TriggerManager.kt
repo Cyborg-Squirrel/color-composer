@@ -30,7 +30,7 @@ interface TriggerManager {
      * Processes any registered triggers.
      *
      * This will update the associated light effect in the
-     * [io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry] depending on the trigger's output
+     * [io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService] depending on the trigger's output
      */
     fun processTriggers()
 }
