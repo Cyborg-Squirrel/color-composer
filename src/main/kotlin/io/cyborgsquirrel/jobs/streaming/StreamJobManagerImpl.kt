@@ -68,6 +68,9 @@ class StreamJobManagerImpl(
             }
 
             val job = wsJob.start(scope)
+            job.invokeOnCompletion {
+                jobMap.remove(client.uuid)
+            }
             jobMap[client.uuid!!] = Pair(wsJob, job)
         } catch (ex: Exception) {
             ex.printStackTrace()

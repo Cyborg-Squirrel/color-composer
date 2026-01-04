@@ -14,8 +14,11 @@ import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.jobs.streaming.serialization.PiFrameDataSerializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
 import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
@@ -52,7 +55,7 @@ class WebSocketJob(
     private val piConfigClient: PiConfigClient,
     private var clientEntity: LedStripClientEntity,
     private var activeLightEffectService: ActiveLightEffectService,
-) : ClientStreamingJob {
+) : ClientStreamingJob, ActiveLightEffectChangeListener {
 
     // Pi WebSocket client
     private var client: LedStripWebSocketClient? = null
@@ -82,23 +85,14 @@ class WebSocketJob(
     private var settingsSyncRequired = true
     private var state = StreamingJobState.SetupIncomplete
 
-    private fun onDataUpdate(strips: List<LedStripModel>) {
-        // TODO check if strip changed, or was removed from the list
-        settingsSyncRequired = true
-        client?.close()
-        state = StreamingJobState.SetupIncomplete
-    }
-
     /**
      * Starts the job which will run in the background using a Kotlin Coroutine.
      * Returns the Job instance.
      */
     override fun start(scope: CoroutineScope): Job {
+        activeLightEffectService.addListener(this)
         return scope.launch {
             logger.info("Start")
-            activeLightEffectService.addListener {
-                onDataUpdate(it.map { it.strip })
-            }
             while (isActive && shouldRun) {
                 processState()
             }
@@ -128,7 +122,7 @@ class WebSocketJob(
                             delay(5000)
                         }
                     } else {
-                        delay(5000)
+                        dispose()
                     }
                 }
 
@@ -361,7 +355,30 @@ class WebSocketJob(
         }
     }
 
+    override fun onUpdate(newEffects: List<ActiveLightEffect>) {
+        val matchingStrips = newEffects.filter {
+            val strip = it.strip
+            val clientUuid = clientEntity.uuid!!
+            when (strip) {
+                is SingleLedStripModel -> {
+                    strip.clientUuid == clientUuid
+                }
+
+                is LedStripPoolModel -> {
+                    strip.clientUuids().contains(clientUuid)
+                }
+            }
+        }.map { it.strip }
+
+        if (strips != matchingStrips) {
+            strips.clear()
+            strips.addAll(matchingStrips)
+            state = StreamingJobState.SettingsSync
+        }
+    }
+
     override fun dispose() {
+        activeLightEffectService.removeLister(this)
         shouldRun = false
         client?.unregisterOnDisconnectedCallback()
         client?.close()

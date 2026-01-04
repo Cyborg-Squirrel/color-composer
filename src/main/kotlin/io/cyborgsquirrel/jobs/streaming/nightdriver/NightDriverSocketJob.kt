@@ -8,8 +8,11 @@ import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverFrameDataSerial
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverSocketResponseDeserializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
@@ -37,7 +40,7 @@ class NightDriverSocketJob(
     private val timeHelper: TimeHelper,
     private var clientEntity: LedStripClientEntity,
     private var activeLightEffectService: ActiveLightEffectService,
-) : ClientStreamingJob {
+) : ClientStreamingJob, ActiveLightEffectChangeListener {
 
     // NightDriver TCP connection
     private var socket: Socket? = null
@@ -106,7 +109,7 @@ class NightDriverSocketJob(
                             delay(5000)
                         }
                     } else {
-                        delay(5000)
+                        dispose()
                     }
                 }
 
@@ -291,8 +294,30 @@ class NightDriverSocketJob(
     }
 
     override fun dispose() {
+        activeLightEffectService.removeLister(this)
         shouldRun = false
         socket?.close()
+    }
+
+    override fun onUpdate(newEffects: List<ActiveLightEffect>) {
+        val matchingStrips = newEffects.filter {
+            val strip = it.strip
+            val clientUuid = clientEntity.uuid!!
+            when (strip) {
+                is SingleLedStripModel -> {
+                    strip.clientUuid == clientUuid
+                }
+
+                is LedStripPoolModel -> {
+                    strip.clientUuids().contains(clientUuid)
+                }
+            }
+        }.map { it.strip }
+
+        if (strips != matchingStrips) {
+            strips.clear()
+            strips.addAll(matchingStrips)
+        }
     }
 
     companion object {

@@ -17,9 +17,9 @@ interface ActiveLightEffectService {
 
     fun getAllEffects(): List<ActiveLightEffect>
 
-    fun addListener(listener: ActiveEffectListUpdateCallback)
+    fun addListener(listener: ActiveLightEffectChangeListener)
 
-    fun removeLister(listener: ActiveEffectListUpdateCallback)
+    fun removeLister(listener: ActiveLightEffectChangeListener)
 
     fun removeAllEffects()
 }

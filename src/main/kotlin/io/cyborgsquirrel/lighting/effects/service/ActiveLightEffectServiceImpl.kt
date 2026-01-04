@@ -8,14 +8,12 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Semaphore
 
-typealias ActiveEffectListUpdateCallback = (List<ActiveLightEffect>) -> Unit
-
 /**
  * A service for memory storage of [ActiveLightEffect]s.
  */
 @Singleton
 class ActiveLightEffectServiceImpl : ActiveLightEffectService {
-    private val listeners = mutableListOf<ActiveEffectListUpdateCallback>()
+    private val listeners = mutableListOf<ActiveLightEffectChangeListener>()
     private var effectList = mutableListOf<ActiveLightEffect>()
     private val lock = Semaphore(1)
 
@@ -102,11 +100,11 @@ class ActiveLightEffectServiceImpl : ActiveLightEffectService {
         return effects
     }
 
-    override fun addListener(listener: ActiveEffectListUpdateCallback) {
+    override fun addListener(listener: ActiveLightEffectChangeListener) {
         listeners.add(listener)
     }
 
-    override fun removeLister(listener: ActiveEffectListUpdateCallback) {
+    override fun removeLister(listener: ActiveLightEffectChangeListener) {
         listeners.remove(listener)
     }
 
@@ -121,7 +119,7 @@ class ActiveLightEffectServiceImpl : ActiveLightEffectService {
     }
 
     private fun onUpdate(updatedEffectList: List<ActiveLightEffect>) {
-        listeners.forEach { it(updatedEffectList) }
+        listeners.forEach { it.onUpdate(updatedEffectList) }
     }
 
     companion object {
