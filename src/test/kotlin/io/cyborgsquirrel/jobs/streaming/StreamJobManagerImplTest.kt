@@ -11,7 +11,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.DisposableHandle
 import kotlinx.coroutines.Job
 
@@ -111,5 +113,41 @@ class StreamJobManagerImplTest : StringSpec({
         val jobState2 = manager.getJobState(mockClientEntityB.uuid!!)
         jobState1 shouldBe expectedJobStateA
         jobState2 shouldBe expectedJobStateB
+    }
+
+    "handle job completion" {
+        val mockClientEntity = mockk<LedStripClientEntity>()
+        val mockStreamingJob = mockk<ClientStreamingJob>()
+        val mockStreamingJobFactory = mockk<StreamingJobFactory>()
+        val mockJob = mockk<Job>()
+        val mockDisposable = mockk<DisposableHandle>()
+        val expectedJobState = PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
+        val callbackSlot = slot<CompletionHandler>()
+
+        every { mockClientEntity.uuid } returns "test-uuid"
+        every { mockClientEntity.clientType } returns ClientType.Pi
+        every { mockStreamingJobFactory.createJob(any()) } returns mockStreamingJob
+        every { mockJob.invokeOnCompletion(capture(callbackSlot)) } returns mockDisposable
+        every { mockStreamingJob.start(any()) } returns mockJob
+        every { mockStreamingJob.getCurrentState() } returns expectedJobState
+        every { mockStreamingJob.dispose() } answers { }
+
+        val manager = StreamJobManagerImpl(mockStreamingJobFactory)
+        manager.startStreamingJob(mockClientEntity)
+
+        verify { mockStreamingJobFactory.createJob(mockClientEntity) }
+        verify { mockStreamingJob.start(any()) }
+
+        var jobState = manager.getJobState(mockClientEntity.uuid!!)
+        jobState shouldBe expectedJobState
+
+        // Job callback indicating it completed
+        // This can happen if the client is deleted from the database
+        val callback = callbackSlot.captured
+        callback.invoke(null)
+
+        jobState = manager.getJobState(mockClientEntity.uuid!!)
+        jobState shouldBe null
+
     }
 })
