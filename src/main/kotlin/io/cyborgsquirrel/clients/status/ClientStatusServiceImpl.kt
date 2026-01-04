@@ -4,14 +4,14 @@ import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.jobs.streaming.StreamingJobState
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.isActive
 import jakarta.inject.Singleton
 import java.util.*
 
 @Singleton
 class ClientStatusServiceImpl(
-    private val activeLightEffectRegistry: ActiveLightEffectRegistry,
+    private val activeLightEffectService: ActiveLightEffectService,
     private val jobsManager: StreamJobManager
 ) : ClientStatusService {
 
@@ -27,7 +27,7 @@ class ClientStatusServiceImpl(
                     val strips = clientEntity.strips
                     var activeEffects = 0
                     for (strip in strips) {
-                        val effectsForStrip = activeLightEffectRegistry.getAllEffectsForStrip(strip.uuid!!)
+                        val effectsForStrip = activeLightEffectService.getAllEffectsForStrip(strip.uuid!!)
                             .filter { it.status.isActive() }
                         activeEffects += effectsForStrip.size
                     }

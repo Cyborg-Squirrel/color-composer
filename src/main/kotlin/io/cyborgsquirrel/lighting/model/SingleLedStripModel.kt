@@ -8,9 +8,9 @@ import io.cyborgsquirrel.lighting.enums.BlendMode
  * [uuid] - the strip's unique id
  * [pin] - the data pin on the client the strip is connected to
  * [length] - how many pixels are in the strip
- * [reversed] - flag indicating whether RGB values should be reversed
  * [blendMode] - the mode for handling multiple effects running on the same strip if they overlap
  * [brightness] - the brightness 0-100
+ * [clientUuid] - the uuid of the client this strip is connected to
  */
 data class SingleLedStripModel(
     override val name: String,
@@ -19,7 +19,10 @@ data class SingleLedStripModel(
     val length: Int,
     val height: Int,
     override val blendMode: BlendMode,
-    val brightness: Int
+    val brightness: Int,
+    val clientUuid: String,
 ) : LedStripModel(uuid, name, blendMode) {
+
     override fun length() = length
+
 }

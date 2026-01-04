@@ -14,7 +14,12 @@ import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.jobs.streaming.serialization.PiFrameDataSerializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
-import io.cyborgsquirrel.led_strips.entity.LedStripEntity
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
+import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripPoolModel
+import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
@@ -49,13 +54,14 @@ class WebSocketJob(
     private val timeHelper: TimeHelper,
     private val piConfigClient: PiConfigClient,
     private var clientEntity: LedStripClientEntity,
-) : ClientStreamingJob {
+    private var activeLightEffectService: ActiveLightEffectService,
+) : ClientStreamingJob, ActiveLightEffectChangeListener {
 
     // Pi WebSocket client
     private var client: LedStripWebSocketClient? = null
 
     // Client data
-    private lateinit var strip: LedStripEntity
+    private val strips = mutableListOf<LedStripModel>()
 
     // Serialization
     private val serializer = PiFrameDataSerializer()
@@ -84,6 +90,7 @@ class WebSocketJob(
      * Returns the Job instance.
      */
     override fun start(scope: CoroutineScope): Job {
+        activeLightEffectService.addListener(this)
         return scope.launch {
             logger.info("Start")
             while (isActive && shouldRun) {
@@ -103,7 +110,10 @@ class WebSocketJob(
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            strip = clientEntity.strips.first()
+                            val newStrips =
+                                activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
+                            strips.clear()
+                            strips.addAll(newStrips)
                             timestampMillis =
                                 timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeSync.clientTimeOffset
                             state = StreamingJobState.WaitingForConnection
@@ -112,7 +122,7 @@ class WebSocketJob(
                             delay(5000)
                         }
                     } else {
-                        delay(5000)
+                        dispose()
                     }
                 }
 
@@ -176,7 +186,7 @@ class WebSocketJob(
                         state = StreamingJobState.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
-                        val frameOptional = renderer.renderFrame(strip.uuid!!, 0)
+                        val frameOptional = renderer.renderFrame((strips.first() as SingleLedStripModel).uuid, 0)
                         if (frameOptional.isEmpty) {
                             // Send a keep-alive frame to clear the strip and prevent the WebSocket from timing out
                             if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
@@ -204,7 +214,7 @@ class WebSocketJob(
                             val options = optionsBuilder.build()
 
                             // Serialize and send frame
-                            val encodedFrame = serializer.encode(frameData, strip.pin!!, options)
+                            val encodedFrame = serializer.encode(frameData, (strips.first() as SingleLedStripModel).pin, options)
 
                             withContext(Dispatchers.IO) {
                                 client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
@@ -240,11 +250,12 @@ class WebSocketJob(
         settingsSyncRequired = false
         val clientStripConfigs = piConfigClient.getStripConfigs(clientEntity)
         val clientSettings = piConfigClient.getClientSettings(clientEntity)
+        val strip = (strips.first() as SingleLedStripModel)
         val serverConfig = PiClientStripConfig(
-            strip.uuid!!,
-            strip.pin!!,
-            strip.length!!,
-            strip.brightness!!,
+            strip.uuid,
+            strip.pin,
+            strip.length,
+            strip.brightness,
             clientEntity.colorOrder!!
         )
 
@@ -290,7 +301,7 @@ class WebSocketJob(
 
     private suspend fun sendClearFrame() {
         val rgbData = mutableListOf<RgbColor>()
-        for (i in 0..<strip.length!!) {
+        for (i in 0..<(strips.first() as SingleLedStripModel).length) {
             rgbData.add(RgbColor.Blank)
         }
 
@@ -298,7 +309,7 @@ class WebSocketJob(
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
-        val frame = serializer.encode(frameData, strip.pin!!, options)
+        val frame = serializer.encode(frameData, (strips.first() as SingleLedStripModel).pin, options)
 
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
@@ -344,16 +355,33 @@ class WebSocketJob(
         }
     }
 
+    override fun onUpdate(newEffects: List<ActiveLightEffect>) {
+        val matchingStrips = newEffects.filter {
+            val strip = it.strip
+            val clientUuid = clientEntity.uuid!!
+            when (strip) {
+                is SingleLedStripModel -> {
+                    strip.clientUuid == clientUuid
+                }
+
+                is LedStripPoolModel -> {
+                    strip.clientUuids().contains(clientUuid)
+                }
+            }
+        }.map { it.strip }
+
+        if (strips != matchingStrips) {
+            strips.clear()
+            strips.addAll(matchingStrips)
+            state = StreamingJobState.SettingsSync
+        }
+    }
+
     override fun dispose() {
+        activeLightEffectService.removeLister(this)
         shouldRun = false
         client?.unregisterOnDisconnectedCallback()
         client?.close()
-    }
-
-    override fun onDataUpdate() {
-        settingsSyncRequired = true
-        client?.close()
-        state = StreamingJobState.SetupIncomplete
     }
 
     companion object {

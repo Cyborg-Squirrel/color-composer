@@ -22,6 +22,7 @@ import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetPoolEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
+import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
@@ -362,7 +363,8 @@ class EffectControllerTest(
             LedStripPoolEntity(
                 uuid = UUID.randomUUID().toString(),
                 name = "Living Room Pool",
-                poolType = PoolType.Unified
+                poolType = PoolType.Unified,
+                blendMode = BlendMode.Average
             )
         )
         poolMemberRepository.save(
@@ -488,7 +490,8 @@ class EffectControllerTest(
             LedStripPoolEntity(
                 uuid = UUID.randomUUID().toString(),
                 name = "Backyard Pool",
-                poolType = PoolType.Unified
+                poolType = PoolType.Unified,
+                blendMode = BlendMode.Average
             )
         )
         poolMemberRepository.save(
@@ -562,7 +565,8 @@ class EffectControllerTest(
             LedStripPoolEntity(
                 uuid = UUID.randomUUID().toString(),
                 name = "Garage Pool",
-                poolType = PoolType.Unified
+                poolType = PoolType.Unified,
+                blendMode = BlendMode.Average
             )
         )
         poolMemberRepository.save(
@@ -620,7 +624,8 @@ class EffectControllerTest(
             LedStripPoolEntity(
                 uuid = UUID.randomUUID().toString(),
                 name = "Deck Pool",
-                poolType = PoolType.Unified
+                poolType = PoolType.Unified,
+                blendMode = BlendMode.Additive
             )
         )
         poolMemberRepository.save(
@@ -697,7 +702,8 @@ class EffectControllerTest(
             LedStripPoolEntity(
                 uuid = UUID.randomUUID().toString(),
                 name = "Patio Pool",
-                poolType = PoolType.Unified
+                poolType = PoolType.Unified,
+                blendMode = BlendMode.Average
             )
         )
         poolMemberRepository.save(

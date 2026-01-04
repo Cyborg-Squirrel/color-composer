@@ -9,5 +9,5 @@ data class CreateEffectRequest(
     val effectType: String,
     val name: String,
     val settings: Map<String, Any>,
-    val paletteUuid: String?
+    val paletteUuid: String?,
 )

@@ -2,7 +2,7 @@ package io.cyborgsquirrel.jobs.init
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
@@ -16,13 +16,13 @@ import java.util.concurrent.Semaphore
  * Server startup job to initialize from the last saved state.
  *
  * This job reads configured effects, filters, palettes, triggers, and clients from the database. Then registers each
- * with the corresponding service (e.g. [TriggerManager], [ActiveLightEffectRegistry], [StreamJobManager]).
+ * with the corresponding service (e.g. [TriggerManager], [ActiveLightEffectService], [StreamJobManager]).
  */
 @Singleton
 class LightEffectInitJob(
     private val clientRepository: H2LedStripClientRepository,
     private val lightEffectRepository: H2LightEffectRepository,
-    private val activeLightEffectRegistry: ActiveLightEffectRegistry,
+    private val activeLightEffectService: ActiveLightEffectService,
     private val triggerManager: TriggerManager,
     private val createLightingService: CreateLightingService,
     private val streamJobManager: StreamJobManager,
@@ -64,8 +64,7 @@ class LightEffectInitJob(
                         filters = filters,
                     )
 
-
-                    activeLightEffectRegistry.addOrUpdateEffect(activeEffect)
+                    activeLightEffectService.addOrUpdateEffect(activeEffect)
 
                     val triggers = createLightingService.effectTriggerFromEntity(effectEntity)
                     if (triggers.isNotEmpty()) {

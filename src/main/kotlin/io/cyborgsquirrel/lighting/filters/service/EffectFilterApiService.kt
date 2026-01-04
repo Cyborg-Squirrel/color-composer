@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.filters.service
 
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
@@ -20,7 +20,7 @@ class EffectFilterApiService(
     private val effectRepository: H2LightEffectRepository,
     private val filterRepository: H2LightEffectFilterRepository,
     private val junctionRepository: H2LightEffectFilterJunctionRepository,
-    private val effectRegistry: ActiveLightEffectRegistry,
+    private val effectRegistry: ActiveLightEffectService,
     private val effectLightingHelper: CreateLightingService,
 ) {
 

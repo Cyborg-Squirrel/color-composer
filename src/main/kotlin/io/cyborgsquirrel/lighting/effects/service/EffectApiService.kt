@@ -6,7 +6,6 @@ import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPalette
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.LightEffectStatusCommand
@@ -31,7 +30,7 @@ class EffectApiService(
     private val triggerRepository: H2LightEffectTriggerRepository,
     private val filterRepository: H2LightEffectFilterRepository,
     private val paletteRepository: H2LightEffectPaletteRepository,
-    private val effectRegistry: ActiveLightEffectRegistry,
+    private val effectRegistry: ActiveLightEffectService,
     private val createLightingService: CreateLightingService,
 ) {
 

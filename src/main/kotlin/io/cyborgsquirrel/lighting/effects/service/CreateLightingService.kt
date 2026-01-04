@@ -1,5 +1,9 @@
 package io.cyborgsquirrel.lighting.effects.service
 
+import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.palette.*
@@ -14,7 +18,6 @@ import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeOfDayTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.*
 import io.cyborgsquirrel.lighting.filters.*
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
@@ -38,7 +41,8 @@ class CreateLightingService(
     private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
     private val locationConfigRepository: H2LocationConfigRepository,
     private val junctionRepository: H2LightEffectFilterJunctionRepository,
-    private val activeLightEffectRegistry: ActiveLightEffectRegistry,
+    private val stripRepository: H2LedStripRepository,
+    private val activeLightEffectService: ActiveLightEffectService,
     private val timeHelper: TimeHelper,
     private val timeOfDayService: TimeOfDayService,
     private val objectMapper: ObjectMapper
@@ -49,6 +53,8 @@ class CreateLightingService(
         val poolEntity = effectEntity.pool
 
         if (stripEntity != null) {
+            // Query to do JOIN of strip and client tables
+            val joinedStripEntity = stripRepository.findByUuid(stripEntity.uuid!!).get()
             return SingleLedStripModel(
                 stripEntity.name!!,
                 stripEntity.uuid!!,
@@ -57,10 +63,15 @@ class CreateLightingService(
                 stripEntity.height,
                 stripEntity.blendMode!!,
                 stripEntity.brightness!!,
+                joinedStripEntity.client!!.uuid!!
             )
         } else if (poolEntity != null) {
             // Query to do JOIN (effect entity JOIN doesn't capture led strips if it points to a pool)
             val stripMemberEntities = poolMemberLedStripRepository.findByPool(poolEntity)
+            val memberStripEntities = stripMemberEntities.map { stripRepository.findByUuid(it.strip!!.uuid!!).get() }
+            stripMemberEntities.forEach { sm ->
+                sm.strip = memberStripEntities.first { it.id == sm.strip?.id }
+            }
             val stripEntities = stripMemberEntities.mapNotNull { it.strip }
             val stripModels = stripEntities.map {
                 SingleLedStripModel(
@@ -70,11 +81,12 @@ class CreateLightingService(
                     it.length!!,
                     it.height,
                     it.blendMode!!,
-                    it.brightness!!
+                    it.brightness!!,
+                    it.client!!.uuid!!
                 )
             }
             return LedStripPoolModel(
-                poolEntity.name!!, poolEntity.uuid!!, poolEntity.poolType!!, stripModels, stripModels.first().blendMode
+                poolEntity.name!!, poolEntity.uuid!!, poolEntity.blendMode!!, poolEntity.poolType!!, stripModels
             )
         }
 
@@ -216,7 +228,7 @@ class CreateLightingService(
                     LightEffectTriggerConstants.ITERATION_TRIGGER_NAME -> {
                         EffectIterationTrigger(
                             timeHelper = timeHelper,
-                            effectRegistry = activeLightEffectRegistry,
+                            effectRegistry = activeLightEffectService,
                             settings = objectMapper.readValueFromTree(
                                 JsonNode.from(trigger.settings), EffectIterationTriggerSettings::class.java
                             ),

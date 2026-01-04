@@ -7,7 +7,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.triggers.LightEffectTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeOfDayTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeTrigger
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.util.time.TimeHelper
 import jakarta.inject.Singleton
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
  */
 @Singleton
 class TriggerManagerImpl(
-    private val effectRepository: ActiveLightEffectRegistry,
+    private val effectRepository: ActiveLightEffectService,
     private val timeHelper: TimeHelper
 ) : TriggerManager {
 

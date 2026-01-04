@@ -13,7 +13,7 @@ import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.led_strips.responses.GetLedStripResponse
 import io.cyborgsquirrel.led_strips.responses.GetLedStripsResponse
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.registry.ActiveLightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
@@ -24,7 +24,7 @@ import kotlin.jvm.optionals.getOrNull
 
 @Singleton
 class LedStripApiService(
-    private val activeLightEffectRegistry: ActiveLightEffectRegistry,
+    private val activeLightEffectService: ActiveLightEffectService,
     private val stripRepository: H2LedStripRepository,
     private val clientRepository: H2LedStripClientRepository,
     private val streamJobManager: StreamJobManager,
@@ -37,7 +37,7 @@ class LedStripApiService(
     fun getStrip(uuid: String): GetLedStripResponse {
         val entityOptional = stripRepository.findByUuid(uuid)
         return if (entityOptional.isPresent) {
-            val activeEffects = activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() }
+            val activeEffects = activeLightEffectService.getAllEffects().filter { it.status.isActive() }
             val entity = entityOptional.get()
             val response = entity.let { s ->
                 GetLedStripResponse(
@@ -62,7 +62,7 @@ class LedStripApiService(
         if (clientUuid != null) {
             val clientEntityOptional = clientRepository.findByUuid(clientUuid)
             return if (clientEntityOptional.isPresent) {
-                val activeEffects = activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() }
+                val activeEffects = activeLightEffectService.getAllEffects().filter { it.status.isActive() }
                 val clientEntity = clientEntityOptional.get()
                 val clientStatusOptional = clientStatusService.getStatusForClient(clientEntity)
                 val stripResponseList = clientEntity.strips.map { s ->
@@ -99,7 +99,7 @@ class LedStripApiService(
                     blendMode = s.blendMode!!,
                     activeEffects = getActiveEffectsForStrip(
                         clientStatusService.getStatusForClient(s.client!!).getOrNull()?.status,
-                        activeLightEffectRegistry.getAllEffects().filter { it.status.isActive() },
+                        activeLightEffectService.getAllEffects().filter { it.status.isActive() },
                         s.uuid
                     ),
                 )
@@ -152,7 +152,7 @@ class LedStripApiService(
 
             if (newEntity != entity) {
                 val newStripEntity = stripRepository.update(newEntity)
-                val effects = activeLightEffectRegistry.getAllEffectsForStrip(uuid)
+                val effects = activeLightEffectService.getAllEffectsForStrip(uuid)
                 effects.forEach {
                     val newEffect = it.copy(
                         strip = SingleLedStripModel(
@@ -163,14 +163,13 @@ class LedStripApiService(
                             newStripEntity.height,
                             newStripEntity.blendMode!!,
                             newStripEntity.brightness!!,
+                            newStripEntity.client!!.uuid!!
                         )
                     )
                     if (it != newEffect) {
-                        activeLightEffectRegistry.addOrUpdateEffect(it)
+                        activeLightEffectService.addOrUpdateEffect(it)
                     }
                 }
-
-                streamJobManager.notifyJobOfDataUpdate(entity.client!!)
             }
         } else {
             throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")
@@ -183,11 +182,10 @@ class LedStripApiService(
             val entity = entityOptional.get()
             if (entity.effects.isEmpty() && entity.members.isEmpty()) {
                 stripRepository.deleteById(entity.id)
-                val effects = activeLightEffectRegistry.getAllEffectsForStrip(uuid)
+                val effects = activeLightEffectService.getAllEffectsForStrip(uuid)
                 effects.forEach {
-                    activeLightEffectRegistry.removeEffect(it)
+                    activeLightEffectService.removeEffect(it)
                 }
-                streamJobManager.notifyJobOfDataUpdate(entity.client!!)
             } else {
                 throw ClientRequestException("Could not delete strip with uuid $uuid. Please delete or reassign its effects and pool member strips first.")
             }

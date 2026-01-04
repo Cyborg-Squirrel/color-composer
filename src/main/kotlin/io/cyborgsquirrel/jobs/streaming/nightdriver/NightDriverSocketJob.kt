@@ -8,8 +8,13 @@ import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverFrameDataSerial
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverSocketResponseDeserializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.model.SingleLedStripModel
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.RgbFrameData
+import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlinx.coroutines.*
@@ -34,13 +39,14 @@ class NightDriverSocketJob(
     private val clientRepository: H2LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private var clientEntity: LedStripClientEntity,
-) : ClientStreamingJob {
+    private var activeLightEffectService: ActiveLightEffectService,
+) : ClientStreamingJob, ActiveLightEffectChangeListener {
 
     // NightDriver TCP connection
     private var socket: Socket? = null
 
     // Client data
-    private var strips = mutableListOf<SingleLedStripModel>()
+    private val strips = mutableListOf<LedStripModel>()
 
     // Serialization
     private val serializer = NightDriverFrameDataSerializer()
@@ -77,6 +83,7 @@ class NightDriverSocketJob(
      * Returns the Job instance.
      */
     override fun start(scope: CoroutineScope): Job {
+        activeLightEffectService.addListener(this)
         return scope.launch {
             logger.info("Start")
             while (isActive && shouldRun) {
@@ -94,17 +101,8 @@ class NightDriverSocketJob(
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            val newStrips = clientEntity.strips.map {
-                                SingleLedStripModel(
-                                    it.name!!,
-                                    it.uuid!!,
-                                    it.pin!!,
-                                    it.length!!,
-                                    it.height,
-                                    it.blendMode!!,
-                                    it.brightness!!,
-                                )
-                            }
+                            val newStrips =
+                                activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
                             strips.clear()
                             strips.addAll(newStrips)
                             state = StreamingJobState.Offline
@@ -112,7 +110,7 @@ class NightDriverSocketJob(
                             delay(5000)
                         }
                     } else {
-                        delay(5000)
+                        dispose()
                     }
                 }
 
@@ -170,7 +168,7 @@ class NightDriverSocketJob(
                             val frameData = RgbFrameData(timestampMillis, rgbData)
 
                             // Serialize and send frame - options are not supported for NightDriver
-                            val encodedFrame = serializer.encode(frameData, strip.pin.toInt())
+                            val encodedFrame = serializer.encode(frameData, (strip as SingleLedStripModel).pin.toInt())
                             encodedFrames.add(encodedFrame)
                         }
 
@@ -297,13 +295,30 @@ class NightDriverSocketJob(
     }
 
     override fun dispose() {
+        activeLightEffectService.removeLister(this)
         shouldRun = false
         socket?.close()
     }
 
-    override fun onDataUpdate() {
-        socket?.close()
-        state = StreamingJobState.SetupIncomplete
+    override fun onUpdate(newEffects: List<ActiveLightEffect>) {
+        val matchingStrips = newEffects.filter {
+            val strip = it.strip
+            val clientUuid = clientEntity.uuid!!
+            when (strip) {
+                is SingleLedStripModel -> {
+                    strip.clientUuid == clientUuid
+                }
+
+                is LedStripPoolModel -> {
+                    strip.clientUuids().contains(clientUuid)
+                }
+            }
+        }.map { it.strip }
+
+        if (strips != matchingStrips) {
+            strips.clear()
+            strips.addAll(matchingStrips)
+        }
     }
 
     companion object {

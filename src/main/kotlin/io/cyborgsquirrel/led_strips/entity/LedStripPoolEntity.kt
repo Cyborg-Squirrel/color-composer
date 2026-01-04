@@ -1,8 +1,8 @@
 package io.cyborgsquirrel.led_strips.entity
 
-import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
+import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity
@@ -29,4 +29,8 @@ data class LedStripPoolEntity(
     @MappedEntity("pool_type")
     @Enumerated(EnumType.STRING)
     var poolType: PoolType?,
+
+    @MappedEntity("blend_mode")
+    @Enumerated(EnumType.STRING)
+    var blendMode: BlendMode? = null,
 )
