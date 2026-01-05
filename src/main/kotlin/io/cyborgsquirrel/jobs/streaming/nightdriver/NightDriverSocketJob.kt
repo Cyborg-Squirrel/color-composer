@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
+import kotlin.jvm.optionals.getOrNull
 
 /**
  * Background job for streaming light effects to NightDriver clients
@@ -151,7 +152,7 @@ class NightDriverSocketJob(
 
                 StreamingJobStatus.RenderingEffect -> {
                     triggerManager.processTriggers()
-                    val frameList = renderer.renderFrames(strips.map { it.uuid }, 0)
+                    val frameList = strips.mapNotNull { renderer.renderFrame(strips.first(), 0).getOrNull() }
 
                     if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
