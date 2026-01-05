@@ -63,8 +63,8 @@ class StripPoolFrameCache {
         }
 
         lock.acquire()
-        pruneFrames(frame.stripUuid)
         stripPoolFrames.add(frame)
+        pruneFrames(frame.stripUuid)
         lock.release()
     }
 
@@ -96,7 +96,7 @@ class StripPoolFrameCache {
 
     private fun pruneFrames(stripUuid: String) {
         val matchingFramesForStrip = stripPoolFrames.filter { it.stripUuid == stripUuid }
-        if (matchingFramesForStrip.size > 1) {
+        if (matchingFramesForStrip.size > MAX_BUFFER_SIZE_PER_STRIP) {
             val sequenceNumbersSorted = matchingFramesForStrip.map { it.sequenceNumber }.sorted()
             val sequenceNumbersToPrune = mutableSetOf<Short>()
             if (sequenceNumbersSorted.last() == Short.MAX_VALUE) {
@@ -105,7 +105,7 @@ class StripPoolFrameCache {
                 var didReachSequenceBreak = !sequenceNumbersSorted.contains(MIN_SEQUENCE_NUMBER)
                 while (!done) {
                     val sequential = if (i < sequenceNumbersSorted.size - 1) {
-                        sequenceNumbersSorted[i] - sequenceNumbersSorted[i + 1] == 1
+                        sequenceNumbersSorted[i + 1] - sequenceNumbersSorted[i] == 1
                     } else {
                         sequenceNumbersSorted[i] - sequenceNumbersSorted[i - 1] == 1
                     }
@@ -115,11 +115,11 @@ class StripPoolFrameCache {
                     }
 
                     didReachSequenceBreak = didReachSequenceBreak || !sequential
-                    done = i >= sequenceNumbersSorted.size - 1 || (sequenceNumbersSorted.size - sequenceNumbersToPrune.size) == 1
+                    done = i >= sequenceNumbersSorted.size - 1 || (sequenceNumbersSorted.size - sequenceNumbersToPrune.size) == MAX_BUFFER_SIZE_PER_STRIP
                     i++
                 }
             } else {
-                sequenceNumbersToPrune.addAll(sequenceNumbersSorted.subList(1, sequenceNumbersSorted.size))
+                sequenceNumbersToPrune.addAll(sequenceNumbersSorted.subList(MAX_BUFFER_SIZE_PER_STRIP - 1, sequenceNumbersSorted.size))
             }
 
             stripPoolFrames.removeIf { it.stripUuid == stripUuid && sequenceNumbersToPrune.contains(it.sequenceNumber) }
@@ -128,5 +128,6 @@ class StripPoolFrameCache {
 
     companion object {
         private const val MIN_SEQUENCE_NUMBER: Short = 1
+        private const val MAX_BUFFER_SIZE_PER_STRIP = 2
     }
 }

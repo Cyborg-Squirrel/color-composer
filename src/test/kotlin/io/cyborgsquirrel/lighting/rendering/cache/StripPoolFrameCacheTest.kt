@@ -3,11 +3,9 @@ package io.cyborgsquirrel.lighting.rendering.cache
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import io.mockk.every
 import io.mockk.mockk
 
-@MicronautTest(startApplication = false, transactional = false)
 class StripPoolFrameCacheTest() : StringSpec({
 
     "adding a frame" {
