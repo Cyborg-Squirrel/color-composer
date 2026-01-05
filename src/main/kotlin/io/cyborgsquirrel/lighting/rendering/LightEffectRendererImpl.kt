@@ -8,6 +8,7 @@ import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.rendering.cache.StripPoolFrameCache
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
@@ -18,86 +19,34 @@ class LightEffectRendererImpl(
     private val effectRepository: ActiveLightEffectService,
 ) : LightEffectRenderer {
 
-    /**
-     * Frame buffer. Used to avoid re-rendering effects for LED strip pools.
-     */
-    private var stripPoolFrames = mutableListOf<RenderedFrameModel>()
+    private val cache = StripPoolFrameCache()
 
     /**
      * Renders all light effects for the specified LED strip [strip].
-     *
-     * First all light effects in the Playing state for the [strip] are rendered. Then the rendered frame data is
-     * put through the filters if any are configured. If the skip blank frames configuration is set, frames will be
-     * skipped if all effects end up producing blank frame data. Last, the light effects are layered on top of each other.
-     * The layering algorithm may just use one effect's colors, or mix them, depending on the blend mode.
-     *
-     * The [sequenceNumber] is used in the case of LED strip pools, where multiple jobs rendering to multiple
-     * clients will request the same color data. The first job to call this method renders the frame, the subsequent
-     * callers read the buffer if the [sequenceNumber] matches.
-     *
-     * Returns an optional RGB data frame. If no effects are configured, or no effects are playing then the optional
-     * will be empty.
      */
     override fun renderFrame(
         strip: LedStripModel, sequenceNumber: Short
     ): Optional<RenderedFrameModel> {
-        val stripUuid = strip.uuid
-        val isPool = strip is LedStripPoolModel
-        if (isPool) {
-            val matchingFramesForStrip = stripPoolFrames.filter { it.stripUuid == stripUuid }
-            if (matchingFramesForStrip.isNotEmpty()) {
-                val poolFrameSequenceNumbers = mutableSetOf<Short>()
-                if (matchingFramesForStrip.size > 2) {
-                    val sequenceNumbersSorted = matchingFramesForStrip.map { it.sequenceNumber }.sortedDescending()
-                    val sequenceNumbersToPrune = mutableSetOf<Short>()
-                    poolFrameSequenceNumbers.addAll(sequenceNumbersSorted - sequenceNumbersToPrune)
-                    for (i in 0..<sequenceNumbersSorted.size - 1) {
-                        // Handle wrap scenario (1 is greater than Short.MAX_VALUE in this case)
-                        if (sequenceNumbersSorted[i] - sequenceNumbersSorted[i + 1] > 1) {
-                            sequenceNumbersToPrune.add(sequenceNumbersSorted[i])
-                        } else if (i > 1) {
-                            // i = 2 or more, we have enough buffered frames and can remove the rest
-                            sequenceNumbersToPrune.add(sequenceNumbersSorted[i])
-                        }
-                    }
-
-                    stripPoolFrames.removeIf { it.stripUuid == stripUuid && sequenceNumbersToPrune.contains(it.sequenceNumber) }
-                } else {
-                    poolFrameSequenceNumbers.addAll(matchingFramesForStrip.map { it.sequenceNumber })
-                }
-
-                // sequenceNumber 0 means the caller is making its first call. Return the latest frame.
-                val frame = if (sequenceNumber <= 0) {
-                    matchingFramesForStrip.maxByOrNull { it.sequenceNumber }!!
-                } else if (poolFrameSequenceNumbers.contains(sequenceNumber)) {
-                    matchingFramesForStrip.first { it.sequenceNumber == sequenceNumber }
-                } else {
-                    null
-                }
-
-                return if (frame != null) {
-                    Optional.of(frame)
-                } else {
-                    Optional.empty()
-                }
+        if (strip is LedStripPoolModel) {
+            val frame = cache.getFrameFromCache(strip.uuid, sequenceNumber)
+            if (frame.isPresent) {
+                return frame
             }
         }
 
-        // TODO caching strategy, is 10 frames enough?
-        if (stripPoolFrames.size > 10) {
-            stripPoolFrames.removeLast()
-        }
-
         val activeEffects =
-            effectRepository.getAllEffectsForStrip(stripUuid).filter { it.status.isActive() }.sortedBy { it.priority }
+            effectRepository.getAllEffectsForStrip(strip.uuid).filter { it.status.isActive() }.sortedBy { it.priority }
         return if (activeEffects.isEmpty()) {
             Optional.empty()
         } else {
-            renderFrame(activeEffects, isPool)
+            renderFrame(strip, activeEffects)
         }
     }
 
-    private fun renderFrame(activeEffects: List<ActiveLightEffect>, isPool: Boolean): Optional<RenderedFrameModel> {
+    private fun renderFrame(
+        strip: LedStripModel,
+        activeEffects: List<ActiveLightEffect>
+    ): Optional<RenderedFrameModel> {
         val allEffectsRgbData = mutableListOf<List<RgbColor>>()
         for (activeEffect in activeEffects) {
             logger.debug("Rendering effect {}", activeEffect)
@@ -167,11 +116,11 @@ class LightEffectRendererImpl(
         val allEffectsPaused = effectStatuses.size == 1 && effectStatuses.first() == LightEffectStatus.Paused
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame pools
         val frame = RenderedFrameModel(
-            activeEffects.first().strip.uuid, renderedRgbData, -1, allEffectsPaused
+            activeEffects.first().strip.uuid, renderedRgbData, cache.getSequenceNumber(strip.uuid), allEffectsPaused
         )
 
-        if (isPool) {
-            stripPoolFrames.add(frame)
+        if (strip is LedStripPoolModel) {
+            cache.addFrameToCache(frame)
         }
 
         return Optional.of(frame)

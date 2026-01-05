@@ -3,7 +3,6 @@ package io.cyborgsquirrel.lighting.rendering.cache
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import java.util.*
 import java.util.concurrent.Semaphore
-import kotlin.math.PI
 
 class StripPoolFrameCache {
 
