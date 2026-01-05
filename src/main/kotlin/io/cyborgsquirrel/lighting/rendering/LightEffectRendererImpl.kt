@@ -5,6 +5,8 @@ import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.isActive
+import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import jakarta.inject.Singleton
@@ -16,15 +18,15 @@ class LightEffectRendererImpl(
     private val effectRepository: ActiveLightEffectService,
 ) : LightEffectRenderer {
 
-    // LED strip pools get rendered if the provided LED strip uuid
-    // is a member of the pool. To avoid re-rendering effects, buffer
-    // the frame for other LED strips.
-    private var stripPoolFrameBuffer = mutableListOf<RenderedFrameModel>()
+    /**
+     * Frame buffer. Used to avoid re-rendering effects for LED strip pools.
+     */
+    private var stripPoolFrames = mutableListOf<RenderedFrameModel>()
 
     /**
-     * Renders all light effects for the specified LED strips [stripUuids].
+     * Renders all light effects for the specified LED strip [strip].
      *
-     * First all light effects in the Playing state for the [stripUuids] are rendered. Then the rendered frame data is
+     * First all light effects in the Playing state for the [strip] are rendered. Then the rendered frame data is
      * put through the filters if any are configured. If the skip blank frames configuration is set, frames will be
      * skipped if all effects end up producing blank frame data. Last, the light effects are layered on top of each other.
      * The layering algorithm may just use one effect's colors, or mix them, depending on the blend mode.
@@ -36,44 +38,66 @@ class LightEffectRendererImpl(
      * Returns an optional RGB data frame. If no effects are configured, or no effects are playing then the optional
      * will be empty.
      */
-    override fun renderFrames(stripUuids: List<String>, sequenceNumber: Short): List<RenderedFrameModel> {
-        val effectsMap = mutableMapOf<String, List<ActiveLightEffect>>()
-        for (stripUuid in stripUuids) {
-            val activeEffects = effectRepository.getAllEffectsForStrip(stripUuid).filter { it.status.isActive() }
-                .sortedBy { it.priority }
-            if (activeEffects.isNotEmpty()) {
-                effectsMap[stripUuid] = activeEffects
+    override fun renderFrame(
+        strip: LedStripModel, sequenceNumber: Short
+    ): Optional<RenderedFrameModel> {
+        val stripUuid = strip.uuid
+        val isPool = strip is LedStripPoolModel
+        if (isPool) {
+            val matchingFramesForStrip = stripPoolFrames.filter { it.stripUuid == stripUuid }
+            if (matchingFramesForStrip.isNotEmpty()) {
+                val poolFrameSequenceNumbers = mutableSetOf<Short>()
+                if (matchingFramesForStrip.size > 2) {
+                    val sequenceNumbersSorted = matchingFramesForStrip.map { it.sequenceNumber }.sortedDescending()
+                    val sequenceNumbersToPrune = mutableSetOf<Short>()
+                    poolFrameSequenceNumbers.addAll(sequenceNumbersSorted - sequenceNumbersToPrune)
+                    for (i in 0..<sequenceNumbersSorted.size - 1) {
+                        // Handle wrap scenario (1 is greater than Short.MAX_VALUE in this case)
+                        if (sequenceNumbersSorted[i] - sequenceNumbersSorted[i + 1] > 1) {
+                            sequenceNumbersToPrune.add(sequenceNumbersSorted[i])
+                        } else if (i > 1) {
+                            // i = 2 or more, we have enough buffered frames and can remove the rest
+                            sequenceNumbersToPrune.add(sequenceNumbersSorted[i])
+                        }
+                    }
+
+                    stripPoolFrames.removeIf { it.stripUuid == stripUuid && sequenceNumbersToPrune.contains(it.sequenceNumber) }
+                } else {
+                    poolFrameSequenceNumbers.addAll(matchingFramesForStrip.map { it.sequenceNumber })
+                }
+
+                // sequenceNumber 0 means the caller is making its first call. Return the latest frame.
+                val frame = if (sequenceNumber <= 0) {
+                    matchingFramesForStrip.maxByOrNull { it.sequenceNumber }!!
+                } else if (poolFrameSequenceNumbers.contains(sequenceNumber)) {
+                    matchingFramesForStrip.first { it.sequenceNumber == sequenceNumber }
+                } else {
+                    null
+                }
+
+                return if (frame != null) {
+                    Optional.of(frame)
+                } else {
+                    Optional.empty()
+                }
             }
         }
 
-        // Nothing to render so we can return an empty list
-        if (effectsMap.isEmpty()) {
-            return listOf()
+        // TODO caching strategy, is 10 frames enough?
+        if (stripPoolFrames.size > 10) {
+            stripPoolFrames.removeLast()
         }
 
-        val renderedFrames = effectsMap.values.map {
-            renderFrame(it)
-        }.filter { it.isPresent }.map {
-            it.get()
-        }
-
-        return renderedFrames
-    }
-
-    override fun renderFrame(
-        stripUuid: String,
-        sequenceNumber: Short
-    ): Optional<RenderedFrameModel> {
-        val activeEffects = effectRepository.getAllEffectsForStrip(stripUuid).filter { it.status.isActive() }
-            .sortedBy { it.priority }
+        val activeEffects =
+            effectRepository.getAllEffectsForStrip(stripUuid).filter { it.status.isActive() }.sortedBy { it.priority }
         return if (activeEffects.isEmpty()) {
             Optional.empty()
         } else {
-            renderFrame(activeEffects)
+            renderFrame(activeEffects, isPool)
         }
     }
 
-    private fun renderFrame(activeEffects: List<ActiveLightEffect>): Optional<RenderedFrameModel> {
+    private fun renderFrame(activeEffects: List<ActiveLightEffect>, isPool: Boolean): Optional<RenderedFrameModel> {
         val allEffectsRgbData = mutableListOf<List<RgbColor>>()
         for (activeEffect in activeEffects) {
             logger.debug("Rendering effect {}", activeEffect)
@@ -96,8 +120,7 @@ class LightEffectRendererImpl(
 
                     if (allBlank) {
                         logger.debug(
-                            "All frames are blank and effect {} is set to skip blank frames",
-                            activeEffect.effectUuid
+                            "All frames are blank and effect {} is set to skip blank frames", activeEffect.effectUuid
                         )
                         rgbData = activeEffect.effect.getNextStep()
                         for (filter in activeEffect.filters) {
@@ -143,11 +166,15 @@ class LightEffectRendererImpl(
         val effectStatuses = activeEffects.map { it.status }.toSet()
         val allEffectsPaused = effectStatuses.size == 1 && effectStatuses.first() == LightEffectStatus.Paused
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame pools
-        return Optional.of(
-            RenderedFrameModel(
-                0, activeEffects.first().strip.uuid, renderedRgbData, -1, allEffectsPaused
-            )
+        val frame = RenderedFrameModel(
+            activeEffects.first().strip.uuid, renderedRgbData, -1, allEffectsPaused
         )
+
+        if (isPool) {
+            stripPoolFrames.add(frame)
+        }
+
+        return Optional.of(frame)
     }
 
     companion object {

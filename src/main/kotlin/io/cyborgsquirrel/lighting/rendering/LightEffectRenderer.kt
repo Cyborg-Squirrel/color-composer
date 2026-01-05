@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.rendering
 
+import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import java.util.*
 
@@ -8,7 +9,5 @@ import java.util.*
  */
 interface LightEffectRenderer {
 
-    fun renderFrames(stripUuids: List<String>, sequenceNumber: Short): List<RenderedFrameModel>
-
-    fun renderFrame(stripUuid: String, sequenceNumber: Short): Optional<RenderedFrameModel>
+    fun renderFrame(strip: LedStripModel, sequenceNumber: Short): Optional<RenderedFrameModel>
 }

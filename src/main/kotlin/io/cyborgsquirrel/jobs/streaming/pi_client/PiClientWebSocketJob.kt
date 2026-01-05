@@ -188,7 +188,7 @@ class PiClientWebSocketJob(
                         status = StreamingJobStatus.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
-                        val frameOptional = renderer.renderFrame((strips.first() as SingleLedStripModel).uuid, 0)
+                        val frameOptional = renderer.renderFrame(strips.first(), 0)
                         if (frameOptional.isEmpty) {
                             // Send a keep-alive frame to clear the strip and prevent the WebSocket from timing out
                             if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
