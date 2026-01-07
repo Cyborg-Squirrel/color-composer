@@ -22,6 +22,7 @@ import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListene
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
+import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
@@ -34,6 +35,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import kotlin.jvm.optionals.getOrNull
 
 /**
  * Background job for streaming light effects to Raspberry Pi clients
@@ -64,6 +66,7 @@ class PiClientWebSocketJob(
 
     // Client data
     private val strips = mutableListOf<LedStripModel>()
+    private val stripPoolFrameSequenceNumbers = mutableMapOf<String, Short>()
 
     // Serialization
     private val serializer = PiFrameDataSerializer()
@@ -188,8 +191,18 @@ class PiClientWebSocketJob(
                         status = StreamingJobStatus.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
-                        val frameOptional = renderer.renderFrame(strips.first(), 0)
-                        if (frameOptional.isEmpty) {
+                        val frames = strips.mapNotNull { s ->
+                            when (s) {
+                                is SingleLedStripModel -> renderer.renderFrame(s, 0)
+                                is LedStripPoolModel -> {
+                                    val sequenceNumber = stripPoolFrameSequenceNumbers.getOrDefault(s.uuid, 0)
+                                    val frame = renderer.renderFrame(s, sequenceNumber)
+                                    if (frame != null) stripPoolFrameSequenceNumbers[s.uuid] = frame.sequenceNumber
+                                    frame
+                                }
+                            }
+                        }
+                        if (frames.isEmpty()) {
                             // Send a keep-alive frame to clear the strip and prevent the WebSocket from timing out
                             if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
                                 logger.info("Sending keep-alive frame to $clientEntity")
@@ -206,20 +219,31 @@ class PiClientWebSocketJob(
                             lastKeepaliveFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
                             timestampMillis += 1000 / fps
 
-                            // Assemble RGB data - timestamp of 0L to not buffer the frame if all effects are paused
-                            val frame = frameOptional.get()
-                            val rgbData = frame.frameData
-                            val frameData = RgbFrameData(timestampMillis, rgbData)
+                            var allEffectsPaused = false
+                            frames.forEach {
+                                allEffectsPaused = allEffectsPaused || it.allEffectsPaused
+                            }
+                            frames.forEach { frame ->
+                                val strip = strips.first { it == frame.strip }
+                                val pin = when (strip) {
+                                    is SingleLedStripModel -> strip.pin
+                                    is LedStripPoolModel -> {
+                                        strip.strips.first { it.clientUuid == clientEntity.uuid }.pin
+                                    }
+                                }
+                                val rgbData = frame.frameData
+                                val frameData = RgbFrameData(timestampMillis, rgbData)
 
-                            // Build options - clear the frame buffer if all effects are paused, this makes the LED strip more responsive to play/pause commands
-                            val optionsBuilder = RgbFrameOptionsBuilder()
-                            val options = optionsBuilder.build()
+                                // Build options - clear the frame buffer if all effects are paused, this makes the LED strip more responsive to play/pause commands
+                                val optionsBuilder = RgbFrameOptionsBuilder()
+                                val options = optionsBuilder.build()
 
-                            // Serialize and send frame
-                            val encodedFrame = serializer.encode(frameData, (strips.first() as SingleLedStripModel).pin, options)
+                                // Serialize and send frame
+                                val encodedFrame = serializer.encode(frameData, pin, options)
 
-                            withContext(Dispatchers.IO) {
-                                client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
+                                withContext(Dispatchers.IO) {
+                                    client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
+                                }
                             }
 
                             // Slow down to ensure we only buffer the specified amount of time into the future.
@@ -228,7 +252,7 @@ class PiClientWebSocketJob(
                             if (nowPlusBufferMillis < timestampMillis) {
                                 sleepMillis = timestampMillis - nowPlusBufferMillis
                                 status = StreamingJobStatus.BufferFullWaiting
-                            } else if (frame.allEffectsPaused) {
+                            } else if (allEffectsPaused) {
                                 // Wait for the duration of one frame to reduce time spent rendering/sending frames
                                 // if all effects are paused.
                                 sleepMillis = (1000 / fps).toLong()
@@ -252,13 +276,9 @@ class PiClientWebSocketJob(
         settingsSyncRequired = false
         val clientStripConfigs = piConfigClient.getStripConfigs(clientEntity)
         val clientSettings = piConfigClient.getClientSettings(clientEntity)
-        val strip = (strips.first() as SingleLedStripModel)
+        val strip = getStrip()
         val serverConfig = PiClientStripConfig(
-            strip.uuid,
-            strip.pin,
-            strip.length,
-            strip.brightness,
-            clientEntity.colorOrder!!
+            strip!!.uuid, strip.pin, strip.length, strip.brightness, clientEntity.colorOrder!!
         )
 
         val stripConfigMatch =
@@ -279,8 +299,7 @@ class PiClientWebSocketJob(
             logger.info("Settings out of sync for $clientEntity - server config: $serverConfig")
 
             piConfigClient.updateClientSettings(
-                clientEntity,
-                PiClientSettings(clientEntity.powerLimit ?: 0)
+                clientEntity, PiClientSettings(clientEntity.powerLimit ?: 0)
             )
         }
 
@@ -303,7 +322,8 @@ class PiClientWebSocketJob(
 
     private suspend fun sendClearFrame() {
         val rgbData = mutableListOf<RgbColor>()
-        for (i in 0..<(strips.first() as SingleLedStripModel).length) {
+        val strip = getStrip()!!
+        for (i in 0..<strip.length) {
             rgbData.add(RgbColor.Blank)
         }
 
@@ -311,7 +331,7 @@ class PiClientWebSocketJob(
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val options = optionsBuilder.build()
-        val frame = serializer.encode(frameData, (strips.first() as SingleLedStripModel).pin, options)
+        val frame = serializer.encode(frameData, strip.pin, options)
 
         withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
@@ -354,6 +374,24 @@ class PiClientWebSocketJob(
 
         client = withContext(Dispatchers.IO) {
             future.get(5, TimeUnit.SECONDS)
+        }
+    }
+
+    /**
+     * Pi clients only support one strip at a time. It may be a single strip or part of a group.
+     */
+    private fun getStrip(): SingleLedStripModel? {
+        if (strips.isEmpty()) {
+            return null
+        }
+        return when (val firstStrip = strips.first()) {
+            is SingleLedStripModel -> {
+                firstStrip
+            }
+
+            is LedStripPoolModel -> {
+                firstStrip.strips.first { it.clientUuid == clientEntity.uuid }
+            }
         }
     }
 

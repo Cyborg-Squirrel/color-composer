@@ -9,5 +9,5 @@ import java.util.*
  */
 interface LightEffectRenderer {
 
-    fun renderFrame(strip: LedStripModel, sequenceNumber: Short): Optional<RenderedFrameModel>
+    fun renderFrame(strip: LedStripModel, sequenceNumber: Short): RenderedFrameModel?
 }

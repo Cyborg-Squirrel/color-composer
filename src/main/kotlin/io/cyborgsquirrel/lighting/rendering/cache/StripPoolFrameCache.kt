@@ -1,7 +1,6 @@
 package io.cyborgsquirrel.lighting.rendering.cache
 
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
-import java.util.*
 import java.util.concurrent.Semaphore
 
 class StripPoolFrameCache {
@@ -12,7 +11,7 @@ class StripPoolFrameCache {
     private var stripPoolFrames = mutableListOf<RenderedFrameModel>()
     private val lock = Semaphore(1)
 
-    fun getFrameFromCache(stripUuid: String, sequenceNumber: Short): Optional<RenderedFrameModel> {
+    fun getFrameFromCache(stripUuid: String, sequenceNumber: Short): RenderedFrameModel? {
         lock.acquire()
         val matchingFramesForStrip = stripPoolFrames.filter { it.stripUuid == stripUuid }
 
@@ -26,11 +25,7 @@ class StripPoolFrameCache {
         }
 
         lock.release()
-        return if (frame != null) {
-            Optional.of(frame)
-        } else {
-            Optional.empty()
-        }
+        return frame
     }
 
     fun addFrameToCache(frame: RenderedFrameModel) {

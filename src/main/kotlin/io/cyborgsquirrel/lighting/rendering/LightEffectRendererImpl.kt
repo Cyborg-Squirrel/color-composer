@@ -13,6 +13,7 @@ import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 @Singleton
 class LightEffectRendererImpl(
@@ -26,10 +27,11 @@ class LightEffectRendererImpl(
      */
     override fun renderFrame(
         strip: LedStripModel, sequenceNumber: Short
-    ): Optional<RenderedFrameModel> {
+    ): RenderedFrameModel? {
         if (strip is LedStripPoolModel) {
             val frame = cache.getFrameFromCache(strip.uuid, sequenceNumber)
-            if (frame.isPresent) {
+            // Only return frame if we get a cache hit
+            if (frame != null) {
                 return frame
             }
         }
@@ -37,7 +39,7 @@ class LightEffectRendererImpl(
         val activeEffects =
             effectRepository.getAllEffectsForStrip(strip.uuid).filter { it.status.isActive() }.sortedBy { it.priority }
         return if (activeEffects.isEmpty()) {
-            Optional.empty()
+            null
         } else {
             renderFrame(strip, activeEffects)
         }
@@ -46,7 +48,7 @@ class LightEffectRendererImpl(
     private fun renderFrame(
         strip: LedStripModel,
         activeEffects: List<ActiveLightEffect>
-    ): Optional<RenderedFrameModel> {
+    ): RenderedFrameModel {
         val allEffectsRgbData = mutableListOf<List<RgbColor>>()
         for (activeEffect in activeEffects) {
             logger.debug("Rendering effect {}", activeEffect)
@@ -116,14 +118,14 @@ class LightEffectRendererImpl(
         val allEffectsPaused = effectStatuses.size == 1 && effectStatuses.first() == LightEffectStatus.Paused
         // TODO rendered RGB list layering, sequence number assignment to frames, render frame pools
         val frame = RenderedFrameModel(
-            activeEffects.first().strip.uuid, renderedRgbData, cache.getSequenceNumber(strip.uuid), allEffectsPaused
+            strip, renderedRgbData, cache.getSequenceNumber(strip.uuid), allEffectsPaused
         )
 
         if (strip is LedStripPoolModel) {
             cache.addFrameToCache(frame)
         }
 
-        return Optional.of(frame)
+        return frame
     }
 
     companion object {
