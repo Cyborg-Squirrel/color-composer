@@ -1,7 +1,6 @@
 package io.cyborgsquirrel.lighting.rendering.cache
 
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
-import java.util.*
 import java.util.concurrent.Semaphore
 
 class StripPoolFrameCache {
@@ -12,9 +11,9 @@ class StripPoolFrameCache {
     private var stripPoolFrames = mutableListOf<RenderedFrameModel>()
     private val lock = Semaphore(1)
 
-    fun getFrameFromCache(stripUuid: String, sequenceNumber: Short): Optional<RenderedFrameModel> {
+    fun getFrameFromCache(stripUuid: String, sequenceNumber: Short): RenderedFrameModel? {
         lock.acquire()
-        val matchingFramesForStrip = stripPoolFrames.filter { it.stripUuid == stripUuid }
+        val matchingFramesForStrip = stripPoolFrames.filter { it.strip.uuid == stripUuid }
 
         // sequenceNumber 0 means the caller is making its first call. Return the latest frame.
         val frame = if (sequenceNumber <= 0) {
@@ -26,11 +25,7 @@ class StripPoolFrameCache {
         }
 
         lock.release()
-        return if (frame != null) {
-            Optional.of(frame)
-        } else {
-            Optional.empty()
-        }
+        return frame
     }
 
     fun addFrameToCache(frame: RenderedFrameModel) {
@@ -40,13 +35,13 @@ class StripPoolFrameCache {
 
         lock.acquire()
         stripPoolFrames.add(frame)
-        pruneFrames(frame.stripUuid)
+        pruneFrames(frame.strip.uuid)
         lock.release()
     }
 
     fun getSequenceNumber(stripUuid: String): Short {
         lock.acquire()
-        val frames = stripPoolFrames.filter { it.stripUuid == stripUuid }.sortedBy { it.sequenceNumber }
+        val frames = stripPoolFrames.filter { it.strip.uuid == stripUuid }.sortedBy { it.sequenceNumber }
         lock.release()
         if (frames.isEmpty()) {
             return MIN_SEQUENCE_NUMBER
@@ -71,7 +66,7 @@ class StripPoolFrameCache {
     }
 
     private fun pruneFrames(stripUuid: String) {
-        val matchingFramesForStrip = stripPoolFrames.filter { it.stripUuid == stripUuid }
+        val matchingFramesForStrip = stripPoolFrames.filter { it.strip.uuid == stripUuid }
         if (matchingFramesForStrip.size > MAX_BUFFER_SIZE_PER_STRIP) {
             val sequenceNumbersSorted = matchingFramesForStrip.map { it.sequenceNumber }.sorted()
             val sequenceNumbersToPrune = mutableSetOf<Short>()
@@ -104,7 +99,7 @@ class StripPoolFrameCache {
                 )
             }
 
-            stripPoolFrames.removeIf { it.stripUuid == stripUuid && sequenceNumbersToPrune.contains(it.sequenceNumber) }
+            stripPoolFrames.removeIf { it.strip.uuid == stripUuid && sequenceNumbersToPrune.contains(it.sequenceNumber) }
         }
     }
 
