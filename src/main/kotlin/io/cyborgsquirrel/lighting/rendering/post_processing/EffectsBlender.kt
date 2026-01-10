@@ -50,19 +50,23 @@ class EffectsBlender {
                 }
 
                 BlendMode.Layer -> {
-                    var didAdd = false
+                    var red = 0.toUByte()
+                    var green = 0.toUByte()
+                    var blue = 0.toUByte()
                     for (j in effectsRgbData.indices) {
                         val rgbColor = effectsRgbData[j][i]
-                        if (rgbColor != RgbColor.Blank) {
-                            renderedRgbData.add(rgbColor)
-                            didAdd = true
-                            break
+                        if (rgbColor.red != 0.toUByte()) {
+                            red = rgbColor.red
+                        }
+                        if (rgbColor.green != 0.toUByte()) {
+                            green = rgbColor.green
+                        }
+                        if (rgbColor.blue != 0.toUByte()) {
+                            blue = rgbColor.blue
                         }
                     }
 
-                    if (!didAdd) {
-                        renderedRgbData.add(RgbColor.Blank)
-                    }
+                    renderedRgbData.add(RgbColor(red, green, blue))
                 }
             }
         }
