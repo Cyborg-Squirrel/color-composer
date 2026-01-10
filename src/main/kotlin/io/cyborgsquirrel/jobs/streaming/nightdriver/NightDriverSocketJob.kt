@@ -152,7 +152,7 @@ class NightDriverSocketJob(
 
                 StreamingJobStatus.RenderingEffect -> {
                     triggerManager.processTriggers()
-                    val frameList = strips.mapNotNull { renderer.renderFrame(strips.first(), 0).getOrNull() }
+                    val frameList = strips.mapNotNull { renderer.renderFrame(it, 0) }
 
                     if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
@@ -166,12 +166,12 @@ class NightDriverSocketJob(
                         // Assemble RGB data
                         val encodedFrames = mutableListOf<ByteArray>()
                         for (frame in frameList) {
-                            val strip = strips.first { it.uuid == frame.stripUuid }
+                            val strip = getStrip(frame.strip)!!
                             val rgbData = frame.frameData
                             val frameData = RgbFrameData(timestampMillis, rgbData)
 
                             // Serialize and send frame - options are not supported for NightDriver
-                            val encodedFrame = serializer.encode(frameData, (strip as SingleLedStripModel).pin.toInt())
+                            val encodedFrame = serializer.encode(frameData, strip.pin.toInt())
                             encodedFrames.add(encodedFrame)
                         }
 
@@ -260,6 +260,18 @@ class NightDriverSocketJob(
                 ce.lastSeenAt = currentTimeAsMillis
                 lastSeenAt = currentTimeAsMillis
                 clientEntity = clientRepository.update(ce)
+            }
+        }
+    }
+
+    private fun getStrip(stripModel: LedStripModel): SingleLedStripModel {
+        return when (stripModel) {
+            is SingleLedStripModel -> {
+                stripModel
+            }
+
+            is LedStripPoolModel -> {
+                stripModel.strips.first { it.clientUuid == clientEntity.uuid }
             }
         }
     }
