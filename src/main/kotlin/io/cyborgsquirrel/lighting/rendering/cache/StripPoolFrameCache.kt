@@ -1,18 +1,15 @@
 package io.cyborgsquirrel.lighting.rendering.cache
 
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
-import java.util.concurrent.Semaphore
 
 class StripPoolFrameCache {
 
     /**
      * Frame buffer. Used to avoid re-rendering effects for LED strip pools.
      */
-    private var stripPoolFrames = mutableListOf<RenderedFrameModel>()
-    private val lock = Semaphore(1)
+    private val stripPoolFrames = mutableListOf<RenderedFrameModel>()
 
     fun getFrameFromCache(stripUuid: String, sequenceNumber: Short): RenderedFrameModel? {
-        lock.acquire()
         val matchingFramesForStrip = stripPoolFrames.filter { it.strip.uuid == stripUuid }
 
         // sequenceNumber 0 means the caller is making its first call. Return the latest frame.
@@ -24,7 +21,6 @@ class StripPoolFrameCache {
             null
         }
 
-        lock.release()
         return frame
     }
 
@@ -33,16 +29,12 @@ class StripPoolFrameCache {
             throw Exception("Invalid frame sequence number ${frame.sequenceNumber}")
         }
 
-        lock.acquire()
         stripPoolFrames.add(frame)
         pruneFrames(frame.strip.uuid)
-        lock.release()
     }
 
     fun getSequenceNumber(stripUuid: String): Short {
-        lock.acquire()
         val frames = stripPoolFrames.filter { it.strip.uuid == stripUuid }.sortedBy { it.sequenceNumber }
-        lock.release()
         if (frames.isEmpty()) {
             return MIN_SEQUENCE_NUMBER
         } else {
@@ -67,7 +59,7 @@ class StripPoolFrameCache {
 
     private fun pruneFrames(stripUuid: String) {
         val matchingFramesForStrip = stripPoolFrames.filter { it.strip.uuid == stripUuid }
-        if (matchingFramesForStrip.size > MAX_BUFFER_SIZE_PER_STRIP) {
+        if (matchingFramesForStrip.size > MAX_CACHE_SIZE_PER_STRIP) {
             val sequenceNumbersSorted = matchingFramesForStrip.map { it.sequenceNumber }.sorted()
             val sequenceNumbersToPrune = mutableSetOf<Short>()
             if (sequenceNumbersSorted.last() == Short.MAX_VALUE) {
@@ -87,13 +79,13 @@ class StripPoolFrameCache {
 
                     didReachSequenceBreak = didReachSequenceBreak || !sequential
                     done =
-                        i >= sequenceNumbersSorted.size - 1 || (sequenceNumbersSorted.size - sequenceNumbersToPrune.size) == MAX_BUFFER_SIZE_PER_STRIP
+                        i >= sequenceNumbersSorted.size - 1 || (sequenceNumbersSorted.size - sequenceNumbersToPrune.size) == MAX_CACHE_SIZE_PER_STRIP
                     i++
                 }
             } else {
                 sequenceNumbersToPrune.addAll(
                     sequenceNumbersSorted.subList(
-                        MAX_BUFFER_SIZE_PER_STRIP - 1,
+                        MAX_CACHE_SIZE_PER_STRIP - 1,
                         sequenceNumbersSorted.size
                     )
                 )
@@ -104,7 +96,6 @@ class StripPoolFrameCache {
     }
 
     companion object {
-        private const val MIN_SEQUENCE_NUMBER: Short = 1
-        private const val MAX_BUFFER_SIZE_PER_STRIP = 2
+        private const val MAX_CACHE_SIZE_PER_STRIP = 2
     }
 }

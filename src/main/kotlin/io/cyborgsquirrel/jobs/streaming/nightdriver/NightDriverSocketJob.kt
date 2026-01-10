@@ -4,7 +4,6 @@ import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
 import io.cyborgsquirrel.jobs.streaming.model.NightDriverStreamingJobState
-import io.cyborgsquirrel.jobs.streaming.model.StreamingJobState
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverFrameDataSerializer
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverSocketResponseDeserializer
@@ -24,7 +23,6 @@ import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
-import kotlin.jvm.optionals.getOrNull
 
 /**
  * Background job for streaming light effects to NightDriver clients
@@ -152,7 +150,7 @@ class NightDriverSocketJob(
 
                 StreamingJobStatus.RenderingEffect -> {
                     triggerManager.processTriggers()
-                    val frameList = strips.mapNotNull { renderer.renderFrame(it, 0) }
+                    val frameList = renderer.renderFrames(strips, clientEntity.uuid!!)
 
                     if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
@@ -166,12 +164,11 @@ class NightDriverSocketJob(
                         // Assemble RGB data
                         val encodedFrames = mutableListOf<ByteArray>()
                         for (frame in frameList) {
-                            val strip = getStrip(frame.strip)!!
                             val rgbData = frame.frameData
                             val frameData = RgbFrameData(timestampMillis, rgbData)
 
                             // Serialize and send frame - options are not supported for NightDriver
-                            val encodedFrame = serializer.encode(frameData, strip.pin.toInt())
+                            val encodedFrame = serializer.encode(frameData, frame.strip.pin.toInt())
                             encodedFrames.add(encodedFrame)
                         }
 
@@ -260,18 +257,6 @@ class NightDriverSocketJob(
                 ce.lastSeenAt = currentTimeAsMillis
                 lastSeenAt = currentTimeAsMillis
                 clientEntity = clientRepository.update(ce)
-            }
-        }
-    }
-
-    private fun getStrip(stripModel: LedStripModel): SingleLedStripModel {
-        return when (stripModel) {
-            is SingleLedStripModel -> {
-                stripModel
-            }
-
-            is LedStripPoolModel -> {
-                stripModel.strips.first { it.clientUuid == clientEntity.uuid }
             }
         }
     }
