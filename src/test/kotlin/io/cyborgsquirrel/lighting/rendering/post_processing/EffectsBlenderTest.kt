@@ -129,4 +129,29 @@ class EffectsBlenderTest : StringSpec({
         result[1] shouldBe RgbColor(0u, 255u, 0u)
         result[2] shouldBe RgbColor(0u, 0u, 255u)
     }
+
+    "use highest value" {
+        val strip = mockk<LedStripModel>()
+        every { strip.length() } returns 3
+        every { strip.blendMode } returns BlendMode.UseHighest
+
+        val effect1 = listOf(
+            RgbColor.Blank,
+            RgbColor(100u, 255u, 100u),
+            RgbColor.Blank
+        )
+
+        val effect2 = listOf(
+            RgbColor.Blank,
+            RgbColor(255u, 0u, 0u),
+            RgbColor(0u, 0u, 255u)
+        )
+
+        val result = blender.blendEffects(strip, listOf(effect1, effect2))
+
+        result.size shouldBe 3
+        result[0] shouldBe RgbColor.Blank
+        result[1] shouldBe RgbColor(255u, 255u, 100u)
+        result[2] shouldBe RgbColor(0u, 0u, 255u)
+    }
 })
