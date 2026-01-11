@@ -18,6 +18,7 @@ import io.cyborgsquirrel.lighting.rendering.post_processing.FrameSegmentationHel
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.Semaphore
 import kotlin.jvm.optionals.getOrNull
 
 @Singleton
@@ -25,6 +26,7 @@ class LightEffectRendererImpl(
     private val effectRepository: ActiveLightEffectService,
 ) : LightEffectRenderer {
 
+    private val lock = Semaphore(1)
     private val cache = StripPoolFrameCache()
     private val tracker = ClientSequenceTracker()
     private val segmentationHelper = FrameSegmentationHelper()
@@ -38,23 +40,30 @@ class LightEffectRendererImpl(
         for (strip in strips) {
             when (strip) {
                 is LedStripPoolModel -> {
-                    val sequenceNumber = tracker.getSequenceNumber(clientUuid, strip.uuid)
-                    val cachedFrame = checkCache(strip, sequenceNumber)
-                    val renderedFrame = if (cachedFrame != null) {
-                        cachedFrame
-                    } else {
-                        val renderedFrame = renderFrame(strip)
-                        if (renderedFrame != null) {
-                            renderedFrame.sequenceNumber = cache.getSequenceNumber(strip.uuid)
-                            cache.addFrameToCache(renderedFrame)
+                    try {
+                        /// Semaphore because strip pools can involve multiple clients and thus multiple job threads
+                        /// jobs should either get the latest frame or the frame cached from the other job's render sequence
+                        lock.acquire()
+                        val sequenceNumber = tracker.getSequenceNumber(clientUuid, strip.uuid)
+                        val cachedFrame = checkCache(strip, sequenceNumber)
+                        val renderedFrame = if (cachedFrame != null) {
+                            cachedFrame
+                        } else {
+                            val renderedFrame = renderFrame(strip)
+                            if (renderedFrame != null) {
+                                renderedFrame.sequenceNumber = cache.getSequenceNumber(strip.uuid)
+                                cache.addFrameToCache(renderedFrame)
+                            }
+
+                            renderedFrame
                         }
 
-                        renderedFrame
-                    }
-
-                    if (renderedFrame != null) {
-                        val frameSegments = segmentationHelper.segmentFrame(strips, clientUuid, renderedFrame)
-                        frameList.addAll(frameSegments)
+                        if (renderedFrame != null) {
+                            val frameSegments = segmentationHelper.segmentFrame(strips, clientUuid, renderedFrame)
+                            frameList.addAll(frameSegments)
+                        }
+                    } finally {
+                        lock.release()
                     }
                 }
 

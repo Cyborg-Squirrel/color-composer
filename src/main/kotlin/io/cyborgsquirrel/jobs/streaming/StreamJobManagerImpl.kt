@@ -6,7 +6,6 @@ import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
 import jakarta.inject.Singleton
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
-import java.util.concurrent.Semaphore
 
 @Singleton
 class StreamJobManagerImpl(
