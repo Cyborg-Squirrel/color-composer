@@ -52,6 +52,7 @@ CREATE TABLE pool_member_led_strips
     id           IDENTITY PRIMARY KEY NOT NULL,
     inverted     BOOLEAN NOT NULL,
     pool_index   SMALLINT NOT NULL,
+    uuid         VARCHAR(50) NOT NULL UNIQUE,
     strip_id     INT NOT NULL,
     pool_id      INT NOT NULL,
     FOREIGN KEY (strip_id) REFERENCES led_strips,

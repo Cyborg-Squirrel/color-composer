@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.clients.service
+package io.cyborgsquirrel.clients.services
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ColorOrder

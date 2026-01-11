@@ -1,4 +1,4 @@
-package io.cyborgsquirrel.led_strips.service
+package io.cyborgsquirrel.led_strips.services
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientStatus

@@ -17,6 +17,8 @@ data class PoolMemberLedStripEntity(
     @Relation(value = Relation.Kind.MANY_TO_ONE)
     var strip: LedStripEntity?,
 
+    var uuid: String? = null,
+
     var inverted: Boolean?,
 
     var poolIndex: Int?
@@ -29,6 +31,7 @@ data class PoolMemberLedStripEntity(
 
         if (id != other.id) return false
         if (strip?.id != other.strip?.id) return false
+        if (uuid != other.uuid) return false
         if (pool?.id != other.pool?.id) return false
         if (inverted != other.inverted) return false
         if (poolIndex != other.poolIndex) return false
@@ -42,10 +45,11 @@ data class PoolMemberLedStripEntity(
         result = 31 * result + (strip?.id ?: 0).hashCode()
         result = 31 * result + (pool?.id ?: 0).hashCode()
         result = 31 * result + (inverted ?: 0).hashCode()
+        result = 31 * result + (uuid ?: 0).hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "PoolMemberLedStripEntity(strip=${strip?.id}, pool=${pool?.id}, id=$id, inverted=$inverted, poolIndex=$poolIndex)"
+        return "PoolMemberLedStripEntity(strip=${strip?.id}, pool=${pool?.id}, id=$id, uuid=$uuid, inverted=$inverted, poolIndex=$poolIndex)"
     }
 }

@@ -9,6 +9,11 @@ import java.util.*
 
 @JdbcRepository(dialect = Dialect.H2)
 interface H2LedStripPoolRepository : CrudRepository<LedStripPoolEntity, Long> {
+
+    @Join(value = "members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "effects", type = Join.Type.LEFT_FETCH)
+    fun queryAll(): List<LedStripPoolEntity>
+
      @Join(value = "members", type = Join.Type.LEFT_FETCH)
      @Join(value = "effects", type = Join.Type.LEFT_FETCH)
      fun queryById(id: Long): Optional<LedStripPoolEntity>
