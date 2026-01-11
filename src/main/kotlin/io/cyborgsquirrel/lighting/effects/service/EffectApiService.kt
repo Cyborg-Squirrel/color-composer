@@ -235,7 +235,7 @@ class EffectApiService(
             val poolUuid = updateEffectRequest.poolUuid
 
             if (stripUuid != null && poolUuid != null) {
-                throw ClientRequestException("Cannot assign effect to both a strip and a strip pool. Please specify only either 'stripUuid' or 'poolUuid'.")
+                throw ClientRequestException("Cannot assign effect to both a strip and a strip pool. Specify either 'stripUuid' or 'poolUuid'.")
             }
 
             if (stripUuid != null && updateEffectRequest.stripUuid != effectEntity.strip?.uuid) {

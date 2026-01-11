@@ -6,6 +6,10 @@ import io.cyborgsquirrel.lighting.model.RgbColor
 
 class EffectsBlender {
 
+    /**
+     * Blends the RGB data from multiple effects into a single [RgbColor] buffer matching the length of the [strip]
+     * [effectsRgbData] is must be sorted by priority highest to lowest for [BlendMode.Layer] to function correctly.
+     */
     fun blendEffects(strip: LedStripModel, effectsRgbData: List<List<RgbColor>>): MutableList<RgbColor> {
         val renderedRgbData = mutableListOf<RgbColor>()
         for (i in 0..<strip.length()) {
@@ -62,6 +66,26 @@ class EffectsBlender {
                             green = rgbColor.green
                         }
                         if (rgbColor.blue != 0.toUByte()) {
+                            blue = rgbColor.blue
+                        }
+                    }
+
+                    renderedRgbData.add(RgbColor(red, green, blue))
+                }
+
+                BlendMode.UseHighest -> {
+                    var red = 0.toUByte()
+                    var green = 0.toUByte()
+                    var blue = 0.toUByte()
+                    for (j in effectsRgbData.indices) {
+                        val rgbColor = effectsRgbData[j][i]
+                        if (rgbColor.red > red) {
+                            red = rgbColor.red
+                        }
+                        if (rgbColor.green > green) {
+                            green = rgbColor.green
+                        }
+                        if (rgbColor.blue > blue) {
                             blue = rgbColor.blue
                         }
                     }

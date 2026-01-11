@@ -13,4 +13,8 @@ enum class BlendMode {
 
     // Only display the RGB values from the effect with higher priority
     Layer,
+
+    // Use the highest red, green, and blue values
+    // For example a RGB value of 100, 50, 20 and another 50, 75, 0 will result in 100, 75, 20
+    UseHighest,
 }
