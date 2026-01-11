@@ -1,28 +1,21 @@
 package io.cyborgsquirrel.jobs.streaming.pi_client
 
 import io.cyborgsquirrel.clients.config.pi_client.PiClientSettings
-import io.cyborgsquirrel.clients.config.pi_client.PiConfigClient
 import io.cyborgsquirrel.clients.config.pi_client.PiClientStripConfig
+import io.cyborgsquirrel.clients.config.pi_client.PiConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
 import io.cyborgsquirrel.jobs.streaming.model.PiStreamingJobState
-import io.cyborgsquirrel.jobs.streaming.model.StreamingJobState
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
-import io.cyborgsquirrel.lighting.model.RgbColor
-import io.cyborgsquirrel.lighting.model.RgbFrameData
-import io.cyborgsquirrel.lighting.model.RgbFrameOptionsBuilder
-import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.jobs.streaming.serialization.PiFrameDataSerializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
+import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
-import io.cyborgsquirrel.lighting.model.LedStripModel
-import io.cyborgsquirrel.lighting.model.LedStripPoolModel
-import io.cyborgsquirrel.lighting.model.SingleLedStripModel
-import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.model.*
+import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
@@ -35,7 +28,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import kotlin.jvm.optionals.getOrNull
 
 /**
  * Background job for streaming light effects to Raspberry Pi clients
@@ -66,7 +58,6 @@ class PiClientWebSocketJob(
 
     // Client data
     private val strips = mutableListOf<LedStripModel>()
-    private val stripPoolFrameSequenceNumbers = mutableMapOf<String, Short>()
 
     // Serialization
     private val serializer = PiFrameDataSerializer()
@@ -191,17 +182,7 @@ class PiClientWebSocketJob(
                         status = StreamingJobStatus.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
-                        val frames = strips.mapNotNull { s ->
-                            when (s) {
-                                is SingleLedStripModel -> renderer.renderFrame(s, 0)
-                                is LedStripPoolModel -> {
-                                    val sequenceNumber = stripPoolFrameSequenceNumbers.getOrDefault(s.uuid, 0)
-                                    val frame = renderer.renderFrame(s, sequenceNumber)
-                                    if (frame != null) stripPoolFrameSequenceNumbers[s.uuid] = frame.sequenceNumber
-                                    frame
-                                }
-                            }
-                        }
+                        val frames = renderer.renderFrames(strips, clientEntity.uuid!!)
                         if (frames.isEmpty()) {
                             // Send a keep-alive frame to clear the strip and prevent the WebSocket from timing out
                             if (lastKeepaliveFrameTimestamp.plusMinutes(1).isBefore(LocalDateTime.now())) {
@@ -219,18 +200,8 @@ class PiClientWebSocketJob(
                             lastKeepaliveFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
                             timestampMillis += 1000 / fps
 
-                            var allEffectsPaused = false
-                            frames.forEach {
-                                allEffectsPaused = allEffectsPaused || it.allEffectsPaused
-                            }
                             frames.forEach { frame ->
-                                val strip = strips.first { it == frame.strip }
-                                val pin = when (strip) {
-                                    is SingleLedStripModel -> strip.pin
-                                    is LedStripPoolModel -> {
-                                        strip.strips.first { it.clientUuid == clientEntity.uuid }.pin
-                                    }
-                                }
+                                val pin = frame.strip.pin
                                 val rgbData = frame.frameData
                                 val frameData = RgbFrameData(timestampMillis, rgbData)
 
@@ -251,12 +222,6 @@ class PiClientWebSocketJob(
                                 Timestamp.from(Instant.now().plusMillis(bufferTimeInMilliseconds)).time
                             if (nowPlusBufferMillis < timestampMillis) {
                                 sleepMillis = timestampMillis - nowPlusBufferMillis
-                                status = StreamingJobStatus.BufferFullWaiting
-                            } else if (allEffectsPaused) {
-                                // Wait for the duration of one frame to reduce time spent rendering/sending frames
-                                // if all effects are paused.
-                                sleepMillis = (1000 / fps).toLong()
-                                timestampMillis += sleepMillis
                                 status = StreamingJobStatus.BufferFullWaiting
                             }
                         }

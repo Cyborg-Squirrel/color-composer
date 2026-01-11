@@ -8,11 +8,17 @@ import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.SingleLedStripModel
+import io.cyborgsquirrel.lighting.rendering.cache.ClientSequenceTracker
 import io.cyborgsquirrel.lighting.rendering.cache.StripPoolFrameCache
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
+import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameSegmentModel
+import io.cyborgsquirrel.lighting.rendering.post_processing.EffectsBlender
+import io.cyborgsquirrel.lighting.rendering.post_processing.FrameSegmentationHelper
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.Semaphore
 import kotlin.jvm.optionals.getOrNull
 
 @Singleton
@@ -20,14 +26,66 @@ class LightEffectRendererImpl(
     private val effectRepository: ActiveLightEffectService,
 ) : LightEffectRenderer {
 
+    private val lock = Semaphore(1)
     private val cache = StripPoolFrameCache()
+    private val tracker = ClientSequenceTracker()
+    private val segmentationHelper = FrameSegmentationHelper()
+    private val blender = EffectsBlender()
 
     /**
-     * Renders all light effects for the specified LED strip [strip].
+     * Renders all light effects for the specified LED strips [strips].
      */
-    override fun renderFrame(
-        strip: LedStripModel, sequenceNumber: Short
-    ): RenderedFrameModel? {
+    override fun renderFrames(strips: List<LedStripModel>, clientUuid: String): List<RenderedFrameSegmentModel> {
+        val frameList = mutableListOf<RenderedFrameSegmentModel>()
+        for (strip in strips) {
+            when (strip) {
+                is LedStripPoolModel -> {
+                    try {
+                        /// Semaphore because strip pools can involve multiple clients and thus multiple job threads
+                        /// jobs should either get the latest frame or the frame cached from the other job's render sequence
+                        lock.acquire()
+                        val sequenceNumber = tracker.getSequenceNumber(clientUuid, strip.uuid)
+                        val cachedFrame = checkCache(strip, sequenceNumber)
+                        val renderedFrame = if (cachedFrame != null) {
+                            cachedFrame
+                        } else {
+                            val renderedFrame = renderFrame(strip)
+                            if (renderedFrame != null) {
+                                renderedFrame.sequenceNumber = cache.getSequenceNumber(strip.uuid)
+                                cache.addFrameToCache(renderedFrame)
+                            }
+
+                            renderedFrame
+                        }
+
+                        if (renderedFrame != null) {
+                            val frameSegments = segmentationHelper.segmentFrame(strips, clientUuid, renderedFrame)
+                            frameList.addAll(frameSegments)
+                        }
+                    } finally {
+                        lock.release()
+                    }
+                }
+
+                is SingleLedStripModel -> {
+                    val renderedFrame = renderFrame(strip)
+                    if (renderedFrame != null) {
+                        frameList.add(
+                            RenderedFrameSegmentModel(
+                                strip,
+                                renderedFrame.sequenceNumber,
+                                renderedFrame.frameData
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        return frameList
+    }
+
+    private fun checkCache(strip: LedStripModel, sequenceNumber: Short): RenderedFrameModel? {
         if (strip is LedStripPoolModel) {
             val frame = cache.getFrameFromCache(strip.uuid, sequenceNumber)
             // Only return frame if we get a cache hit
@@ -36,6 +94,10 @@ class LightEffectRendererImpl(
             }
         }
 
+        return null
+    }
+
+    private fun renderFrame(strip: LedStripModel): RenderedFrameModel? {
         val activeEffects =
             effectRepository.getAllEffectsForStrip(strip.uuid).filter { it.status.isActive() }.sortedBy { it.priority }
         return if (activeEffects.isEmpty()) {
@@ -50,7 +112,8 @@ class LightEffectRendererImpl(
         activeEffects: List<ActiveLightEffect>
     ): RenderedFrameModel {
         val allEffectsRgbData = mutableListOf<List<RgbColor>>()
-        for (activeEffect in activeEffects) {
+        val activeEffectsByPriority = activeEffects.sortedBy { it.priority }
+        for (activeEffect in activeEffectsByPriority) {
             logger.debug("Rendering effect {}", activeEffect)
             var rgbData = if (activeEffect.status == LightEffectStatus.Playing) {
                 activeEffect.effect.getNextStep()
@@ -85,47 +148,8 @@ class LightEffectRendererImpl(
         }
 
         // If there are multiple effects, layer the RGB output on top of each other.
-        val renderedRgbData = mutableListOf<RgbColor>()
-        val stripLength = activeEffects.first().strip.length()
-        val blendMode = activeEffects.first().strip.blendMode
-        for (i in 0..<stripLength) {
-            when (blendMode) {
-                BlendMode.Additive -> {
-                    var didAdd = false
-                    for (j in allEffectsRgbData.indices) {
-                        val rgbColor = allEffectsRgbData[j][i]
-                        if (!rgbColor.isBlank()) {
-                            if (didAdd) {
-                                renderedRgbData[i] += rgbColor
-                            } else {
-                                didAdd = true
-                                renderedRgbData.add(rgbColor)
-                            }
-                        }
-                    }
-
-                    if (!didAdd) {
-                        renderedRgbData.add(RgbColor.Blank)
-                    }
-                }
-
-                BlendMode.Average -> TODO()
-                BlendMode.Layer -> TODO()
-            }
-        }
-
-        val effectStatuses = activeEffects.map { it.status }.toSet()
-        val allEffectsPaused = effectStatuses.size == 1 && effectStatuses.first() == LightEffectStatus.Paused
-        // TODO rendered RGB list layering, sequence number assignment to frames, render frame pools
-        val frame = RenderedFrameModel(
-            strip, renderedRgbData, cache.getSequenceNumber(strip.uuid), allEffectsPaused
-        )
-
-        if (strip is LedStripPoolModel) {
-            cache.addFrameToCache(frame)
-        }
-
-        return frame
+        val renderedRgbData = blender.blendEffects(strip, allEffectsRgbData)
+        return RenderedFrameModel(strip, renderedRgbData)
     }
 
     companion object {
