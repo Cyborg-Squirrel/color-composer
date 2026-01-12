@@ -321,7 +321,6 @@ class StripPoolApiServiceTest(
         )
         poolRepository.save(pool)
 
-        // Create initial members
         val member1 = PoolMemberLedStripEntity(
             pool = pool,
             strip = strip1,
@@ -339,7 +338,6 @@ class StripPoolApiServiceTest(
         poolMemberRepository.save(member1)
         poolMemberRepository.save(member2)
 
-        // Update to only include strip-1
         val request = UpdateStripPoolMembersRequest(
             members = listOf(
                 StripPoolMemberRequestModel(
@@ -381,7 +379,6 @@ class StripPoolApiServiceTest(
         )
         poolRepository.save(pool)
 
-        // Create initial member
         val member = PoolMemberLedStripEntity(
             pool = pool,
             strip = strip1,
@@ -391,7 +388,6 @@ class StripPoolApiServiceTest(
         )
         poolMemberRepository.save(member)
 
-        // Update the member
         val request = UpdateStripPoolMembersRequest(
             members = listOf(
                 StripPoolMemberRequestModel(
@@ -456,7 +452,6 @@ class StripPoolApiServiceTest(
         )
         poolRepository.save(pool)
 
-        // Create initial members with strip1 and strip2
         val member1 = PoolMemberLedStripEntity(
             pool = pool,
             strip = strip1,
@@ -474,7 +469,6 @@ class StripPoolApiServiceTest(
         poolMemberRepository.save(member1)
         poolMemberRepository.save(member2)
 
-        // Update to include strip2 and strip3 (remove strip1, add strip3)
         val request = UpdateStripPoolMembersRequest(
             members = listOf(
                 StripPoolMemberRequestModel(
@@ -524,7 +518,6 @@ class StripPoolApiServiceTest(
         )
         poolRepository.save(pool)
 
-        // Create initial member
         val member = PoolMemberLedStripEntity(
             pool = pool,
             strip = strip1,
@@ -534,7 +527,6 @@ class StripPoolApiServiceTest(
         )
         poolMemberRepository.save(member)
 
-        // Update with empty members list
         val request = UpdateStripPoolMembersRequest(members = emptyList())
 
         stripPoolApiService.updatePoolMembers("pool-uuid", request)
