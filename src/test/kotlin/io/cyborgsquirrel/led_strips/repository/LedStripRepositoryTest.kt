@@ -70,6 +70,7 @@ class LedStripRepositoryTest(
             PoolMemberLedStripEntity(
                 pool = poolEntity,
                 strip = ledStrip,
+                uuid = UUID.randomUUID().toString(),
                 inverted = false,
                 poolIndex = index
             )
@@ -120,6 +121,7 @@ class LedStripRepositoryTest(
             members.size shouldBe 1
             members.first().apply {
                 id shouldBe savedPoolMembers.first().id
+                uuid shouldBe savedPoolMembers.first().uuid
                 inverted shouldBe savedPoolMembers.first().inverted
                 poolIndex shouldBe savedPoolMembers.first().poolIndex
             }
