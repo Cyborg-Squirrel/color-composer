@@ -82,7 +82,7 @@ class StripPoolApiService(
             poolEntity.blendMode = request.blendMode
         }
 
-        poolRepository.save(poolEntity)
+        poolRepository.update(poolEntity)
     }
 
     fun updatePoolMembers(uuid: String, request: UpdateStripPoolRequest) {
