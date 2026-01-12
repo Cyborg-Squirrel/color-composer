@@ -368,10 +368,10 @@ class EffectControllerTest(
             )
         )
         poolMemberRepository.save(
-            PoolMemberLedStripEntity(strip = stripA, pool = pool, poolIndex = 0, inverted = false)
+            PoolMemberLedStripEntity(strip = stripA, pool = pool, uuid = UUID.randomUUID().toString(),poolIndex = 0, inverted = false)
         )
         poolMemberRepository.save(
-            PoolMemberLedStripEntity(strip = stripB, pool = pool, poolIndex = 1, inverted = false)
+            PoolMemberLedStripEntity(strip = stripB, pool = pool, uuid = UUID.randomUUID().toString(),poolIndex = 1, inverted = false)
         )
 
         val paletteSettings = objectToMap(
@@ -495,10 +495,10 @@ class EffectControllerTest(
             )
         )
         poolMemberRepository.save(
-            PoolMemberLedStripEntity(strip = stripA, pool = pool, poolIndex = 0, inverted = false)
+            PoolMemberLedStripEntity(strip = stripA, pool = pool, uuid = UUID.randomUUID().toString(), poolIndex = 0, inverted = false)
         )
         poolMemberRepository.save(
-            PoolMemberLedStripEntity(strip = stripB, pool = pool, poolIndex = 1, inverted = false)
+            PoolMemberLedStripEntity(strip = stripB, pool = pool, uuid = UUID.randomUUID().toString(),poolIndex = 1, inverted = false)
         )
 
         val paletteSettings = objectToMap(
@@ -570,7 +570,7 @@ class EffectControllerTest(
             )
         )
         poolMemberRepository.save(
-            PoolMemberLedStripEntity(strip = strip, pool = pool, poolIndex = 0, inverted = false)
+            PoolMemberLedStripEntity(strip = strip, pool = pool, uuid = UUID.randomUUID().toString(), poolIndex = 0, inverted = false)
         )
 
         val paletteSettings = objectToMap(
@@ -629,7 +629,7 @@ class EffectControllerTest(
             )
         )
         poolMemberRepository.save(
-            PoolMemberLedStripEntity(strip = strip, pool = pool, poolIndex = 0, inverted = false)
+            PoolMemberLedStripEntity(strip = strip, pool = pool, uuid = UUID.randomUUID().toString(), poolIndex = 0, inverted = false)
         )
 
         val paletteSettings = objectToMap(
@@ -707,7 +707,7 @@ class EffectControllerTest(
             )
         )
         poolMemberRepository.save(
-            PoolMemberLedStripEntity(strip = strip, pool = pool, poolIndex = 0, inverted = false)
+            PoolMemberLedStripEntity(strip = strip, pool = pool, uuid = UUID.randomUUID().toString(), poolIndex = 0, inverted = false)
         )
 
         val paletteSettings = objectToMap(

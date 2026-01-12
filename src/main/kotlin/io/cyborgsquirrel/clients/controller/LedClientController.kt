@@ -3,7 +3,7 @@ package io.cyborgsquirrel.clients.controller
 import io.cyborgsquirrel.clients.api.LedClientApi
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
-import io.cyborgsquirrel.clients.service.LedClientApiService
+import io.cyborgsquirrel.clients.services.LedClientApiService
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body

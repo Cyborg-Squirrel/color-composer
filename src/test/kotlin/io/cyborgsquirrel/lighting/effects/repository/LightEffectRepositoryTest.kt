@@ -135,6 +135,7 @@ class LightEffectRepositoryTest(
             PoolMemberLedStripEntity(
                 pool = pool,
                 strip = strip,
+                uuid = UUID.randomUUID().toString(),
                 inverted = false,
                 poolIndex = 1
             )

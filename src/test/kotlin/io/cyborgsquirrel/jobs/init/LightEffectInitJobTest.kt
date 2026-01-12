@@ -337,7 +337,7 @@ class LightEffectInitJobTest(
             )
         )
         poolMemberLedStripRepository.save(
-            PoolMemberLedStripEntity(strip = strip, pool = pool, poolIndex = 0, inverted = false)
+            PoolMemberLedStripEntity(strip = strip, pool = pool, uuid = UUID.randomUUID().toString(), poolIndex = 0, inverted = false)
         )
         val settingsJson = objectToMap(objectMapper, lightEffectSettings)
         val lightEffect = lightEffectRepository.save(

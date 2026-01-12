@@ -12,6 +12,7 @@ import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import java.util.*
 
@@ -24,6 +25,13 @@ class LedStripPoolRepositoryTest(
 ) : StringSpec({
     lateinit var ledStripA: LedStripEntity
     lateinit var ledStripB: LedStripEntity
+
+    afterTest {
+        poolMemberLedStripRepository.deleteAll()
+        ledStripPoolRepository.deleteAll()
+        ledStripPoolRepository.deleteAll()
+        clientRepository.deleteAll()
+    }
 
     fun createLedStripClientEntity(
         name: String,
@@ -73,6 +81,7 @@ class LedStripPoolRepositoryTest(
     ): PoolMemberLedStripEntity = PoolMemberLedStripEntity(
         pool = pool,
         strip = strip,
+        uuid = UUID.randomUUID().toString(),
         inverted = inverted,
         poolIndex = poolIndex
     )
@@ -111,18 +120,22 @@ class LedStripPoolRepositoryTest(
             createPoolMember(pool, ledStripA, 0, false),
             createPoolMember(pool, ledStripB, 1, false)
         )
-        val savedMembers = poolMemberLedStripRepository.saveAll(poolMembers)
+        poolMemberLedStripRepository.saveAll(poolMembers)
 
         val fetchedPool = ledStripPoolRepository.queryById(pool.id)
         fetchedPool.isPresent shouldBe true
 
         val poolEntity = fetchedPool.get()
+        poolEntity.members.size shouldBe 2
+        for (poolMember in poolEntity.members) {
+            val matchedMember = poolMembers.first { it.uuid == poolMember.uuid }
+            matchedMember shouldNotBe null
+            matchedMember.matches(poolMember)
+        }
         poolEntity.apply {
             uuid shouldBe pool.uuid
             name shouldBe pool.name
             members.size shouldBe 2
-            members.first().matches(savedMembers.first())
-            members.last().matches(savedMembers.last())
             blendMode shouldBe pool.blendMode
         }
     }

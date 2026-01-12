@@ -3,7 +3,7 @@ package io.cyborgsquirrel.led_strips.controller
 import io.cyborgsquirrel.led_strips.api.LedStripSetupApi
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
-import io.cyborgsquirrel.led_strips.service.LedStripApiService
+import io.cyborgsquirrel.led_strips.services.LedStripApiService
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
