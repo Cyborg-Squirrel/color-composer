@@ -3,6 +3,7 @@ package io.cyborgsquirrel.strip_pools.controller
 import io.cyborgsquirrel.strip_pools.api.StripPoolApi
 import io.cyborgsquirrel.strip_pools.requests.CreateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
+import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolMembersRequest
 import io.cyborgsquirrel.strip_pools.services.StripPoolApiService
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
@@ -58,7 +59,7 @@ class StripPoolController(
         }
     }
 
-    override fun updatePoolMembers(uuid: String, @Body request: UpdateStripPoolRequest): HttpResponse<Any> {
+    override fun updatePoolMembers(uuid: String, @Body request: UpdateStripPoolMembersRequest): HttpResponse<Any> {
         return try {
             stripPoolApiService.updatePoolMembers(uuid, request)
             HttpResponse.noContent()

@@ -1,13 +1,21 @@
 package io.cyborgsquirrel.strip_pools.services
 
+import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientType
+import io.cyborgsquirrel.clients.enums.ColorOrder
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.strip_pools.requests.CreateStripPoolRequest
+import io.cyborgsquirrel.strip_pools.requests.StripPoolMemberRequestModel
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
+import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolMembersRequest
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
@@ -20,12 +28,30 @@ import java.util.*
 class StripPoolApiServiceTest(
     private val stripPoolApiService: StripPoolApiService,
     private val poolRepository: H2LedStripPoolRepository,
-    private val poolMemberRepository: H2PoolMemberLedStripRepository
+    private val poolMemberRepository: H2PoolMemberLedStripRepository,
+    private val stripRepository: H2LedStripRepository,
+    private val clientRepository: H2LedStripClientRepository
 ) : StringSpec({
 
     afterTest {
         poolMemberRepository.deleteAll()
+        stripRepository.deleteAll()
         poolRepository.deleteAll()
+        clientRepository.deleteAll()
+    }
+
+    fun createTestClient(): LedStripClientEntity {
+        val client = LedStripClientEntity(
+            name = "Test Client",
+            uuid = UUID.randomUUID().toString(),
+            address = "192.168.1.1",
+            clientType = ClientType.Pi,
+            colorOrder = ColorOrder.RGB,
+            wsPort = 8000,
+            apiPort = 8001
+        )
+        clientRepository.save(client)
+        return client
     }
 
     "getStripPool should throw exception for non-existent pool" {
@@ -167,6 +193,354 @@ class StripPoolApiServiceTest(
     "deletePool should not throw exception for non-existent pool" {
         // Should not throw any exception
         stripPoolApiService.deletePool("non-existent-pool")
+    }
+
+    "updatePoolMembers should throw exception for non-existent pool" {
+        val request = UpdateStripPoolMembersRequest(members = emptyList())
+
+        shouldThrow<ClientRequestException> {
+            stripPoolApiService.updatePoolMembers("non-existent-pool", request)
+        }
+    }
+
+    "updatePoolMembers should throw exception for non-existent strip" {
+        val pool = LedStripPoolEntity(
+            name = "Test Pool",
+            uuid = "pool-uuid",
+            poolType = PoolType.Sync,
+            blendMode = BlendMode.Additive
+        )
+        poolRepository.save(pool)
+
+        val request = UpdateStripPoolMembersRequest(
+            members = listOf(
+                StripPoolMemberRequestModel(
+                    uuid = "member-1",
+                    stripUuid = "non-existent-strip",
+                    inverted = false,
+                    poolIndex = 0
+                )
+            )
+        )
+
+        shouldThrow<ClientRequestException> {
+            stripPoolApiService.updatePoolMembers("pool-uuid", request)
+        }
+    }
+
+    "updatePoolMembers should create new members" {
+        val client = createTestClient()
+
+        val strip1 = LedStripEntity(
+            name = "Strip 1",
+            uuid = "strip-1",
+            pin = "D5",
+            length = 30,
+            height = 1,
+            blendMode = BlendMode.Additive,
+            brightness = 100,
+            client = client
+        )
+        val strip2 = LedStripEntity(
+            name = "Strip 2",
+            uuid = "strip-2",
+            pin = "D6",
+            length = 50,
+            height = 1,
+            blendMode = BlendMode.Additive,
+            brightness = 100,
+            client = client
+        )
+        stripRepository.save(strip1)
+        stripRepository.save(strip2)
+
+        val pool = LedStripPoolEntity(
+            name = "Test Pool",
+            uuid = "pool-uuid",
+            poolType = PoolType.Sync,
+            blendMode = BlendMode.Additive
+        )
+        poolRepository.save(pool)
+
+        val request = UpdateStripPoolMembersRequest(
+            members = listOf(
+                StripPoolMemberRequestModel(
+                    uuid = "member-1",
+                    stripUuid = "strip-1",
+                    inverted = false,
+                    poolIndex = 0
+                ),
+                StripPoolMemberRequestModel(
+                    uuid = "member-2",
+                    stripUuid = "strip-2",
+                    inverted = true,
+                    poolIndex = 1
+                )
+            )
+        )
+
+        stripPoolApiService.updatePoolMembers("pool-uuid", request)
+
+        val members = poolMemberRepository.findByPool(pool)
+        members.size shouldBe 2
+        members.find { it.uuid == "member-1" }?.inverted shouldBe false
+        members.find { it.uuid == "member-2" }?.inverted shouldBe true
+    }
+
+    "updatePoolMembers should delete members not in request" {
+        val client = createTestClient()
+
+        val strip1 = LedStripEntity(
+            name = "Strip 1",
+            uuid = "strip-1",
+            pin = "D5",
+            length = 30,
+            height = 1,
+            blendMode = BlendMode.Additive,
+            brightness = 100,
+            client = client
+        )
+        val strip2 = LedStripEntity(
+            name = "Strip 2",
+            uuid = "strip-2",
+            pin = "D6",
+            length = 50,
+            height = 1,
+            blendMode = BlendMode.Additive,
+            brightness = 100,
+            client = client
+        )
+        stripRepository.save(strip1)
+        stripRepository.save(strip2)
+
+        val pool = LedStripPoolEntity(
+            name = "Test Pool",
+            uuid = "pool-uuid",
+            poolType = PoolType.Sync,
+            blendMode = BlendMode.Additive
+        )
+        poolRepository.save(pool)
+
+        // Create initial members
+        val member1 = PoolMemberLedStripEntity(
+            pool = pool,
+            strip = strip1,
+            uuid = "member-1",
+            inverted = false,
+            poolIndex = 0
+        )
+        val member2 = PoolMemberLedStripEntity(
+            pool = pool,
+            strip = strip2,
+            uuid = "member-2",
+            inverted = false,
+            poolIndex = 1
+        )
+        poolMemberRepository.save(member1)
+        poolMemberRepository.save(member2)
+
+        // Update to only include strip-1
+        val request = UpdateStripPoolMembersRequest(
+            members = listOf(
+                StripPoolMemberRequestModel(
+                    uuid = "member-1",
+                    stripUuid = "strip-1",
+                    inverted = false,
+                    poolIndex = 0
+                )
+            )
+        )
+
+        stripPoolApiService.updatePoolMembers("pool-uuid", request)
+
+        val members = poolMemberRepository.findByPool(pool)
+        members.size shouldBe 1
+        members[0].uuid shouldBe "member-1"
+    }
+
+    "updatePoolMembers should update existing members" {
+        val client = createTestClient()
+
+        val strip1 = LedStripEntity(
+            name = "Strip 1",
+            uuid = "strip-1",
+            pin = "D5",
+            length = 30,
+            height = 1,
+            blendMode = BlendMode.Additive,
+            brightness = 100,
+            client = client
+        )
+        stripRepository.save(strip1)
+
+        val pool = LedStripPoolEntity(
+            name = "Test Pool",
+            uuid = "pool-uuid",
+            poolType = PoolType.Sync,
+            blendMode = BlendMode.Additive
+        )
+        poolRepository.save(pool)
+
+        // Create initial member
+        val member = PoolMemberLedStripEntity(
+            pool = pool,
+            strip = strip1,
+            uuid = "member-1",
+            inverted = false,
+            poolIndex = 0
+        )
+        poolMemberRepository.save(member)
+
+        // Update the member
+        val request = UpdateStripPoolMembersRequest(
+            members = listOf(
+                StripPoolMemberRequestModel(
+                    uuid = "member-1",
+                    stripUuid = "strip-1",
+                    inverted = true,
+                    poolIndex = 5
+                )
+            )
+        )
+
+        stripPoolApiService.updatePoolMembers("pool-uuid", request)
+
+        val updatedMembers = poolMemberRepository.findByPool(pool)
+        updatedMembers.size shouldBe 1
+        updatedMembers[0].inverted shouldBe true
+        updatedMembers[0].poolIndex shouldBe 5
+    }
+
+    "updatePoolMembers should handle subset and superset of members" {
+        val client = createTestClient()
+
+        val strip1 = LedStripEntity(
+            name = "Strip 1",
+            uuid = "strip-1",
+            pin = "D5",
+            length = 30,
+            height = 1,
+            blendMode = BlendMode.Additive,
+            brightness = 100,
+            client = client
+        )
+        val strip2 = LedStripEntity(
+            name = "Strip 2",
+            uuid = "strip-2",
+            pin = "D6",
+            length = 50,
+            height = 1,
+            blendMode = BlendMode.Additive,
+            brightness = 100,
+            client = client
+        )
+        val strip3 = LedStripEntity(
+            name = "Strip 3",
+            uuid = "strip-3",
+            pin = "D7",
+            length = 40,
+            height = 1,
+            blendMode = BlendMode.Additive,
+            brightness = 100,
+            client = client
+        )
+        stripRepository.save(strip1)
+        stripRepository.save(strip2)
+        stripRepository.save(strip3)
+
+        val pool = LedStripPoolEntity(
+            name = "Test Pool",
+            uuid = "pool-uuid",
+            poolType = PoolType.Sync,
+            blendMode = BlendMode.Additive
+        )
+        poolRepository.save(pool)
+
+        // Create initial members with strip1 and strip2
+        val member1 = PoolMemberLedStripEntity(
+            pool = pool,
+            strip = strip1,
+            uuid = "member-1",
+            inverted = false,
+            poolIndex = 0
+        )
+        val member2 = PoolMemberLedStripEntity(
+            pool = pool,
+            strip = strip2,
+            uuid = "member-2",
+            inverted = false,
+            poolIndex = 1
+        )
+        poolMemberRepository.save(member1)
+        poolMemberRepository.save(member2)
+
+        // Update to include strip2 and strip3 (remove strip1, add strip3)
+        val request = UpdateStripPoolMembersRequest(
+            members = listOf(
+                StripPoolMemberRequestModel(
+                    uuid = "member-2",
+                    stripUuid = "strip-2",
+                    inverted = false,
+                    poolIndex = 0
+                ),
+                StripPoolMemberRequestModel(
+                    uuid = "member-3",
+                    stripUuid = "strip-3",
+                    inverted = true,
+                    poolIndex = 1
+                )
+            )
+        )
+
+        stripPoolApiService.updatePoolMembers("pool-uuid", request)
+
+        val members = poolMemberRepository.findByPool(pool)
+        members.size shouldBe 2
+        members.find { it.uuid == "member-1" } shouldBe null
+        members.find { it.uuid == "member-2" } shouldNotBe null
+        members.find { it.uuid == "member-3" } shouldNotBe null
+    }
+
+    "updatePoolMembers should clear all members when request is empty" {
+        val client = createTestClient()
+
+        val strip1 = LedStripEntity(
+            name = "Strip 1",
+            uuid = "strip-1",
+            pin = "D5",
+            length = 30,
+            height = 1,
+            blendMode = BlendMode.Additive,
+            brightness = 100,
+            client = client
+        )
+        stripRepository.save(strip1)
+
+        val pool = LedStripPoolEntity(
+            name = "Test Pool",
+            uuid = "pool-uuid",
+            poolType = PoolType.Sync,
+            blendMode = BlendMode.Additive
+        )
+        poolRepository.save(pool)
+
+        // Create initial member
+        val member = PoolMemberLedStripEntity(
+            pool = pool,
+            strip = strip1,
+            uuid = "member-1",
+            inverted = false,
+            poolIndex = 0
+        )
+        poolMemberRepository.save(member)
+
+        // Update with empty members list
+        val request = UpdateStripPoolMembersRequest(members = emptyList())
+
+        stripPoolApiService.updatePoolMembers("pool-uuid", request)
+
+        val members = poolMemberRepository.findByPool(pool)
+        members.isEmpty() shouldBe true
     }
 
 })
