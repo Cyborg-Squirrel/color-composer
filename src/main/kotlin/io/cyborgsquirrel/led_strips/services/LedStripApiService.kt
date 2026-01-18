@@ -27,7 +27,6 @@ class LedStripApiService(
     private val activeLightEffectService: ActiveLightEffectService,
     private val stripRepository: H2LedStripRepository,
     private val clientRepository: H2LedStripClientRepository,
-    private val streamJobManager: StreamJobManager,
     private val clientStatusService: ClientStatusService,
 ) {
 
@@ -114,6 +113,12 @@ class LedStripApiService(
         if (clientEntityOptional.isPresent) {
             val clientEntity = clientEntityOptional.get()
             validatePin(clientEntity, request.pin)
+            
+            // Pi clients can only have one LED strip
+            if (clientEntity.clientType == ClientType.Pi && clientEntity.strips.isNotEmpty()) {
+                throw ClientRequestException("Pi clients can only have one LED strip connected.")
+            }
+            
             val stripEntity = LedStripEntity(
                 client = clientEntity,
                 uuid = UUID.randomUUID().toString(),
@@ -135,20 +140,60 @@ class LedStripApiService(
         val entityOptional = stripRepository.findByUuid(uuid)
         if (entityOptional.isPresent) {
             val entity = entityOptional.get()
-            if (request.pin != null) {
-                validatePin(entity.client!!, request.pin)
+            val clientEntity = entity.client
+            val newEntity = if (clientEntity?.uuid != request.clientUuid) {
+                if (request.clientUuid == null) {
+                    entity.copy(
+                        client = null,
+                        name = request.name ?: entity.name,
+                        pin = request.pin ?: entity.pin,
+                        length = request.length ?: entity.length,
+                        height = request.height ?: entity.height,
+                        blendMode = request.blendMode ?: entity.blendMode,
+                        brightness = request.brightness ?: entity.brightness,
+                    )
+                } else {
+                    val newClientOptional = clientRepository.findByUuid(request.clientUuid)
+                    if (newClientOptional.isEmpty) {
+                        throw ClientRequestException("Client with uuid ${request.clientUuid} does not exist!")
+                    }
+                    val newClient = newClientOptional.get()
+
+                    // Pi clients can only have one LED strip
+                    if (newClient.clientType == ClientType.Pi) {
+                        val newClientStrips = newClient.strips
+                        if (newClientStrips.isNotEmpty() && !newClientStrips.map { it.uuid }.contains(uuid)) {
+                            throw ClientRequestException("Pi clients can only have one LED strip connected.")
+                        }
+                    }
+
+                    entity.copy(
+                        client = newClient,
+                        name = request.name ?: entity.name,
+                        pin = request.pin ?: entity.pin,
+                        length = request.length ?: entity.length,
+                        height = request.height ?: entity.height,
+                        blendMode = request.blendMode ?: entity.blendMode,
+                        brightness = request.brightness ?: entity.brightness,
+                    )
+                }
+            } else {
+                // Strip client assignment is remaining the same
+                entity.copy(
+                    name = request.name ?: entity.name,
+                    pin = request.pin ?: entity.pin,
+                    length = request.length ?: entity.length,
+                    height = request.height ?: entity.height,
+                    blendMode = request.blendMode ?: entity.blendMode,
+                    brightness = request.brightness ?: entity.brightness,
+                )
             }
 
-            // TODO notify any running effects of the updated length or height. Force user to restart effects?
-            // TODO notify renderer or active effect registry of blend mode changes.
-            val newEntity = entity.copy(
-                name = request.name ?: entity.name,
-                pin = request.pin ?: entity.pin,
-                length = request.length ?: entity.length,
-                height = request.height ?: entity.height,
-                blendMode = request.blendMode ?: entity.blendMode,
-                brightness = request.brightness ?: entity.brightness,
-            )
+            if (request.pin != null) {
+                validatePin(newEntity.client!!, request.pin)
+            } else if (request.clientUuid != null) {
+                throw ClientRequestException("A pin must be specified for a strip being assigned to a client!")
+            }
 
             if (newEntity != entity) {
                 val newStripEntity = stripRepository.update(newEntity)
