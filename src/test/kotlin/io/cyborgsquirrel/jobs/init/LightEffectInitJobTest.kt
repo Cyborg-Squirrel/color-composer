@@ -134,7 +134,7 @@ class LightEffectInitJobTest(
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
-        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumEffectSettings::class
+        activeEffectList.first().effect.settings::class shouldBe SpectrumEffectSettings::class
         activeEffectList.first().strip.uuid shouldBe strip.uuid
         activeEffectList.first().strip.name shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
@@ -202,7 +202,7 @@ class LightEffectInitJobTest(
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
-        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumEffectSettings::class
+        activeEffectList.first().effect.settings::class shouldBe SpectrumEffectSettings::class
         activeEffectList.first().strip.uuid shouldBe strip.uuid
         activeEffectList.first().strip.name shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
@@ -279,7 +279,7 @@ class LightEffectInitJobTest(
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
-        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumEffectSettings::class
+        activeEffectList.first().effect.settings::class shouldBe SpectrumEffectSettings::class
         activeEffectList.first().strip.uuid shouldBe strip.uuid
         activeEffectList.first().strip.name shouldBe strip.name
         activeEffectList.first().status shouldBe lightEffect.status
@@ -357,7 +357,7 @@ class LightEffectInitJobTest(
 
         activeEffectList.size shouldBe 1
         activeEffectList.first().effect::class shouldBe SpectrumLightEffect::class
-        activeEffectList.first().effect.getSettings()::class shouldBe SpectrumEffectSettings::class
+        activeEffectList.first().effect.settings::class shouldBe SpectrumEffectSettings::class
         activeEffectList.first().strip.uuid shouldBe pool.uuid
         activeEffectList.first().strip.name shouldBe pool.name
         activeEffectList.first().status shouldBe lightEffect.status

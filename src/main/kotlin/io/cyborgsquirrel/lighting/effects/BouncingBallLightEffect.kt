@@ -15,9 +15,9 @@ import kotlin.math.sqrt
 class BouncingBallLightEffect(
     private val numberOfLeds: Int,
     private val timeHelper: TimeHelper,
-    private val settings: BouncingBallEffectSettings,
-    private var palette: ColorPalette?,
-) : LightEffect {
+    override val settings: BouncingBallEffectSettings,
+    override var palette: ColorPalette?,
+) : LightEffect(settings, palette) {
     // Higher values slow the effect
     private val speedKnob = settings.speed
 
@@ -49,8 +49,6 @@ class BouncingBallLightEffect(
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
-
-    override fun getSettings() = settings
 
     override fun getIterations() = iterations
 

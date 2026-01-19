@@ -5,7 +5,6 @@ import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.status.ClientStatusService
-import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
@@ -13,11 +12,20 @@ import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.led_strips.responses.GetLedStripResponse
 import io.cyborgsquirrel.led_strips.responses.GetLedStripsResponse
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.BouncingBallLightEffect
+import io.cyborgsquirrel.lighting.effects.CustomLightEffect
+import io.cyborgsquirrel.lighting.effects.FlameLightEffect
+import io.cyborgsquirrel.lighting.effects.LightEffect
+import io.cyborgsquirrel.lighting.effects.MarqueeEffect
+import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
+import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
+import io.cyborgsquirrel.lighting.effects.WaveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.time.TimeHelper
 import jakarta.inject.Singleton
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
@@ -28,6 +36,7 @@ class LedStripApiService(
     private val stripRepository: H2LedStripRepository,
     private val clientRepository: H2LedStripClientRepository,
     private val clientStatusService: ClientStatusService,
+    private val timeHelper: TimeHelper,
 ) {
 
     private val validPiPins = listOf("D10", "D12", "D18", "D21")
@@ -113,12 +122,12 @@ class LedStripApiService(
         if (clientEntityOptional.isPresent) {
             val clientEntity = clientEntityOptional.get()
             validatePin(clientEntity, request.pin)
-            
+
             // Pi clients can only have one LED strip
             if (clientEntity.clientType == ClientType.Pi && clientEntity.strips.isNotEmpty()) {
                 throw ClientRequestException("Pi clients can only have one LED strip connected.")
             }
-            
+
             val stripEntity = LedStripEntity(
                 client = clientEntity,
                 uuid = UUID.randomUUID().toString(),
@@ -137,20 +146,20 @@ class LedStripApiService(
     }
 
     fun updateStrip(uuid: String, request: UpdateLedStripRequest) {
-        val entityOptional = stripRepository.findByUuid(uuid)
-        if (entityOptional.isPresent) {
-            val entity = entityOptional.get()
-            val clientEntity = entity.client
-            val newEntity = if (clientEntity?.uuid != request.clientUuid) {
+        val stripEntityOptional = stripRepository.findByUuid(uuid)
+        if (stripEntityOptional.isPresent) {
+            val stripEntity = stripEntityOptional.get()
+            val clientEntity = stripEntity.client
+            val newStripEntity = if (clientEntity?.uuid != request.clientUuid) {
                 if (request.clientUuid == null) {
-                    entity.copy(
+                    stripEntity.copy(
                         client = null,
-                        name = request.name ?: entity.name,
-                        pin = request.pin ?: entity.pin,
-                        length = request.length ?: entity.length,
-                        height = request.height ?: entity.height,
-                        blendMode = request.blendMode ?: entity.blendMode,
-                        brightness = request.brightness ?: entity.brightness,
+                        name = request.name ?: stripEntity.name,
+                        pin = request.pin ?: stripEntity.pin,
+                        length = request.length ?: stripEntity.length,
+                        height = request.height ?: stripEntity.height,
+                        blendMode = request.blendMode ?: stripEntity.blendMode,
+                        brightness = request.brightness ?: stripEntity.brightness,
                     )
                 } else {
                     val newClientOptional = clientRepository.findByUuid(request.clientUuid)
@@ -167,38 +176,38 @@ class LedStripApiService(
                         }
                     }
 
-                    entity.copy(
+                    stripEntity.copy(
                         client = newClient,
-                        name = request.name ?: entity.name,
-                        pin = request.pin ?: entity.pin,
-                        length = request.length ?: entity.length,
-                        height = request.height ?: entity.height,
-                        blendMode = request.blendMode ?: entity.blendMode,
-                        brightness = request.brightness ?: entity.brightness,
+                        name = request.name ?: stripEntity.name,
+                        pin = request.pin ?: stripEntity.pin,
+                        length = request.length ?: stripEntity.length,
+                        height = request.height ?: stripEntity.height,
+                        blendMode = request.blendMode ?: stripEntity.blendMode,
+                        brightness = request.brightness ?: stripEntity.brightness,
                     )
                 }
             } else {
                 // Strip client assignment is remaining the same
-                entity.copy(
-                    name = request.name ?: entity.name,
-                    pin = request.pin ?: entity.pin,
-                    length = request.length ?: entity.length,
-                    height = request.height ?: entity.height,
-                    blendMode = request.blendMode ?: entity.blendMode,
-                    brightness = request.brightness ?: entity.brightness,
+                stripEntity.copy(
+                    name = request.name ?: stripEntity.name,
+                    pin = request.pin ?: stripEntity.pin,
+                    length = request.length ?: stripEntity.length,
+                    height = request.height ?: stripEntity.height,
+                    blendMode = request.blendMode ?: stripEntity.blendMode,
+                    brightness = request.brightness ?: stripEntity.brightness,
                 )
             }
 
             if (request.pin != null) {
-                validatePin(newEntity.client!!, request.pin)
+                validatePin(newStripEntity.client!!, request.pin)
             } else if (request.clientUuid != null) {
                 throw ClientRequestException("A pin must be specified for a strip being assigned to a client!")
             }
 
-            if (newEntity != entity) {
-                val newStripEntity = stripRepository.update(newEntity)
-                val effects = activeLightEffectService.getAllEffectsForStrip(uuid)
-                effects.forEach {
+            if (newStripEntity != stripEntity) {
+                val newStripEntity = stripRepository.update(newStripEntity)
+                val activeEffects = activeLightEffectService.getAllEffectsForStrip(uuid)
+                activeEffects.forEach {
                     val newEffect = it.copy(
                         strip = SingleLedStripModel(
                             newStripEntity.name!!,
@@ -209,7 +218,11 @@ class LedStripApiService(
                             newStripEntity.blendMode!!,
                             newStripEntity.brightness!!,
                             newStripEntity.client!!.uuid!!
-                        )
+                        ),
+                        effect = if (stripEntity.length != newStripEntity.length) recreateEffect(
+                            it.effect,
+                            newStripEntity.length!!
+                        ) else it.effect
                     )
                     if (it != newEffect) {
                         activeLightEffectService.addOrUpdateEffect(it)
@@ -283,5 +296,29 @@ class LedStripApiService(
         clientStatus: ClientStatus?, activeEffects: List<ActiveLightEffect>, stripUuid: String?
     ): Int {
         return if (clientStatus == ClientStatus.Active) activeEffects.filter { it.strip.uuid == stripUuid }.size else 0
+    }
+
+    private fun recreateEffect(lightEffect: LightEffect, numberOfLeds: Int): LightEffect {
+        return when (lightEffect) {
+            is BouncingBallLightEffect -> BouncingBallLightEffect(
+                numberOfLeds,
+                timeHelper,
+                lightEffect.settings,
+                lightEffect.palette
+            )
+
+            is CustomLightEffect -> CustomLightEffect(lightEffect.settings, lightEffect.palette)
+            is FlameLightEffect -> FlameLightEffect(numberOfLeds, lightEffect.settings, lightEffect.palette)
+            is MarqueeEffect -> MarqueeEffect(numberOfLeds, lightEffect.settings, lightEffect.palette, timeHelper)
+            is NightriderLightEffect -> NightriderLightEffect(
+                numberOfLeds,
+                lightEffect.settings,
+                lightEffect.palette,
+                timeHelper
+            )
+
+            is SpectrumLightEffect -> SpectrumLightEffect(numberOfLeds, lightEffect.settings, lightEffect.palette)
+            is WaveLightEffect -> WaveLightEffect(numberOfLeds, lightEffect.settings, lightEffect.palette)
+        }
     }
 }

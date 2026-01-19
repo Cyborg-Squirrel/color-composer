@@ -13,10 +13,9 @@ import kotlin.math.min
 // TODO palette support
 class WaveLightEffect(
     private val numberOfLeds: Int,
-    private val settings: WaveEffectSettings,
-    private var palette: ColorPalette?,
-) :
-    LightEffect {
+    override val settings: WaveEffectSettings,
+    override var palette: ColorPalette?,
+) : LightEffect(settings, palette) {
 
     private var waveALocation = 0
     private var waveBLocation = 0
@@ -45,12 +44,10 @@ class WaveLightEffect(
         }
 
         val waveARgbData = waveA.buffer.subList(
-            if (waveALocation > 0) 0 else abs(waveALocation),
-            min(waveA.buffer.size, startPoint - waveALocation)
+            if (waveALocation > 0) 0 else abs(waveALocation), min(waveA.buffer.size, startPoint - waveALocation)
         )
         val waveBRgbData = waveB.buffer.subList(
-            max(waveB.buffer.size - 1 - (waveBLocation - startPoint), 0),
-            waveB.buffer.size
+            max(waveB.buffer.size - 1 - (waveBLocation - startPoint), 0), waveB.buffer.size
         )
 
         for (i in 0..<waveALocation) {
@@ -75,8 +72,6 @@ class WaveLightEffect(
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
-
-    override fun getSettings() = settings
 
     override fun getIterations() = iterations
 

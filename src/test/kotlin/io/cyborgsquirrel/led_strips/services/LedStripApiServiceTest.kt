@@ -2,24 +2,38 @@ package io.cyborgsquirrel.led_strips.services
 
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.BlendMode
+import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.micronaut.test.annotation.MockBean
+import io.micronaut.test.extensions.kotest5.MicronautKotest5Extension.getMock
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 
 @MicronautTest
 class LedStripApiServiceTest(
     private val ledStripApiService: LedStripApiService,
     private val stripRepository: H2LedStripRepository,
-    private val clientRepository: H2LedStripClientRepository
+    private val clientRepository: H2LedStripClientRepository,
+    private val clientStatusService: ClientStatusService,
+    private val activeLightEffectService: ActiveLightEffectService,
+    private val timeHelper: TimeHelper,
 ) : StringSpec({
 
     afterTest {
@@ -34,21 +48,40 @@ class LedStripApiServiceTest(
     }
 
     "getStrip should return strip by uuid" {
+        val mockActiveLightEffectService = getMock(activeLightEffectService)
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
+        val service = LedStripApiService(
+            mockActiveLightEffectService,
+            stripRepository,
+            clientRepository,
+            clientStatusService,
+            timeHelper
+        )
 
-        val result = ledStripApiService.getStrip(strip.uuid!!)
+        val mockEffectA = mockk<ActiveLightEffect>()
+        val mockEffectB = mockk<ActiveLightEffect>()
+        val mockStrip = mockk<LedStripModel>()
+        every { mockStrip.uuid } returns strip.uuid!!
+        every { mockEffectA.status } returns LightEffectStatus.Playing
+        every { mockEffectA.strip } returns mockStrip
+        every { mockEffectB.status } returns LightEffectStatus.Stopped
+        every { mockEffectB.strip } returns mockStrip
+        every { mockActiveLightEffectService.getAllEffects() } returns listOf(mockEffectA, mockEffectB)
+
+        val result = service.getStrip(strip.uuid!!)
         result.uuid shouldBe strip.uuid
         result.name shouldBe strip.name
         result.length shouldBe strip.length
         result.pin shouldBe strip.pin
         result.blendMode shouldBe strip.blendMode
         result.brightness shouldBe strip.brightness
+        result.activeEffects shouldBe 1
     }
 
     "getStrips should return empty list when no strips exist" {
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
-        
+
         val result = ledStripApiService.getStrips(client.uuid!!)
         result.strips.isEmpty() shouldBe true
     }
@@ -80,7 +113,7 @@ class LedStripApiServiceTest(
 
     "createStrip should create new strip with valid request" {
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
-        
+
         val request = CreateLedStripRequest(
             client.uuid!!,
             "New Strip",
@@ -118,10 +151,10 @@ class LedStripApiServiceTest(
     "createStrip should fail for Pi client with existing strip" {
         val client = createLedStripClientEntity(clientRepository, "Pi Client", "192.168.1.100", 50, 51)
         client.clientType = ClientType.Pi
-        
+
         // Create first strip for Pi client
         val firstStrip = saveLedStrip(stripRepository, client, "First Strip", 100, "D10", 100)
-        
+
         val request = CreateLedStripRequest(
             client.uuid!!,
             "Second Strip",
@@ -182,7 +215,7 @@ class LedStripApiServiceTest(
     "updateStrip should succeed when moving to Pi client with no existing strips" {
         val client = createLedStripClientEntity(clientRepository, "Pi Client", "192.168.1.100", 50, 51)
         client.clientType = ClientType.Pi
-        
+
         val newClient = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.101", 52, 53)
         val strip = saveLedStrip(stripRepository, newClient, "Test Strip", 100, "D12", 100)
 
@@ -208,14 +241,30 @@ class LedStripApiServiceTest(
         s.brightness shouldBe strip.brightness
     }
 
-    "deleteStrip should delete existing strip" {
+    "delete an existing strip" {
+        val mockActiveLightEffectService = getMock(activeLightEffectService)
+        val service =
+            LedStripApiService(
+                mockActiveLightEffectService,
+                stripRepository,
+                clientRepository,
+                clientStatusService,
+                timeHelper
+            )
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
 
-        ledStripApiService.onStripDeleted(strip.uuid!!)
+        val mockEffect = mockk<ActiveLightEffect>()
+        every { mockActiveLightEffectService.getAllEffectsForStrip(strip.uuid!!) } returns listOf(mockEffect)
+
+        service.onStripDeleted(strip.uuid!!)
 
         val deletedStrip = stripRepository.findByUuid(strip.uuid!!)
         deletedStrip.isEmpty shouldBe true
+
+        verify(exactly = 1) {
+            mockActiveLightEffectService.removeEffect(mockEffect)
+        }
     }
 
     "deleteStrip should fail for non-existent strip" {
@@ -223,4 +272,10 @@ class LedStripApiServiceTest(
             ledStripApiService.onStripDeleted("non-existent-uuid")
         }
     }
-})
+}) {
+
+    @MockBean(ActiveLightEffectService::class)
+    fun activeLightEffectService(): ActiveLightEffectService {
+        return mockk(relaxed = true)
+    }
+}
