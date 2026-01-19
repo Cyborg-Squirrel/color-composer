@@ -140,7 +140,6 @@ class LedStripSetupControllerTest(
                 length = 180,
                 height = 3,
                 blendMode = newBlendMode,
-                powerLimit = 10000,
                 brightness = 85,
                 clientUuid = client.uuid
             )
@@ -244,7 +243,6 @@ class LedStripSetupControllerTest(
                 length = 200,
                 height = 2,
                 blendMode = BlendMode.Average,
-                powerLimit = 10000,
                 brightness = 85,
             )
             
