@@ -8,10 +8,10 @@ import io.cyborgsquirrel.util.time.TimeHelper
 
 class MarqueeEffect(
     private val numberOfLeds: Int,
-    private val settings: MarqueeEffectSettings,
-    private var palette: ColorPalette?,
+    override val settings: MarqueeEffectSettings,
+    override var palette: ColorPalette?,
     private val timeHelper: TimeHelper,
-) : LightEffect {
+) : LightEffect(settings, palette) {
 
     private var frame = 0
     private var iterations = 0
@@ -72,8 +72,6 @@ class MarqueeEffect(
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
-
-    override fun getSettings() = settings
 
     override fun getIterations() = iterations
 

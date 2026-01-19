@@ -1,0 +1,333 @@
+package io.cyborgsquirrel.led_strips.services
+
+import io.cyborgsquirrel.clients.enums.ClientType
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.status.ClientStatusService
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
+import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
+import io.cyborgsquirrel.lighting.effect_palette.palette.StaticColorPalette
+import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
+import io.cyborgsquirrel.lighting.enums.BlendMode
+import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.cyborgsquirrel.lighting.model.LedStripModel
+import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
+import io.cyborgsquirrel.test_helpers.saveLedStrip
+import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.time.TimeHelper
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
+import io.micronaut.test.annotation.MockBean
+import io.micronaut.test.extensions.kotest5.MicronautKotest5Extension.getMock
+import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
+import java.util.UUID
+
+@MicronautTest
+class LedStripApiServiceTest(
+    private val ledStripApiService: LedStripApiService,
+    private val stripRepository: H2LedStripRepository,
+    private val clientRepository: H2LedStripClientRepository,
+    private val clientStatusService: ClientStatusService,
+    private val activeLightEffectService: ActiveLightEffectService,
+    private val timeHelper: TimeHelper,
+) : StringSpec({
+
+    afterTest {
+        stripRepository.deleteAll()
+        clientRepository.deleteAll()
+    }
+
+    "getStrip should throw exception for non-existent strip" {
+        shouldThrow<ClientRequestException> {
+            ledStripApiService.getStrip("non-existent-uuid")
+        }
+    }
+
+    "getStrip should return strip by uuid" {
+        val mockActiveLightEffectService = getMock(activeLightEffectService)
+        val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
+        val service = LedStripApiService(
+            mockActiveLightEffectService, stripRepository, clientRepository, clientStatusService, timeHelper
+        )
+
+        val mockEffectA = mockk<ActiveLightEffect>()
+        val mockEffectB = mockk<ActiveLightEffect>()
+        val mockStrip = mockk<LedStripModel>()
+        every { mockStrip.uuid } returns strip.uuid!!
+        every { mockEffectA.status } returns LightEffectStatus.Playing
+        every { mockEffectA.strip } returns mockStrip
+        every { mockEffectB.status } returns LightEffectStatus.Stopped
+        every { mockEffectB.strip } returns mockStrip
+        every { mockActiveLightEffectService.getAllEffects() } returns listOf(mockEffectA, mockEffectB)
+
+        val result = service.getStrip(strip.uuid!!)
+        result.uuid shouldBe strip.uuid
+        result.name shouldBe strip.name
+        result.length shouldBe strip.length
+        result.pin shouldBe strip.pin
+        result.blendMode shouldBe strip.blendMode
+        result.brightness shouldBe strip.brightness
+        result.activeEffects shouldBe 1
+    }
+
+    "getStrips should return empty list when no strips exist" {
+        val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+
+        val result = ledStripApiService.getStrips(client.uuid!!)
+        result.strips.isEmpty() shouldBe true
+    }
+
+    "getStrips should return all strips for a client" {
+        val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+        val strip1 = saveLedStrip(stripRepository, client, "Strip 1", 100, "D10", 100)
+        val strip2 = saveLedStrip(stripRepository, client, "Strip 2", 150, "D12", 150)
+
+        val result = ledStripApiService.getStrips(client.uuid!!)
+        result.strips.size shouldBe 2
+        val matchingStrip1 = result.strips.first { it.uuid == strip1.uuid }
+        val matchingStrip2 = result.strips.first { it.uuid == strip2.uuid }
+
+        matchingStrip1 shouldNotBe null
+        matchingStrip2 shouldNotBe null
+
+        result.strips.forEach { rs ->
+            val matchingStrip = listOf(strip1, strip2).first { it.uuid == rs.uuid }
+            matchingStrip.client!!.uuid shouldBe rs.clientUuid
+            matchingStrip.name shouldBe rs.name
+            matchingStrip.pin shouldBe rs.pin
+            matchingStrip.length shouldBe rs.length
+            matchingStrip.height shouldBe rs.height
+            matchingStrip.brightness shouldBe rs.brightness
+            matchingStrip.blendMode shouldBe rs.blendMode
+        }
+    }
+
+    "createStrip should create new strip with valid request" {
+        val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+
+        val request = CreateLedStripRequest(
+            client.uuid!!, "New Strip", "D10", 200, blendMode = BlendMode.Additive
+        )
+
+        val uuid = ledStripApiService.createStrip(request)
+        uuid shouldNotBe null
+        uuid.isEmpty() shouldBe false
+
+        val savedStrip = stripRepository.findByUuid(uuid)
+        savedStrip.isPresent shouldBe true
+        savedStrip.get().name shouldBe request.name
+        savedStrip.get().length shouldBe request.length
+        savedStrip.get().pin shouldBe request.pin
+        savedStrip.get().blendMode shouldBe request.blendMode
+    }
+
+    "createStrip should fail for non-existent client" {
+        val request = CreateLedStripRequest(
+            "non-existent-uuid", "New Strip", "D10", 200, blendMode = BlendMode.Additive
+        )
+
+        shouldThrow<ClientRequestException> {
+            ledStripApiService.createStrip(request)
+        }
+    }
+
+    "createStrip should fail for Pi client with existing strip" {
+        val client = createLedStripClientEntity(clientRepository, "Pi Client", "192.168.1.100", 50, 51)
+        client.clientType = ClientType.Pi
+
+        // Create first strip for Pi client
+        val firstStrip = saveLedStrip(stripRepository, client, "First Strip", 100, "D10", 100)
+
+        val request = CreateLedStripRequest(
+            client.uuid!!, "Second Strip", "D12", 200, blendMode = BlendMode.Additive
+        )
+
+        shouldThrow<ClientRequestException> {
+            ledStripApiService.createStrip(request)
+        }
+    }
+
+    "updateStrip should update strip properties" {
+        val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Original Strip", 100, "D10", 100)
+
+        val request = UpdateLedStripRequest(
+            name = "Updated Strip",
+            pin = "D12",
+            length = 150,
+            blendMode = BlendMode.Average,
+            height = null,
+            brightness = strip.brightness,
+            clientUuid = client.uuid
+        )
+
+        ledStripApiService.updateStrip(strip.uuid!!, request)
+
+        val updatedStrip = stripRepository.findByUuid(strip.uuid!!)
+        updatedStrip.get().name shouldBe request.name
+        updatedStrip.get().length shouldBe request.length
+        updatedStrip.get().pin shouldBe request.pin
+        updatedStrip.get().blendMode shouldBe request.blendMode
+    }
+
+    "updateStrip should recreate effect when length changes" {
+        val mockActiveLightEffectService = getMock(activeLightEffectService)
+        val mockPalette = mockk<StaticColorPalette>()
+        every { mockPalette.getPrimaryColor(any()) } returns RgbColor.Red
+        every { mockPalette.getSecondaryColor(any()) } returns RgbColor.Orange
+        every { mockPalette.getTertiaryColor(any()) } returns RgbColor.Yellow
+        every { mockPalette.getOtherColors(any()) } returns listOf()
+
+        val spectrumLightEffect = SpectrumLightEffect(10, SpectrumEffectSettings(6, true), mockPalette)
+
+        // Advance the light effect by 1 so when the new one is created we can verify the iterations reset to 0
+        var i = 0
+        while (i < 20 && spectrumLightEffect.getIterations() == 0) {
+            i++
+            spectrumLightEffect.getNextStep()
+        }
+        spectrumLightEffect.getIterations() shouldBe 1
+
+        val service = LedStripApiService(
+            mockActiveLightEffectService, stripRepository, clientRepository, clientStatusService, timeHelper
+        )
+        val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Original Strip", 10, "D10", 100)
+
+        val mockStrip = mockk<LedStripModel>()
+        every { mockStrip.uuid } returns strip.uuid!!
+        val mockActiveLightEffect = ActiveLightEffect(
+            UUID.randomUUID().toString(),
+            0,
+            false,
+            LightEffectStatus.Playing,
+            spectrumLightEffect,
+            listOf(),
+            mockStrip
+        )
+        every { mockActiveLightEffectService.getAllEffectsForStrip(strip.uuid!!) } returns listOf(mockActiveLightEffect)
+
+        val activeEffectSlot = slot<ActiveLightEffect>()
+        every { mockActiveLightEffectService.addOrUpdateEffect(capture(activeEffectSlot)) } returns Unit
+
+        val request = UpdateLedStripRequest(
+            name = strip.name,
+            pin = strip.pin,
+            length = strip.length!! + 1,
+            blendMode = strip.blendMode,
+            height = strip.height,
+            brightness = strip.brightness,
+            clientUuid = client.uuid
+        )
+
+        service.updateStrip(strip.uuid!!, request)
+
+        verify(exactly = 1) {
+            mockActiveLightEffectService.addOrUpdateEffect(any())
+        }
+
+        activeEffectSlot.isCaptured shouldBe true
+
+        val capturedEffect = activeEffectSlot.captured
+        // Iterations are reset to 0, settings and palette are retained
+        capturedEffect.effect.getIterations() shouldBe 0
+        capturedEffect.effect.settings shouldBe spectrumLightEffect.settings
+        capturedEffect.effect.palette shouldBe spectrumLightEffect.palette
+
+        val updatedStrip = stripRepository.findByUuid(strip.uuid!!)
+        updatedStrip.get().length shouldBe request.length
+    }
+
+    "updateStrip should fail when moving to Pi client with existing strip" {
+        val clientA = createLedStripClientEntity(clientRepository, "Pi Client", "192.168.1.100", 50, 51)
+        val stripA = saveLedStrip(stripRepository, clientA, "Existing Strip", 100, "D10", 100)
+        val clientB = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.101", 52, 53)
+        val stripB = saveLedStrip(stripRepository, clientB, "Test Strip", 100, "D12", 100)
+
+        val request = UpdateLedStripRequest(
+            clientUuid = clientB.uuid!!,
+            name = "Updated Strip",
+            pin = "D12",
+            length = 150,
+            blendMode = BlendMode.Average,
+            height = null,
+            brightness = stripA.brightness,
+        )
+
+        shouldThrow<ClientRequestException> {
+            ledStripApiService.updateStrip(stripA.uuid!!, request)
+        }
+    }
+
+    "updateStrip should succeed when moving to Pi client with no existing strips" {
+        val client = createLedStripClientEntity(clientRepository, "Pi Client", "192.168.1.100", 50, 51)
+        val newClient = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.101", 52, 53)
+        val strip = saveLedStrip(stripRepository, newClient, "Test Strip", 100, "D12", 100)
+
+        val request = UpdateLedStripRequest(
+            clientUuid = client.uuid!!,
+            name = "Updated Strip",
+            pin = "D10",
+            length = 150,
+            blendMode = BlendMode.Average,
+            height = null,
+            brightness = strip.brightness,
+        )
+
+        ledStripApiService.updateStrip(strip.uuid!!, request)
+
+        val updatedStrip = stripRepository.findByUuid(strip.uuid!!)
+        val s = updatedStrip.get()
+        s.client!!.uuid shouldBe client.uuid
+        s.pin shouldBe request.pin
+        s.length shouldBe request.length
+        s.blendMode shouldBe request.blendMode
+        s.height shouldBe strip.height
+        s.brightness shouldBe strip.brightness
+    }
+
+    "delete an existing strip" {
+        val mockActiveLightEffectService = getMock(activeLightEffectService)
+        val service = LedStripApiService(
+            mockActiveLightEffectService, stripRepository, clientRepository, clientStatusService, timeHelper
+        )
+        val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
+
+        val mockEffect = mockk<ActiveLightEffect>()
+        every { mockActiveLightEffectService.getAllEffectsForStrip(strip.uuid!!) } returns listOf(mockEffect)
+
+        service.onStripDeleted(strip.uuid!!)
+
+        val deletedStrip = stripRepository.findByUuid(strip.uuid!!)
+        deletedStrip.isEmpty shouldBe true
+
+        verify(exactly = 1) {
+            mockActiveLightEffectService.removeEffect(mockEffect)
+        }
+    }
+
+    "deleteStrip should fail for non-existent strip" {
+        shouldThrow<ClientRequestException> {
+            ledStripApiService.onStripDeleted("non-existent-uuid")
+        }
+    }
+}) {
+
+    @MockBean(ActiveLightEffectService::class)
+    fun activeLightEffectService(): ActiveLightEffectService {
+        return mockk(relaxed = true)
+    }
+}

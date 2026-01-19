@@ -130,18 +130,18 @@ class LedStripSetupControllerTest(
             stripOptional.get().brightness shouldBe request.brightness
         }
 
-        "Updating strips" {
+        "Updating strips - same client" {
             val client = createLedStripClientEntity(clientRepository, "Porch lights", "192.168.50.50", 50, 51)
             val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 100)
             val newBlendMode = if (strip.blendMode == BlendMode.Additive) BlendMode.Average else BlendMode.Additive
             val request = UpdateLedStripRequest(
                 name = "Ceiling strip",
-                pin = null,
+                pin = "D10",
                 length = 180,
                 height = 3,
                 blendMode = newBlendMode,
-                powerLimit = 10000,
                 brightness = 85,
+                clientUuid = client.uuid
             )
 
             val response = apiClient.updateStrip(strip.uuid!!, request)
@@ -150,10 +150,12 @@ class LedStripSetupControllerTest(
             val updatedStripOptional = stripRepository.findByUuid(strip.uuid!!)
             updatedStripOptional.isPresent shouldBe true
             updatedStripOptional.get().name shouldBe request.name
+            updatedStripOptional.get().pin shouldBe request.pin
             updatedStripOptional.get().length shouldBe request.length
             updatedStripOptional.get().height shouldBe request.height
             updatedStripOptional.get().blendMode shouldBe request.blendMode
             updatedStripOptional.get().brightness shouldBe request.brightness
+            updatedStripOptional.get().client!!.uuid shouldBe client.uuid
         }
 
         "Deleting strips" {
@@ -183,5 +185,68 @@ class LedStripSetupControllerTest(
             response.status shouldBe HttpStatus.NO_CONTENT
             stripOptional = stripRepository.findByUuid(strip.uuid!!)
             stripOptional.isPresent shouldBe false
+        }
+
+        "Limit one strip per Pi client using the create endpoint" {
+            val client = createLedStripClientEntity(clientRepository, "Pi Client", "192.168.50.50", 50, 51)
+            
+            val request1 = CreateLedStripRequest(
+                client.uuid!!,
+                "First Strip",
+                "D10",
+                240,
+                blendMode = BlendMode.Additive,
+            )
+            var response = apiClient.createStrip(request1)
+            response.status shouldBe HttpStatus.CREATED
+            
+            val request2 = CreateLedStripRequest(
+                client.uuid!!,
+                "Second Strip",
+                "D12",
+                240,
+                blendMode = BlendMode.Additive,
+            )
+            response = apiClient.createStrip(request2)
+            response.status shouldBe HttpStatus.BAD_REQUEST
+        }
+
+        "Limit one strip per Pi client using the update endpoint" {
+            val piClient = createLedStripClientEntity(clientRepository, "Pi Client", "192.168.50.50", 50, 51)
+            val nightDriverClient = createLedStripClientEntity(clientRepository, "NightDriver Client", "192.168.50.51", 52, 53)
+            
+            val request1 = CreateLedStripRequest(
+                piClient.uuid!!,
+                "Pi Strip",
+                "D10",
+                240,
+                blendMode = BlendMode.Additive,
+            )
+            var response = apiClient.createStrip(request1)
+            response.status shouldBe HttpStatus.CREATED
+            
+            val request2 = CreateLedStripRequest(
+                nightDriverClient.uuid!!,
+                "NightDriver Strip",
+                "D12",
+                240,
+                blendMode = BlendMode.Additive,
+            )
+            response = apiClient.createStrip(request2)
+            val nightDriverStripUuid = response.body() as String
+            response.status shouldBe HttpStatus.CREATED
+            
+            val updateRequest = UpdateLedStripRequest(
+                clientUuid = piClient.uuid!!,
+                name = "Updated NightDriver Strip",
+                pin = "D12",
+                length = 200,
+                height = 2,
+                blendMode = BlendMode.Average,
+                brightness = 85,
+            )
+            
+            response = apiClient.updateStrip(nightDriverStripUuid, updateRequest)
+            response.status shouldBe HttpStatus.BAD_REQUEST
         }
     })

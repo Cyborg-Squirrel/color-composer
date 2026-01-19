@@ -23,13 +23,14 @@ fun createLedStripClientEntity(
     name: String,
     address: String,
     apiPort: Int,
-    wsPort: Int
+    wsPort: Int,
+    clientType: ClientType = ClientType.Pi
 ): LedStripClientEntity =
     clientRepository.save(
         LedStripClientEntity(
             name = name,
             address = address,
-            clientType = ClientType.Pi,
+            clientType = clientType,
             colorOrder = ColorOrder.RGB,
             uuid = UUID.randomUUID().toString(),
             apiPort = apiPort,

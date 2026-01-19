@@ -19,10 +19,10 @@ import kotlin.math.min
  */
 class NightriderLightEffect(
     private val numberOfLeds: Int,
-    private val settings: NightriderEffectSettings,
-    private var palette: ColorPalette?,
+    override val settings: NightriderEffectSettings,
+    override var palette: ColorPalette?,
     private val timeHelper: TimeHelper,
-) : LightEffect {
+) : LightEffect(settings, palette) {
 
     private var frame: Long = 0
     private var reflect = false
@@ -130,8 +130,6 @@ class NightriderLightEffect(
 
         return completeFrame(rgbList, endingColorCallback)
     }
-
-    override fun getSettings() = settings
 
     override fun getIterations() = iterations
 

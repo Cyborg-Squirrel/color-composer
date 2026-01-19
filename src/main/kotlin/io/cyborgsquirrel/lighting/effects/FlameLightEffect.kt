@@ -14,9 +14,9 @@ import kotlin.random.Random
  */
 class FlameLightEffect(
     private val numberOfLeds: Int,
-    private val settings: FlameEffectSettings,
-    private var palette: ColorPalette?,
-) : LightEffect {
+    override val settings: FlameEffectSettings,
+    override var palette: ColorPalette?,
+) : LightEffect(settings, palette) {
 
     // TODO how do we count iterations? Do we count iterations for this effect?
     private var iterations = 0
@@ -29,8 +29,6 @@ class FlameLightEffect(
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
-
-    override fun getSettings() = settings
 
     override fun getIterations() = iterations
 

@@ -5,6 +5,14 @@ import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.BouncingBallLightEffect
+import io.cyborgsquirrel.lighting.effects.CustomLightEffect
+import io.cyborgsquirrel.lighting.effects.FlameLightEffect
+import io.cyborgsquirrel.lighting.effects.LightEffect
+import io.cyborgsquirrel.lighting.effects.MarqueeEffect
+import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
+import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
+import io.cyborgsquirrel.lighting.effects.WaveLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest

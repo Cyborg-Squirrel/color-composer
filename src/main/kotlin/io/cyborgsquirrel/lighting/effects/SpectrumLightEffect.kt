@@ -9,9 +9,9 @@ import kotlin.math.ceil
 
 class SpectrumLightEffect(
     private val numberOfLeds: Int,
-    private val settings: SpectrumEffectSettings,
-    private var palette: ColorPalette?,
-) : LightEffect {
+    override val settings: SpectrumEffectSettings,
+    override var palette: ColorPalette?,
+) : LightEffect(settings, palette) {
 
     private var frame = 0
     private var iterations = 0
@@ -72,8 +72,6 @@ class SpectrumLightEffect(
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
-
-    override fun getSettings() = settings
 
     private fun colorList(index: Int): List<RgbColor> {
         if (palette != null) {
