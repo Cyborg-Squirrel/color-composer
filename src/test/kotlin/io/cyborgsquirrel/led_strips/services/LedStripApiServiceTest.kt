@@ -199,8 +199,13 @@ class LedStripApiServiceTest(
         ledStripApiService.updateStrip(strip.uuid!!, request)
 
         val updatedStrip = stripRepository.findByUuid(strip.uuid!!)
-        updatedStrip.get().client shouldBe client
-        updatedStrip.get().pin shouldBe request.pin
+        val s = updatedStrip.get()
+        s.client!!.uuid shouldBe client.uuid
+        s.pin shouldBe request.pin
+        s.length shouldBe request.length
+        s.blendMode shouldBe request.blendMode
+        s.height shouldBe strip.height
+        s.brightness shouldBe strip.brightness
     }
 
     "deleteStrip should delete existing strip" {
