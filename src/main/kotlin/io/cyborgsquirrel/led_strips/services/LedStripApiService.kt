@@ -225,7 +225,7 @@ class LedStripApiService(
                         ) else it.effect
                     )
                     if (it != newEffect) {
-                        activeLightEffectService.addOrUpdateEffect(it)
+                        activeLightEffectService.addOrUpdateEffect(newEffect)
                     }
                 }
             }
