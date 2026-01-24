@@ -63,16 +63,19 @@ class FrameSegmentationHelperTest : StringSpec({
         every { clientStrip1.uuid } returns "strip-1"
         every { clientStrip1.length } returns 5
         every { clientStrip1.clientUuid } returns clientUuid
+        every { clientStrip1.inverted } returns false
 
         val clientStrip2 = mockk<SingleLedStripModel>()
         every { clientStrip2.uuid } returns "strip-2"
         every { clientStrip2.length } returns 3
         every { clientStrip2.clientUuid } returns clientUuid
+        every { clientStrip2.inverted } returns false
 
         val clientStrip3 = mockk<SingleLedStripModel>()
         every { clientStrip3.uuid } returns "strip-3"
         every { clientStrip3.length } returns 2
         every { clientStrip3.clientUuid } returns clientUuid
+        every { clientStrip3.inverted } returns false
 
         val stripPool = mockk<LedStripPoolModel>()
         every { stripPool.uuid } returns "pool-1"
@@ -85,10 +88,16 @@ class FrameSegmentationHelperTest : StringSpec({
         result[0].frameData shouldBe frame.frameData.subList(0, clientStrip1.length)
         result[0].strip shouldBe clientStrip1
         result[0].sequenceNumber shouldBe frame.sequenceNumber
-        result[1].frameData shouldBe frame.frameData.subList(clientStrip1.length, clientStrip1.length + clientStrip2.length)
+        result[1].frameData shouldBe frame.frameData.subList(
+            clientStrip1.length,
+            clientStrip1.length + clientStrip2.length
+        )
         result[1].strip shouldBe clientStrip2
         result[1].sequenceNumber shouldBe frame.sequenceNumber
-        result[2].frameData shouldBe frame.frameData.subList(clientStrip1.length + clientStrip2.length, frame.frameData.size)
+        result[2].frameData shouldBe frame.frameData.subList(
+            clientStrip1.length + clientStrip2.length,
+            frame.frameData.size
+        )
         result[2].strip shouldBe clientStrip3
         result[2].sequenceNumber shouldBe frame.sequenceNumber
     }
@@ -98,16 +107,19 @@ class FrameSegmentationHelperTest : StringSpec({
         every { clientStrip1.uuid } returns "strip-1"
         every { clientStrip1.length } returns 5
         every { clientStrip1.clientUuid } returns clientUuid
+        every { clientStrip1.inverted } returns false
 
         val clientStrip2 = mockk<SingleLedStripModel>()
         every { clientStrip2.uuid } returns "strip-2"
         every { clientStrip2.length } returns 3
         every { clientStrip2.clientUuid } returns clientUuid
+        every { clientStrip2.inverted } returns false
 
         val poolStrip3 = mockk<SingleLedStripModel>()
         every { poolStrip3.uuid } returns "strip-3"
         every { poolStrip3.length } returns 2
         every { poolStrip3.clientUuid } returns "not-this-clients-uuid"
+        every { poolStrip3.inverted } returns false
 
         val poolStrip = mockk<LedStripPoolModel>()
         every { poolStrip.uuid } returns "pool-1"
@@ -120,7 +132,10 @@ class FrameSegmentationHelperTest : StringSpec({
         result[0].frameData shouldBe frame.frameData.subList(0, clientStrip1.length)
         result[0].strip shouldBe clientStrip1
         result[0].sequenceNumber shouldBe frame.sequenceNumber
-        result[1].frameData shouldBe frame.frameData.subList(clientStrip1.length, clientStrip1.length + clientStrip2.length)
+        result[1].frameData shouldBe frame.frameData.subList(
+            clientStrip1.length,
+            clientStrip1.length + clientStrip2.length
+        )
         result[1].strip shouldBe clientStrip2
         result[1].sequenceNumber shouldBe frame.sequenceNumber
     }
@@ -130,20 +145,24 @@ class FrameSegmentationHelperTest : StringSpec({
         every { clientStrip1.uuid } returns "strip-1"
         every { clientStrip1.length } returns 5
         every { clientStrip1.clientUuid } returns clientUuid
+        every { clientStrip1.inverted } returns false
 
         val clientStrip2 = mockk<SingleLedStripModel>()
         every { clientStrip2.uuid } returns "strip-2"
         every { clientStrip2.length } returns 3
         every { clientStrip2.clientUuid } returns clientUuid
+        every { clientStrip2.inverted } returns false
 
         val poolStrip2 = mockk<SingleLedStripModel>()
         every { poolStrip2.uuid } returns "strip-3"
         every { poolStrip2.length } returns 2
         every { poolStrip2.clientUuid } returns notThisClientsUuid
+        every { poolStrip2.inverted } returns false
 
         val poolStrip = mockk<LedStripPoolModel>()
         every { poolStrip.uuid } returns "pool-1"
         every { poolStrip.strips } returns listOf(clientStrip1, poolStrip2, clientStrip2)
+        every { poolStrip2.inverted } returns false
 
         val frame = generateFrame(poolStrip)
         val result = helper.segmentFrame(listOf(poolStrip), clientUuid, frame)
@@ -152,7 +171,42 @@ class FrameSegmentationHelperTest : StringSpec({
         result[0].frameData shouldBe frame.frameData.subList(0, clientStrip1.length)
         result[0].strip shouldBe clientStrip1
         result[0].sequenceNumber shouldBe frame.sequenceNumber
-        result[1].frameData shouldBe frame.frameData.subList(clientStrip1.length + poolStrip2.length, frame.frameData.size)
+        result[1].frameData shouldBe frame.frameData.subList(
+            clientStrip1.length + poolStrip2.length,
+            frame.frameData.size
+        )
+        result[1].strip shouldBe clientStrip2
+        result[1].sequenceNumber shouldBe frame.sequenceNumber
+    }
+
+    "strip pool with inverted strip" {
+        val clientStrip1 = mockk<SingleLedStripModel>()
+        every { clientStrip1.uuid } returns "strip-1"
+        every { clientStrip1.length } returns 5
+        every { clientStrip1.clientUuid } returns clientUuid
+        every { clientStrip1.inverted } returns false
+
+        val clientStrip2 = mockk<SingleLedStripModel>()
+        every { clientStrip2.uuid } returns "strip-2"
+        every { clientStrip2.length } returns 3
+        every { clientStrip2.clientUuid } returns clientUuid
+        every { clientStrip2.inverted } returns true
+
+        val poolStrip = mockk<LedStripPoolModel>()
+        every { poolStrip.uuid } returns "pool-1"
+        every { poolStrip.strips } returns listOf(clientStrip1, clientStrip2)
+
+        val frame = generateFrame(poolStrip)
+        val result = helper.segmentFrame(listOf(poolStrip), clientUuid, frame)
+
+        result.size shouldBe 2
+        result[0].frameData shouldBe frame.frameData.subList(0, clientStrip1.length)
+        result[0].strip shouldBe clientStrip1
+        result[0].sequenceNumber shouldBe frame.sequenceNumber
+
+        val expectedInvertedData =
+            frame.frameData.subList(clientStrip1.length, clientStrip1.length + clientStrip2.length).reversed()
+        result[1].frameData shouldBe expectedInvertedData
         result[1].strip shouldBe clientStrip2
         result[1].sequenceNumber shouldBe frame.sequenceNumber
     }

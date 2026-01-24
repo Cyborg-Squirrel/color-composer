@@ -18,6 +18,7 @@ import io.cyborgsquirrel.lighting.effects.FlameLightEffect
 import io.cyborgsquirrel.lighting.effects.LightEffect
 import io.cyborgsquirrel.lighting.effects.MarqueeEffect
 import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
+import io.cyborgsquirrel.lighting.effects.SparkleLightEffect
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.WaveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
@@ -217,7 +218,8 @@ class LedStripApiService(
                             newStripEntity.height,
                             newStripEntity.blendMode!!,
                             newStripEntity.brightness!!,
-                            newStripEntity.client!!.uuid!!
+                            newStripEntity.client!!.uuid!!,
+                            false
                         ),
                         effect = if (stripEntity.length != newStripEntity.length) recreateEffect(
                             it.effect,
@@ -319,6 +321,12 @@ class LedStripApiService(
 
             is SpectrumLightEffect -> SpectrumLightEffect(numberOfLeds, lightEffect.settings, lightEffect.palette)
             is WaveLightEffect -> WaveLightEffect(numberOfLeds, lightEffect.settings, lightEffect.palette)
+            is SparkleLightEffect -> SparkleLightEffect(
+                numberOfLeds,
+                lightEffect.settings,
+                lightEffect.palette,
+                timeHelper
+            )
         }
     }
 }

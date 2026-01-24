@@ -21,6 +21,7 @@ data class SingleLedStripModel(
     override val blendMode: BlendMode,
     val brightness: Int,
     val clientUuid: String,
+    val inverted: Boolean,
 ) : LedStripModel(uuid, name, blendMode) {
 
     override fun length() = length
