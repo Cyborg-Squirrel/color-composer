@@ -63,7 +63,8 @@ class CreateLightingService(
                 stripEntity.height,
                 stripEntity.blendMode!!,
                 stripEntity.brightness!!,
-                joinedStripEntity.client!!.uuid!!
+                joinedStripEntity.client!!.uuid!!,
+                false
             )
         } else if (poolEntity != null) {
             // Query to do JOIN (effect entity JOIN doesn't capture led strips if it points to a pool)
@@ -72,17 +73,17 @@ class CreateLightingService(
             stripMemberEntities.forEach { sm ->
                 sm.strip = memberStripEntities.first { it.id == sm.strip?.id }
             }
-            val stripEntities = stripMemberEntities.mapNotNull { it.strip }
-            val stripModels = stripEntities.map {
+            val stripModels = stripMemberEntities.map {
                 SingleLedStripModel(
-                    it.name!!,
-                    it.uuid!!,
-                    it.pin!!,
-                    it.length!!,
-                    it.height,
-                    it.blendMode!!,
-                    it.brightness!!,
-                    it.client!!.uuid!!
+                    it.strip!!.name!!,
+                    it.strip!!.uuid!!,
+                    it.strip!!.pin!!,
+                    it.strip!!.length!!,
+                    it.strip!!.height,
+                    it.strip!!.blendMode!!,
+                    it.strip!!.brightness!!,
+                    it.strip!!.client!!.uuid!!,
+                    it.inverted!!
                 )
             }
             return LedStripPoolModel(
