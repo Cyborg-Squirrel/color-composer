@@ -157,7 +157,7 @@ class PiClientWebSocketJob(
                         clientTimeSync.doTimeSync { piConfigClient.getClientTime(clientEntity).millisSinceEpoch }
                     }
 
-                    timestampMillis = timeHelper.millisSinceEpoch() // clientTimeSync.clientTimeOffset
+                    timestampMillis = timeHelper.millisSinceEpoch() + clientTimeSync.clientTimeOffset
                     logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
                     // If we disconnect during the time sync don't set the state to rendering
