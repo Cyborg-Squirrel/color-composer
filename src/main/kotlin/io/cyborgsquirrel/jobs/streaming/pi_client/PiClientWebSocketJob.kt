@@ -167,7 +167,7 @@ class PiClientWebSocketJob(
                 }
 
                 StreamingJobStatus.RenderingEffect -> {
-                    val currentTimeAsMillis = timeHelper.millisSinceEpoch() + 500
+                    val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     val timeDesynced =
                         timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeSync.clientTimeOffset
                     updateLastSeenAt(currentTimeAsMillis)
