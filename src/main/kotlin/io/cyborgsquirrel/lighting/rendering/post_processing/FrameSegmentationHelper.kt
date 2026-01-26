@@ -38,12 +38,15 @@ class FrameSegmentationHelper {
                 var startIndex = 0
                 for (fs in frameStrip.strips) {
                     for (cs in clientSingleStrips) {
-                        if (cs.uuid == fs.uuid) {
-                            var segmentData = frame.frameData.subList(startIndex, startIndex + cs.length)
-                            if (cs.inverted) {
-                                segmentData = segmentData.reversed()
-                            }
-                            frameList.add(RenderedFrameSegmentModel(cs, frame.sequenceNumber, segmentData))
+                        if (cs == fs) {
+                            val segmentData = frame.frameData.subList(startIndex, startIndex + cs.length)
+                            frameList.add(
+                                RenderedFrameSegmentModel(
+                                    cs,
+                                    frame.sequenceNumber,
+                                    if (cs.inverted) segmentData.reversed() else segmentData
+                                )
+                            )
                             break
                         }
                     }

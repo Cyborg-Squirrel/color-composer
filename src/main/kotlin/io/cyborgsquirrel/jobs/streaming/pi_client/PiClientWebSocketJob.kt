@@ -153,11 +153,11 @@ class PiClientWebSocketJob(
 
                 StreamingJobStatus.TimeSyncRequired -> {
                     // Don't sync more often than every 3 seconds if we end up looping on time sync for some reason
-                    if (timeSinceLastSync > 1000 * 3) {
-                        clientTimeSync.doTimeSync { piConfigClient.getClientTime(clientEntity).millisSinceEpoch }
-                    }
+//                    if (timeSinceLastSync > 1000 * 3) {
+//                        clientTimeSync.doTimeSync { piConfigClient.getClientTime(clientEntity).millisSinceEpoch }
+//                    }
 
-                    timestampMillis = timeHelper.millisSinceEpoch() + clientTimeSync.clientTimeOffset
+                    timestampMillis = timeHelper.millisSinceEpoch() // clientTimeSync.clientTimeOffset
                     logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
                     // If we disconnect during the time sync don't set the state to rendering
@@ -167,9 +167,9 @@ class PiClientWebSocketJob(
                 }
 
                 StreamingJobStatus.RenderingEffect -> {
-                    val currentTimeAsMillis = timeHelper.millisSinceEpoch()
-                    val timeDesynced =
-                        timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeSync.clientTimeOffset
+                    val currentTimeAsMillis = timeHelper.millisSinceEpoch() + 500
+                    val timeDesynced = false
+//                        timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeSync.clientTimeOffset
                     updateLastSeenAt(currentTimeAsMillis)
                     if (timeDesynced) {
                         logger.info(
