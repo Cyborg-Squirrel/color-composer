@@ -45,6 +45,7 @@ class LightEffectRendererImpl(
                         /// jobs should either get the latest frame or the frame cached from the other job's render sequence
                         lock.acquire()
                         val sequenceNumber = tracker.getSequenceNumber(clientUuid, strip.uuid)
+                        tracker.setSequenceNumber(clientUuid, strip.uuid, (sequenceNumber + 1).toShort())
                         val cachedFrame = checkCache(strip, sequenceNumber)
                         val renderedFrame = if (cachedFrame != null) {
                             cachedFrame
