@@ -222,30 +222,6 @@ class NightriderLightEffect(
         updatePointerLocation()
     }
 
-//    private fun getBeginningColors(colorCallback: (Int) -> RgbColor): MutableList<RgbColor> {
-//        val rgbList = mutableListOf<RgbColor>()
-//        val upperBound = if (reflect) location else previousLocation
-//        for (i in 0..<upperBound) {
-//            rgbList.add(colorCallback(i))
-//        }
-//
-//        return rgbList
-//    }
-
-//    private fun completeFrame(
-//        frameData: MutableList<RgbColor>, endingColorCallback: (Int) -> RgbColor
-//    ): MutableList<RgbColor> {
-//        if (frameData.size < numberOfLeds) {
-//            for (i in 0..<numberOfLeds - frameData.size) {
-//                frameData.add(endingColorCallback(i + frameData.size))
-//            }
-//
-//            return frameData
-//        } else {
-//            return frameData.subList(0, numberOfLeds)
-//        }
-//    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(NightriderLightEffect::class.java)
     }
