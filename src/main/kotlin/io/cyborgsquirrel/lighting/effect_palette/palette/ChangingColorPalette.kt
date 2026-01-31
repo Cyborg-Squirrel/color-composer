@@ -69,7 +69,7 @@ class ChangingColorPalette(
                 )
             }
         } else {
-            null
+            currentPalette.tertiaryColor
         }
     }
 
