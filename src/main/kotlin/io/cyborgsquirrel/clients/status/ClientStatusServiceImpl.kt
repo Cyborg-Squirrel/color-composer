@@ -24,10 +24,10 @@ class ClientStatusServiceImpl(
                 StreamingJobStatus.Offline -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Offline))
                 StreamingJobStatus.ConnectedIdle -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Idle))
                 else -> {
-                    val strips = clientEntity.strips
+                    val strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
                     var activeEffects = 0
                     for (strip in strips) {
-                        val effectsForStrip = activeLightEffectService.getAllEffectsForStrip(strip.uuid!!)
+                        val effectsForStrip = activeLightEffectService.getAllEffectsForStrip(strip.uuid)
                             .filter { it.status.isActive() }
                         activeEffects += effectsForStrip.size
                     }

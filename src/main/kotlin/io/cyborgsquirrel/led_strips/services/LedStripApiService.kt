@@ -24,6 +24,7 @@ import io.cyborgsquirrel.lighting.effects.WaveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.isActive
+import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -58,7 +59,10 @@ class LedStripApiService(
                     height = s.height,
                     brightness = s.brightness!!,
                     blendMode = s.blendMode!!,
-                    activeEffects = activeEffects.filter { it.strip.uuid == s.uuid }.size,
+                    activeEffects = activeEffects.filter {
+                        it.strip.uuid == s.uuid || (it.strip is LedStripPoolModel && it.strip.strips.map { it.uuid }
+                            .contains(uuid))
+                    }.size,
                 )
             }
             response
@@ -297,7 +301,10 @@ class LedStripApiService(
     private fun getActiveEffectsForStrip(
         clientStatus: ClientStatus?, activeEffects: List<ActiveLightEffect>, stripUuid: String?
     ): Int {
-        return if (clientStatus == ClientStatus.Active) activeEffects.filter { it.strip.uuid == stripUuid }.size else 0
+        return if (clientStatus == ClientStatus.Active) activeEffects.filter {
+            it.strip.uuid == stripUuid || (it.strip is LedStripPoolModel && it.strip.strips.map { it.uuid }
+                .contains(stripUuid))
+        }.size else 0
     }
 
     private fun recreateEffect(lightEffect: LightEffect, numberOfLeds: Int): LightEffect {
