@@ -108,15 +108,16 @@ class ClientStatusServiceTest(
         val mockClientEntity = mockk<LedStripClientEntity>()
         val mockStrip = mockk<LedStripEntity>()
         val stripUuid = UUID.randomUUID().toString()
+        val clientUuid = "ABC-XYZ"
         val activeEffect = mockk<ActiveLightEffect>()
 
         every {
             mockJobsManager.getJobState(any())
         } returns PiStreamingJobState(StreamingJobStatus.RenderingEffect)
         every {
-            mockActiveLightEffectService.getAllEffectsForStrip(any())
+            mockActiveLightEffectService.getEffectsForClient(any())
         } returns listOf()
-        every { mockClientEntity.uuid } returns "ABC-XYZ"
+        every { mockClientEntity.uuid } returns clientUuid
 
         every {
             mockStrip.uuid
@@ -125,7 +126,7 @@ class ClientStatusServiceTest(
             mockClientEntity.strips
         } returns setOf(mockStrip)
         every {
-            activeLightEffectService.getAllEffectsForStrip(stripUuid)
+            activeLightEffectService.getEffectsForClient(clientUuid)
         } returns listOf(activeEffect)
         every {
             activeEffect.status
