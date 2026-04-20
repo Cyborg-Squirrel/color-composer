@@ -16,25 +16,19 @@ class EffectController(
     private val effectApiService: EffectApiService
 ) : EffectApi {
 
-    override fun getAllEffects(): HttpResponse<GetEffectsResponse> {
+    override fun getEffects(stripUuid: String?, poolUuid: String?): HttpResponse<Any> {
         return try {
-            val response = effectApiService.getAllEffects()
-            HttpResponse.ok(response)
-        } catch (ex: Exception) {
-            HttpResponse.serverError()
-        }
-    }
-
-    override fun getEffectsForStrip(stripUuid: String?, poolUuid: String?): HttpResponse<Any> {
-        return try {
-            if (!stripUuid.isNullOrBlank()) {
+            if (!stripUuid.isNullOrBlank() && !poolUuid.isNullOrBlank()) {
+                HttpResponse.badRequest("stripUuid and poolUuid provided, request must be one or the other.")
+            } else if (!stripUuid.isNullOrBlank()) {
                 val response = effectApiService.getEffectsForStrip(stripUuid)
                 HttpResponse.ok(response)
             } else if (!poolUuid.isNullOrBlank()) {
                 val response = effectApiService.getEffectsForPool(poolUuid)
                 HttpResponse.ok(response)
             } else {
-                HttpResponse.badRequest("A stripUuid or poolUuid must be specified!")
+                val response = effectApiService.getAllEffects()
+                HttpResponse.ok(response)
             }
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)

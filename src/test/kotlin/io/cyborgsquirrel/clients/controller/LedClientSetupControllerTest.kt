@@ -123,7 +123,7 @@ class LedClientSetupControllerTest(
             updatedClientEntity.apiPort shouldBe updatedClientRequest.apiPort
             updatedClientEntity.wsPort shouldBe updatedClientRequest.wsPort
             updatedClientEntity.uuid shouldBe clientEntity.uuid
-            updatedClientEntity.powerLimit shouldBe clientEntity.powerLimit
+            updatedClientEntity.powerLimit shouldBe updatedClientRequest.powerLimit
         }
 
         "Delete clients" {

@@ -24,7 +24,8 @@ fun createLedStripClientEntity(
     address: String,
     apiPort: Int,
     wsPort: Int,
-    clientType: ClientType = ClientType.Pi
+    clientType: ClientType = ClientType.Pi,
+    powerLimit: Int? = null
 ): LedStripClientEntity =
     clientRepository.save(
         LedStripClientEntity(
@@ -34,7 +35,8 @@ fun createLedStripClientEntity(
             colorOrder = ColorOrder.RGB,
             uuid = UUID.randomUUID().toString(),
             apiPort = apiPort,
-            wsPort = wsPort
+            wsPort = wsPort,
+            powerLimit = powerLimit
         )
     )
 

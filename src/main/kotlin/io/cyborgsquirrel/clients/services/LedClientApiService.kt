@@ -104,16 +104,33 @@ class LedClientApiService(
                 colorOrder = request.colorOrder ?: entity.colorOrder,
                 apiPort = request.apiPort ?: entity.apiPort,
                 wsPort = request.wsPort ?: entity.wsPort,
+                powerLimit = request.powerLimit ?: entity.powerLimit,
             )
 
-            if (newEntity != entity) {
+            if (shouldRestartStreamingJob(entity, newEntity)) {
                 streamJobManager.stopWebsocketJob(entity)
                 clientRepository.update(newEntity)
                 streamJobManager.startStreamingJob(newEntity)
+            } else {
+                clientRepository.update(newEntity)
             }
         } else {
             throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")
         }
+    }
+
+    private fun shouldRestartStreamingJob(
+        oldClientEntity: LedStripClientEntity,
+        newClientEntity: LedStripClientEntity
+    ): Boolean {
+        val clientTypeChanged = oldClientEntity.clientType != newClientEntity.clientType
+        val powerLimitChanged = oldClientEntity.powerLimit != newClientEntity.powerLimit
+        val apiPortChanged = oldClientEntity.apiPort != newClientEntity.apiPort
+        val wsPortChanged = oldClientEntity.wsPort != newClientEntity.wsPort
+        val stripsChanged = oldClientEntity.strips.map { it.uuid } != newClientEntity.strips.map { it.uuid }
+        val addressChanged = oldClientEntity.address != newClientEntity.address
+        val colorOrderChanged = oldClientEntity.colorOrder != newClientEntity.colorOrder
+        return clientTypeChanged || powerLimitChanged || apiPortChanged || wsPortChanged || stripsChanged || addressChanged || colorOrderChanged
     }
 
     fun deleteClient(uuid: String) {

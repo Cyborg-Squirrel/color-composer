@@ -1,7 +1,9 @@
 package io.cyborgsquirrel.lighting.effects.responses
 
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
+import io.micronaut.serde.annotation.Serdeable
 
+@Serdeable
 data class GetStripEffectResponse(
     override val name: String,
     override val type: String,
