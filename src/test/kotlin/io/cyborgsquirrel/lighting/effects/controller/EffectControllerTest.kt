@@ -760,4 +760,11 @@ class EffectControllerTest(
         val effectsResponse = response.body() as GetEffectsResponse
         effectsResponse.effects.isEmpty() shouldBe true
     }
+
+    "getEffects endpoint - handles empty results gracefully" {
+        val response = apiClient.getEffects(null, null)
+        response.status shouldBe HttpStatus.OK
+        val body = response.body() as GetEffectsResponse
+        body.effects.isEmpty() shouldBe true
+    }
 })
