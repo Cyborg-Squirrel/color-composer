@@ -10,10 +10,7 @@ import io.micronaut.http.annotation.*
 interface EffectApi {
 
     @Get
-    fun getAllEffects(): HttpResponse<GetEffectsResponse>
-
-    @Get
-    fun getEffectsForStrip(@QueryValue stripUuid: String?, @QueryValue poolUuid: String?): HttpResponse<Any>
+    fun getEffects(@QueryValue stripUuid: String?, @QueryValue poolUuid: String?): HttpResponse<Any>
 
     @Get("/{uuid}")
     fun getEffect(uuid: String) : HttpResponse<Any>

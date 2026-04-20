@@ -95,10 +95,10 @@ class EffectControllerTest(
         )
         effectEntity = effectRepository.save(effectEntity)
 
-        val getAllEffectsHttpResponse = apiClient.getAllEffects()
+        val getAllEffectsHttpResponse = apiClient.getEffects(null, null)
         getAllEffectsHttpResponse.status shouldBe HttpStatus.OK
 
-        val getAllEffectsResponse = getAllEffectsHttpResponse.body()
+        val getAllEffectsResponse = getAllEffectsHttpResponse.body() as GetEffectsResponse
         getAllEffectsResponse.effects.size shouldBe 1
         val effectFromApi = getAllEffectsResponse.effects.first()
 
@@ -165,13 +165,13 @@ class EffectControllerTest(
         )
         effectEntity = effectRepository.save(effectEntity)
 
-        var getAllEffectsHttpResponse = apiClient.getEffectsForStrip(strips.first().uuid, null)
+        var getAllEffectsHttpResponse = apiClient.getEffects(strips.first().uuid, null)
         getAllEffectsHttpResponse.status shouldBe HttpStatus.OK
 
         var getAllEffectsResponse = getAllEffectsHttpResponse.body() as GetEffectsResponse
         getAllEffectsResponse.effects.isEmpty() shouldBe true
 
-        getAllEffectsHttpResponse = apiClient.getEffectsForStrip(strips.last().uuid, null)
+        getAllEffectsHttpResponse = apiClient.getEffects(strips.last().uuid, null)
         getAllEffectsResponse = getAllEffectsHttpResponse.body() as GetEffectsResponse
         getAllEffectsResponse.effects.size shouldBe 1
         val effectFromApi = getAllEffectsResponse.effects.first()
@@ -545,7 +545,7 @@ class EffectControllerTest(
             )
         )
 
-        val getEffectsResponse = apiClient.getEffectsForStrip(null, pool.uuid)
+        val getEffectsResponse = apiClient.getEffects(null, pool.uuid)
         getEffectsResponse.status shouldBe HttpStatus.OK
 
         val effectsResponse = getEffectsResponse.body() as GetEffectsResponse
@@ -749,5 +749,15 @@ class EffectControllerTest(
         effectRepository.findAll().isEmpty() shouldBe true
         paletteRepository.findAll().isEmpty() shouldBe false
         poolRepository.findAll().isEmpty() shouldBe false
+    }
+
+    "Consolidated getEffects - returns empty list when no effects match filter" {
+        val client = createLedStripClientEntity(clientRepository, "Unused", "192.168.50.50", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Strip", 100, PiClientPin.D21.pinName, 80)
+
+        val response = apiClient.getEffects(strip.uuid, null)
+        response.status shouldBe HttpStatus.OK
+        val effectsResponse = response.body() as GetEffectsResponse
+        effectsResponse.effects.isEmpty() shouldBe true
     }
 })
