@@ -63,6 +63,8 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("org.yaml:snakeyaml")
     testImplementation("io.mockk:mockk")
+    testImplementation("org.testcontainers:testcontainers:1.19.7")
+    testImplementation("org.testcontainers:postgresql:1.19.7")
     // https://dev.to/sineaggi/fix-dynamic-agent-loading-warning-in-gradle-5748
     testAgent("net.bytebuddy:byte-buddy-agent:1.15.10")
 }

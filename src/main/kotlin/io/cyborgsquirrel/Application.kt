@@ -12,6 +12,7 @@ import io.micronaut.scheduling.TaskScheduler
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.util.Optional
 
 fun main(args: Array<String>) {
     run(*args)
@@ -19,7 +20,7 @@ fun main(args: Array<String>) {
 
 @Singleton
 class StartupListener(
-    private val h2WebServer: H2WebServer,
+    private val h2WebServer: Optional<H2WebServer>,
     private val sunriseSunsetJob: SunriseSunsetApiFetchJob,
     private val lightEffectInitJob: LightEffectInitJob,
     private val taskScheduler: TaskScheduler,
@@ -33,7 +34,7 @@ class StartupListener(
             taskScheduler.schedule(Duration.ofMillis(0), lightEffectInitJob)
             taskScheduler.schedule("1 0 * * ?", sunriseSunsetJob)
             taskScheduler.schedule(Duration.ofMinutes(5), sunriseSunsetJob)
-            h2WebServer.start()
+            h2WebServer.ifPresent { it.start() }
         } catch (e: InterruptedException) {
             e.printStackTrace()
         }
@@ -47,14 +48,14 @@ class StartupListener(
 @Singleton
 class ShutdownListener(
     private val streamJobManager: StreamJobManager,
-    private val h2WebServer: H2WebServer,
+    private val h2WebServer: Optional<H2WebServer>,
 ) :
     ApplicationEventListener<ServerShutdownEvent> {
 
     override fun onApplicationEvent(event: ServerShutdownEvent) {
         logger.info("Application shutting down")
         try {
-            h2WebServer.stop()
+            h2WebServer.ifPresent { it.stop() }
             streamJobManager.stopAllJobs()
         } catch (e: InterruptedException) {
             e.printStackTrace()
