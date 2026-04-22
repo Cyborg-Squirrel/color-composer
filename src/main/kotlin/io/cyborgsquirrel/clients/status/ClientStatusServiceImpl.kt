@@ -25,7 +25,7 @@ class ClientStatusServiceImpl(
                 StreamingJobStatus.ConnectedIdle -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Idle))
                 else -> {
                     val activeEffects = activeLightEffectService.getEffectsForClient(clientEntity.uuid!!)
-                        .map { it.status.isActive() }.size
+                        .filter { it.status.isActive() }.size
                     if (activeEffects > 0) {
                         Optional.of(ClientStatusInfo(ClientStatus.Active, activeEffects))
                     } else {
