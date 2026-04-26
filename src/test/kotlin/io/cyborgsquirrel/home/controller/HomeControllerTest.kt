@@ -2,21 +2,16 @@ package io.cyborgsquirrel.home.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.home.api.HomeApi
-import io.cyborgsquirrel.home.responses.ActiveEffectResponse
 import io.cyborgsquirrel.home.responses.HomeResponse
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
-import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
-import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
-import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.cyborgsquirrel.test_helpers.saveLightEffect
@@ -88,38 +83,22 @@ class HomeControllerTest(
         val client = createLedStripClientEntity(clientRepository, "Client 1", "192.168.1.1", 8000, 8001)
         val strip = saveLedStrip(stripRepository, client, "Strip 1", 60, PiClientPin.D10.pinName, 100)
 
-        val playingUuid = UUID.randomUUID().toString()
-        val stripModel = SingleLedStripModel(
-            name = strip.name!!,
-            uuid = strip.uuid!!,
-            pin = strip.pin!!,
-            length = strip.length!!,
-            height = strip.height,
-            blendMode = strip.blendMode!!,
-            brightness = strip.brightness!!,
-            clientUuid = client.uuid!!,
-            inverted = false,
-        )
-        val spectrumSettings = SpectrumEffectSettings.default(60)
-
-        activeLightEffectService.addOrUpdateEffect(
-            ActiveLightEffect(
-                effectUuid = playingUuid,
-                priority = 0,
-                skipFramesIfBlank = true,
-                status = LightEffectStatus.Playing,
-                effect = SpectrumLightEffect(60, spectrumSettings, null),
-                filters = listOf(),
-                strip = stripModel,
-            )
-        )
+        val playingEffect = saveLightEffect(effectRepository, objectMapper, strip, LightEffectStatus.Playing)
 
         val response = apiClient.getHome()
 
         response.status shouldBe HttpStatus.OK
         val body = response.body() as HomeResponse
         body.activeEffects shouldContainExactly listOf(
-            ActiveEffectResponse(uuid = playingUuid, status = LightEffectStatus.Playing, stripUuid = strip.uuid!!),
+            GetStripEffectResponse(
+                uuid = playingEffect.uuid!!,
+                status = LightEffectStatus.Playing,
+                stripUuid = strip.uuid!!,
+                name = playingEffect.name!!,
+                type = playingEffect.type!!,
+                settings = playingEffect.settings!!,
+                paletteUuid = null,
+            ),
         )
     }
 })

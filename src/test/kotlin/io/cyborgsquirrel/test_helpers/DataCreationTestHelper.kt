@@ -60,7 +60,8 @@ fun saveLedStrip(
 fun saveLightEffect(
     effectRepository: H2LightEffectRepository,
     objectMapper: ObjectMapper,
-    strip: LedStripEntity
+    strip: LedStripEntity,
+    status: LightEffectStatus = LightEffectStatus.Idle,
 ): LightEffectEntity =
     effectRepository.save(
         LightEffectEntity(
@@ -69,6 +70,6 @@ fun saveLightEffect(
             settings = objectToMap(objectMapper, SpectrumEffectSettings(strip.length!!, animated = false)),
             type = LightEffectConstants.SPECTRUM_NAME,
             name = "My light effect",
-            status = LightEffectStatus.Idle
+            status = status
         )
     )

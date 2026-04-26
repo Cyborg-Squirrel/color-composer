@@ -186,6 +186,16 @@ class EffectApiService(
         return GetEffectsResponse(effectList.filterNotNull())
     }
 
+    fun getAllEffectsWithStatus(statuses: List<LightEffectStatus>): GetEffectsResponse {
+        // TODO strip vs strip pool differentiation, strip pool support
+        val effectEntities = effectRepository.findByStatusIn(statuses)
+        val effectList: List<GetEffectResponse?> = effectEntities.map {
+            getEffectResponseForEffect(it)
+        }
+
+        return GetEffectsResponse(effectList.filterNotNull())
+    }
+
     fun getEffectWithUuid(uuid: String): GetEffectResponse {
         val effectEntityOptional = effectRepository.findByUuid(uuid)
         if (effectEntityOptional.isPresent) {
@@ -348,7 +358,7 @@ class EffectApiService(
         }
     }
 
-    private fun getEffectResponseForEffect(lightEffectEntity: LightEffectEntity): GetEffectResponse? {
+    fun getEffectResponseForEffect(lightEffectEntity: LightEffectEntity): GetEffectResponse? {
         return if (lightEffectEntity.strip != null) {
             GetStripEffectResponse(
                 name = lightEffectEntity.name!!,
