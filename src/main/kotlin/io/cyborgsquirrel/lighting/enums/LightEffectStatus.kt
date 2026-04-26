@@ -11,9 +11,16 @@ enum class LightEffectStatus {
     Paused,
 
     // No longer being rendered, will start from the beginning if the user reactivates it
-    Stopped,
+    Stopped;
+
+    companion object {
+        fun activeStatuses(): List<LightEffectStatus> {
+            return listOf(LightEffectStatus.Playing, LightEffectStatus.Paused)
+        }
+    }
 }
 
 fun LightEffectStatus.isActive(): Boolean {
-    return this == LightEffectStatus.Playing || this == LightEffectStatus.Paused
+    return LightEffectStatus.activeStatuses().contains(this)
 }
+
