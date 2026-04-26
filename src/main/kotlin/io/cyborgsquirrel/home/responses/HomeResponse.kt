@@ -8,4 +8,5 @@ data class HomeResponse(
     val strips: Int,
     val effects: Int,
     val palettes: Int,
+    val activeEffects: List<ActiveEffectResponse>,
 )
