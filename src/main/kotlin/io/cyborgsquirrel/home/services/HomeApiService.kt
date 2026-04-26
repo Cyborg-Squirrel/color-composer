@@ -16,10 +16,10 @@ class HomeApiService(
 ) {
     fun getHome(): HomeResponse {
         return HomeResponse(
-            clients = clientRepository.count(),
-            strips = stripRepository.count(),
-            effects = effectRepository.count(),
-            palettes = paletteRepository.count(),
+            clients = clientRepository.count().toInt(),
+            strips = stripRepository.count().toInt(),
+            effects = effectRepository.count().toInt(),
+            palettes = paletteRepository.count().toInt(),
         )
     }
 }
