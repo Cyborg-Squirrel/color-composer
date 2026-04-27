@@ -100,6 +100,10 @@ class LedStripApiServiceTest(
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
         val strip1 = saveLedStrip(stripRepository, client, "Strip 1", 100, "D10", 100)
         val strip2 = saveLedStrip(stripRepository, client, "Strip 2", 150, "D12", 150)
+        val statusService = getMock(clientStatusService)
+        every {
+            statusService.getStatusForClient(client)
+        } returns Optional.of(ClientStatusInfo.inactive(ClientStatus.Idle))
 
         val result = ledStripApiService.getStrips(client.uuid!!)
         result.strips.size shouldBe 2
