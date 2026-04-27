@@ -246,7 +246,8 @@ class LedStripApiService(
 
     fun mapStripEntityToResponse(entity: LedStripEntity): GetLedStripResponse {
         val activeEffects = activeLightEffectService.getAllEffects().filter { it.status.isActive() }
-        val clientStatus = clientStatusService.getStatusForClient(entity.client!!).getOrNull()?.status
+        val clientStatus = if (entity.client == null) null else clientStatusService.getStatusForClient(entity.client!!)
+            .getOrNull()?.status
         return GetLedStripResponse(
             clientUuid = entity.client!!.uuid!!,
             name = entity.name!!,
