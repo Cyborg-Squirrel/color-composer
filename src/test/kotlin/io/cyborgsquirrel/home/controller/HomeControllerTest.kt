@@ -48,10 +48,10 @@ class HomeControllerTest(
 
         response.status shouldBe HttpStatus.OK
         val body = response.body() as HomeResponse
-        body.clients shouldBe 0
-        body.strips shouldBe 0
-        body.effects shouldBe 0
-        body.palettes shouldBe 0
+        body.totalClients shouldBe 0
+        body.totalStrips shouldBe 0
+        body.totalEffects shouldBe 0
+        body.totalPalettes shouldBe 0
         body.activeEffects shouldBe emptyList()
     }
 
@@ -72,10 +72,10 @@ class HomeControllerTest(
 
         response.status shouldBe HttpStatus.OK
         val body = response.body() as HomeResponse
-        body.clients shouldBe 1
-        body.strips shouldBe 1
-        body.effects shouldBe 1
-        body.palettes shouldBe 1
+        body.totalClients shouldBe 1
+        body.totalStrips shouldBe 1
+        body.totalEffects shouldBe 1
+        body.totalPalettes shouldBe 1
         body.activeEffects shouldBe emptyList()
     }
 

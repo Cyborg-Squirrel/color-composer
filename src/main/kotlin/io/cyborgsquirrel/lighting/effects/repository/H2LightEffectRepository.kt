@@ -66,5 +66,13 @@ interface H2LightEffectRepository : CrudRepository<LightEffectEntity, Long> {
     @Join(value = "pool.members", type = Join.Type.LEFT_FETCH)
     @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
     @Join(value = "filterJunctions", type = Join.Type.LEFT_FETCH)
+    fun findByUuidIn(uuid: List<String>): Optional<LightEffectEntity>
+
+    @Join(value = "strip", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool", type = Join.Type.LEFT_FETCH)
+    @Join(value = "palette", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
+    @Join(value = "filterJunctions", type = Join.Type.LEFT_FETCH)
     fun findByIdIn(ids: List<Long>): List<LightEffectEntity>
 }

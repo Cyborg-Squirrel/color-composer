@@ -1,7 +1,9 @@
 package io.cyborgsquirrel.led_strips.services
 
+import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.status.ClientStatusInfo
 import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
@@ -31,6 +33,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import java.util.Optional
 import java.util.UUID
 
 @MicronautTest
@@ -58,8 +61,12 @@ class LedStripApiServiceTest(
         val mockActiveLightEffectService = getMock(activeLightEffectService)
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
+        val statusService = getMock(clientStatusService)
+        every {
+            statusService.getStatusForClient(client)
+        } returns Optional.of(ClientStatusInfo(ClientStatus.Active, 1))
         val service = LedStripApiService(
-            mockActiveLightEffectService, stripRepository, clientRepository, clientStatusService, timeHelper
+            mockActiveLightEffectService, stripRepository, clientRepository, statusService, timeHelper
         )
 
         val mockEffectA = mockk<ActiveLightEffect>()
@@ -93,6 +100,10 @@ class LedStripApiServiceTest(
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
         val strip1 = saveLedStrip(stripRepository, client, "Strip 1", 100, "D10", 100)
         val strip2 = saveLedStrip(stripRepository, client, "Strip 2", 150, "D12", 150)
+        val statusService = getMock(clientStatusService)
+        every {
+            statusService.getStatusForClient(client)
+        } returns Optional.of(ClientStatusInfo.inactive(ClientStatus.Idle))
 
         val result = ledStripApiService.getStrips(client.uuid!!)
         result.strips.size shouldBe 2
@@ -328,6 +339,11 @@ class LedStripApiServiceTest(
 
     @MockBean(ActiveLightEffectService::class)
     fun activeLightEffectService(): ActiveLightEffectService {
+        return mockk(relaxed = true)
+    }
+
+    @MockBean(ClientStatusService::class)
+    fun clientStatusService(): ClientStatusService {
         return mockk(relaxed = true)
     }
 }
