@@ -42,10 +42,10 @@ class HomeApiServiceTest(
     "Returns zero counts when database is empty" {
         val response = service.getHome()
 
-        response.clients shouldBe 0
-        response.strips shouldBe 0
-        response.effects shouldBe 0
-        response.palettes shouldBe 0
+        response.totalClients shouldBe 0
+        response.totalStrips shouldBe 0
+        response.totalEffects shouldBe 0
+        response.totalPalettes shouldBe 0
         response.activeEffects shouldBe emptyList()
     }
 

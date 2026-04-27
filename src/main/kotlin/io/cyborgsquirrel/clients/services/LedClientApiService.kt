@@ -24,20 +24,7 @@ class LedClientApiService(
     fun getAllClients(): GetClientsResponse {
         val clientEntities = clientRepository.queryAll()
         val responseClients = clientEntities.map {
-            val statusInfo = getStatusInfo(it)
-            GetClientResponse(
-                it.name!!,
-                it.address!!,
-                it.uuid!!,
-                it.clientType.toString(),
-                it.colorOrder!!,
-                it.apiPort!!,
-                it.wsPort!!,
-                it.lastSeenAt,
-                statusInfo.status,
-                statusInfo.activeEffects,
-                it.powerLimit
-            )
+            mapClientEntityToResponse(it)
         }
         return GetClientsResponse(responseClients)
     }
@@ -46,22 +33,7 @@ class LedClientApiService(
         val clientEntityOptional = clientRepository.findByUuid(uuid)
         if (clientEntityOptional.isPresent) {
             val clientEntity = clientEntityOptional.get()
-            val statusInfo = getStatusInfo(clientEntity)
-            val clientResponse = GetClientResponse(
-                clientEntity.name!!,
-                clientEntity.address!!,
-                clientEntity.uuid!!,
-                clientEntity.clientType.toString(),
-                clientEntity.colorOrder!!,
-                clientEntity.apiPort!!,
-                clientEntity.wsPort!!,
-                clientEntity.lastSeenAt,
-                statusInfo.status,
-                statusInfo.activeEffects,
-                clientEntity.powerLimit
-            )
-
-            return clientResponse
+            return mapClientEntityToResponse(clientEntity)
         } else {
             throw ClientRequestException("Client with uuid $uuid doesn't exist!")
         }
@@ -146,6 +118,23 @@ class LedClientApiService(
         } else {
             throw ClientRequestException("Could not delete client with uuid $uuid. It does not exist.")
         }
+    }
+
+    fun mapClientEntityToResponse(client: LedStripClientEntity): GetClientResponse {
+        val statusInfo = getStatusInfo(client)
+        return GetClientResponse(
+            client.name!!,
+            client.address!!,
+            client.uuid!!,
+            client.clientType.toString(),
+            client.colorOrder!!,
+            client.apiPort!!,
+            client.wsPort!!,
+            client.lastSeenAt,
+            statusInfo.status,
+            statusInfo.activeEffects,
+            client.powerLimit
+        )
     }
 
     private fun getStatusInfo(client: LedStripClientEntity): ClientStatusInfo {

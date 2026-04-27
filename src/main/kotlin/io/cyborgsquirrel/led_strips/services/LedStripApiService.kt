@@ -47,25 +47,7 @@ class LedStripApiService(
     fun getStrip(uuid: String): GetLedStripResponse {
         val entityOptional = stripRepository.findByUuid(uuid)
         return if (entityOptional.isPresent) {
-            val activeEffects = activeLightEffectService.getAllEffects().filter { it.status.isActive() }
-            val entity = entityOptional.get()
-            val response = entity.let { s ->
-                GetLedStripResponse(
-                    clientUuid = s.client!!.uuid!!,
-                    name = s.name!!,
-                    uuid = s.uuid!!,
-                    pin = s.pin!!,
-                    length = s.length!!,
-                    height = s.height,
-                    brightness = s.brightness!!,
-                    blendMode = s.blendMode!!,
-                    activeEffects = activeEffects.filter {
-                        it.strip.uuid == s.uuid || (it.strip is LedStripPoolModel && it.strip.strips.map { it.uuid }
-                            .contains(uuid))
-                    }.size,
-                )
-            }
-            response
+            mapStripEntityToResponse(entityOptional.get())
         } else {
             throw ClientRequestException("No LED strip exists with uuid $uuid!")
         }
@@ -75,24 +57,8 @@ class LedStripApiService(
         if (clientUuid != null) {
             val clientEntityOptional = clientRepository.findByUuid(clientUuid)
             return if (clientEntityOptional.isPresent) {
-                val activeEffects = activeLightEffectService.getAllEffects().filter { it.status.isActive() }
                 val clientEntity = clientEntityOptional.get()
-                val clientStatusOptional = clientStatusService.getStatusForClient(clientEntity)
-                val stripResponseList = clientEntity.strips.map { s ->
-                    GetLedStripResponse(
-                        clientUuid = clientUuid,
-                        name = s.name!!,
-                        uuid = s.uuid!!,
-                        pin = s.pin!!,
-                        length = s.length!!,
-                        height = s.height,
-                        brightness = s.brightness!!,
-                        blendMode = s.blendMode!!,
-                        activeEffects = getActiveEffectsForStrip(
-                            clientStatusOptional.getOrNull()?.status, activeEffects, s.uuid
-                        )
-                    )
-                }
+                val stripResponseList = clientEntity.strips.map { mapStripEntityToResponse(it) }
                 GetLedStripsResponse(stripResponseList)
             } else {
                 throw ClientRequestException("No client exists with uuid $clientUuid!")
@@ -100,25 +66,7 @@ class LedStripApiService(
         } else {
             val clientEntities = clientRepository.queryAll()
             val stripEntities = clientEntities.map { it.strips }.flatten()
-            val stripResponseList = stripEntities.map { s ->
-                GetLedStripResponse(
-                    clientUuid = s.client!!.uuid!!,
-                    name = s.name!!,
-                    uuid = s.uuid!!,
-                    pin = s.pin!!,
-                    length = s.length!!,
-                    height = s.height,
-                    brightness = s.brightness!!,
-                    blendMode = s.blendMode!!,
-                    activeEffects = getActiveEffectsForStrip(
-                        clientStatusService.getStatusForClient(s.client!!).getOrNull()?.status,
-                        activeLightEffectService.getAllEffects().filter { it.status.isActive() },
-                        s.uuid
-                    ),
-                )
-            }
-
-            return GetLedStripsResponse(stripResponseList)
+            return GetLedStripsResponse(stripEntities.map { mapStripEntityToResponse(it) })
         }
     }
 
@@ -296,9 +244,25 @@ class LedStripApiService(
         }
     }
 
+    fun mapStripEntityToResponse(entity: LedStripEntity): GetLedStripResponse {
+        val activeEffects = activeLightEffectService.getAllEffects().filter { it.status.isActive() }
+        val clientStatus = clientStatusService.getStatusForClient(entity.client!!).getOrNull()?.status
+        return GetLedStripResponse(
+            clientUuid = entity.client!!.uuid!!,
+            name = entity.name!!,
+            uuid = entity.uuid!!,
+            pin = entity.pin!!,
+            length = entity.length!!,
+            height = entity.height,
+            brightness = entity.brightness!!,
+            blendMode = entity.blendMode!!,
+            activeEffects = getActiveEffectsForStrip(clientStatus, activeEffects, entity.uuid),
+        )
+    }
+
     // The effect could be configured as Playing but the client is offline. If the client is offline
     // we should report 0 active effects.
-    private fun getActiveEffectsForStrip(
+    fun getActiveEffectsForStrip(
         clientStatus: ClientStatus?, activeEffects: List<ActiveLightEffect>, stripUuid: String?
     ): Int {
         return if (clientStatus == ClientStatus.Active) activeEffects.filter {

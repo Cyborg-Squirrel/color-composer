@@ -15,7 +15,7 @@ enum class LightEffectStatus {
 
     companion object {
         fun activeStatuses(): List<LightEffectStatus> {
-            return listOf(LightEffectStatus.Playing, LightEffectStatus.Paused)
+            return listOf(Playing, Paused)
         }
     }
 }
