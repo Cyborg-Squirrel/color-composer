@@ -9,7 +9,7 @@ data class SparkleEffectSettings(
     val fadeInMillisMin: Int,
     val fadeOutMillisMax: Int,
     val fadeOutMillisMin: Int,
-) : LightEffectSettings(1, 0) {
+) : LightEffectSettings() {
     companion object {
         fun default() = SparkleEffectSettings(
             numDots = 10,

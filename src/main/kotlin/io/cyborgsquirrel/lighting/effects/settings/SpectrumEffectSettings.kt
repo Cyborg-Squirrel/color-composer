@@ -6,7 +6,7 @@ import io.micronaut.serde.annotation.Serdeable
 data class SpectrumEffectSettings(
     val colorPixelWidth: Int,
     val animated: Boolean,
-) : LightEffectSettings(1, 0) {
+) : LightEffectSettings() {
     companion object {
         fun default(numberOfLeds: Int) = SpectrumEffectSettings(numberOfLeds / 10, true)
     }

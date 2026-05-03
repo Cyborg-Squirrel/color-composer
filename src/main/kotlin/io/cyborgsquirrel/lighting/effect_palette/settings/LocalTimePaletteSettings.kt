@@ -4,4 +4,4 @@ import io.micronaut.serde.annotation.Serdeable
 import java.time.LocalTime
 
 @Serdeable
-data class LocalTimePaletteSettings(val paletteMap: Map<LocalTime, SettingsPalette>) : LightEffectPaletteSettings(1, 0)
+data class LocalTimePaletteSettings(val paletteMap: Map<LocalTime, SettingsPalette>) : LightEffectPaletteSettings()
