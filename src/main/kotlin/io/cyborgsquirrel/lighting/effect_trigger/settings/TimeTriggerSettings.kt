@@ -12,6 +12,6 @@ class TimeTriggerSettings(
     val triggerDay: LocalDate?,
     activationDuration: Duration,
     maxActivations: Int?,
-    triggerType: TriggerType
+    triggerType: TriggerType,
 ) :
     TriggerSettings(activationDuration, maxActivations, triggerType)

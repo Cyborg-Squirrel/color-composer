@@ -18,7 +18,7 @@ data class BouncingBallEffectSettings(
                 numberOfLeds - 1,
                 4.0,
                 LightEffectConstants.EARTH_GRAVITY,
-                0.05
+                0.05,
             )
     }
 }

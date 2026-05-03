@@ -8,7 +8,7 @@ data class NightriderCometEffectSettings(
     val trailLength: Int,
     val trailFadeCurve: FadeCurve,
     val wrap: Boolean,
-    val updatesPerSecond: Int
+    val updatesPerSecond: Int,
 ) : NightriderEffectSettings() {
     override fun wrap() = wrap
 

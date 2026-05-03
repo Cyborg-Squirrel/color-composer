@@ -3,7 +3,7 @@ package io.cyborgsquirrel.lighting.effect_palette.settings
 import java.time.Duration
 
 
-sealed class ChangingPaletteSettings {
+sealed class ChangingPaletteSettings : LightEffectPaletteSettings() {
     abstract fun paletteHoldTime(): Duration
     abstract fun paletteTransitionTime(): Duration
 }

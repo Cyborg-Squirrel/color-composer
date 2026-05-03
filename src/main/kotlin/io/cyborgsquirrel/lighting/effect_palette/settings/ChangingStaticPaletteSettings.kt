@@ -7,7 +7,7 @@ import java.time.Duration
 data class ChangingStaticPaletteSettings(
     val palettes: List<SettingsPalette>,
     val holdTime: Duration,
-    val transitionTime: Duration
+    val transitionTime: Duration,
 ) : ChangingPaletteSettings() {
     override fun paletteHoldTime(): Duration {
         return holdTime
