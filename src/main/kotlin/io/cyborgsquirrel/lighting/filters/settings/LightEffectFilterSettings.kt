@@ -1,3 +1,5 @@
 package io.cyborgsquirrel.lighting.filters.settings
 
-sealed class LightEffectFilterSettings(val majorVersion: Int = 1, val minorVersion: Int = 0)
+import io.cyborgsquirrel.lighting.VersionedSettings
+
+sealed class LightEffectFilterSettings(override val majorVersion: Int = 1, override val minorVersion: Int = 0) : VersionedSettings

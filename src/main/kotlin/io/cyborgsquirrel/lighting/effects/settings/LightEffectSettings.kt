@@ -1,3 +1,5 @@
 package io.cyborgsquirrel.lighting.effects.settings
 
-sealed class LightEffectSettings(val majorVersion: Int = 1, val minorVersion: Int = 0)
+import io.cyborgsquirrel.lighting.VersionedSettings
+
+sealed class LightEffectSettings(override val majorVersion: Int = 1, override val minorVersion: Int = 0) : VersionedSettings
