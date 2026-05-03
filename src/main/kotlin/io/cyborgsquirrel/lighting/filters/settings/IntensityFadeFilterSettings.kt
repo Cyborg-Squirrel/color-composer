@@ -8,4 +8,4 @@ data class IntensityFadeFilterSettings(
     val startingIntensity: Float,
     val endingIntensity: Float,
     val fadeDuration: Duration,
-)
+) : LightEffectFilterSettings(1, 0)

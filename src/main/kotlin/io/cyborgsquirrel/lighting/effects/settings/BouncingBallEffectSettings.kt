@@ -10,7 +10,7 @@ data class BouncingBallEffectSettings(
     val speed: Double,
     val gravity: Double,
     val minimumSpeed: Double,
-) : LightEffectSettings() {
+) : LightEffectSettings(1, 0) {
     companion object {
         fun default(numberOfLeds: Int) =
             BouncingBallEffectSettings(

@@ -4,4 +4,4 @@ import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
 import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
-data class TimeOfDayPaletteSettings(val paletteMap: Map<TimeOfDay, SettingsPalette>)
+data class TimeOfDayPaletteSettings(val paletteMap: Map<TimeOfDay, SettingsPalette>) : LightEffectPaletteSettings(1, 0)

@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.effects.settings
 
-sealed class NightriderEffectSettings : LightEffectSettings() {
+sealed class NightriderEffectSettings : LightEffectSettings(1, 0) {
     abstract fun wrap(): Boolean
 
     abstract fun updatesPerSecond(): Int

@@ -10,6 +10,6 @@ class TimeOfDayTriggerSettings(
     val timeOfDay: TimeOfDay,
     activationDuration: Duration,
     maxActivations: Int?,
-    triggerType: TriggerType
+    triggerType: TriggerType,
 ) :
     TriggerSettings(activationDuration, maxActivations, triggerType)

@@ -10,7 +10,7 @@ class EffectIterationTriggerSettingsTest(private val objectMapper: ObjectMapper)
 
     val effectIterationTriggerSettings = EffectIterationTriggerSettings(7)
     val effectIterationTriggerSettingsJson =
-        "{\"activationDuration\":0,\"maxActivations\":7,\"triggerType\":\"StopEffect\"}"
+        "{\"activationDuration\":0,\"maxActivations\":7,\"triggerType\":\"StopEffect\",\"majorVersion\":1,\"minorVersion\":0}"
 
     "Serialize to json" {
         val json = objectMapper.writeValueAsString(effectIterationTriggerSettings)
@@ -23,5 +23,7 @@ class EffectIterationTriggerSettingsTest(private val objectMapper: ObjectMapper)
         settings.maxActivations shouldBe effectIterationTriggerSettings.maxActivations
         settings.triggerType shouldBe effectIterationTriggerSettings.triggerType
         settings.activationDuration shouldBe effectIterationTriggerSettings.activationDuration
+        settings.majorVersion shouldBe 1
+        settings.minorVersion shouldBe 0
     }
 })

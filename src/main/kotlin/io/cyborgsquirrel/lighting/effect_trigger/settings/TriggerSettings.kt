@@ -5,4 +5,4 @@ import io.micronaut.serde.annotation.Serdeable
 import java.time.Duration
 
 @Serdeable
-open class TriggerSettings(val activationDuration: Duration, val maxActivations: Int?, val triggerType: TriggerType)
+open class TriggerSettings(val activationDuration: Duration, val maxActivations: Int?, val triggerType: TriggerType, val majorVersion: Int = 1, val minorVersion: Int = 0)

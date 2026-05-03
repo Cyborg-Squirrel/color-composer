@@ -14,7 +14,7 @@ class SunriseSunsetTriggerSettingsTest(private val objectMapper: ObjectMapper) :
     val timeOfDayTriggerSettings =
         TimeOfDayTriggerSettings(TimeOfDay.Sunset, Duration.ofHours(4), 120, TriggerType.StartEffect)
     val sunriseSunsetTriggerSettingsJson =
-        "{\"activationDuration\":14400000,\"maxActivations\":120,\"triggerType\":\"StartEffect\",\"timeOfDay\":\"Sunset\"}"
+        "{\"activationDuration\":14400000,\"maxActivations\":120,\"triggerType\":\"StartEffect\",\"majorVersion\":1,\"minorVersion\":0,\"timeOfDay\":\"Sunset\"}"
 
     "Serialize to json" {
         val json = objectMapper.writeValueAsString(timeOfDayTriggerSettings)
@@ -28,5 +28,7 @@ class SunriseSunsetTriggerSettingsTest(private val objectMapper: ObjectMapper) :
         settings.maxActivations shouldBe timeOfDayTriggerSettings.maxActivations
         settings.triggerType shouldBe timeOfDayTriggerSettings.triggerType
         settings.activationDuration shouldBe timeOfDayTriggerSettings.activationDuration
+        settings.majorVersion shouldBe 1
+        settings.minorVersion shouldBe 0
     }
 })
