@@ -72,6 +72,7 @@ class LedClientSetupControllerTest(
             singleClientResponse.wsPort shouldBe client.wsPort
             singleClientResponse.apiPort shouldBe client.apiPort
             singleClientResponse.status shouldBe mockedStatus
+            singleClientResponse.firmwareVersion shouldBe client.firmwareVersion
 
             response = apiClient.getAllClients()
             response.status shouldBe HttpStatus.OK
@@ -104,6 +105,7 @@ class LedClientSetupControllerTest(
             clientEntity.apiPort shouldBe createClientRequest.apiPort
             clientEntity.wsPort shouldBe createClientRequest.wsPort
             clientEntity.powerLimit shouldBe createClientRequest.powerLimit
+            clientEntity.firmwareVersion shouldBe "0.1"
         }
 
         "Updating clients" {

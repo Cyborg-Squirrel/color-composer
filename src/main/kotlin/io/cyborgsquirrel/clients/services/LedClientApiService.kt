@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.clients.services
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
@@ -56,7 +57,8 @@ class LedClientApiService(
                     apiPort = request.apiPort,
                     wsPort = request.wsPort,
                     uuid = UUID.randomUUID().toString(),
-                    powerLimit = request.powerLimit ?: 0
+                    powerLimit = request.powerLimit ?: 0,
+                    firmwareVersion = if (request.clientType == ClientType.Pi) "0.1" else "--",
                 )
             )
 
@@ -133,7 +135,8 @@ class LedClientApiService(
             client.lastSeenAt,
             statusInfo.status,
             statusInfo.activeEffects,
-            client.powerLimit
+            client.powerLimit,
+            client.firmwareVersion!!,
         )
     }
 
