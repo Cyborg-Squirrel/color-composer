@@ -256,6 +256,7 @@ class NightDriverSocketJob(
                 val ce = clientEntityOptional.get()
                 ce.lastSeenAt = currentTimeAsMillis
                 lastSeenAt = currentTimeAsMillis
+                lastResponse?.let { ce.firmwareVersion = it.flashVersion.toString() }
                 clientEntity = clientRepository.update(ce)
             }
         }

@@ -30,6 +30,7 @@ class LedStripClientRepositoryTest(
         wsPort = 8888,
         apiPort = 80,
         lastSeenAt = Timestamp.from(Instant.now()).time,
+        firmwareVersion = "--",
     )
 
     val demoLedStripEntity = LedStripEntity(

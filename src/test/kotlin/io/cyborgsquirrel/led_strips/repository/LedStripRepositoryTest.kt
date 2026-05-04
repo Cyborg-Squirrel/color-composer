@@ -33,7 +33,8 @@ class LedStripRepositoryTest(
             colorOrder = ColorOrder.RGB,
             uuid = UUID.randomUUID().toString(),
             wsPort = 8888,
-            apiPort = 7777
+            apiPort = 7777,
+            firmwareVersion = "--",
         )
     )
 

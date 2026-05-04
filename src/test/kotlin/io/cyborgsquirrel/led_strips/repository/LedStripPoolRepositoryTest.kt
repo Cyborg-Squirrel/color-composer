@@ -46,7 +46,8 @@ class LedStripPoolRepositoryTest(
             colorOrder = ColorOrder.RGB,
             uuid = UUID.randomUUID().toString(),
             wsPort = wsPort,
-            apiPort = apiPort
+            apiPort = apiPort,
+            firmwareVersion = "--",
         )
     )
 

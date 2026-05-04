@@ -16,5 +16,6 @@ data class GetClientResponse(
     val lastSeenAt: Long,
     val status: ClientStatus,
     val activeEffects: Int,
-    val powerLimit: Int?
+    val powerLimit: Int?,
+    val firmwareVersion: String
 )
