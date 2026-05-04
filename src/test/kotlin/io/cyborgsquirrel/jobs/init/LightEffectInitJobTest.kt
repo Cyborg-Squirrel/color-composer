@@ -102,7 +102,8 @@ class LightEffectInitJobTest(
                 colorOrder = ColorOrder.RGB,
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
-                wsPort = 2222
+                wsPort = 2222,
+                firmwareVersion = "--",
             )
         )
         val strip = ledStripRepository.save(
@@ -160,7 +161,8 @@ class LightEffectInitJobTest(
                 colorOrder = ColorOrder.RGB,
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
-                wsPort = 2222
+                wsPort = 2222,
+                firmwareVersion = "--",
             )
         )
         val strip = ledStripRepository.save(
@@ -237,7 +239,8 @@ class LightEffectInitJobTest(
                 colorOrder = ColorOrder.RGB,
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
-                wsPort = 2222
+                wsPort = 2222,
+                firmwareVersion = "--",
             )
         )
         val strip = ledStripRepository.save(
@@ -314,7 +317,8 @@ class LightEffectInitJobTest(
                 colorOrder = ColorOrder.RGB,
                 uuid = UUID.randomUUID().toString(),
                 apiPort = 1111,
-                wsPort = 2222
+                wsPort = 2222,
+                firmwareVersion = "--",
             )
         )
         val strip = ledStripRepository.save(

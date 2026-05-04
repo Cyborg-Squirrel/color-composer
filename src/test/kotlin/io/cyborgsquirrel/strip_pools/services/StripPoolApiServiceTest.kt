@@ -48,7 +48,8 @@ class StripPoolApiServiceTest(
             clientType = ClientType.Pi,
             colorOrder = ColorOrder.RGB,
             wsPort = 8000,
-            apiPort = 8001
+            apiPort = 8001,
+            firmwareVersion = "--",
         )
         clientRepository.save(client)
         return client

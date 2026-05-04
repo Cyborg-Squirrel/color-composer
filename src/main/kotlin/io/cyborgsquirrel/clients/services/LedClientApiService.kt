@@ -136,7 +136,7 @@ class LedClientApiService(
             statusInfo.status,
             statusInfo.activeEffects,
             client.powerLimit,
-            client.firmwareVersion!!,
+            client.firmwareVersion,
         )
     }
 
