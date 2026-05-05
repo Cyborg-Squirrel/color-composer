@@ -2,6 +2,7 @@ package io.cyborgsquirrel.clients.config.pi_client
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.model.ClientTime
+import io.cyborgsquirrel.clients.model.ClientVersion
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.uri.UriBuilder
@@ -52,6 +53,18 @@ class PiConfigClient(
         withContext(Dispatchers.IO) {
             httpClient.toBlocking().exchange(request, String::class.java)
         }
+    }
+
+    suspend fun getClientVersion(client: LedStripClientEntity): ClientVersion {
+        val uri = UriBuilder.of(client.address)
+            .port(client.apiPort!!)
+            .path("version")
+            .build()
+
+        val response = withContext(Dispatchers.IO) {
+            httpClient.toBlocking().retrieve(uri.toString())
+        }
+        return objectMapper.readValue(response, ClientVersion::class.java)
     }
 
     suspend fun getClientTime(client: LedStripClientEntity): ClientTime {

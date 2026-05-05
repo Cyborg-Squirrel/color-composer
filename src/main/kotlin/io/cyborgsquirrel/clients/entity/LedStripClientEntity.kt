@@ -47,7 +47,7 @@ data class LedStripClientEntity(
     var powerLimit: Int? = null,
 
     @MappedProperty("firmware_version")
-    var firmwareVersion: String = "--",
+    var firmwareVersion: String?,
 ) {
     // Overrides to prevent infinite looping
 

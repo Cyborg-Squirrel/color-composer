@@ -141,7 +141,6 @@ class PiClientWebSocketJob(
 
                 StreamingJobStatus.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
-                    settingsSyncRequired = true
                     status = StreamingJobStatus.WaitingForConnection
                     setupSocket()
                 }
@@ -268,6 +267,9 @@ class PiClientWebSocketJob(
             )
         }
 
+        logger.info("Checking Pi client version...")
+        updateClientVersion()
+
         status = StreamingJobStatus.ConnectedIdle
     }
 
@@ -282,6 +284,17 @@ class PiClientWebSocketJob(
                 lastSeenAt = currentTimeAsMillis
                 clientEntity = clientRepository.update(ce)
             }
+        }
+    }
+
+    private suspend fun updateClientVersion() {
+        val version = piConfigClient.getClientVersion(clientEntity).version
+        logger.info("Pi client $clientEntity is running version $version")
+        val clientEntityOptional = clientRepository.findById(clientEntity.id)
+        if (clientEntityOptional.isPresent) {
+            val ce = clientEntityOptional.get()
+            ce.firmwareVersion = version
+            clientEntity = clientRepository.update(ce)
         }
     }
 
@@ -328,6 +341,7 @@ class PiClientWebSocketJob(
 
             override fun onNext(client: PiWebSocketClient?) {
                 status = StreamingJobStatus.ConnectedIdle
+                settingsSyncRequired = true
                 client?.registerOnDisconnectedCallback({
                     if (status != StreamingJobStatus.SetupIncomplete) {
                         status = StreamingJobStatus.Offline
