@@ -17,7 +17,6 @@ sealed class PiClientResponse {
 fun ByteArray.toPiClientResponse(timeHelper: TimeHelper): PiClientResponse {
     val receivedAt = timeHelper.millisSinceEpoch()
     val buf = ByteBuffer.wrap(this).order(ByteOrder.LITTLE_ENDIAN)
-    buf.int // payload length prefix
     val type = buf.get().toInt() and 0xFF
     val bodyLength = buf.get().toInt() and 0xFF
     return when (type) {
