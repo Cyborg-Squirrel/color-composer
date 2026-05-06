@@ -80,6 +80,7 @@ class PiClientWebSocketJob(
     private var shouldRun = true
     private var settingsSyncRequired = true
     private var status = StreamingJobStatus.SetupIncomplete
+    private var latestResponse: PiClientResponse? = null
 
     /**
      * Starts the job which will run in the background using a Kotlin Coroutine.
@@ -199,7 +200,7 @@ class PiClientWebSocketJob(
                             lastKeepaliveFrameTimestamp = LocalDateTime.of(0, 1, 1, 0, 0)
                             timestampMillis += 1000 / fps
 
-                            frames.forEach { frame ->
+                            for (frame in frames) {
                                 val pin = frame.strip.pin
                                 val rgbData = frame.frameData
                                 val frameData = RgbFrameData(timestampMillis, rgbData)
@@ -211,9 +212,12 @@ class PiClientWebSocketJob(
                                 // Serialize and send frame
                                 val encodedFrame = serializer.encode(frameData, pin, options)
 
-                                withContext(Dispatchers.IO) {
+                                latestResponse = withContext(Dispatchers.IO) {
                                     client?.send(encodedFrame)?.get(1, TimeUnit.SECONDS)
-                                }
+                                }?.toPiClientResponse(timeHelper)
+
+                                handleResponse(latestResponse)
+                                if (status != StreamingJobStatus.RenderingEffect) break
                             }
 
                             // Slow down to ensure we only buffer the specified amount of time into the future.
@@ -311,9 +315,11 @@ class PiClientWebSocketJob(
         val options = optionsBuilder.build()
         val frame = serializer.encode(frameData, strip.pin, options)
 
-        withContext(Dispatchers.IO) {
+        latestResponse = withContext(Dispatchers.IO) {
             client?.send(frame)?.get(1, TimeUnit.SECONDS)
-        }
+        }?.toPiClientResponse(timeHelper)
+
+        handleResponse(latestResponse)
     }
 
     private suspend fun setupSocket() {
@@ -393,6 +399,23 @@ class PiClientWebSocketJob(
             strips.clear()
             strips.addAll(matchingStrips)
             status = StreamingJobStatus.SettingsSync
+        }
+    }
+
+    private fun handleResponse(response: PiClientResponse?) {
+        when (response) {
+            is PiClientResponse.BackpressureError -> {
+                sleepMillis = bufferTimeInMilliseconds / 2
+                status = StreamingJobStatus.BufferFullWaiting
+            }
+            is PiClientResponse.NoResponse,
+            is PiClientResponse.GenericError,
+            is PiClientResponse.UnknownType -> {
+                logger.warn("Unexpected response from $clientEntity: $response - reconnecting")
+                status = StreamingJobStatus.Offline
+                client?.close()
+            }
+            is PiClientResponse.BufferStatus, null -> Unit
         }
     }
 

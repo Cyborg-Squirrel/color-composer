@@ -1,17 +1,24 @@
 package io.cyborgsquirrel.jobs.streaming.serialization
 
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
+import io.cyborgsquirrel.jobs.streaming.nightdriver.toNightDriverSocketResponse
+import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.mockk.every
+import io.mockk.mockk
 
 @AnnotationSpec.Test
-class NightDriverSocketResponseDeserializerTest : StringSpec({
+class NightDriverSocketResponseTest : StringSpec({
+
+    val timeHelper = mockk<TimeHelper>()
 
     "Deserialize socket response from Night Driver" {
-        val deserializer = NightDriverSocketResponseDeserializer()
+        every { timeHelper.millisSinceEpoch() } returns 12345L
+
         val bytes = byteArrayOf(
             72,
             0,
@@ -87,7 +94,7 @@ class NightDriverSocketResponseDeserializerTest : StringSpec({
             0
         )
 
-        val socketResponse = deserializer.deserialize(bytes)
+        val socketResponse = bytes.toNightDriverSocketResponse(timeHelper)
 
         socketResponse.size shouldBe NightDriverSocketResponse.SIZE_IN_BYTES
         socketResponse.sequence shouldBe 131113
@@ -102,14 +109,13 @@ class NightDriverSocketResponseDeserializerTest : StringSpec({
         socketResponse.bufferPosition shouldBe 15
         socketResponse.frameDrawing shouldBe 30
         socketResponse.watts shouldBe 2
+        socketResponse.receivedAt shouldBe 12345L
     }
 
     "Wrong size packet" {
-        val deserializer = NightDriverSocketResponseDeserializer()
-        val bytes = byteArrayOf(1, 2, 3)
         var didThrow = false
         try {
-            deserializer.deserialize(bytes)
+            byteArrayOf(1, 2, 3).toNightDriverSocketResponse(timeHelper)
         } catch (ex: Exception) {
             didThrow = true
         }
@@ -118,7 +124,8 @@ class NightDriverSocketResponseDeserializerTest : StringSpec({
     }
 
     "Wrong size in packet size field" {
-        val deserializer = NightDriverSocketResponseDeserializer()
+        every { timeHelper.millisSinceEpoch() } returns 0L
+
         val bytes = byteArrayOf(
             73,
             0,
@@ -195,7 +202,7 @@ class NightDriverSocketResponseDeserializerTest : StringSpec({
         )
         var didThrow = false
         try {
-            deserializer.deserialize(bytes)
+            bytes.toNightDriverSocketResponse(timeHelper)
         } catch (ex: Exception) {
             didThrow = true
         }

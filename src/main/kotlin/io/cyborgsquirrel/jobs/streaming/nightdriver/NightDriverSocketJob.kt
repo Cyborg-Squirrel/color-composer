@@ -6,7 +6,6 @@ import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
 import io.cyborgsquirrel.jobs.streaming.model.NightDriverStreamingJobState
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverFrameDataSerializer
-import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverSocketResponseDeserializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
@@ -51,7 +50,6 @@ class NightDriverSocketJob(
 
     // Serialization
     private val serializer = NightDriverFrameDataSerializer()
-    private val deserializer = NightDriverSocketResponseDeserializer()
 
     // Time tracking
     private var timestampMillis = 0L
@@ -236,7 +234,7 @@ class NightDriverSocketJob(
                 if (availableBytes != null && availableBytes > 0L) {
                     val bytes = ByteArray(NightDriverSocketResponse.SIZE_IN_BYTES)
                     socket?.getInputStream()?.read(bytes)
-                    lastResponse = deserializer.deserialize(bytes)
+                    lastResponse = bytes.toNightDriverSocketResponse(timeHelper)
                     lastResponseReceivedAt = timeHelper.millisSinceEpoch()
                     logger.debug("Night Driver client {} status {}", clientEntity, lastResponse)
                     logger.debug("Client clock {}", timeHelper.dateTimeFromMillis(lastResponse!!.currentClockMillis()))
