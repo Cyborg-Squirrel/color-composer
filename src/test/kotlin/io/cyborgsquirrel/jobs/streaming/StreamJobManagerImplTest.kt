@@ -81,7 +81,7 @@ class StreamJobManagerImplTest : StringSpec({
         val expectedJobStateA = PiStreamingJobState(StreamingJobStatus.RenderingEffect)
         val expectedJobStateB = NightDriverStreamingJobState(
             StreamingJobStatus.RenderingEffect,
-            NightDriverSocketResponse(72, 1, 40, 1.0, 2.0, 3.0, 4.0, -45.0, 2, 1, 35, 1)
+            NightDriverSocketResponse(72, 1, 40, 1.0, 2.0, 3.0, 4.0, -45.0, 2, 1, 35, 1, receivedAt = 0L)
         )
 
         every { mockClientEntityA.uuid } returns "test-uuid-1"

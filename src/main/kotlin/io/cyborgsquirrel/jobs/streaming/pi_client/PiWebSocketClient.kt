@@ -26,6 +26,7 @@ abstract class PiWebSocketClient : AutoCloseable {
 
     @OnMessage
     fun onMessage(message: ByteArray) {
+        logger.debug("Message - {}", message)
         future?.complete(message)
     }
 
@@ -49,13 +50,14 @@ abstract class PiWebSocketClient : AutoCloseable {
     }
 
     fun send(message: ByteArray): CompletableFuture<ByteArray> {
-        waitForSend()
-        future = CompletableFuture()
-        return session!!.sendAsync(message)
+        waitForResponse()
+        future = CompletableFuture<ByteArray>()
+        session!!.sendAsync(message)
+        return future!!
     }
 
-    private fun waitForSend() {
-        future?.get(5, TimeUnit.SECONDS)
+    fun waitForResponse() {
+        future?.get(500, TimeUnit.MILLISECONDS)
     }
 
     private fun notifyDisconnectCallback() {

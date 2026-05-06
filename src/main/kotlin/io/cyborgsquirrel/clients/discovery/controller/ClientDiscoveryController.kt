@@ -79,7 +79,8 @@ class ClientDiscoveryController(
                         colorOrder = ColorOrder.RGB,
                         wsPort = client.wsPort,
                         apiPort = client.apiPort,
-                        uuid = UUID.randomUUID().toString()
+                        uuid = UUID.randomUUID().toString(),
+                        firmwareVersion = "0.1"
                     )
                     clientRepository.save(entity)
                     return HttpResponse.created(matchingClient)
