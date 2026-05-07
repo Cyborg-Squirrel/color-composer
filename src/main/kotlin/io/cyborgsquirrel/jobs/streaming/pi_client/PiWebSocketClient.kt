@@ -5,16 +5,14 @@ import io.micronaut.websocket.WebSocketSession
 import io.micronaut.websocket.annotation.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.ConcurrentLinkedQueue
 
 @ClientWebSocket
 abstract class PiWebSocketClient : AutoCloseable {
 
     private var session: WebSocketSession? = null
-
-    private var future: CompletableFuture<ByteArray>? = null
-
     private var onDisconnectedCallback: () -> Unit = {}
+    val responseQueue = ConcurrentLinkedQueue<ByteArray>()
 
     fun registerOnDisconnectedCallback(callback: () -> Unit) {
         onDisconnectedCallback = callback
@@ -27,7 +25,7 @@ abstract class PiWebSocketClient : AutoCloseable {
     @OnMessage
     fun onMessage(message: ByteArray) {
         logger.debug("Message - {}", message)
-        future?.complete(message)
+        responseQueue.add(message)
     }
 
     @OnOpen
@@ -49,25 +47,13 @@ abstract class PiWebSocketClient : AutoCloseable {
         notifyDisconnectCallback()
     }
 
-    fun send(message: ByteArray): CompletableFuture<ByteArray> {
-        waitForResponse()
-        future = CompletableFuture<ByteArray>()
-        session!!.sendAsync(message)
-        return future!!
-    }
-
-    fun waitForResponse() {
-        future?.get(500, TimeUnit.MILLISECONDS)
-    }
+    fun send(message: ByteArray): CompletableFuture<ByteArray> = session!!.sendAsync(message)
 
     private fun notifyDisconnectCallback() {
         try {
-            future?.cancel(true)
-        } catch (_: Exception) {
-        }
-        try {
             onDisconnectedCallback()
         } catch (_: Exception) {
+            // Suppress exceptions
         }
     }
 

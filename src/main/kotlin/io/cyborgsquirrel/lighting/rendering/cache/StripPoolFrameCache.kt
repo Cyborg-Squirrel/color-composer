@@ -14,7 +14,7 @@ class StripPoolFrameCache {
 
         // sequenceNumber 0 means the caller is making its first call. Return the latest frame.
         val frame = if (sequenceNumber <= 0) {
-            matchingFramesForStrip.maxByOrNull { it.sequenceNumber }!!
+            matchingFramesForStrip.maxByOrNull { it.sequenceNumber }
         } else if (matchingFramesForStrip.map { it.sequenceNumber }.contains(sequenceNumber)) {
             matchingFramesForStrip.first { it.sequenceNumber == sequenceNumber }
         } else {

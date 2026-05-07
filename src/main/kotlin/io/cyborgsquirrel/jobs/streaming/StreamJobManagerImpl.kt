@@ -3,16 +3,18 @@ package io.cyborgsquirrel.jobs.streaming
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketJob
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
+import jakarta.annotation.PreDestroy
 import jakarta.inject.Singleton
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 
 @Singleton
 class StreamJobManagerImpl(
     private val streamingJobFactory: StreamingJobFactory
 ) : StreamJobManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val jobMap = mutableMapOf<String, Pair<ClientStreamingJob, Job>>()
+    private val jobMap = ConcurrentHashMap<String, Pair<ClientStreamingJob, Job>>()
 
     override fun startStreamingJob(client: LedStripClientEntity) {
         logger.info("Starting websocket job for $client")
@@ -28,7 +30,7 @@ class StreamJobManagerImpl(
             }
             jobMap[client.uuid!!] = Pair(streamingJob, coroutineJob)
         } catch (ex: Exception) {
-            ex.printStackTrace()
+            logger.error("Error starting streaming job for $client", ex)
         }
     }
 
@@ -37,24 +39,30 @@ class StreamJobManagerImpl(
         try {
             val jobPair = jobMap.remove(client.uuid!!)
             jobPair?.first?.dispose()
-            runBlocking { jobPair?.second?.cancel() }
+            jobPair?.second?.cancel()
         } catch (ex: Exception) {
-            ex.printStackTrace()
+            logger.error("Error stopping streaming job for $client", ex)
         }
     }
 
     override fun stopAllJobs() {
         logger.info("Stopping all websocket jobs...")
         try {
-            for (clientUuid in jobMap.keys) {
-                jobMap[clientUuid]?.first?.dispose()
-                runBlocking { jobMap[clientUuid]?.second?.cancel() }
-            }
-
+            val snapshot = jobMap.values.toList()
             jobMap.clear()
+            for ((streamingJob, coroutineJob) in snapshot) {
+                streamingJob.dispose()
+                coroutineJob.cancel()
+            }
         } catch (ex: Exception) {
-            ex.printStackTrace()
+            logger.error("Error stopping all streaming jobs", ex)
         }
+    }
+
+    @PreDestroy
+    fun shutdown() {
+        stopAllJobs()
+        scope.cancel()
     }
 
     override fun getJobState(clientUuid: String) = jobMap[clientUuid]?.first?.getCurrentState()

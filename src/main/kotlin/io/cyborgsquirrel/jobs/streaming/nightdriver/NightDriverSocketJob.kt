@@ -17,6 +17,7 @@ import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
@@ -45,8 +46,9 @@ class NightDriverSocketJob(
     // NightDriver TCP connection
     private var socket: Socket? = null
 
-    // Client data
-    private val strips = mutableListOf<LedStripModel>()
+    // Client data — written from both the coroutine and the onUpdate listener callback
+    @Volatile
+    private var strips: List<LedStripModel> = emptyList()
 
     // Serialization
     private val serializer = NightDriverFrameDataSerializer()
@@ -61,7 +63,7 @@ class NightDriverSocketJob(
     private val clientTimeOffset: Long
         get() = clientTimeSync.clientTimeOffset
 
-    // State/logic
+    // State/logic — status/lastResponse/lastResponseReceivedAt written from both coroutine and IO thread
     private var exponentialReconnectionBackoffValue = 1
     private val exponentialReconnectionBackoffValueMax = 8
 
@@ -69,8 +71,11 @@ class NightDriverSocketJob(
     private val millisPerFrame: Long
         get() = 1000L / fps
     private var shouldRun = true
+    @Volatile
     private var status = StreamingJobStatus.SetupIncomplete
+    @Volatile
     private var lastResponse: NightDriverSocketResponse? = null
+    @Volatile
     private var lastResponseReceivedAt = 0L
 
     fun getLatestResponse() = lastResponse
@@ -100,10 +105,7 @@ class NightDriverSocketJob(
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            val newStrips =
-                                activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
-                            strips.clear()
-                            strips.addAll(newStrips)
+                            strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
                             status = StreamingJobStatus.Offline
                         } else {
                             delay(5000)
@@ -123,6 +125,7 @@ class NightDriverSocketJob(
 
                 StreamingJobStatus.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
+                    delay(1000)
                     setupSocket()
                 }
 
@@ -215,9 +218,10 @@ class NightDriverSocketJob(
                     }
                 }
             }
+        } catch (ex: CancellationException) {
+            throw ex
         } catch (ex: Exception) {
-            logger.error("Error $ex while processing state $status")
-            ex.printStackTrace()
+            logger.error("Error while processing state $status", ex)
             delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
             if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
         }
@@ -230,14 +234,21 @@ class NightDriverSocketJob(
                 socket?.getOutputStream()?.write(frame)
                 socket?.getOutputStream()?.flush()
 
-                val availableBytes = socket?.getInputStream()?.available()?.toLong()
-                if (availableBytes != null && availableBytes > 0L) {
+                val inputStream = socket?.getInputStream()
+                if (inputStream != null && inputStream.available() >= NightDriverSocketResponse.SIZE_IN_BYTES) {
                     val bytes = ByteArray(NightDriverSocketResponse.SIZE_IN_BYTES)
-                    socket?.getInputStream()?.read(bytes)
-                    lastResponse = bytes.toNightDriverSocketResponse(timeHelper)
-                    lastResponseReceivedAt = timeHelper.millisSinceEpoch()
-                    logger.debug("Night Driver client {} status {}", clientEntity, lastResponse)
-                    logger.debug("Client clock {}", timeHelper.dateTimeFromMillis(lastResponse!!.currentClockMillis()))
+                    var offset = 0
+                    while (offset < bytes.size) {
+                        val read = inputStream.read(bytes, offset, bytes.size - offset)
+                        if (read == -1) break
+                        offset += read
+                    }
+                    if (offset == bytes.size) {
+                        lastResponse = bytes.toNightDriverSocketResponse(timeHelper)
+                        lastResponseReceivedAt = timeHelper.millisSinceEpoch()
+                        logger.debug("Night Driver client {} status {}", clientEntity, lastResponse)
+                        logger.debug("Client clock {}", timeHelper.dateTimeFromMillis(lastResponse!!.currentClockMillis()))
+                    }
                 }
             }
         } catch (sockEx: SocketException) {
@@ -269,14 +280,16 @@ class NightDriverSocketJob(
             clientEntity.address
         }
 
-        withContext(Dispatchers.IO) {
-            try {
-                socket?.close()
-            } catch (_: Exception) {
-            }
+        withTimeout(10_000L) {
+            withContext(Dispatchers.IO) {
+                try {
+                    socket?.close()
+                } catch (_: Exception) {
+                }
 
-            socket = Socket()
-            socket?.connect(InetSocketAddress(host, clientEntity.wsPort!!), 5000)
+                socket = Socket()
+                socket?.connect(InetSocketAddress(host, clientEntity.wsPort!!), 5000)
+            }
         }
 
         if (socket?.isConnected == true) {
@@ -294,7 +307,7 @@ class NightDriverSocketJob(
     }
 
     override fun dispose() {
-        activeLightEffectService.removeLister(this)
+        activeLightEffectService.removeListener(this)
         shouldRun = false
         socket?.close()
     }
@@ -304,19 +317,14 @@ class NightDriverSocketJob(
             val strip = it.strip
             val clientUuid = clientEntity.uuid!!
             when (strip) {
-                is SingleLedStripModel -> {
-                    strip.clientUuid == clientUuid
-                }
-
-                is LedStripPoolModel -> {
-                    strip.clientUuids().contains(clientUuid)
-                }
+                is SingleLedStripModel -> strip.clientUuid == clientUuid
+                is LedStripPoolModel -> strip.clientUuids().contains(clientUuid)
             }
         }.map { it.strip }
 
         if (strips != matchingStrips) {
-            strips.clear()
-            strips.addAll(matchingStrips)
+            // NightDriver has no settings-sync step, so the new strip list takes effect on the next rendered frame.
+            strips = matchingStrips
         }
     }
 

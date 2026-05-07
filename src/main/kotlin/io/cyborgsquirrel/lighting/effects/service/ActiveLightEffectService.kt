@@ -19,7 +19,7 @@ interface ActiveLightEffectService {
 
     fun addListener(listener: ActiveLightEffectChangeListener)
 
-    fun removeLister(listener: ActiveLightEffectChangeListener)
+    fun removeListener(listener: ActiveLightEffectChangeListener)
 
     fun removeAllEffects()
 }

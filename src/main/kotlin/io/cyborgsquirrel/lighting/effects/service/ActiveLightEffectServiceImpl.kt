@@ -104,7 +104,7 @@ class ActiveLightEffectServiceImpl : ActiveLightEffectService {
         listeners.add(listener)
     }
 
-    override fun removeLister(listener: ActiveLightEffectChangeListener) {
+    override fun removeListener(listener: ActiveLightEffectChangeListener) {
         listeners.remove(listener)
     }
 

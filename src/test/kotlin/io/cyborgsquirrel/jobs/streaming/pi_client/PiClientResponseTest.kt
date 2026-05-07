@@ -21,9 +21,7 @@ class PiClientResponseTest : StringSpec({
     }
 
     fun buildMessage(type: Int, body: ByteArray): ByteArray {
-        val payloadSize = 2 + body.size
-        val buf = ByteBuffer.allocate(4 + payloadSize).order(ByteOrder.LITTLE_ENDIAN)
-        buf.putInt(payloadSize)
+        val buf = ByteBuffer.allocate(2 + body.size).order(ByteOrder.LITTLE_ENDIAN)
         buf.put(type.toByte())
         buf.put(body.size.toByte())
         buf.put(body)
