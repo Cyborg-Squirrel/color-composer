@@ -325,7 +325,12 @@ class PiClientWebSocketJob(
                         cont.resumeWith(Result.failure(t ?: Exception("WebSocket connection failed")))
                     }
 
-                    override fun onComplete() {}
+                    override fun onComplete() {
+                        if (cont.isActive) {
+                            status = StreamingJobStatus.Offline
+                            cont.resumeWith(Result.failure(Exception("WebSocket connection closed without connecting")))
+                        }
+                    }
 
                     override fun onNext(piClient: PiWebSocketClient?) {
                         status = StreamingJobStatus.ConnectedIdle

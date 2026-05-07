@@ -235,7 +235,7 @@ class NightDriverSocketJob(
                 socket?.getOutputStream()?.flush()
 
                 val inputStream = socket?.getInputStream()
-                if (inputStream != null && inputStream.available() >= NightDriverSocketResponse.SIZE_IN_BYTES) {
+                if (inputStream != null) {
                     val bytes = ByteArray(NightDriverSocketResponse.SIZE_IN_BYTES)
                     var offset = 0
                     while (offset < bytes.size) {

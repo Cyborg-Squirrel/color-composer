@@ -19,16 +19,15 @@ class StreamJobManagerImpl(
     override fun startStreamingJob(client: LedStripClientEntity) {
         logger.info("Starting websocket job for $client")
         try {
-            if (jobMap.containsKey((client.uuid!!))) {
-                stopWebsocketJob(client)
-            }
-
             val streamingJob = streamingJobFactory.createJob(client)
             val coroutineJob = streamingJob.start(scope)
+            val pair = Pair(streamingJob, coroutineJob)
             coroutineJob.invokeOnCompletion {
-                jobMap.remove(client.uuid)
+                jobMap.remove(client.uuid, pair)
             }
-            jobMap[client.uuid!!] = Pair(streamingJob, coroutineJob)
+            val old = jobMap.put(client.uuid!!, pair)
+            old?.first?.dispose()
+            old?.second?.cancel()
         } catch (ex: Exception) {
             logger.error("Error starting streaming job for $client", ex)
         }
