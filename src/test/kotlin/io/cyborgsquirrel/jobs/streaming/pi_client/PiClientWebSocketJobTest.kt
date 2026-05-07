@@ -136,9 +136,10 @@ class PiClientWebSocketJobTest : StringSpec({
         coEvery { mockPiConfigClient.getStripConfigs(any()) } returns PiClientStripsConfigList(
             listOf(PiClientStripConfig(STRIP_UUID, STRIP_PIN, STRIP_LENGTH, STRIP_BRIGHTNESS, ColorOrder.RGB))
         )
-        coEvery { mockPiConfigClient.getClientSettings(any()) } returns PiClientSettings(0)
+        coEvery { mockPiConfigClient.getClientSettings(any()) } returns PiClientSettings(500, 15000)
         coEvery { mockPiConfigClient.getClientVersion(any()) } returns ClientVersion("1.0.0")
         coEvery { mockPiConfigClient.getClientTime(any()) } returns ClientTime(NOW_MILLIS)
+        coEvery { mockPiConfigClient.updateClientSettings(any(), any()) } answers {}
     }
 
     afterEach { clearAllMocks() }
