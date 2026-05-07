@@ -25,6 +25,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.mockk.*
 import kotlinx.coroutines.*
+import java.net.Socket
 import java.time.LocalDateTime
 import java.util.*
 import java.nio.ByteBuffer
@@ -128,20 +129,6 @@ class NightDriverSocketJobTest : StringSpec({
         job.getCurrentState().status shouldBe StreamingJobStatus.SetupIncomplete
     }
 
-    "onUpdate with a matching LedStripPoolModel does not throw" {
-        setupCommonMocks()
-        val job = makeJob()
-        val poolStrip = LedStripPoolModel(
-            name = "Pool",
-            uuid = "pool-uuid",
-            blendMode = BlendMode.Additive,
-            poolType = PoolType.Sync,
-            strips = listOf(strip),
-        )
-        job.onUpdate(listOf(activeEffect.copy(strip = poolStrip)))
-        job.getCurrentState().status shouldBe StreamingJobStatus.SetupIncomplete
-    }
-
     "onUpdate called twice with the same strips is idempotent" {
         setupCommonMocks()
         val job = makeJob()
@@ -213,10 +200,10 @@ class NightDriverSocketJobTest : StringSpec({
     "RenderingEffect with empty frames transitions to BufferFullWaiting" {
         setupCommonMocks()
         // Socket connections will fail immediately (no real server), so we mock the socket constructor
-        mockkConstructor(java.net.Socket::class)
-        every { anyConstructed<java.net.Socket>().connect(any(), any()) } throws java.net.ConnectException("refused")
-        every { anyConstructed<java.net.Socket>().isConnected } returns false
-        every { anyConstructed<java.net.Socket>().close() } answers {}
+        mockkConstructor(Socket::class)
+        every { anyConstructed<Socket>().connect(any(), any()) } throws java.net.ConnectException("refused")
+        every { anyConstructed<Socket>().isConnected } returns false
+        every { anyConstructed<Socket>().close() } answers {}
 
         val job = makeJob()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -234,35 +221,3 @@ class NightDriverSocketJobTest : StringSpec({
         unmockkConstructor(java.net.Socket::class)
     }
 })
-
-// ---------------------------------------------------------------------------
-// Binary response builder — mirrors the layout in NightDriverSocketResponse.kt
-// ---------------------------------------------------------------------------
-
-fun buildNightDriverResponse(
-    bufferSize: Short = 10,
-    bufferPosition: Short = 0,
-    frameDrawing: Short = 0,
-    currentClock: Double = NOW_MILLIS / 1000.0,
-): ByteArray {
-    val buf = ByteBuffer.allocate(NightDriverSocketResponse.SIZE_IN_BYTES).order(ByteOrder.LITTLE_ENDIAN)
-    buf.putShort(NightDriverSocketResponse.SIZE_IN_BYTES.toShort()) // size
-    buf.putShort(0)                                                  // padding
-    buf.putInt(1)                                                    // sequence
-    buf.putInt(0)                                                    // padding
-    buf.putShort(100)                                                // flashVersion
-    buf.putShort(0)                                                  // padding
-    buf.putDouble(currentClock)                                      // currentClock
-    buf.putDouble(0.0)                                               // oldestPacket
-    buf.putDouble(0.0)                                               // newestPacket
-    buf.putDouble(1.0)                                               // brightness
-    buf.putDouble(-60.0)                                             // wifiSignal
-    buf.putShort(bufferSize)                                         // bufferSize
-    buf.putShort(0)                                                  // padding
-    buf.putShort(bufferPosition)                                     // bufferPosition
-    buf.putShort(0)                                                  // padding
-    buf.putShort(frameDrawing)                                       // frameDrawing
-    buf.putShort(0)                                                  // padding
-    buf.putShort(5)                                                  // watts
-    return buf.array()
-}

@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 private const val CLIENT_UUID = "test-client-uuid"
 private const val STRIP_UUID = "test-strip-uuid"
-private const val STRIP_PIN = "18"
+private const val STRIP_PIN = "D10"
 private const val STRIP_LENGTH = 60
 private const val STRIP_BRIGHTNESS = 100
 private const val NOW_MILLIS = 10_000L
@@ -95,14 +95,6 @@ class PiClientWebSocketJobTest : StringSpec({
         Publisher { subscriber ->
             subscriber.onSubscribe(object : Subscription {
                 override fun request(n: Long) { subscriber.onNext(piClient) }
-                override fun cancel() {}
-            })
-        }
-
-    fun failingPublisher(cause: Throwable): Publisher<PiWebSocketClient> =
-        Publisher { subscriber ->
-            subscriber.onSubscribe(object : Subscription {
-                override fun request(n: Long) { subscriber.onError(cause) }
                 override fun cancel() {}
             })
         }
@@ -231,7 +223,7 @@ class PiClientWebSocketJobTest : StringSpec({
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         val coroutineJob = job.start(scope)
-        delay(100) // well before the 5 s polling delay
+        delay(50) // well before the 5 s polling delay
         coroutineJob.cancel()
         scope.cancel()
 
@@ -290,7 +282,7 @@ class PiClientWebSocketJobTest : StringSpec({
     "handleResponse: GenericError transitions to Offline and closes the client" {
         setupCommonMocks()
         every { mockPiWebSocketClient.send(any()) } answers {
-            mockResponseQueue.add(buildGenericErrorResponse("hardware fault"))
+            mockResponseQueue.add(buildGenericErrorResponse("generic error"))
             CompletableFuture.completedFuture(byteArrayOf())
         }
         every { mockRenderer.renderFrames(any(), any()) } returns listOf(
@@ -300,7 +292,7 @@ class PiClientWebSocketJobTest : StringSpec({
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         val coroutineJob = job.start(scope)
-        delay(200)
+        delay(50)
         coroutineJob.cancel()
         scope.cancel()
 
