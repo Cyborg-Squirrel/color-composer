@@ -16,7 +16,7 @@ class ClientStatusServiceImpl(
 ) : ClientStatusService {
 
     override fun getStatusForClient(clientEntity: LedStripClientEntity): Optional<ClientStatusInfo> {
-        val clientJobState = jobsManager.getJobState(clientEntity.uuid!!)
+        val clientJobState = jobsManager.getJobState(clientEntity.uuid)
         if (clientJobState != null) {
             return when (clientJobState.status) {
                 StreamingJobStatus.SetupIncomplete -> Optional.of(ClientStatusInfo.inactive(ClientStatus.SetupIncomplete))
@@ -24,7 +24,7 @@ class ClientStatusServiceImpl(
                 StreamingJobStatus.Offline -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Offline))
                 StreamingJobStatus.ConnectedIdle -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Idle))
                 else -> {
-                    val activeEffects = activeLightEffectService.getEffectsForClient(clientEntity.uuid!!)
+                    val activeEffects = activeLightEffectService.getEffectsForClient(clientEntity.uuid)
                         .filter { it.status.isActive() }.size
                     if (activeEffects > 0) {
                         Optional.of(ClientStatusInfo(ClientStatus.Active, activeEffects))

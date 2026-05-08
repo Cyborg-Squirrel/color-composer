@@ -75,6 +75,8 @@ class LightEffectTriggerRepositoryTest(
                 apiPort = 1111,
                 wsPort = 2222,
                 firmwareVersion = "--",
+                fps = 35,
+                fadeTimeoutMillis = 0,
             )
         )
         val strip = ledStripRepository.save(

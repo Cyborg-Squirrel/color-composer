@@ -31,6 +31,8 @@ class LedStripClientRepositoryTest(
         apiPort = 80,
         lastSeenAt = Timestamp.from(Instant.now()).time,
         firmwareVersion = "--",
+        fps = 35,
+        fadeTimeoutMillis = 0,
     )
 
     val demoLedStripEntity = LedStripEntity(

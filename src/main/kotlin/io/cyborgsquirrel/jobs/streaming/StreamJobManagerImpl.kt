@@ -25,7 +25,7 @@ class StreamJobManagerImpl(
             coroutineJob.invokeOnCompletion {
                 jobMap.remove(client.uuid, pair)
             }
-            val old = jobMap.put(client.uuid!!, pair)
+            val old = jobMap.put(client.uuid, pair)
             old?.first?.dispose()
             old?.second?.cancel()
         } catch (ex: Exception) {
@@ -36,7 +36,7 @@ class StreamJobManagerImpl(
     override fun stopWebsocketJob(client: LedStripClientEntity) {
         logger.info("Stopping websocket job for $client")
         try {
-            val jobPair = jobMap.remove(client.uuid!!)
+            val jobPair = jobMap.remove(client.uuid)
             jobPair?.first?.dispose()
             jobPair?.second?.cancel()
         } catch (ex: Exception) {

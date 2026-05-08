@@ -46,13 +46,13 @@ class LedClientApiServiceTest(
             powerLimit = 100  // Changed
         )
 
-        ledClientApiService.updateClient(client.uuid!!, updateRequest)
+        ledClientApiService.updateClient(client.uuid, updateRequest)
 
         val streamJobManager = getMock(streamJobManager)
         verify(atLeast = 1) { streamJobManager.stopWebsocketJob(any()) }
         verify(atLeast = 1) { streamJobManager.startStreamingJob(any()) }
 
-        val updatedClient = clientRepository.findByUuid(client.uuid!!).get()
+        val updatedClient = clientRepository.findByUuid(client.uuid).get()
         updatedClient.powerLimit shouldBe 100
     }
 
@@ -74,13 +74,13 @@ class LedClientApiServiceTest(
             powerLimit = null
         )
 
-        ledClientApiService.updateClient(client.uuid!!, updateRequest)
+        ledClientApiService.updateClient(client.uuid, updateRequest)
 
         val streamJobManager = getMock(streamJobManager)
         verify(atLeast = 1) { streamJobManager.stopWebsocketJob(any()) }
         verify(atLeast = 1) { streamJobManager.startStreamingJob(any()) }
 
-        val updatedClient = clientRepository.findByUuid(client.uuid!!).get()
+        val updatedClient = clientRepository.findByUuid(client.uuid).get()
         updatedClient.apiPort shouldBe 9000
     }
 
@@ -102,13 +102,13 @@ class LedClientApiServiceTest(
             powerLimit = null
         )
 
-        ledClientApiService.updateClient(client.uuid!!, updateRequest)
+        ledClientApiService.updateClient(client.uuid, updateRequest)
 
         val streamJobManager = getMock(streamJobManager)
         verify(atLeast = 1) { streamJobManager.stopWebsocketJob(any()) }
         verify(atLeast = 1) { streamJobManager.startStreamingJob(any()) }
 
-        val updatedClient = clientRepository.findByUuid(client.uuid!!).get()
+        val updatedClient = clientRepository.findByUuid(client.uuid).get()
         updatedClient.wsPort shouldBe 9001
     }
 
@@ -130,13 +130,13 @@ class LedClientApiServiceTest(
             powerLimit = null
         )
 
-        ledClientApiService.updateClient(client.uuid!!, updateRequest)
+        ledClientApiService.updateClient(client.uuid, updateRequest)
 
         val streamJobManager = getMock(streamJobManager)
         verify(atLeast = 1) { streamJobManager.stopWebsocketJob(any()) }
         verify(atLeast = 1) { streamJobManager.startStreamingJob(any()) }
 
-        val updatedClient = clientRepository.findByUuid(client.uuid!!).get()
+        val updatedClient = clientRepository.findByUuid(client.uuid).get()
         updatedClient.address shouldBe "192.168.1.200"
     }
 
@@ -160,7 +160,7 @@ class LedClientApiServiceTest(
             powerLimit = null
         )
 
-        ledClientApiService.updateClient(client.uuid!!, updateRequest)
+        ledClientApiService.updateClient(client.uuid, updateRequest)
 
         val streamJobManager = getMock(streamJobManager)
         verify(atLeast = 1) { streamJobManager.stopWebsocketJob(any()) }
@@ -185,13 +185,13 @@ class LedClientApiServiceTest(
             powerLimit = null
         )
 
-        ledClientApiService.updateClient(client.uuid!!, updateRequest)
+        ledClientApiService.updateClient(client.uuid, updateRequest)
 
         val streamJobManager = getMock(streamJobManager)
         verify(exactly = 0) { streamJobManager.stopWebsocketJob(any()) }
         verify(exactly = 0) { streamJobManager.startStreamingJob(any()) }
 
-        val updatedClient = clientRepository.findByUuid(client.uuid!!).get()
+        val updatedClient = clientRepository.findByUuid(client.uuid).get()
         updatedClient.name shouldBe updateRequest.name
     }
 }) {

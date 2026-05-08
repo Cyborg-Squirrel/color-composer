@@ -48,7 +48,7 @@ class LedStripSetupControllerTest(
 
             // Request strips for a client which has no strips
             val client = createLedStripClientEntity(clientRepository, "Lamp lights", "192.168.1.23", 90, 91)
-            response = apiClient.getStrips(client.uuid!!)
+            response = apiClient.getStrips(client.uuid)
             response.status shouldBe HttpStatus.OK
             var getStripsResponse = response.body() as GetLedStripsResponse
             getStripsResponse.strips.isEmpty() shouldBe true
@@ -66,7 +66,7 @@ class LedStripSetupControllerTest(
             getStripResponse.brightness shouldBe strip.brightness
 
             // Request strips for client
-            response = apiClient.getStrips(client.uuid!!)
+            response = apiClient.getStrips(client.uuid)
             response.status shouldBe HttpStatus.OK
             getStripsResponse = response.body() as GetLedStripsResponse
             getStripsResponse.strips.size shouldBe 1
@@ -84,7 +84,7 @@ class LedStripSetupControllerTest(
             val client = createLedStripClientEntity(clientRepository, "Porch lights", "192.168.50.50", 50, 51)
             var request =
                 CreateLedStripRequest(
-                    client.uuid!!,
+                    client.uuid,
                     "Porch underglow strip",
                     "D10",
                     240,
@@ -108,7 +108,7 @@ class LedStripSetupControllerTest(
             // Create with optional fields specified
             request =
                 CreateLedStripRequest(
-                    client.uuid!!,
+                    client.uuid,
                     "Porch under-glow strip",
                     "D10",
                     180,
@@ -191,7 +191,7 @@ class LedStripSetupControllerTest(
             val client = createLedStripClientEntity(clientRepository, "Pi Client", "192.168.50.50", 50, 51)
             
             val request1 = CreateLedStripRequest(
-                client.uuid!!,
+                client.uuid,
                 "First Strip",
                 "D10",
                 240,
@@ -201,7 +201,7 @@ class LedStripSetupControllerTest(
             response.status shouldBe HttpStatus.CREATED
             
             val request2 = CreateLedStripRequest(
-                client.uuid!!,
+                client.uuid,
                 "Second Strip",
                 "D12",
                 240,
@@ -216,7 +216,7 @@ class LedStripSetupControllerTest(
             val nightDriverClient = createLedStripClientEntity(clientRepository, "NightDriver Client", "192.168.50.51", 52, 53)
             
             val request1 = CreateLedStripRequest(
-                piClient.uuid!!,
+                piClient.uuid,
                 "Pi Strip",
                 "D10",
                 240,
@@ -226,7 +226,7 @@ class LedStripSetupControllerTest(
             response.status shouldBe HttpStatus.CREATED
             
             val request2 = CreateLedStripRequest(
-                nightDriverClient.uuid!!,
+                nightDriverClient.uuid,
                 "NightDriver Strip",
                 "D12",
                 240,
@@ -237,7 +237,7 @@ class LedStripSetupControllerTest(
             response.status shouldBe HttpStatus.CREATED
             
             val updateRequest = UpdateLedStripRequest(
-                clientUuid = piClient.uuid!!,
+                clientUuid = piClient.uuid,
                 name = "Updated NightDriver Strip",
                 pin = "D12",
                 length = 200,

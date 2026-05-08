@@ -67,9 +67,11 @@ class NightDriverSocketJobTest : StringSpec({
         colorOrder = ColorOrder.RGB,
         wsPort = 65000,
         apiPort = 80,
-        firmwareVersion = null,
+        firmwareVersion = "40",
         powerLimit = 0,
         strips = setOf(mockStripEntity),
+        fps = 35,
+        fadeTimeoutMillis = 0,
     )
     val activeEffect = ActiveLightEffect(
         effectUuid = "nd-effect-uuid",

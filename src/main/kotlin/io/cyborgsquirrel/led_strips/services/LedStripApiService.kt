@@ -170,7 +170,7 @@ class LedStripApiService(
                             newStripEntity.height,
                             newStripEntity.blendMode!!,
                             newStripEntity.brightness!!,
-                            newStripEntity.client!!.uuid!!,
+                            newStripEntity.client!!.uuid,
                             false
                         ),
                         effect = if (stripEntity.length != newStripEntity.length) recreateEffect(
@@ -227,7 +227,6 @@ class LedStripApiService(
         val isPinValid = when (clientEntity.clientType) {
             ClientType.Pi -> validPiPins.contains(pin)
             ClientType.NightDriver -> nightDriverPinValid(pin)
-            null -> throw Exception("No client type specified for client ${clientEntity.uuid}")
         }
 
         if (!isPinValid) {
@@ -249,7 +248,7 @@ class LedStripApiService(
         val clientStatus = if (entity.client == null) null else clientStatusService.getStatusForClient(entity.client!!)
             .getOrNull()?.status
         return GetLedStripResponse(
-            clientUuid = entity.client!!.uuid!!,
+            clientUuid = entity.client!!.uuid,
             name = entity.name!!,
             uuid = entity.uuid!!,
             pin = entity.pin!!,

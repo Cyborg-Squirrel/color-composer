@@ -63,7 +63,7 @@ class LedClientSetupControllerTest(
             response = apiClient.getClient(UUID.randomUUID().toString())
             response.status shouldBe HttpStatus.BAD_REQUEST
 
-            response = apiClient.getClient(client.uuid!!)
+            response = apiClient.getClient(client.uuid)
             response.status shouldBe HttpStatus.OK
             val singleClientResponse = response.body() as GetClientResponse
             singleClientResponse.uuid shouldBe client.uuid
@@ -112,10 +112,10 @@ class LedClientSetupControllerTest(
             val clientEntity = createLedStripClientEntity(clientRepository, "Window lights", "192.168.1.112", 112, 113)
             val updatedClientRequest =
                 UpdateClientRequest("Living room lights", "192.168.1.113", ColorOrder.GRB, 115, 116, 333)
-            val updateResponse = apiClient.update(clientEntity.uuid!!, updatedClientRequest)
+            val updateResponse = apiClient.update(clientEntity.uuid, updatedClientRequest)
             updateResponse.status shouldBe HttpStatus.NO_CONTENT
 
-            val clientEntityOptional = clientRepository.findByUuid(clientEntity.uuid!!)
+            val clientEntityOptional = clientRepository.findByUuid(clientEntity.uuid)
             clientEntityOptional.isPresent shouldBe true
             val updatedClientEntity = clientEntityOptional.get()
             updatedClientEntity.name shouldBe updatedClientRequest.name
@@ -132,15 +132,15 @@ class LedClientSetupControllerTest(
             val clientEntity = createLedStripClientEntity(clientRepository, "Window lights", "192.168.50.67", 80, 90)
             val strip = saveLedStrip(stripRepository, clientEntity, "Window light", 60, PiClientPin.D10.pinName, 100)
 
-            var deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
+            var deleteResponse = apiClient.deleteClient(clientEntity.uuid)
             deleteResponse.status shouldBe HttpStatus.BAD_REQUEST
 
             stripRepository.delete(strip)
 
-            deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
+            deleteResponse = apiClient.deleteClient(clientEntity.uuid)
             deleteResponse.status shouldBe HttpStatus.NO_CONTENT
 
-            deleteResponse = apiClient.deleteClient(clientEntity.uuid!!)
+            deleteResponse = apiClient.deleteClient(clientEntity.uuid)
             deleteResponse.status shouldBe HttpStatus.BAD_REQUEST
         }
     }) {

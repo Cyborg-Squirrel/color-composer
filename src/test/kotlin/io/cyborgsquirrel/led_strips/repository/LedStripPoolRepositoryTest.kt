@@ -48,6 +48,8 @@ class LedStripPoolRepositoryTest(
             wsPort = wsPort,
             apiPort = apiPort,
             firmwareVersion = "--",
+            fps = 35,
+            fadeTimeoutMillis = 0,
         )
     )
 

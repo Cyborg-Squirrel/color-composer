@@ -50,7 +50,6 @@ class StreamingJobFactory(
                 )
             }
 
-            null -> throw Exception("No clientType specified!")
         }
     }
 }

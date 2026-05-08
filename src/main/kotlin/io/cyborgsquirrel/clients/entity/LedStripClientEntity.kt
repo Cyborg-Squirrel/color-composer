@@ -21,23 +21,23 @@ data class LedStripClientEntity(
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "client")
     var strips: Set<LedStripEntity> = setOf(),
 
-    var name: String?,
+    var name: String,
 
-    var uuid: String?,
+    var uuid: String,
 
-    var address: String?,
+    var address: String,
 
     @MappedEntity("client_type")
     @Enumerated(EnumType.STRING)
-    var clientType: ClientType?,
+    var clientType: ClientType,
 
     @MappedEntity("color_order")
     @Enumerated(EnumType.STRING)
-    var colorOrder: ColorOrder?,
+    var colorOrder: ColorOrder,
 
-    var wsPort: Int? = null,
+    var wsPort: Int,
 
-    var apiPort: Int? = null,
+    var apiPort: Int,
 
     @MappedProperty("last_seen_at")
     var lastSeenAt: Long = 0,
@@ -47,12 +47,12 @@ data class LedStripClientEntity(
     var powerLimit: Int? = null,
 
     @MappedProperty("firmware_version")
-    var firmwareVersion: String?,
+    var firmwareVersion: String,
 
-    var fps: Int = 35,
+    var fps: Int,
 
     @MappedProperty("fade_timeout_millis")
-    var fadeTimeoutMillis: Int = 0,
+    var fadeTimeoutMillis: Int,
 ) {
     // Overrides to prevent infinite looping
 
@@ -80,12 +80,12 @@ data class LedStripClientEntity(
     override fun hashCode(): Int {
         var result = name.hashCode()
         result = 31 * result + id.hashCode()
-        result = 31 * result + (address ?: 0).hashCode()
-        result = 31 * result + (clientType?.ordinal ?: 0).hashCode()
-        result = 31 * result + (colorOrder ?: 0).hashCode()
-        result = 31 * result + (uuid ?: 0).hashCode()
-        result = 31 * result + (apiPort ?: 0).hashCode()
-        result = 31 * result + (wsPort ?: 0).hashCode()
+        result = 31 * result + address.hashCode()
+        result = 31 * result + clientType.ordinal.hashCode()
+        result = 31 * result + colorOrder.hashCode()
+        result = 31 * result + uuid.hashCode()
+        result = 31 * result + apiPort.hashCode()
+        result = 31 * result + wsPort.hashCode()
         result = 31 * result + lastSeenAt.hashCode()
         result = 31 * result + powerLimit.hashCode()
         result = 31 * result + firmwareVersion.hashCode()

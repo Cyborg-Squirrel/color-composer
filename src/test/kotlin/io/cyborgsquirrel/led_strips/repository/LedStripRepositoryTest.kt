@@ -35,6 +35,8 @@ class LedStripRepositoryTest(
             wsPort = 8888,
             apiPort = 7777,
             firmwareVersion = "--",
+            fps = 35,
+            fadeTimeoutMillis = 0,
         )
     )
 

@@ -63,7 +63,7 @@ class CreateLightingService(
                 stripEntity.height,
                 stripEntity.blendMode!!,
                 stripEntity.brightness!!,
-                joinedStripEntity.client!!.uuid!!,
+                joinedStripEntity.client!!.uuid,
                 false
             )
         } else if (poolEntity != null) {
@@ -82,7 +82,7 @@ class CreateLightingService(
                     it.strip!!.height,
                     it.strip!!.blendMode!!,
                     it.strip!!.brightness!!,
-                    it.strip!!.client!!.uuid!!,
+                    it.strip!!.client!!.uuid,
                     it.inverted!!
                 )
             }

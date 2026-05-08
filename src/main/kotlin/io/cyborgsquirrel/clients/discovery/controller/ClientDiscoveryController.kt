@@ -80,7 +80,9 @@ class ClientDiscoveryController(
                         wsPort = client.wsPort,
                         apiPort = client.apiPort,
                         uuid = UUID.randomUUID().toString(),
-                        firmwareVersion = "0.1"
+                        firmwareVersion = "0.1",
+                        fps = 35,
+                        fadeTimeoutMillis = 15000
                     )
                     clientRepository.save(entity)
                     return HttpResponse.created(matchingClient)

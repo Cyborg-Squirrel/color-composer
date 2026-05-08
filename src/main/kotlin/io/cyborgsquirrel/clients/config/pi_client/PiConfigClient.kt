@@ -57,7 +57,7 @@ class PiConfigClient(
 
     suspend fun getClientVersion(client: LedStripClientEntity): ClientVersion {
         val uri = UriBuilder.of(client.address)
-            .port(client.apiPort!!)
+            .port(client.apiPort)
             .path("version")
             .build()
 
@@ -69,7 +69,7 @@ class PiConfigClient(
 
     suspend fun getClientTime(client: LedStripClientEntity): ClientTime {
         val uri = UriBuilder.of(client.address)
-            .port(client.apiPort!!)
+            .port(client.apiPort)
             .path("time")
             .build()
 
@@ -100,13 +100,13 @@ class PiConfigClient(
 
     private fun getStripsConfigurationUriBuilder(client: LedStripClientEntity): UriBuilder {
         return UriBuilder.of(client.address)
-            .port(client.apiPort!!)
+            .port(client.apiPort)
             .path("strips-config")
     }
 
     private fun getGlobalSettingsUriBuilder(client: LedStripClientEntity): UriBuilder {
         return UriBuilder.of(client.address)
-            .port(client.apiPort!!)
+            .port(client.apiPort)
             .path("settings")
     }
 }

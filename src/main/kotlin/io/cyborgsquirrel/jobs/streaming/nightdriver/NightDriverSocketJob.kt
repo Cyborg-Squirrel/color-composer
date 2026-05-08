@@ -101,11 +101,11 @@ class NightDriverSocketJob(
         try {
             when (status) {
                 StreamingJobStatus.SetupIncomplete -> {
-                    val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
+                    val clientOptional = clientRepository.findByUuid(clientEntity.uuid)
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
+                            strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid).map { it.strip }
                             status = StreamingJobStatus.Offline
                         } else {
                             delay(5000)
@@ -151,7 +151,7 @@ class NightDriverSocketJob(
 
                 StreamingJobStatus.RenderingEffect -> {
                     triggerManager.processTriggers()
-                    val frameList = renderer.renderFrames(strips, clientEntity.uuid!!)
+                    val frameList = renderer.renderFrames(strips, clientEntity.uuid)
 
                     if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
@@ -273,9 +273,9 @@ class NightDriverSocketJob(
 
     private suspend fun setupSocket() {
         val httpSlashPattern = Regex("^(http|https)://")
-        val httpSlashPatternResult = httpSlashPattern.find(clientEntity.address!!)
+        val httpSlashPatternResult = httpSlashPattern.find(clientEntity.address)
         val host = if (httpSlashPatternResult?.groups?.isNotEmpty() == true) {
-            clientEntity.address?.replace(httpSlashPattern, "")
+            clientEntity.address.replace(httpSlashPattern, "")
         } else {
             clientEntity.address
         }
@@ -288,7 +288,7 @@ class NightDriverSocketJob(
                 }
 
                 socket = Socket()
-                socket?.connect(InetSocketAddress(host, clientEntity.wsPort!!), 5000)
+                socket?.connect(InetSocketAddress(host, clientEntity.wsPort), 5000)
             }
         }
 
@@ -315,7 +315,7 @@ class NightDriverSocketJob(
     override fun onUpdate(newEffects: List<ActiveLightEffect>) {
         val matchingStrips = newEffects.filter {
             val strip = it.strip
-            val clientUuid = clientEntity.uuid!!
+            val clientUuid = clientEntity.uuid
             when (strip) {
                 is SingleLedStripModel -> strip.clientUuid == clientUuid
                 is LedStripPoolModel -> strip.clientUuids().contains(clientUuid)

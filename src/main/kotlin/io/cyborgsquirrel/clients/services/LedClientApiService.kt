@@ -43,7 +43,7 @@ class LedClientApiService(
     fun createClient(request: CreateClientRequest): String {
         val entityOptional = clientRepository.findByAddress(request.address)
         return if (entityOptional.isPresent) {
-            entityOptional.get().uuid!!
+            entityOptional.get().uuid
         } else {
             // Default to RGB if no color order is specified - it is not required for Pi clients
             val colorOrder = request.colorOrder ?: ColorOrder.RGB
@@ -65,7 +65,7 @@ class LedClientApiService(
             )
 
             streamJobManager.startStreamingJob(clientEntity)
-            clientEntity.uuid!!
+            clientEntity.uuid
         }
     }
 
@@ -131,18 +131,18 @@ class LedClientApiService(
     fun mapClientEntityToResponse(client: LedStripClientEntity): GetClientResponse {
         val statusInfo = getStatusInfo(client)
         return GetClientResponse(
-            client.name!!,
-            client.address!!,
-            client.uuid!!,
+            client.name,
+            client.address,
+            client.uuid,
             client.clientType.toString(),
-            client.colorOrder!!,
-            client.apiPort!!,
-            client.wsPort!!,
+            client.colorOrder,
+            client.apiPort,
+            client.wsPort,
             client.lastSeenAt,
             statusInfo.status,
             statusInfo.activeEffects,
             client.powerLimit,
-            client.firmwareVersion!!,
+            client.firmwareVersion,
             client.fps,
             client.fadeTimeoutMillis,
         )

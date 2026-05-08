@@ -50,6 +50,8 @@ class StripPoolApiServiceTest(
             wsPort = 8000,
             apiPort = 8001,
             firmwareVersion = "--",
+            fps = 35,
+            fadeTimeoutMillis = 0,
         )
         clientRepository.save(client)
         return client

@@ -92,7 +92,7 @@ class LedStripApiServiceTest(
     "getStrips should return empty list when no strips exist" {
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
 
-        val result = ledStripApiService.getStrips(client.uuid!!)
+        val result = ledStripApiService.getStrips(client.uuid)
         result.strips.isEmpty() shouldBe true
     }
 
@@ -105,7 +105,7 @@ class LedStripApiServiceTest(
             statusService.getStatusForClient(client)
         } returns Optional.of(ClientStatusInfo.inactive(ClientStatus.Idle))
 
-        val result = ledStripApiService.getStrips(client.uuid!!)
+        val result = ledStripApiService.getStrips(client.uuid)
         result.strips.size shouldBe 2
         val matchingStrip1 = result.strips.first { it.uuid == strip1.uuid }
         val matchingStrip2 = result.strips.first { it.uuid == strip2.uuid }
@@ -129,7 +129,7 @@ class LedStripApiServiceTest(
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
 
         val request = CreateLedStripRequest(
-            client.uuid!!, "New Strip", "D10", 200, blendMode = BlendMode.Additive
+            client.uuid, "New Strip", "D10", 200, blendMode = BlendMode.Additive
         )
 
         val uuid = ledStripApiService.createStrip(request)
@@ -162,7 +162,7 @@ class LedStripApiServiceTest(
         val firstStrip = saveLedStrip(stripRepository, client, "First Strip", 100, "D10", 100)
 
         val request = CreateLedStripRequest(
-            client.uuid!!, "Second Strip", "D12", 200, blendMode = BlendMode.Additive
+            client.uuid, "Second Strip", "D12", 200, blendMode = BlendMode.Additive
         )
 
         shouldThrow<ClientRequestException> {
@@ -268,7 +268,7 @@ class LedStripApiServiceTest(
         val stripB = saveLedStrip(stripRepository, clientB, "Test Strip", 100, "D12", 100)
 
         val request = UpdateLedStripRequest(
-            clientUuid = clientB.uuid!!,
+            clientUuid = clientB.uuid,
             name = "Updated Strip",
             pin = "D12",
             length = 150,
@@ -288,7 +288,7 @@ class LedStripApiServiceTest(
         val strip = saveLedStrip(stripRepository, newClient, "Test Strip", 100, "D12", 100)
 
         val request = UpdateLedStripRequest(
-            clientUuid = client.uuid!!,
+            clientUuid = client.uuid,
             name = "Updated Strip",
             pin = "D10",
             length = 150,
