@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
+import java.net.URI
 
 /**
  * Background job for streaming light effects to NightDriver clients
@@ -272,13 +273,7 @@ class NightDriverSocketJob(
     }
 
     private suspend fun setupSocket() {
-        val httpSlashPattern = Regex("^(http|https)://")
-        val httpSlashPatternResult = httpSlashPattern.find(clientEntity.address)
-        val host = if (httpSlashPatternResult?.groups?.isNotEmpty() == true) {
-            clientEntity.address.replace(httpSlashPattern, "")
-        } else {
-            clientEntity.address
-        }
+        val host = parseHost(clientEntity.address)
 
         withTimeout(10_000L) {
             withContext(Dispatchers.IO) {
@@ -330,5 +325,13 @@ class NightDriverSocketJob(
 
     companion object {
         private val logger = LoggerFactory.getLogger(NightDriverSocketJob::class.java)
+
+        fun parseHost(address: String): String {
+            return try {
+                URI(address).host ?: address
+            } catch (_: Exception) {
+                address
+            }
+        }
     }
 }

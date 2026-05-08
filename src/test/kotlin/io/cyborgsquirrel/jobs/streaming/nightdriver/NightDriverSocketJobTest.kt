@@ -108,6 +108,18 @@ class NightDriverSocketJobTest : StringSpec({
     afterEach { clearAllMocks() }
 
     // -------------------------------------------------------------------------
+    // parseHost tests
+    // -------------------------------------------------------------------------
+
+    "parseHost" {
+        NightDriverSocketJob.parseHost("192.168.1.200") shouldBe "192.168.1.200"
+        NightDriverSocketJob.parseHost("myhostname.local") shouldBe "myhostname.local"
+        NightDriverSocketJob.parseHost("http://192.168.1.200") shouldBe "192.168.1.200"
+        NightDriverSocketJob.parseHost("https://192.168.1.200") shouldBe "192.168.1.200"
+        NightDriverSocketJob.parseHost("http://myhostname.local") shouldBe "myhostname.local"
+    }
+
+    // -------------------------------------------------------------------------
     // Direct method tests
     // -------------------------------------------------------------------------
 

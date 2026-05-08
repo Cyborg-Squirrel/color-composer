@@ -54,6 +54,12 @@ data class LedStripClientEntity(
     @MappedProperty("fade_timeout_millis")
     var fadeTimeoutMillis: Int,
 ) {
+    companion object {
+        const val DEFAULT_FIRMWARE_VERSION = "--"
+        const val DEFAULT_FPS = 35
+        const val DEFAULT_FADE_TIMEOUT_MILLIS = 15000
+    }
+
     // Overrides to prevent infinite looping
 
     override fun equals(other: Any?): Boolean {

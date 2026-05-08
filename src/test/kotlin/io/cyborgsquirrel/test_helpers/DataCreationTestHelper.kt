@@ -26,9 +26,9 @@ fun createLedStripClientEntity(
     wsPort: Int,
     clientType: ClientType = ClientType.Pi,
     powerLimit: Int? = null,
-    firmwareVersion: String = "0.1",
-    fps: Int = 35,
-    fadeTimeoutMillis: Int = 0,
+    firmwareVersion: String = LedStripClientEntity.DEFAULT_FIRMWARE_VERSION,
+    fps: Int = LedStripClientEntity.DEFAULT_FPS,
+    fadeTimeoutMillis: Int = LedStripClientEntity.DEFAULT_FADE_TIMEOUT_MILLIS,
 ): LedStripClientEntity =
     clientRepository.save(
         LedStripClientEntity(

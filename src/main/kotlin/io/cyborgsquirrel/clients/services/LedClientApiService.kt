@@ -58,9 +58,9 @@ class LedClientApiService(
                     wsPort = request.wsPort,
                     uuid = UUID.randomUUID().toString(),
                     powerLimit = request.powerLimit ?: 0,
-                    firmwareVersion = if (request.clientType == ClientType.Pi) "0.1" else "--",
-                    fps = request.fps ?: 35,
-                    fadeTimeoutMillis = request.fadeTimeoutMillis ?: 0,
+                    firmwareVersion = if (request.clientType == ClientType.Pi) "0.1" else LedStripClientEntity.DEFAULT_FIRMWARE_VERSION,
+                    fps = request.fps ?: LedStripClientEntity.DEFAULT_FPS,
+                    fadeTimeoutMillis = request.fadeTimeoutMillis ?: LedStripClientEntity.DEFAULT_FADE_TIMEOUT_MILLIS,
                 )
             )
 

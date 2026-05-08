@@ -81,8 +81,8 @@ class ClientDiscoveryController(
                         apiPort = client.apiPort,
                         uuid = UUID.randomUUID().toString(),
                         firmwareVersion = "0.1",
-                        fps = 35,
-                        fadeTimeoutMillis = 15000
+                        fps = LedStripClientEntity.DEFAULT_FPS,
+                        fadeTimeoutMillis = LedStripClientEntity.DEFAULT_FADE_TIMEOUT_MILLIS
                     )
                     clientRepository.save(entity)
                     return HttpResponse.created(matchingClient)
