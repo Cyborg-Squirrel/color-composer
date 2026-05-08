@@ -80,7 +80,7 @@ class ClientDiscoveryController(
                         wsPort = client.wsPort,
                         apiPort = client.apiPort,
                         uuid = UUID.randomUUID().toString(),
-                        firmwareVersion = "0.1",
+                        firmwareVersion = LedStripClientEntity.DEFAULT_FIRMWARE_VERSION,
                         fps = LedStripClientEntity.DEFAULT_FPS,
                         fadeTimeoutMillis = LedStripClientEntity.DEFAULT_FADE_TIMEOUT_MILLIS
                     )
