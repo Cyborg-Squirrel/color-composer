@@ -48,6 +48,11 @@ data class LedStripClientEntity(
 
     @MappedProperty("firmware_version")
     var firmwareVersion: String?,
+
+    var fps: Int = 35,
+
+    @MappedProperty("fade_timeout_millis")
+    var fadeTimeoutMillis: Int = 0,
 ) {
     // Overrides to prevent infinite looping
 
@@ -66,6 +71,8 @@ data class LedStripClientEntity(
         if (lastSeenAt != other.lastSeenAt) return false
         if (powerLimit != other.powerLimit) return false
         if (firmwareVersion != other.firmwareVersion) return false
+        if (fps != other.fps) return false
+        if (fadeTimeoutMillis != other.fadeTimeoutMillis) return false
 
         return true
     }
@@ -82,10 +89,12 @@ data class LedStripClientEntity(
         result = 31 * result + lastSeenAt.hashCode()
         result = 31 * result + powerLimit.hashCode()
         result = 31 * result + firmwareVersion.hashCode()
+        result = 31 * result + fps.hashCode()
+        result = 31 * result + fadeTimeoutMillis.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "LedStripClientEntity(id=$id, name=$name, address=$address, clientType=$clientType, colorOrder=$colorOrder uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort, lastSeenAt=$lastSeenAt, powerLimit=$powerLimit, firmwareVersion=$firmwareVersion)"
+        return "LedStripClientEntity(id=$id, name=$name, address=$address, clientType=$clientType, colorOrder=$colorOrder uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort, lastSeenAt=$lastSeenAt, powerLimit=$powerLimit, firmwareVersion=$firmwareVersion, fps=$fps, fadeTimeoutMillis=$fadeTimeoutMillis)"
     }
 }

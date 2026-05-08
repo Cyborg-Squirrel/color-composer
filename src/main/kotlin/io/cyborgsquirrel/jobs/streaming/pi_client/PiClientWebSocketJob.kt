@@ -78,8 +78,7 @@ class PiClientWebSocketJob(
     private var status = StreamingJobStatus.SetupIncomplete
     private var exponentialReconnectionBackoffValue = 1
     private val exponentialReconnectionBackoffValueMax = 8
-    // TODO: Add this as a configurable option to client entity and API
-    private val fps = 35
+    private val fps get() = clientEntity.fps
     private val bufferTimeInMilliseconds = 500L
     private var shouldRun = true
     private var settingsSyncRequired = true
@@ -258,12 +257,12 @@ class PiClientWebSocketJob(
         }
 
         val clientSettingsMatch = clientSettings.powerLimit == clientEntity.powerLimit
+                && clientSettings.fadeTimeoutMillis == clientEntity.fadeTimeoutMillis
         if (!clientSettingsMatch) {
             logger.info("Settings out of sync for $clientEntity - server config: $serverConfig")
-            // TODO Configurable frameTimeoutMillis in ClientEntity and API
             piConfigClient.updateClientSettings(
                 clientEntity,
-                PiClientSettings(clientEntity.powerLimit ?: 0, clientSettings.fadeTimeoutMillis)
+                PiClientSettings(clientEntity.powerLimit ?: 0, clientEntity.fadeTimeoutMillis)
             )
         }
 

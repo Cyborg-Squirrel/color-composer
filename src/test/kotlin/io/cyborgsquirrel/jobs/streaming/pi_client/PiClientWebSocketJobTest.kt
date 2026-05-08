@@ -79,6 +79,8 @@ class PiClientWebSocketJobTest : StringSpec({
         firmwareVersion = null,
         powerLimit = 0,
         strips = setOf(mockStripEntity),
+        fps = 35,
+        fadeTimeoutMillis = 15000,
     )
     val activeEffect = ActiveLightEffect(
         effectUuid = "effect-uuid",

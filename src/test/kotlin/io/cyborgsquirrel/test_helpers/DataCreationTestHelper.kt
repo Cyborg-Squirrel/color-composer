@@ -26,7 +26,9 @@ fun createLedStripClientEntity(
     wsPort: Int,
     clientType: ClientType = ClientType.Pi,
     powerLimit: Int? = null,
-    firmwareVersion: String = "0.1"
+    firmwareVersion: String = "0.1",
+    fps: Int = 35,
+    fadeTimeoutMillis: Int = 0,
 ): LedStripClientEntity =
     clientRepository.save(
         LedStripClientEntity(
@@ -38,7 +40,9 @@ fun createLedStripClientEntity(
             apiPort = apiPort,
             wsPort = wsPort,
             powerLimit = powerLimit,
-            firmwareVersion = firmwareVersion
+            firmwareVersion = firmwareVersion,
+            fps = fps,
+            fadeTimeoutMillis = fadeTimeoutMillis,
         )
     )
 

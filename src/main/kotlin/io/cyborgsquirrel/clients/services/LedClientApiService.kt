@@ -59,6 +59,8 @@ class LedClientApiService(
                     uuid = UUID.randomUUID().toString(),
                     powerLimit = request.powerLimit ?: 0,
                     firmwareVersion = if (request.clientType == ClientType.Pi) "0.1" else "--",
+                    fps = request.fps ?: 35,
+                    fadeTimeoutMillis = request.fadeTimeoutMillis ?: 0,
                 )
             )
 
@@ -79,6 +81,8 @@ class LedClientApiService(
                 apiPort = request.apiPort ?: entity.apiPort,
                 wsPort = request.wsPort ?: entity.wsPort,
                 powerLimit = request.powerLimit ?: entity.powerLimit,
+                fps = request.fps ?: entity.fps,
+                fadeTimeoutMillis = request.fadeTimeoutMillis ?: entity.fadeTimeoutMillis,
             )
 
             if (shouldRestartStreamingJob(entity, newEntity)) {
@@ -104,7 +108,9 @@ class LedClientApiService(
         val stripsChanged = oldClientEntity.strips.map { it.uuid } != newClientEntity.strips.map { it.uuid }
         val addressChanged = oldClientEntity.address != newClientEntity.address
         val colorOrderChanged = oldClientEntity.colorOrder != newClientEntity.colorOrder
-        return clientTypeChanged || powerLimitChanged || apiPortChanged || wsPortChanged || stripsChanged || addressChanged || colorOrderChanged
+        val fpsChanged = oldClientEntity.fps != newClientEntity.fps
+        val fadeTimeoutChanged = oldClientEntity.fadeTimeoutMillis != newClientEntity.fadeTimeoutMillis
+        return clientTypeChanged || powerLimitChanged || apiPortChanged || wsPortChanged || stripsChanged || addressChanged || colorOrderChanged || fpsChanged || fadeTimeoutChanged
     }
 
     fun deleteClient(uuid: String) {
@@ -137,6 +143,8 @@ class LedClientApiService(
             statusInfo.activeEffects,
             client.powerLimit,
             client.firmwareVersion!!,
+            client.fps,
+            client.fadeTimeoutMillis,
         )
     }
 
