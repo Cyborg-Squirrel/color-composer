@@ -11,16 +11,7 @@ import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.led_strips.responses.GetLedStripResponse
 import io.cyborgsquirrel.led_strips.responses.GetLedStripsResponse
-import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.BouncingBallLightEffect
-import io.cyborgsquirrel.lighting.effects.CustomLightEffect
-import io.cyborgsquirrel.lighting.effects.FlameLightEffect
-import io.cyborgsquirrel.lighting.effects.LightEffect
-import io.cyborgsquirrel.lighting.effects.MarqueeEffect
-import io.cyborgsquirrel.lighting.effects.NightriderLightEffect
-import io.cyborgsquirrel.lighting.effects.SparkleLightEffect
-import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
-import io.cyborgsquirrel.lighting.effects.WaveLightEffect
+import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.isActive

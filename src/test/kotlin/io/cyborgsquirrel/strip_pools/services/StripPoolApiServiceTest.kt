@@ -14,8 +14,8 @@ import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.strip_pools.requests.CreateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.requests.StripPoolMemberRequestModel
-import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolMembersRequest
+import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec

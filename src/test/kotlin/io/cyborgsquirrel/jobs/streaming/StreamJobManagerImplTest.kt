@@ -8,12 +8,7 @@ import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.DisposableHandle
 import kotlinx.coroutines.Job

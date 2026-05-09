@@ -4,7 +4,6 @@ import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
-import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.service.EffectApiService
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.cyborgsquirrel.util.exception.ResourceNotFoundException

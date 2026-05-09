@@ -1,15 +1,14 @@
 package io.cyborgsquirrel.jobs.init
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
+import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
-import java.lang.Exception
 import java.util.concurrent.Semaphore
 
 /**

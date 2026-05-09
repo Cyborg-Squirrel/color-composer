@@ -1,8 +1,8 @@
 package io.cyborgsquirrel.strip_pools.api
 
 import io.cyborgsquirrel.strip_pools.requests.CreateStripPoolRequest
-import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolMembersRequest
+import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 

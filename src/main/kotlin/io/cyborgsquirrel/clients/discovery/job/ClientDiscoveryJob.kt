@@ -1,7 +1,6 @@
 package io.cyborgsquirrel.clients.discovery.job
 
 import io.cyborgsquirrel.clients.discovery.enums.DiscoveryJobStatus
-import io.cyborgsquirrel.clients.discovery.model.ClientDiscoveryResponse
 import io.cyborgsquirrel.clients.discovery.udp.UdpBroadcastReceiver
 import io.cyborgsquirrel.clients.discovery.udp.UdpBroadcastSender
 import io.micronaut.serde.ObjectMapper

@@ -3,7 +3,6 @@ package io.cyborgsquirrel.lighting.effects.api
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
-import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.*
 

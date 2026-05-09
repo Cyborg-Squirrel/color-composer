@@ -3,8 +3,8 @@ package io.cyborgsquirrel.clients.services
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

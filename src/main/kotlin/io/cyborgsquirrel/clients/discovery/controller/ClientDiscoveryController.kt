@@ -1,6 +1,5 @@
 package io.cyborgsquirrel.clients.discovery.controller
 
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.discovery.enums.DiscoveryJobStatus
 import io.cyborgsquirrel.clients.discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.clients.discovery.model.DiscoveredClientsResponseList
@@ -8,6 +7,7 @@ import io.cyborgsquirrel.clients.discovery.model.DiscoveryStatusResponse
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.SelectClientRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller

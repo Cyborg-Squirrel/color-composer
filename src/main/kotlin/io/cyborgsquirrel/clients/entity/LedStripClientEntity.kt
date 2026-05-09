@@ -3,11 +3,7 @@ package io.cyborgsquirrel.clients.entity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.micronaut.data.annotation.GeneratedValue
-import io.micronaut.data.annotation.Id
-import io.micronaut.data.annotation.MappedEntity
-import io.micronaut.data.annotation.MappedProperty
-import io.micronaut.data.annotation.Relation
+import io.micronaut.data.annotation.*
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 

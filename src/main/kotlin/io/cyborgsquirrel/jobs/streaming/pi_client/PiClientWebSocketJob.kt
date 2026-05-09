@@ -20,9 +20,7 @@ import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameSegmentModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
