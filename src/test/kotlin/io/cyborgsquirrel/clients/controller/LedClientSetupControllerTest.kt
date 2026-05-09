@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.clients.controller
 
 import io.cyborgsquirrel.clients.api.LedClientApi
+import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
@@ -105,7 +106,7 @@ class LedClientSetupControllerTest(
             clientEntity.apiPort shouldBe createClientRequest.apiPort
             clientEntity.wsPort shouldBe createClientRequest.wsPort
             clientEntity.powerLimit shouldBe createClientRequest.powerLimit
-            clientEntity.firmwareVersion shouldBe "0.1"
+            clientEntity.firmwareVersion shouldBe LedStripClientEntity.DEFAULT_FIRMWARE_VERSION
         }
 
         "Updating clients" {
