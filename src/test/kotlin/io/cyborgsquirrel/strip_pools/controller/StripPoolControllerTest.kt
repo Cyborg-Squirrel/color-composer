@@ -1,7 +1,6 @@
 package io.cyborgsquirrel.strip_pools.controller
 
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
-import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
@@ -11,7 +10,6 @@ import io.cyborgsquirrel.strip_pools.requests.CreateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.responses.GetStripPoolResponse
 import io.cyborgsquirrel.strip_pools.responses.GetStripPoolsResponse
-import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

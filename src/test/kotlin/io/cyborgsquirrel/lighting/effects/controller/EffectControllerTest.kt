@@ -1,10 +1,10 @@
 package io.cyborgsquirrel.lighting.effects.controller
 
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.led_strips.enums.PiClientPin
-import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
+import io.cyborgsquirrel.led_strips.enums.PiClientPin
+import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
@@ -32,7 +32,6 @@ import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.serde.ObjectMapper

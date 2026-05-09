@@ -8,12 +8,7 @@ import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketResponse
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.DisposableHandle
 import kotlinx.coroutines.Job
@@ -46,7 +41,7 @@ class StreamJobManagerImplTest : StringSpec({
 
         manager.startStreamingJob(mockClientEntity)
 
-        val jobState = manager.getJobState(mockClientEntity.uuid!!)
+        val jobState = manager.getJobState(mockClientEntity.uuid)
         jobState shouldBe PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
         verify { mockStreamingJobFactory.createJob(mockClientEntity) }
         verify { mockStreamingJob.start(any()) }
@@ -63,7 +58,7 @@ class StreamJobManagerImplTest : StringSpec({
         manager.stopWebsocketJob(mockClientEntity)
 
         // Job state is null because it no longer exists
-        val jobState = manager.getJobState(mockClientEntity.uuid!!)
+        val jobState = manager.getJobState(mockClientEntity.uuid)
         jobState shouldBe null
         verify { mockStreamingJob.dispose() }
         verify { mockJob.cancel() }
@@ -104,8 +99,8 @@ class StreamJobManagerImplTest : StringSpec({
         manager.startStreamingJob(mockClientEntityA)
         manager.startStreamingJob(mockClientEntityB)
 
-        val jobState1 = manager.getJobState(mockClientEntityA.uuid!!)
-        val jobState2 = manager.getJobState(mockClientEntityB.uuid!!)
+        val jobState1 = manager.getJobState(mockClientEntityA.uuid)
+        val jobState2 = manager.getJobState(mockClientEntityB.uuid)
         jobState1 shouldBe expectedJobStateA
         jobState2 shouldBe expectedJobStateB
     }
@@ -124,7 +119,7 @@ class StreamJobManagerImplTest : StringSpec({
         verify { mockStreamingJobFactory.createJob(mockClientEntity) }
         verify { mockStreamingJob.start(any()) }
 
-        var jobState = manager.getJobState(mockClientEntity.uuid!!)
+        var jobState = manager.getJobState(mockClientEntity.uuid)
         jobState shouldBe expectedJobState
 
         // Job callback indicating it completed
@@ -132,7 +127,7 @@ class StreamJobManagerImplTest : StringSpec({
         val callback = callbackSlot.captured
         callback.invoke(null)
 
-        jobState = manager.getJobState(mockClientEntity.uuid!!)
+        jobState = manager.getJobState(mockClientEntity.uuid)
         jobState shouldBe null
     }
 })

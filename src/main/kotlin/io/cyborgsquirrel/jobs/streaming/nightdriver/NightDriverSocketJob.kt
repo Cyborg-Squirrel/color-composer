@@ -17,12 +17,12 @@ import io.cyborgsquirrel.lighting.model.RgbFrameData
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
+import java.net.URI
 
 /**
  * Background job for streaming light effects to NightDriver clients
@@ -101,11 +101,11 @@ class NightDriverSocketJob(
         try {
             when (status) {
                 StreamingJobStatus.SetupIncomplete -> {
-                    val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
+                    val clientOptional = clientRepository.findByUuid(clientEntity.uuid)
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
+                            strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid).map { it.strip }
                             status = StreamingJobStatus.Offline
                         } else {
                             delay(5000)
@@ -151,7 +151,7 @@ class NightDriverSocketJob(
 
                 StreamingJobStatus.RenderingEffect -> {
                     triggerManager.processTriggers()
-                    val frameList = renderer.renderFrames(strips, clientEntity.uuid!!)
+                    val frameList = renderer.renderFrames(strips, clientEntity.uuid)
 
                     if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
@@ -272,13 +272,7 @@ class NightDriverSocketJob(
     }
 
     private suspend fun setupSocket() {
-        val httpSlashPattern = Regex("^(http|https)://")
-        val httpSlashPatternResult = httpSlashPattern.find(clientEntity.address!!)
-        val host = if (httpSlashPatternResult?.groups?.isNotEmpty() == true) {
-            clientEntity.address?.replace(httpSlashPattern, "")
-        } else {
-            clientEntity.address
-        }
+        val host = parseHost(clientEntity.address)
 
         withTimeout(10_000L) {
             withContext(Dispatchers.IO) {
@@ -288,7 +282,7 @@ class NightDriverSocketJob(
                 }
 
                 socket = Socket()
-                socket?.connect(InetSocketAddress(host, clientEntity.wsPort!!), 5000)
+                socket?.connect(InetSocketAddress(host, clientEntity.wsPort), 5000)
             }
         }
 
@@ -315,7 +309,7 @@ class NightDriverSocketJob(
     override fun onUpdate(newEffects: List<ActiveLightEffect>) {
         val matchingStrips = newEffects.filter {
             val strip = it.strip
-            val clientUuid = clientEntity.uuid!!
+            val clientUuid = clientEntity.uuid
             when (strip) {
                 is SingleLedStripModel -> strip.clientUuid == clientUuid
                 is LedStripPoolModel -> strip.clientUuids().contains(clientUuid)
@@ -330,5 +324,13 @@ class NightDriverSocketJob(
 
     companion object {
         private val logger = LoggerFactory.getLogger(NightDriverSocketJob::class.java)
+
+        fun parseHost(address: String): String {
+            return try {
+                URI(address).host ?: address
+            } catch (_: Exception) {
+                address
+            }
+        }
     }
 }

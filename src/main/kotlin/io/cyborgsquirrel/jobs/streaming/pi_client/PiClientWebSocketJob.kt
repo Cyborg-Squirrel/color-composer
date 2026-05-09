@@ -20,9 +20,7 @@ import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameSegmentModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.websocket.WebSocketClient
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
@@ -78,8 +76,7 @@ class PiClientWebSocketJob(
     private var status = StreamingJobStatus.SetupIncomplete
     private var exponentialReconnectionBackoffValue = 1
     private val exponentialReconnectionBackoffValueMax = 8
-    // TODO: Add this as a configurable option to client entity and API
-    private val fps = 35
+    private val fps get() = clientEntity.fps
     private val bufferTimeInMilliseconds = 500L
     private var shouldRun = true
     private var settingsSyncRequired = true
@@ -109,11 +106,11 @@ class PiClientWebSocketJob(
             }
             when (status) {
                 StreamingJobStatus.SetupIncomplete -> {
-                    val clientOptional = clientRepository.findByUuid(clientEntity.uuid!!)
+                    val clientOptional = clientRepository.findByUuid(clientEntity.uuid)
                     if (clientOptional.isPresent) {
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
-                            strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid!!).map { it.strip }
+                            strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid).map { it.strip }
                             timestampMillis =
                                 timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeSync.clientTimeOffset
                             status = StreamingJobStatus.WaitingForConnection
@@ -182,7 +179,7 @@ class PiClientWebSocketJob(
                         status = StreamingJobStatus.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
-                        val frames = renderer.renderFrames(strips, clientEntity.uuid!!)
+                        val frames = renderer.renderFrames(strips, clientEntity.uuid)
                         if (frames.isEmpty()) {
                             sendKeepaliveIfDue()
                             timestampMillis = timeHelper.millisSinceEpoch() + clientTimeSync.clientTimeOffset
@@ -243,7 +240,7 @@ class PiClientWebSocketJob(
         val clientStripConfigs = piConfigClient.getStripConfigs(clientEntity)
         val clientSettings = piConfigClient.getClientSettings(clientEntity)
         val serverConfig = PiClientStripConfig(
-            strip.uuid, strip.pin, strip.length, strip.brightness, clientEntity.colorOrder!!
+            strip.uuid, strip.pin, strip.length, strip.brightness, clientEntity.colorOrder
         )
 
         val stripConfigMatch =
@@ -258,12 +255,12 @@ class PiClientWebSocketJob(
         }
 
         val clientSettingsMatch = clientSettings.powerLimit == clientEntity.powerLimit
+                && clientSettings.fadeTimeoutMillis == clientEntity.fadeTimeoutMillis
         if (!clientSettingsMatch) {
             logger.info("Settings out of sync for $clientEntity - server config: $serverConfig")
-            // TODO Configurable frameTimeoutMillis in ClientEntity and API
             piConfigClient.updateClientSettings(
                 clientEntity,
-                PiClientSettings(clientEntity.powerLimit ?: 0, clientSettings.fadeTimeoutMillis)
+                PiClientSettings(clientEntity.powerLimit ?: 0, clientEntity.fadeTimeoutMillis)
             )
         }
 
@@ -308,13 +305,13 @@ class PiClientWebSocketJob(
 
     private suspend fun setupSocket() {
         val httpPattern = Regex("^(http|https)")
-        val httpPatternResult = httpPattern.find(clientEntity.address!!)
+        val httpPatternResult = httpPattern.find(clientEntity.address)
         val websocketAddress = if (httpPatternResult?.groups?.isNotEmpty() == true) {
-            clientEntity.address!!.replace(httpPattern, "ws")
+            clientEntity.address.replace(httpPattern, "ws")
         } else {
-            "ws://${clientEntity.address!!}"
+            "ws://${clientEntity.address}"
         }
-        val uri = UriBuilder.of(websocketAddress).port(clientEntity.wsPort!!).build()
+        val uri = UriBuilder.of(websocketAddress).port(clientEntity.wsPort).build()
         val clientPublisher = webSocketClient.connect(PiWebSocketClient::class.java, uri)
 
         client = withTimeout(5000L) {
@@ -368,7 +365,7 @@ class PiClientWebSocketJob(
     override fun onUpdate(newEffects: List<ActiveLightEffect>) {
         val matchingStrips = newEffects.filter {
             val strip = it.strip
-            val clientUuid = clientEntity.uuid!!
+            val clientUuid = clientEntity.uuid
             when (strip) {
                 is SingleLedStripModel -> strip.clientUuid == clientUuid
                 is LedStripPoolModel -> strip.clientUuids().contains(clientUuid)

@@ -1,6 +1,5 @@
 package io.cyborgsquirrel.clients.discovery.controller
 
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.discovery.enums.DiscoveryJobStatus
 import io.cyborgsquirrel.clients.discovery.job.ClientDiscoveryJob
 import io.cyborgsquirrel.clients.discovery.model.DiscoveredClientsResponseList
@@ -8,6 +7,7 @@ import io.cyborgsquirrel.clients.discovery.model.DiscoveryStatusResponse
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.SelectClientRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
@@ -80,7 +80,9 @@ class ClientDiscoveryController(
                         wsPort = client.wsPort,
                         apiPort = client.apiPort,
                         uuid = UUID.randomUUID().toString(),
-                        firmwareVersion = "0.1"
+                        firmwareVersion = LedStripClientEntity.DEFAULT_FIRMWARE_VERSION,
+                        fps = LedStripClientEntity.DEFAULT_FPS,
+                        fadeTimeoutMillis = LedStripClientEntity.DEFAULT_FADE_TIMEOUT_MILLIS
                     )
                     clientRepository.save(entity)
                     return HttpResponse.created(matchingClient)

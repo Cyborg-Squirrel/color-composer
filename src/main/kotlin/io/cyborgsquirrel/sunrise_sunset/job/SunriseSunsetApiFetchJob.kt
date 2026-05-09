@@ -1,8 +1,8 @@
 package io.cyborgsquirrel.sunrise_sunset.job
 
+import io.cyborgsquirrel.sunrise_sunset.client.SunriseSunsetApiClient
 import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
 import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
-import io.cyborgsquirrel.sunrise_sunset.client.SunriseSunsetApiClient
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.TimeHelper

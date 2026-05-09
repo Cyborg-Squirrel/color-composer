@@ -1,11 +1,11 @@
 package io.cyborgsquirrel.clients.repository
 
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
+import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
@@ -31,6 +31,8 @@ class LedStripClientRepositoryTest(
         apiPort = 80,
         lastSeenAt = Timestamp.from(Instant.now()).time,
         firmwareVersion = "--",
+        fps = 35,
+        fadeTimeoutMillis = 0,
     )
 
     val demoLedStripEntity = LedStripEntity(

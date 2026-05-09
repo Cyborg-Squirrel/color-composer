@@ -3,11 +3,7 @@ package io.cyborgsquirrel.clients.entity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.micronaut.data.annotation.GeneratedValue
-import io.micronaut.data.annotation.Id
-import io.micronaut.data.annotation.MappedEntity
-import io.micronaut.data.annotation.MappedProperty
-import io.micronaut.data.annotation.Relation
+import io.micronaut.data.annotation.*
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 
@@ -21,23 +17,23 @@ data class LedStripClientEntity(
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "client")
     var strips: Set<LedStripEntity> = setOf(),
 
-    var name: String?,
+    var name: String,
 
-    var uuid: String?,
+    var uuid: String,
 
-    var address: String?,
+    var address: String,
 
     @MappedEntity("client_type")
     @Enumerated(EnumType.STRING)
-    var clientType: ClientType?,
+    var clientType: ClientType,
 
     @MappedEntity("color_order")
     @Enumerated(EnumType.STRING)
-    var colorOrder: ColorOrder?,
+    var colorOrder: ColorOrder,
 
-    var wsPort: Int? = null,
+    var wsPort: Int,
 
-    var apiPort: Int? = null,
+    var apiPort: Int,
 
     @MappedProperty("last_seen_at")
     var lastSeenAt: Long = 0,
@@ -47,8 +43,19 @@ data class LedStripClientEntity(
     var powerLimit: Int? = null,
 
     @MappedProperty("firmware_version")
-    var firmwareVersion: String?,
+    var firmwareVersion: String,
+
+    var fps: Int,
+
+    @MappedProperty("fade_timeout_millis")
+    var fadeTimeoutMillis: Int,
 ) {
+    companion object {
+        const val DEFAULT_FIRMWARE_VERSION = "--"
+        const val DEFAULT_FPS = 35
+        const val DEFAULT_FADE_TIMEOUT_MILLIS = 15000
+    }
+
     // Overrides to prevent infinite looping
 
     override fun equals(other: Any?): Boolean {
@@ -66,6 +73,8 @@ data class LedStripClientEntity(
         if (lastSeenAt != other.lastSeenAt) return false
         if (powerLimit != other.powerLimit) return false
         if (firmwareVersion != other.firmwareVersion) return false
+        if (fps != other.fps) return false
+        if (fadeTimeoutMillis != other.fadeTimeoutMillis) return false
 
         return true
     }
@@ -73,19 +82,21 @@ data class LedStripClientEntity(
     override fun hashCode(): Int {
         var result = name.hashCode()
         result = 31 * result + id.hashCode()
-        result = 31 * result + (address ?: 0).hashCode()
-        result = 31 * result + (clientType?.ordinal ?: 0).hashCode()
-        result = 31 * result + (colorOrder ?: 0).hashCode()
-        result = 31 * result + (uuid ?: 0).hashCode()
-        result = 31 * result + (apiPort ?: 0).hashCode()
-        result = 31 * result + (wsPort ?: 0).hashCode()
+        result = 31 * result + address.hashCode()
+        result = 31 * result + clientType.ordinal.hashCode()
+        result = 31 * result + colorOrder.hashCode()
+        result = 31 * result + uuid.hashCode()
+        result = 31 * result + apiPort.hashCode()
+        result = 31 * result + wsPort.hashCode()
         result = 31 * result + lastSeenAt.hashCode()
         result = 31 * result + powerLimit.hashCode()
         result = 31 * result + firmwareVersion.hashCode()
+        result = 31 * result + fps.hashCode()
+        result = 31 * result + fadeTimeoutMillis.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "LedStripClientEntity(id=$id, name=$name, address=$address, clientType=$clientType, colorOrder=$colorOrder uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort, lastSeenAt=$lastSeenAt, powerLimit=$powerLimit, firmwareVersion=$firmwareVersion)"
+        return "LedStripClientEntity(id=$id, name=$name, address=$address, clientType=$clientType, colorOrder=$colorOrder uuid=$uuid, apiPort=$apiPort, wsPort=$wsPort, lastSeenAt=$lastSeenAt, powerLimit=$powerLimit, firmwareVersion=$firmwareVersion, fps=$fps, fadeTimeoutMillis=$fadeTimeoutMillis)"
     }
 }

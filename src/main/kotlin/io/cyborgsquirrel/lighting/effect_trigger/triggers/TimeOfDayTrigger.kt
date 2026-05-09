@@ -1,15 +1,15 @@
 package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
-import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
-import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
 import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTriggerSettings
+import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
+import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
 import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
 import io.cyborgsquirrel.sunrise_sunset.model.SunriseSunsetModel
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
 import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
-import io.cyborgsquirrel.util.time.TimeOfDayService
 import io.cyborgsquirrel.util.time.TimeHelper
+import io.cyborgsquirrel.util.time.TimeOfDayService
 import io.cyborgsquirrel.util.time.ymd
 import io.micronaut.serde.ObjectMapper
 import java.time.LocalDateTime

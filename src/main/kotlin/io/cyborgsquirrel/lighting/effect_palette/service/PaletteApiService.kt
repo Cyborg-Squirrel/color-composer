@@ -8,8 +8,8 @@ import io.cyborgsquirrel.lighting.effect_palette.requests.UpdatePaletteRequest
 import io.cyborgsquirrel.lighting.effect_palette.responses.GetAllPalettesResponse
 import io.cyborgsquirrel.lighting.effect_palette.responses.GetPaletteResponse
 import io.cyborgsquirrel.lighting.effect_palette.settings.*
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.json.tree.JsonNode

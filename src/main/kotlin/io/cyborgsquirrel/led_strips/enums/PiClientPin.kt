@@ -1,7 +1,5 @@
 package io.cyborgsquirrel.led_strips.enums
 
-import io.cyborgsquirrel.led_strips.enums.PiClientPin.entries
-
 // Available Pi pins which support NeoPixel/WS2812
 enum class PiClientPin(val pinName: String) {
     D10("D10"),

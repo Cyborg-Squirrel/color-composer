@@ -4,24 +4,26 @@ import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
+import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
+import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
-import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
-import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
+import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
@@ -33,8 +35,6 @@ import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
-import io.cyborgsquirrel.jobs.streaming.StreamJobManager
-import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -104,6 +104,8 @@ class LightEffectInitJobTest(
                 apiPort = 1111,
                 wsPort = 2222,
                 firmwareVersion = "--",
+                fps = 35,
+                fadeTimeoutMillis = 0,
             )
         )
         val strip = ledStripRepository.save(
@@ -163,6 +165,8 @@ class LightEffectInitJobTest(
                 apiPort = 1111,
                 wsPort = 2222,
                 firmwareVersion = "--",
+                fps = 35,
+                fadeTimeoutMillis = 0,
             )
         )
         val strip = ledStripRepository.save(
@@ -241,6 +245,8 @@ class LightEffectInitJobTest(
                 apiPort = 1111,
                 wsPort = 2222,
                 firmwareVersion = "--",
+                fps = 35,
+                fadeTimeoutMillis = 0,
             )
         )
         val strip = ledStripRepository.save(
@@ -319,6 +325,8 @@ class LightEffectInitJobTest(
                 apiPort = 1111,
                 wsPort = 2222,
                 firmwareVersion = "--",
+                fps = 35,
+                fadeTimeoutMillis = 0,
             )
         )
         val strip = ledStripRepository.save(

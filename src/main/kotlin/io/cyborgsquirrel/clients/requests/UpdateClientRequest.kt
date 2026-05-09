@@ -10,5 +10,7 @@ data class UpdateClientRequest(
     val colorOrder: ColorOrder?,
     val apiPort: Int?,
     val wsPort: Int?,
-    val powerLimit: Int?
+    val powerLimit: Int?,
+    val fps: Int? = null,
+    val fadeTimeoutMillis: Int? = null
 )

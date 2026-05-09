@@ -17,5 +17,7 @@ data class GetClientResponse(
     val status: ClientStatus,
     val activeEffects: Int,
     val powerLimit: Int?,
-    val firmwareVersion: String
+    val firmwareVersion: String,
+    val fps: Int,
+    val fadeTimeoutMillis: Int
 )

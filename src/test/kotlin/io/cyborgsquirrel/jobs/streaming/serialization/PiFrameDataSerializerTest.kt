@@ -1,10 +1,8 @@
 package io.cyborgsquirrel.jobs.streaming.serialization
 
-import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.RgbFrameData
-import io.cyborgsquirrel.lighting.model.RgbFrameOptions
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

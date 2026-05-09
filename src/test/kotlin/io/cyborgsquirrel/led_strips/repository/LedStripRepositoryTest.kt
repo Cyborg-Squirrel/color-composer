@@ -1,12 +1,12 @@
 package io.cyborgsquirrel.led_strips.repository
 
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
+import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
+import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.lighting.enums.BlendMode
@@ -35,6 +35,8 @@ class LedStripRepositoryTest(
             wsPort = 8888,
             apiPort = 7777,
             firmwareVersion = "--",
+            fps = 35,
+            fadeTimeoutMillis = 0,
         )
     )
 

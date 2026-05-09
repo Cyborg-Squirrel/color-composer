@@ -1,7 +1,6 @@
 package io.cyborgsquirrel.clients.services
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
-import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
@@ -43,7 +42,7 @@ class LedClientApiService(
     fun createClient(request: CreateClientRequest): String {
         val entityOptional = clientRepository.findByAddress(request.address)
         return if (entityOptional.isPresent) {
-            entityOptional.get().uuid!!
+            entityOptional.get().uuid
         } else {
             // Default to RGB if no color order is specified - it is not required for Pi clients
             val colorOrder = request.colorOrder ?: ColorOrder.RGB
@@ -58,12 +57,14 @@ class LedClientApiService(
                     wsPort = request.wsPort,
                     uuid = UUID.randomUUID().toString(),
                     powerLimit = request.powerLimit ?: 0,
-                    firmwareVersion = if (request.clientType == ClientType.Pi) "0.1" else "--",
+                    firmwareVersion = LedStripClientEntity.DEFAULT_FIRMWARE_VERSION,
+                    fps = request.fps ?: LedStripClientEntity.DEFAULT_FPS,
+                    fadeTimeoutMillis = request.fadeTimeoutMillis ?: LedStripClientEntity.DEFAULT_FADE_TIMEOUT_MILLIS,
                 )
             )
 
             streamJobManager.startStreamingJob(clientEntity)
-            clientEntity.uuid!!
+            clientEntity.uuid
         }
     }
 
@@ -79,6 +80,8 @@ class LedClientApiService(
                 apiPort = request.apiPort ?: entity.apiPort,
                 wsPort = request.wsPort ?: entity.wsPort,
                 powerLimit = request.powerLimit ?: entity.powerLimit,
+                fps = request.fps ?: entity.fps,
+                fadeTimeoutMillis = request.fadeTimeoutMillis ?: entity.fadeTimeoutMillis,
             )
 
             if (shouldRestartStreamingJob(entity, newEntity)) {
@@ -104,7 +107,9 @@ class LedClientApiService(
         val stripsChanged = oldClientEntity.strips.map { it.uuid } != newClientEntity.strips.map { it.uuid }
         val addressChanged = oldClientEntity.address != newClientEntity.address
         val colorOrderChanged = oldClientEntity.colorOrder != newClientEntity.colorOrder
-        return clientTypeChanged || powerLimitChanged || apiPortChanged || wsPortChanged || stripsChanged || addressChanged || colorOrderChanged
+        val fpsChanged = oldClientEntity.fps != newClientEntity.fps
+        val fadeTimeoutChanged = oldClientEntity.fadeTimeoutMillis != newClientEntity.fadeTimeoutMillis
+        return clientTypeChanged || powerLimitChanged || apiPortChanged || wsPortChanged || stripsChanged || addressChanged || colorOrderChanged || fpsChanged || fadeTimeoutChanged
     }
 
     fun deleteClient(uuid: String) {
@@ -125,18 +130,20 @@ class LedClientApiService(
     fun mapClientEntityToResponse(client: LedStripClientEntity): GetClientResponse {
         val statusInfo = getStatusInfo(client)
         return GetClientResponse(
-            client.name!!,
-            client.address!!,
-            client.uuid!!,
+            client.name,
+            client.address,
+            client.uuid,
             client.clientType.toString(),
-            client.colorOrder!!,
-            client.apiPort!!,
-            client.wsPort!!,
+            client.colorOrder,
+            client.apiPort,
+            client.wsPort,
             client.lastSeenAt,
             statusInfo.status,
             statusInfo.activeEffects,
             client.powerLimit,
-            client.firmwareVersion!!,
+            client.firmwareVersion,
+            client.fps,
+            client.fadeTimeoutMillis,
         )
     }
 

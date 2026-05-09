@@ -2,7 +2,6 @@ package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.CustomLightEffectSettings
-import io.cyborgsquirrel.lighting.effects.settings.LightEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 
 /**

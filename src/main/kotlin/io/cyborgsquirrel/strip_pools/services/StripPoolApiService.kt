@@ -6,14 +6,14 @@ import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
 import io.cyborgsquirrel.strip_pools.requests.CreateStripPoolRequest
-import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolMembersRequest
+import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.responses.GetStripPoolResponse
 import io.cyborgsquirrel.strip_pools.responses.GetStripPoolsResponse
 import io.cyborgsquirrel.strip_pools.responses.StripPoolMemberResponseModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import jakarta.inject.Singleton
-import java.util.UUID
+import java.util.*
 
 @Singleton
 class StripPoolApiService(
