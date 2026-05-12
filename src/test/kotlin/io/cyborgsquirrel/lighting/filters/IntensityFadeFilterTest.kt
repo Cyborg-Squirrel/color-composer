@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.filters
 
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterHasMetadata
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilter
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.core.spec.style.StringSpec
@@ -33,7 +33,7 @@ class IntensityFadeFilterTest : StringSpec({
     ): IntensityFadeFilter {
         val millisSinceEpoch = Timestamp.from(Instant.now()).time
         val mockTimeHelper = setupTimeHelper(millisSinceEpoch)
-        val settings = IntensityFadeFilterHasMetadata(
+        val settings = IntensityFadeFilter(
             startingIntensity = startingIntensity,
             endingIntensity = endingIntensity,
             fadeDuration = fadeDuration

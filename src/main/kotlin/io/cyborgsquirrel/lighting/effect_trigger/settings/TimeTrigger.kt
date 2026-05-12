@@ -1,15 +1,17 @@
 package io.cyborgsquirrel.lighting.effect_trigger.settings
 
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
-import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
 import io.micronaut.serde.annotation.Serdeable
 import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalTime
 
 @Serdeable
-class TimeOfDayTriggerHasMetadata(
-    val timeOfDay: TimeOfDay,
+class TimeTrigger(
+    val triggerTime: LocalTime,
+    val triggerDay: LocalDate?,
     activationDuration: Duration,
     maxActivations: Int?,
     triggerType: TriggerType,
 ) :
-    TriggerHasMetadata(activationDuration, maxActivations, triggerType)
+    Trigger(activationDuration, maxActivations, triggerType)

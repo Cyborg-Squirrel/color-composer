@@ -4,8 +4,8 @@ import io.micronaut.serde.annotation.Serdeable
 import java.time.Duration
 
 @Serdeable
-data class IntensityFadeFilterHasMetadata(
+data class IntensityFadeFilter(
     val startingIntensity: Float,
     val endingIntensity: Float,
     val fadeDuration: Duration,
-) : LightEffectFilterHasMetadata()
+) : LightEffectFilter()

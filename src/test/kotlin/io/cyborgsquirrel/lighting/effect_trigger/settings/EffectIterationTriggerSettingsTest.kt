@@ -8,7 +8,7 @@ import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 @MicronautTest(startApplication = false, transactional = false)
 class EffectIterationTriggerSettingsTest(private val objectMapper: ObjectMapper) : StringSpec({
 
-    val effectIterationTriggerSettings = EffectIterationTriggerHasMetadata(7)
+    val effectIterationTriggerSettings = EffectIterationTrigger(7)
     val effectIterationTriggerSettingsJson =
         "{\"activationDuration\":0,\"maxActivations\":7,\"triggerType\":\"StopEffect\",\"metadata\":{\"majorVersion\":1,\"minorVersion\":0}}"
 
@@ -19,7 +19,7 @@ class EffectIterationTriggerSettingsTest(private val objectMapper: ObjectMapper)
 
     "Serialize from json" {
         val settings =
-            objectMapper.readValue(effectIterationTriggerSettingsJson, EffectIterationTriggerHasMetadata::class.java)
+            objectMapper.readValue(effectIterationTriggerSettingsJson, EffectIterationTrigger::class.java)
         settings.maxActivations shouldBe effectIterationTriggerSettings.maxActivations
         settings.triggerType shouldBe effectIterationTriggerSettings.triggerType
         settings.activationDuration shouldBe effectIterationTriggerSettings.activationDuration

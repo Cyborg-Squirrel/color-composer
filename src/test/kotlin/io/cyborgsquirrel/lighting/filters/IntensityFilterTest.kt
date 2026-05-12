@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.filters
 
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterHasMetadata
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFilter
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.BehaviorSpec
@@ -11,7 +11,7 @@ import java.util.*
 class IntensityFilterTest : BehaviorSpec({
 
     given("An intensity filter set to 0.5") {
-        val filter = IntensityFilter(IntensityFilterHasMetadata(0.5f), UUID.randomUUID().toString())
+        val filter = IntensityFilter(IntensityFilter(0.5f), UUID.randomUUID().toString())
         and("A list of RgbColors") {
             val rgbList = listOf(RgbColor.Red, RgbColor.Green, RgbColor.Blue)
             `when`("The filter is applied to a list of RgbColors") {

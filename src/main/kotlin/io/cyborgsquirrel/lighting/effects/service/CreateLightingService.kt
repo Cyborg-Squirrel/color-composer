@@ -6,9 +6,9 @@ import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.palette.*
 import io.cyborgsquirrel.lighting.effect_palette.settings.*
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
-import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerHasMetadata
-import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTriggerHasMetadata
-import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerHasMetadata
+import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTrigger
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTrigger
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.LightEffectTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.TimeOfDayTrigger
@@ -18,9 +18,9 @@ import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.settings.*
 import io.cyborgsquirrel.lighting.filters.*
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterHasMetadata
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterHasMetadata
-import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterHasMetadata
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilter
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFilter
+import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilter
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
@@ -98,7 +98,7 @@ class CreateLightingService(
             EffectPaletteConstants.STATIC_COLOR_PALETTE -> {
                 StaticColorPalette(
                     settings = objectMapper.readValueFromTree(
-                        JsonNode.from(settings), StaticPaletteHasMetadata::class.java
+                        JsonNode.from(settings), StaticPalette::class.java
                     ),
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
@@ -108,7 +108,7 @@ class CreateLightingService(
             EffectPaletteConstants.GRADIENT_COLOR_PALETTE_NAME -> {
                 GradientColorPalette(
                     settings = objectMapper.readValueFromTree(
-                        JsonNode.from(settings), GradientPaletteHasMetadata::class.java
+                        JsonNode.from(settings), GradientPalette::class.java
                     ),
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
@@ -118,7 +118,7 @@ class CreateLightingService(
             EffectPaletteConstants.CHANGING_COLOR_GRADIENT_PALETTE_NAME -> {
                 ChangingColorPalette(
                     settings = objectMapper.readValueFromTree(
-                        JsonNode.from(settings), ChangingGradientPaletteHasMetadata::class.java
+                        JsonNode.from(settings), ChangingGradientPalette::class.java
                     ),
                     timeHelper = timeHelper,
                     uuid = uuid,
@@ -129,7 +129,7 @@ class CreateLightingService(
             EffectPaletteConstants.CHANGING_COLOR_STATIC_PALETTE_NAME -> {
                 ChangingColorPalette(
                     settings = objectMapper.readValueFromTree(
-                        JsonNode.from(settings), ChangingStaticPaletteHasMetadata::class.java
+                        JsonNode.from(settings), ChangingStaticPalette::class.java
                     ),
                     timeHelper = timeHelper,
                     uuid = uuid,
@@ -140,7 +140,7 @@ class CreateLightingService(
             EffectPaletteConstants.TIME_OF_DAY_COLOR_PALETTE -> {
                 TimeOfDayColorPalette(
                     settings = objectMapper.readValueFromTree(
-                        JsonNode.from(settings), TimeOfDayPaletteHasMetadata::class.java
+                        JsonNode.from(settings), TimeOfDayPalette::class.java
                     ),
                     timeHelper = timeHelper,
                     timeOfDayService = timeOfDayService,
@@ -155,7 +155,7 @@ class CreateLightingService(
             EffectPaletteConstants.LOCAL_TIME_COLOR_PALETTE -> {
                 LocalTimeColorPalette(
                     settings = objectMapper.readValueFromTree(
-                        JsonNode.from(settings), LocalTimePaletteHasMetadata::class.java
+                        JsonNode.from(settings), LocalTimePalette::class.java
                     ),
                     timeHelper = timeHelper,
                     uuid = uuid,
@@ -228,7 +228,7 @@ class CreateLightingService(
                             timeHelper = timeHelper,
                             effectRegistry = activeLightEffectService,
                             settings = objectMapper.readValueFromTree(
-                                JsonNode.from(trigger.settings), EffectIterationTriggerHasMetadata::class.java
+                                JsonNode.from(trigger.settings), EffectIterationTrigger::class.java
                             ),
                             uuid = trigger.uuid!!,
                             effectUuid = effectEntity.uuid!!,
@@ -239,7 +239,7 @@ class CreateLightingService(
                         TimeTrigger(
                             timeHelper = timeHelper,
                             settings = objectMapper.readValueFromTree(
-                                JsonNode.from(trigger.settings), TimeTriggerHasMetadata::class.java
+                                JsonNode.from(trigger.settings), TimeTrigger::class.java
                             ),
                             uuid = trigger.uuid!!,
                             effectUuid = effectEntity.uuid!!,
@@ -254,7 +254,7 @@ class CreateLightingService(
                             timeHelper = timeHelper,
                             timeOfDayService = timeOfDayService,
                             settings = objectMapper.readValueFromTree(
-                                JsonNode.from(trigger.settings), TimeOfDayTriggerHasMetadata::class.java
+                                JsonNode.from(trigger.settings), TimeOfDayTrigger::class.java
                             ),
                             uuid = trigger.uuid!!,
                             effectUuid = effectEntity.uuid!!
@@ -285,7 +285,7 @@ class CreateLightingService(
             LightEffectFilterConstants.INTENSITY_FADE_FILTER_NAME -> {
                 IntensityFadeFilter(
                     timeHelper = timeHelper, settings = objectMapper.readValueFromTree(
-                        JsonNode.from(settings), IntensityFadeFilterHasMetadata::class.java
+                        JsonNode.from(settings), IntensityFadeFilter::class.java
                     ), uuid = uuid
                 )
             }
@@ -293,7 +293,7 @@ class CreateLightingService(
             LightEffectFilterConstants.INTENSITY_FILTER_NAME -> {
                 IntensityFilter(
                     settings = objectMapper.readValueFromTree(
-                        JsonNode.from(settings), IntensityFilterHasMetadata::class.java
+                        JsonNode.from(settings), IntensityFilter::class.java
                     ), uuid = uuid
                 )
             }
@@ -301,7 +301,7 @@ class CreateLightingService(
             LightEffectFilterConstants.REFLECTION_FILTER_NAME -> {
                 ReflectionFilter(
                     settings = objectMapper.readValueFromTree(
-                        JsonNode.from(settings), ReflectionFilterHasMetadata::class.java
+                        JsonNode.from(settings), ReflectionFilter::class.java
                     ), uuid = uuid
                 )
             }

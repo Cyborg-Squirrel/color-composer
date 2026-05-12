@@ -1,12 +1,12 @@
 package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
 import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
-import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerHasMetadata
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTrigger
 import io.cyborgsquirrel.util.time.TimeHelper
 import java.time.LocalDateTime
 import java.util.*
 
-class TimeTrigger(private val timeHelper: TimeHelper, settings: TimeTriggerHasMetadata, uuid: String, effectUuid: String) :
+class TimeTrigger(private val timeHelper: TimeHelper, settings: TimeTrigger, uuid: String, effectUuid: String) :
     LightEffectTrigger(settings, uuid, effectUuid) {
 
     private var activationNumber = 0
@@ -38,7 +38,7 @@ class TimeTrigger(private val timeHelper: TimeHelper, settings: TimeTriggerHasMe
         )
     }
 
-    private fun getTriggerTime() = (settings as TimeTriggerHasMetadata).triggerTime
+    private fun getTriggerTime() = (settings as TimeTrigger).triggerTime
 
-    private fun getTriggerDay() = (settings as TimeTriggerHasMetadata).triggerDay
+    private fun getTriggerDay() = (settings as TimeTrigger).triggerDay
 }

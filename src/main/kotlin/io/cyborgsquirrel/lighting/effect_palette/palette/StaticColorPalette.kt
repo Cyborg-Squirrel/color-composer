@@ -1,8 +1,8 @@
 package io.cyborgsquirrel.lighting.effect_palette.palette
 
-import io.cyborgsquirrel.lighting.effect_palette.settings.StaticPaletteHasMetadata
+import io.cyborgsquirrel.lighting.effect_palette.settings.StaticPalette
 
-class StaticColorPalette(private val settings: StaticPaletteHasMetadata, uuid: String, numberOfLeds: Int) :
+class StaticColorPalette(private val settings: StaticPalette, uuid: String, numberOfLeds: Int) :
     ColorPalette(uuid, numberOfLeds) {
     override fun getPrimaryColor(index: Int) = settings.palette.primaryColor
 

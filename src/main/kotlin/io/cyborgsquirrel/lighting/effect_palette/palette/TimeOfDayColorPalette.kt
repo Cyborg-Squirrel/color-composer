@@ -2,7 +2,7 @@ package io.cyborgsquirrel.lighting.effect_palette.palette
 
 import io.cyborgsquirrel.lighting.effect_palette.helper.TimePaletteHelper
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
-import io.cyborgsquirrel.lighting.effect_palette.settings.TimeOfDayPaletteHasMetadata
+import io.cyborgsquirrel.lighting.effect_palette.settings.TimeOfDayPalette
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.model.SunriseSunsetModel
 import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
@@ -15,7 +15,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class TimeOfDayColorPalette(
-    private val settings: TimeOfDayPaletteHasMetadata,
+    private val settings: TimeOfDayPalette,
     private val timeHelper: TimeHelper,
     private val timeOfDayService: TimeOfDayService,
     private val locationConfigRepository: H2LocationConfigRepository,

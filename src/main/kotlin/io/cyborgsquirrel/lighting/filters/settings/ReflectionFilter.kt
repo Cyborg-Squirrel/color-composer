@@ -4,4 +4,4 @@ import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
-data class ReflectionFilterHasMetadata(val reflectionType: ReflectionType) : LightEffectFilterHasMetadata()
+data class ReflectionFilter(val reflectionType: ReflectionType) : LightEffectFilter()

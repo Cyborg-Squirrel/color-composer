@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.filters
 
 import io.cyborgsquirrel.lighting.enums.ReflectionType
-import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterHasMetadata
+import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilter
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -10,7 +10,7 @@ import java.util.*
 class ReflectionFilterTest : BehaviorSpec({
 
     given("A reflection filter configured with reflection low to high") {
-        val filter = ReflectionFilter(ReflectionFilterHasMetadata(ReflectionType.LowToHigh), UUID.randomUUID().toString())
+        val filter = ReflectionFilter(ReflectionFilter(ReflectionType.LowToHigh), UUID.randomUUID().toString())
         and("A list of RgbColors") {
             val rgbList = listOf(RgbColor.Green, RgbColor.Blue, RgbColor.Purple, RgbColor.Blank, RgbColor.Blank)
             `when`("The filter is applied to a list of RgbColors") {
@@ -28,7 +28,7 @@ class ReflectionFilterTest : BehaviorSpec({
     }
 
     given("A reflection filter configured with reflection high to low") {
-        val filter = ReflectionFilter(ReflectionFilterHasMetadata(ReflectionType.HighToLow), UUID.randomUUID().toString())
+        val filter = ReflectionFilter(ReflectionFilter(ReflectionType.HighToLow), UUID.randomUUID().toString())
         and("A list of RgbColors") {
             val rgbList = listOf(RgbColor.Blank, RgbColor.Blue, RgbColor.Red, RgbColor.Orange)
             `when`("The filter is applied to a list of RgbColors") {

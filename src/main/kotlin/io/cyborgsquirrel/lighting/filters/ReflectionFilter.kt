@@ -1,12 +1,12 @@
 package io.cyborgsquirrel.lighting.filters
 
 import io.cyborgsquirrel.lighting.enums.ReflectionType
-import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterHasMetadata
+import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilter
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
-class ReflectionFilter(val settings: ReflectionFilterHasMetadata, uuid: String) : LightEffectFilter(uuid) {
+class ReflectionFilter(val settings: ReflectionFilter, uuid: String) : LightEffectFilter(uuid) {
 
     private val reflectionType = settings.reflectionType
 

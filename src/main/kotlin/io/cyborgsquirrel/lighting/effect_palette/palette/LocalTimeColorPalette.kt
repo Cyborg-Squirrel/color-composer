@@ -1,14 +1,14 @@
 package io.cyborgsquirrel.lighting.effect_palette.palette
 
 import io.cyborgsquirrel.lighting.effect_palette.helper.TimePaletteHelper
-import io.cyborgsquirrel.lighting.effect_palette.settings.LocalTimePaletteHasMetadata
+import io.cyborgsquirrel.lighting.effect_palette.settings.LocalTimePalette
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 import java.time.LocalDateTime
 
 class LocalTimeColorPalette(
-    private val settings: LocalTimePaletteHasMetadata,
+    private val settings: LocalTimePalette,
     private val timeHelper: TimeHelper,
     uuid: String,
     numberOfLeds: Int,

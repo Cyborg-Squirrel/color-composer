@@ -7,4 +7,4 @@ import io.micronaut.serde.annotation.Serdeable
 import java.time.Duration
 
 @Serdeable
-open class TriggerHasMetadata(val activationDuration: Duration, val maxActivations: Int?, val triggerType: TriggerType, override val metadata: SettingsMetadata = SettingsMetadata()) : HasMetadata
+open class Trigger(val activationDuration: Duration, val maxActivations: Int?, val triggerType: TriggerType, override val metadata: SettingsMetadata = SettingsMetadata()) : HasMetadata

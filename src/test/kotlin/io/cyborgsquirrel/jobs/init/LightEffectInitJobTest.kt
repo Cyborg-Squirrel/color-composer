@@ -17,7 +17,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerHasMetadata
+import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTrigger
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
@@ -34,7 +34,7 @@ import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterHasMetadata
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilter
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -64,8 +64,8 @@ class LightEffectInitJobTest(
 ) : StringSpec({
 
     val lightEffectSettings = SpectrumEffectSettings.default(60).copy(10)
-    val iterationTriggerSettings = EffectIterationTriggerHasMetadata(25)
-    val fadeFilterSettings = IntensityFadeFilterHasMetadata(0.0f, 1.0f, Duration.ofSeconds(20))
+    val iterationTriggerSettings = EffectIterationTrigger(25)
+    val fadeFilterSettings = IntensityFadeFilter(0.0f, 1.0f, Duration.ofSeconds(20))
     lateinit var websocketManagerMock: StreamJobManager
 
     beforeTest {

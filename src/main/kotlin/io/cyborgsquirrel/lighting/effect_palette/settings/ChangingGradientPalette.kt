@@ -4,11 +4,11 @@ import io.micronaut.serde.annotation.Serdeable
 import java.time.Duration
 
 @Serdeable
-data class ChangingStaticPaletteHasMetadata(
-    val palettes: List<SettingsPalette>,
+data class ChangingGradientPalette(
+    val gradientList: List<Map<Int, SettingsPalette>>,
     val holdTime: Duration,
     val transitionTime: Duration,
-) : ChangingPaletteHasMetadata() {
+) : ChangingPalette() {
     override fun paletteHoldTime(): Duration {
         return holdTime
     }

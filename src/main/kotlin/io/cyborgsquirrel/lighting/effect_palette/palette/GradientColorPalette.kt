@@ -1,11 +1,11 @@
 package io.cyborgsquirrel.lighting.effect_palette.palette
 
 import io.cyborgsquirrel.lighting.effect_palette.helper.GradientColorHelper
-import io.cyborgsquirrel.lighting.effect_palette.settings.GradientPaletteHasMetadata
+import io.cyborgsquirrel.lighting.effect_palette.settings.GradientPalette
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
 import io.cyborgsquirrel.lighting.model.RgbColor
 
-class GradientColorPalette(private val settings: GradientPaletteHasMetadata, uuid: String, numberOfLeds: Int) :
+class GradientColorPalette(private val settings: GradientPalette, uuid: String, numberOfLeds: Int) :
     ColorPalette(uuid, numberOfLeds) {
 
     private val helper = GradientColorHelper()
