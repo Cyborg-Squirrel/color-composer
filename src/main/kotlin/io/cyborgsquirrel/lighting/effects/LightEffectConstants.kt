@@ -14,5 +14,15 @@ class LightEffectConstants {
         const val BOUNCING_BALL_NAME = "Bouncing Ball"
         const val WAVE_EFFECT_NAME = "Wave"
         const val MARQUEE_EFFECT_NAME = "Marquee"
+
+        val allEffectNames = listOf(
+            SPECTRUM_NAME,
+            NIGHTRIDER_COLOR_FILL_NAME,
+            NIGHTRIDER_COMET_NAME,
+            FLAME_EFFECT_NAME,
+            BOUNCING_BALL_NAME,
+            WAVE_EFFECT_NAME,
+            MARQUEE_EFFECT_NAME
+        )
     }
 }

@@ -127,42 +127,42 @@ class PaletteApiService(
             EffectPaletteConstants.STATIC_COLOR_PALETTE -> {
                 objectMapper.readValueFromTree(
                     JsonNode.from(settings),
-                    StaticPaletteSettings::class.java
+                    StaticPaletteHasMetadata::class.java
                 )
             }
 
             EffectPaletteConstants.GRADIENT_COLOR_PALETTE_NAME -> {
                 objectMapper.readValueFromTree(
                     JsonNode.from(settings),
-                    GradientPaletteSettings::class.java
+                    GradientPaletteHasMetadata::class.java
                 )
             }
 
             EffectPaletteConstants.CHANGING_COLOR_GRADIENT_PALETTE_NAME -> {
                 objectMapper.readValueFromTree(
                     JsonNode.from(settings),
-                    ChangingGradientPaletteSettings::class.java
+                    ChangingGradientPaletteHasMetadata::class.java
                 )
             }
 
             EffectPaletteConstants.CHANGING_COLOR_STATIC_PALETTE_NAME -> {
                 objectMapper.readValueFromTree(
                     JsonNode.from(settings),
-                    ChangingStaticPaletteSettings::class.java
+                    ChangingStaticPaletteHasMetadata::class.java
                 )
             }
 
             EffectPaletteConstants.TIME_OF_DAY_COLOR_PALETTE -> {
                 objectMapper.readValueFromTree(
                     JsonNode.from(settings),
-                    TimeOfDayPaletteSettings::class.java
+                    TimeOfDayPaletteHasMetadata::class.java
                 )
             }
 
             EffectPaletteConstants.LOCAL_TIME_COLOR_PALETTE -> {
                 objectMapper.readValueFromTree(
                     JsonNode.from(settings),
-                    LocalTimePaletteSettings::class.java
+                    LocalTimePaletteHasMetadata::class.java
                 )
             }
 

@@ -6,10 +6,10 @@ import io.micronaut.serde.annotation.Serdeable
 import java.time.Duration
 
 @Serdeable
-class TimeOfDayTriggerSettings(
+class TimeOfDayTriggerHasMetadata(
     val timeOfDay: TimeOfDay,
     activationDuration: Duration,
     maxActivations: Int?,
     triggerType: TriggerType,
 ) :
-    TriggerSettings(activationDuration, maxActivations, triggerType)
+    TriggerHasMetadata(activationDuration, maxActivations, triggerType)

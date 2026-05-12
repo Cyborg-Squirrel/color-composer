@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
 import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
-import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTriggerSettings
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTriggerHasMetadata
 import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
 import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
 import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
@@ -22,7 +22,7 @@ class TimeOfDayTrigger(
     private val objectMapper: ObjectMapper,
     private val timeHelper: TimeHelper,
     private val timeOfDayService: TimeOfDayService,
-    settings: TimeOfDayTriggerSettings,
+    settings: TimeOfDayTriggerHasMetadata,
     uuid: String,
     effectUuid: String,
 ) : LightEffectTrigger(settings, uuid, effectUuid) {
@@ -57,7 +57,7 @@ class TimeOfDayTrigger(
     }
 
     private fun getSunriseSunsetOption(): TimeOfDay {
-        return (settings as TimeOfDayTriggerSettings).timeOfDay
+        return (settings as TimeOfDayTriggerHasMetadata).timeOfDay
     }
 
     private fun refresh() {

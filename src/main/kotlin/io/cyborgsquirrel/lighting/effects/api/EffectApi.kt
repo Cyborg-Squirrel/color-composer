@@ -11,6 +11,9 @@ interface EffectApi {
     @Get
     fun getEffects(@QueryValue stripUuid: String?, @QueryValue poolUuid: String?): HttpResponse<Any>
 
+    @Get("/schemas")
+    fun getSchemas(): HttpResponse<Any>
+
     @Get("/{uuid}")
     fun getEffect(uuid: String) : HttpResponse<Any>
 

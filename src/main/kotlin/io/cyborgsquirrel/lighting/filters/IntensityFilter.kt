@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.filters
 
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterHasMetadata
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.micronaut.serde.annotation.Serdeable
 
@@ -8,7 +8,7 @@ import io.micronaut.serde.annotation.Serdeable
  * Transforms a list of [RgbColor] to increase or decrease the intensity
  */
 @Serdeable
-open class IntensityFilter(val settings: IntensityFilterSettings, uuid: String) : LightEffectFilter(uuid) {
+open class IntensityFilter(val settings: IntensityFilterHasMetadata, uuid: String) : LightEffectFilter(uuid) {
 
     private val intensity = settings.intensity
 

@@ -7,11 +7,11 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 @Serdeable
-class TimeTriggerSettings(
+class TimeTriggerHasMetadata(
     val triggerTime: LocalTime,
     val triggerDay: LocalDate?,
     activationDuration: Duration,
     maxActivations: Int?,
     triggerType: TriggerType,
 ) :
-    TriggerSettings(activationDuration, maxActivations, triggerType)
+    TriggerHasMetadata(activationDuration, maxActivations, triggerType)

@@ -23,9 +23,9 @@ import io.cyborgsquirrel.lighting.filters.requests.CreateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.requests.UpdateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.responses.GetFilterResponse
 import io.cyborgsquirrel.lighting.filters.responses.GetFiltersResponse
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterSettings
-import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterHasMetadata
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterHasMetadata
+import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterHasMetadata
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrip
@@ -59,7 +59,7 @@ class EffectFilterControllerTest(
     }
 
     "Getting filter by uuid" {
-        val defaultBrightnessSettings = objectToMap(objectMapper, IntensityFilterSettings(0.5f))
+        val defaultBrightnessSettings = objectToMap(objectMapper, IntensityFilterHasMetadata(0.5f))
         val filterEntity = LightEffectFilterEntity(
             name = "Half brightness filter",
             uuid = UUID.randomUUID().toString(),
@@ -134,7 +134,7 @@ class EffectFilterControllerTest(
         )
 
         val effectUuid = (createEffectHttpResponse.body() as String)
-        val intensityFadeFilterSettings = IntensityFadeFilterSettings(0.25f, 1.0f, Duration.ofSeconds(15))
+        val intensityFadeFilterSettings = IntensityFadeFilterHasMetadata(0.25f, 1.0f, Duration.ofSeconds(15))
         val settingsAsMap = objectToMap(objectMapper, intensityFadeFilterSettings)
         val request = CreateEffectFilterRequest(
             "My brightness fade filter",
@@ -178,7 +178,7 @@ class EffectFilterControllerTest(
         )
         val effectUuid = createEffectHttpResponse.body() as String
 
-        val reflectionFilterSettings = ReflectionFilterSettings(ReflectionType.CopyOverCenter)
+        val reflectionFilterSettings = ReflectionFilterHasMetadata(ReflectionType.CopyOverCenter)
         val settingsAsMap = objectToMap(objectMapper, reflectionFilterSettings)
         val createRequest = CreateEffectFilterRequest(
             "My brightness fade filter",
@@ -239,7 +239,7 @@ class EffectFilterControllerTest(
         )
         val effectUuid = createEffectHttpResponse.body() as String
 
-        val reflectionFilterSettings = ReflectionFilterSettings(ReflectionType.CopyOverCenter)
+        val reflectionFilterSettings = ReflectionFilterHasMetadata(ReflectionType.CopyOverCenter)
         val settingsAsMap = objectToMap(objectMapper, reflectionFilterSettings)
         val createRequest = CreateEffectFilterRequest(
             "My brightness fade filter",

@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
 import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
-import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
+import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerHasMetadata
 import io.cyborgsquirrel.lighting.effects.LightEffect
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -15,7 +15,7 @@ import java.util.*
 class EffectIterationTrigger(
     private val timeHelper: TimeHelper,
     private val effectRegistry: ActiveLightEffectService,
-    settings: EffectIterationTriggerSettings,
+    settings: EffectIterationTriggerHasMetadata,
     uuid: String,
     effectUuid: String,
 ) :
@@ -47,6 +47,6 @@ class EffectIterationTrigger(
     }
 
     private fun getMaxIterations(): Int {
-        return (settings as EffectIterationTriggerSettings).maxActivations!!
+        return (settings as EffectIterationTriggerHasMetadata).maxActivations!!
     }
 }

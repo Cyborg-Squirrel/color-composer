@@ -1,6 +1,6 @@
 package io.cyborgsquirrel.lighting.filters
 
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterHasMetadata
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.serde.annotation.Serdeable
@@ -13,7 +13,7 @@ import io.micronaut.serde.annotation.Serdeable
  */
 @Serdeable
 open class IntensityFadeFilter(
-    val settings: IntensityFadeFilterSettings,
+    val settings: IntensityFadeFilterHasMetadata,
     val timeHelper: TimeHelper,
     uuid: String,
 ) : LightEffectFilter(uuid) {

@@ -2,15 +2,15 @@ package io.cyborgsquirrel.lighting.effect_palette.palette
 
 import io.cyborgsquirrel.lighting.effect_palette.enums.ChangingPaletteStep
 import io.cyborgsquirrel.lighting.effect_palette.helper.GradientColorHelper
-import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingGradientPaletteSettings
-import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingPaletteSettings
-import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingStaticPaletteSettings
+import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingGradientPaletteHasMetadata
+import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingPaletteHasMetadata
+import io.cyborgsquirrel.lighting.effect_palette.settings.ChangingStaticPaletteHasMetadata
 import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 
 class ChangingColorPalette(
-    private val settings: ChangingPaletteSettings,
+    private val settings: ChangingPaletteHasMetadata,
     private val timeHelper: TimeHelper,
     uuid: String,
     numberOfLeds: Int,
@@ -94,8 +94,8 @@ class ChangingColorPalette(
 
     private fun getCurrentPalette(index: Int): SettingsPalette {
         return when (settings) {
-            is ChangingStaticPaletteSettings -> settings.palettes[counter % settings.palettes.size]
-            is ChangingGradientPaletteSettings -> helper.getPalette(
+            is ChangingStaticPaletteHasMetadata -> settings.palettes[counter % settings.palettes.size]
+            is ChangingGradientPaletteHasMetadata -> helper.getPalette(
                 index,
                 numberOfLeds,
                 settings.gradientList[counter % settings.gradientList.size]
@@ -105,8 +105,8 @@ class ChangingColorPalette(
 
     private fun getNextPalette(index: Int): SettingsPalette {
         return when (settings) {
-            is ChangingStaticPaletteSettings -> settings.palettes[(counter + 1) % settings.palettes.size]
-            is ChangingGradientPaletteSettings -> helper.getPalette(
+            is ChangingStaticPaletteHasMetadata -> settings.palettes[(counter + 1) % settings.palettes.size]
+            is ChangingGradientPaletteHasMetadata -> helper.getPalette(
                 index,
                 numberOfLeds,
                 settings.gradientList[(counter + 1) % settings.gradientList.size]

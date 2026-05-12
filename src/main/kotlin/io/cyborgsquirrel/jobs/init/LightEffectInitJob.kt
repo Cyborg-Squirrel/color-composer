@@ -46,8 +46,8 @@ class LightEffectInitJob(
                         strip.length()
                     ) else null
                     val lightEffect = createLightingService.createEffect(
-                        effectEntity.settings!!,
-                        effectEntity.type!!,
+                        effectEntity.settings,
+                        effectEntity.type,
                         palette,
                         strip.length()
                     )

@@ -5,5 +5,5 @@ import io.micronaut.serde.annotation.Serdeable
 import java.time.Duration
 
 @Serdeable
-class EffectIterationTriggerSettings(maxActivations: Int) :
-    TriggerSettings(Duration.ofSeconds(0), maxActivations, TriggerType.StopEffect)
+class EffectIterationTriggerHasMetadata(maxActivations: Int) :
+    TriggerHasMetadata(Duration.ofSeconds(0), maxActivations, TriggerType.StopEffect)

@@ -12,9 +12,9 @@ import java.time.LocalTime
 class TimeTriggerSettingsTest(private val objectMapper: ObjectMapper) : StringSpec({
 
     val timeTriggerSettings =
-        TimeTriggerSettings(LocalTime.of(18, 0), null, Duration.ofHours(4), 120, TriggerType.StartEffect)
+        TimeTriggerHasMetadata(LocalTime.of(18, 0), null, Duration.ofHours(4), 120, TriggerType.StartEffect)
     val timeTriggerSettingsJson =
-        "{\"activationDuration\":14400000,\"maxActivations\":120,\"triggerType\":\"StartEffect\",\"majorVersion\":1,\"minorVersion\":0,\"triggerTime\":\"18:00:00\"}"
+        "{\"activationDuration\":14400000,\"maxActivations\":120,\"triggerType\":\"StartEffect\",\"metadata\":{\"majorVersion\":1,\"minorVersion\":0},\"triggerTime\":\"18:00:00\"}"
 
     "Serialize to json" {
         val json = objectMapper.writeValueAsString(timeTriggerSettings)
@@ -23,12 +23,12 @@ class TimeTriggerSettingsTest(private val objectMapper: ObjectMapper) : StringSp
 
     "Serialize from json" {
         val settings =
-            objectMapper.readValue(timeTriggerSettingsJson, TimeTriggerSettings::class.java)
+            objectMapper.readValue(timeTriggerSettingsJson, TimeTriggerHasMetadata::class.java)
         settings.triggerTime shouldBe timeTriggerSettings.triggerTime
         settings.maxActivations shouldBe timeTriggerSettings.maxActivations
         settings.triggerType shouldBe timeTriggerSettings.triggerType
         settings.activationDuration shouldBe timeTriggerSettings.activationDuration
-        settings.majorVersion shouldBe 1
-        settings.minorVersion shouldBe 0
+        settings.metadata.majorVersion shouldBe 1
+        settings.metadata.minorVersion shouldBe 0
     }
 })

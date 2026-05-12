@@ -45,7 +45,7 @@ class LightEffectRepositoryTest(
         newEntity.pool?.id shouldBe expectedEntity.pool?.id
         newEntity.uuid shouldBe expectedEntity.uuid
         newEntity.name shouldBe expectedEntity.name
-        newEntity.settings!!.map { normalizeNumberTypes(it.value) } shouldBe expectedEntity.settings!!.map {
+        newEntity.settings.map { normalizeNumberTypes(it.value) } shouldBe expectedEntity.settings.map {
             normalizeNumberTypes(
                 it.value
             )

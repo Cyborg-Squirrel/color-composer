@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
-import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTriggerSettings
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTriggerHasMetadata
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
@@ -115,7 +115,7 @@ class SunriseSunsetTriggerTest(
         mockLocation(date, apiResponse2025Jan21Json, duluthMnLocation)
         mockTimestampParse(cst)
 
-        val settings = TimeOfDayTriggerSettings(
+        val settings = TimeOfDayTriggerHasMetadata(
             TimeOfDay.Sunrise,
             Duration.ofMinutes(30),
             Int.MAX_VALUE,
@@ -162,7 +162,7 @@ class SunriseSunsetTriggerTest(
 
         mockLocation(date, apiResponse2025Jan2Json, londonGbLocation)
         mockTimestampParse(utc)
-        val settings = TimeOfDayTriggerSettings(
+        val settings = TimeOfDayTriggerHasMetadata(
             TimeOfDay.Sunset,
             Duration.ofHours(1),
             Int.MAX_VALUE,
@@ -194,7 +194,7 @@ class SunriseSunsetTriggerTest(
         mockTime(date, time)
         mockLocation(date, apiResponse2025Jan2Json, londonGbLocation)
         mockTimestampParse(utc)
-        val settings = TimeOfDayTriggerSettings(
+        val settings = TimeOfDayTriggerHasMetadata(
             TimeOfDay.Sunset,
             Duration.ofHours(1),
             Int.MAX_VALUE,
@@ -229,7 +229,7 @@ class SunriseSunsetTriggerTest(
 
         mockTime(date, time)
         mockTimestampParse(utc)
-        val settings = TimeOfDayTriggerSettings(
+        val settings = TimeOfDayTriggerHasMetadata(
             TimeOfDay.Sunset,
             Duration.ofHours(1),
             Int.MAX_VALUE,

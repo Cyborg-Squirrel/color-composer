@@ -65,7 +65,7 @@ class EffectControllerTest(
         val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 100)
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPaletteSettings(
+            StaticPaletteHasMetadata(
                 SettingsPalette(
                     primaryColor = RgbColor.Red,
                     secondaryColor = RgbColor.Orange,
@@ -104,7 +104,7 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings!!.map {
+        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -121,7 +121,7 @@ class EffectControllerTest(
         val strips = listOf(stripA, stripB)
         val paletteSettings = objectToMap(
             objectMapper,
-            GradientPaletteSettings(
+            GradientPaletteHasMetadata(
                 mapOf(
                     0 to SettingsPalette(
                         primaryColor = RgbColor.Blue,
@@ -178,7 +178,7 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings!!.map {
+        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -212,7 +212,7 @@ class EffectControllerTest(
         effectEntity.strip?.uuid shouldBe request.stripUuid
         effectEntity.name shouldBe request.name
         effectEntity.uuid shouldBe effectUuid
-        effectEntity.settings!!.map { normalizeNumberTypes(it.value) } shouldBe request.settings.map {
+        effectEntity.settings.map { normalizeNumberTypes(it.value) } shouldBe request.settings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -225,7 +225,7 @@ class EffectControllerTest(
         val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 66)
         val paletteSettings = objectToMap(
             objectMapper,
-            TimeOfDayPaletteSettings(
+            TimeOfDayPaletteHasMetadata(
                 mapOf(
                     TimeOfDay.Midnight to SettingsPalette(
                         primaryColor = RgbColor.Purple,
@@ -288,7 +288,7 @@ class EffectControllerTest(
         effectEntities.first().strip?.uuid shouldBe strip.uuid
         effectEntities.first().name shouldBe updateRequest.name
         effectEntities.first().uuid shouldBe effectEntity.uuid
-        effectEntities.first().settings!!.map { normalizeNumberTypes(it.value) } shouldBe updateRequest.settings!!.map {
+        effectEntities.first().settings.map { normalizeNumberTypes(it.value) } shouldBe updateRequest.settings!!.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -303,7 +303,7 @@ class EffectControllerTest(
         val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 50)
         val paletteSettings = objectToMap(
             objectMapper,
-            ChangingStaticPaletteSettings(
+            ChangingStaticPaletteHasMetadata(
                 listOf(
                     SettingsPalette(
                         primaryColor = RgbColor.Red,
@@ -375,7 +375,7 @@ class EffectControllerTest(
 
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPaletteSettings(
+            StaticPaletteHasMetadata(
                 SettingsPalette(
                     primaryColor = RgbColor.Green,
                     secondaryColor = RgbColor.Cyan,
@@ -502,7 +502,7 @@ class EffectControllerTest(
 
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPaletteSettings(
+            StaticPaletteHasMetadata(
                 SettingsPalette(
                     primaryColor = RgbColor.Blue,
                     secondaryColor = RgbColor.Blue,
@@ -574,7 +574,7 @@ class EffectControllerTest(
 
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPaletteSettings(
+            StaticPaletteHasMetadata(
                 SettingsPalette(
                     primaryColor = RgbColor.Yellow,
                     secondaryColor = RgbColor.Yellow,
@@ -633,7 +633,7 @@ class EffectControllerTest(
 
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPaletteSettings(
+            StaticPaletteHasMetadata(
                 SettingsPalette(
                     primaryColor = RgbColor.Purple,
                     secondaryColor = RgbColor.Purple,
@@ -686,7 +686,7 @@ class EffectControllerTest(
         updatedEffect.uuid shouldBe poolEffect.uuid
         updatedEffect.pool?.uuid shouldBe pool.uuid
         updatedEffect.strip shouldBe null
-        updatedEffect.settings!!.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
+        updatedEffect.settings.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -711,7 +711,7 @@ class EffectControllerTest(
 
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPaletteSettings(
+            StaticPaletteHasMetadata(
                 SettingsPalette(
                     primaryColor = RgbColor.Orange,
                     secondaryColor = RgbColor.Orange,
@@ -765,5 +765,12 @@ class EffectControllerTest(
         response.status shouldBe HttpStatus.OK
         val body = response.body() as GetEffectsResponse
         body.effects.isEmpty() shouldBe true
+    }
+
+    "Get effect schemas returns one schema per effect" {
+        val response = apiClient.getSchemas()
+        response.status shouldBe HttpStatus.OK
+        val body = response.body() as List<*>
+        body.size shouldBe 7
     }
 })
