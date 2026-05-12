@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effects.responses
 
+import io.cyborgsquirrel.lighting.enums.EffectCategory
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.micronaut.serde.annotation.Serdeable
 
@@ -12,6 +13,7 @@ data class GetPoolEffectResponse(
     override val paletteUuid: String?,
     override val settings: Map<String, Any>,
     override val status: LightEffectStatus,
+    override val category: EffectCategory,
 ) : GetEffectResponse(
-    name, type, uuid, paletteUuid, settings, status
+    name, type, uuid, paletteUuid, settings, status, category
 )

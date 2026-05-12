@@ -11,6 +11,7 @@ import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPalette
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.enums.EffectCategory
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrip
@@ -98,6 +99,7 @@ class HomeControllerTest(
                 type = playingEffect.type!!,
                 settings = playingEffect.settings!!,
                 paletteUuid = null,
+                category = EffectCategory.forEffect(playingEffect.type!!),
             ),
         )
     }
