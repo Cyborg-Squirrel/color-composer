@@ -23,9 +23,8 @@ import io.cyborgsquirrel.lighting.filters.requests.CreateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.requests.UpdateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.responses.GetFilterResponse
 import io.cyborgsquirrel.lighting.filters.responses.GetFiltersResponse
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilter
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFilter
-import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilter
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterSettings
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrip
@@ -59,7 +58,7 @@ class EffectFilterControllerTest(
     }
 
     "Getting filter by uuid" {
-        val defaultBrightnessSettings = objectToMap(objectMapper, IntensityFilter(0.5f))
+        val defaultBrightnessSettings = objectToMap(objectMapper, IntensityFilterSettings(0.5f))
         val filterEntity = LightEffectFilterEntity(
             name = "Half brightness filter",
             uuid = UUID.randomUUID().toString(),
@@ -134,7 +133,7 @@ class EffectFilterControllerTest(
         )
 
         val effectUuid = (createEffectHttpResponse.body() as String)
-        val intensityFadeFilterSettings = IntensityFadeFilter(0.25f, 1.0f, Duration.ofSeconds(15))
+        val intensityFadeFilterSettings = IntensityFadeFilterSettings(0.25f, 1.0f, Duration.ofSeconds(15))
         val settingsAsMap = objectToMap(objectMapper, intensityFadeFilterSettings)
         val request = CreateEffectFilterRequest(
             "My brightness fade filter",

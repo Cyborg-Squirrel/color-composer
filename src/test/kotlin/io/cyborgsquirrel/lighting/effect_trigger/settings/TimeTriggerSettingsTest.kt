@@ -12,7 +12,7 @@ import java.time.LocalTime
 class TimeTriggerSettingsTest(private val objectMapper: ObjectMapper) : StringSpec({
 
     val timeTriggerSettings =
-        TimeTrigger(LocalTime.of(18, 0), null, Duration.ofHours(4), 120, TriggerType.StartEffect)
+        TimeTriggerSettings(LocalTime.of(18, 0), null, Duration.ofHours(4), 120, TriggerType.StartEffect)
     val timeTriggerSettingsJson =
         "{\"activationDuration\":14400000,\"maxActivations\":120,\"triggerType\":\"StartEffect\",\"metadata\":{\"majorVersion\":1,\"minorVersion\":0},\"triggerTime\":\"18:00:00\"}"
 
@@ -23,7 +23,7 @@ class TimeTriggerSettingsTest(private val objectMapper: ObjectMapper) : StringSp
 
     "Serialize from json" {
         val settings =
-            objectMapper.readValue(timeTriggerSettingsJson, TimeTrigger::class.java)
+            objectMapper.readValue(timeTriggerSettingsJson, TimeTriggerSettings::class.java)
         settings.triggerTime shouldBe timeTriggerSettings.triggerTime
         settings.maxActivations shouldBe timeTriggerSettings.maxActivations
         settings.triggerType shouldBe timeTriggerSettings.triggerType

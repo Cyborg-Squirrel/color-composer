@@ -65,7 +65,7 @@ class EffectControllerTest(
         val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 100)
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPalette(
+            StaticPaletteSettings(
                 SettingsPalette(
                     primaryColor = RgbColor.Red,
                     secondaryColor = RgbColor.Orange,
@@ -121,7 +121,7 @@ class EffectControllerTest(
         val strips = listOf(stripA, stripB)
         val paletteSettings = objectToMap(
             objectMapper,
-            GradientPalette(
+            GradientPaletteSettings(
                 mapOf(
                     0 to SettingsPalette(
                         primaryColor = RgbColor.Blue,
@@ -225,7 +225,7 @@ class EffectControllerTest(
         val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 66)
         val paletteSettings = objectToMap(
             objectMapper,
-            TimeOfDayPalette(
+            TimeOfDayPaletteSettings(
                 mapOf(
                     TimeOfDay.Midnight to SettingsPalette(
                         primaryColor = RgbColor.Purple,
@@ -303,7 +303,7 @@ class EffectControllerTest(
         val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 50)
         val paletteSettings = objectToMap(
             objectMapper,
-            ChangingStaticPalette(
+            ChangingStaticPaletteSettings(
                 listOf(
                     SettingsPalette(
                         primaryColor = RgbColor.Red,
@@ -375,7 +375,7 @@ class EffectControllerTest(
 
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPalette(
+            StaticPaletteSettings(
                 SettingsPalette(
                     primaryColor = RgbColor.Green,
                     secondaryColor = RgbColor.Cyan,
@@ -502,7 +502,7 @@ class EffectControllerTest(
 
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPalette(
+            StaticPaletteSettings(
                 SettingsPalette(
                     primaryColor = RgbColor.Blue,
                     secondaryColor = RgbColor.Blue,
@@ -574,7 +574,7 @@ class EffectControllerTest(
 
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPalette(
+            StaticPaletteSettings(
                 SettingsPalette(
                     primaryColor = RgbColor.Yellow,
                     secondaryColor = RgbColor.Yellow,
@@ -633,7 +633,7 @@ class EffectControllerTest(
 
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPalette(
+            StaticPaletteSettings(
                 SettingsPalette(
                     primaryColor = RgbColor.Purple,
                     secondaryColor = RgbColor.Purple,
@@ -711,7 +711,7 @@ class EffectControllerTest(
 
         val paletteSettings = objectToMap(
             objectMapper,
-            StaticPalette(
+            StaticPaletteSettings(
                 SettingsPalette(
                     primaryColor = RgbColor.Orange,
                     secondaryColor = RgbColor.Orange,

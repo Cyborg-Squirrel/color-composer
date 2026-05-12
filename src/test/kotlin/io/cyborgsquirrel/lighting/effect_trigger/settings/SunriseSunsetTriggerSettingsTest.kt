@@ -12,7 +12,7 @@ import java.time.Duration
 class SunriseSunsetTriggerSettingsTest(private val objectMapper: ObjectMapper) : StringSpec({
 
     val timeOfDayTriggerSettings =
-        TimeOfDayTrigger(TimeOfDay.Sunset, Duration.ofHours(4), 120, TriggerType.StartEffect)
+        TimeOfDayTriggerSettings(TimeOfDay.Sunset, Duration.ofHours(4), 120, TriggerType.StartEffect)
     val sunriseSunsetTriggerSettingsJson =
         "{\"activationDuration\":14400000,\"maxActivations\":120,\"triggerType\":\"StartEffect\",\"metadata\":{\"majorVersion\":1,\"minorVersion\":0},\"timeOfDay\":\"Sunset\"}"
 
@@ -23,7 +23,7 @@ class SunriseSunsetTriggerSettingsTest(private val objectMapper: ObjectMapper) :
 
     "Serialize from json" {
         val settings =
-            objectMapper.readValue(sunriseSunsetTriggerSettingsJson, TimeOfDayTrigger::class.java)
+            objectMapper.readValue(sunriseSunsetTriggerSettingsJson, TimeOfDayTriggerSettings::class.java)
         settings.timeOfDay shouldBe timeOfDayTriggerSettings.timeOfDay
         settings.maxActivations shouldBe timeOfDayTriggerSettings.maxActivations
         settings.triggerType shouldBe timeOfDayTriggerSettings.triggerType

@@ -1,10 +1,10 @@
 package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
 import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
-import io.cyborgsquirrel.lighting.effect_trigger.settings.Trigger
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TriggerSettings
 import java.util.*
 
-sealed class LightEffectTrigger(val settings: Trigger, val uuid: String, val effectUuid: String) {
+sealed class LightEffectTrigger(val settings: TriggerSettings, val uuid: String, val effectUuid: String) {
 
     /**
      * Checks the trigger condition and returns the most recent activation of the trigger.

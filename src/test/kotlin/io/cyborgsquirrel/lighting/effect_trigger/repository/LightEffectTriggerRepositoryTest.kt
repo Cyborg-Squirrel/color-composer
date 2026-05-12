@@ -12,7 +12,7 @@ import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
-import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTrigger
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
@@ -41,7 +41,7 @@ class LightEffectTriggerRepositoryTest(
 
     val nightriderLightEffectSettings = NightriderEffectSettings.default()
     val timeTriggerSettings =
-        TimeTrigger(
+        TimeTriggerSettings(
             LocalTime.of(19, 0), null, Duration.ofHours(4), maxActivations = null, triggerType = TriggerType.StartEffect
         )
 

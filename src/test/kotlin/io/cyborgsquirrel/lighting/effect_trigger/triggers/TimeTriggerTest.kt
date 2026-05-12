@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effect_trigger.triggers
 
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
-import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTrigger
+import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
@@ -66,7 +66,7 @@ class TimeTriggerTest(
         val date = LocalDate.of(2025, 1, 21)
         val time = LocalTime.of(17, 1)
         mockResponses(date, time)
-        val settings = TimeTrigger(
+        val settings = TimeTriggerSettings(
             LocalTime.of(17, 0), null, Duration.ofMinutes(30), Int.MAX_VALUE, TriggerType.StartEffect
         )
         val trigger = TimeTrigger(mockTimeHelper, settings, UUID.randomUUID().toString(), activeEffect.effectUuid)

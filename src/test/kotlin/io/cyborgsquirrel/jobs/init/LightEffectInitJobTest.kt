@@ -17,7 +17,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTrigger
+import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
@@ -34,7 +34,7 @@ import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
-import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilter
+import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -217,7 +217,7 @@ class LightEffectInitJobTest(
         val triggers = triggerManager.getTriggers()
 
         triggers.size shouldBe 1
-        triggers.first()::class shouldBe EffectIterationTrigger::class
+        triggers.first()::class shouldBe EffectIterationTriggerSettings::class
         triggers.first().uuid shouldBe trigger.uuid
         triggers.first().settings::class shouldBe iterationTriggerSettings::class
         triggers.first().settings.triggerType shouldBe iterationTriggerSettings.triggerType
@@ -297,7 +297,7 @@ class LightEffectInitJobTest(
         val filters = activeEffectList.first().filters
 
         filters.size shouldBe 1
-        filters.first()::class shouldBe IntensityFadeFilter::class
+        filters.first()::class shouldBe IntensityFadeFilterSettings::class
         filters.first().uuid shouldBe filter.uuid
         (filters.first() as IntensityFadeFilter).settings::class shouldBe fadeFilterSettings::class
         (filters.first() as IntensityFadeFilter).settings.startingIntensity shouldBe fadeFilterSettings.startingIntensity
