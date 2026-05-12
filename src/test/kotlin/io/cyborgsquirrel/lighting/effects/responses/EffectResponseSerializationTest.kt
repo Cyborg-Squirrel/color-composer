@@ -1,5 +1,6 @@
 package io.cyborgsquirrel.lighting.effects.responses
 
+import io.cyborgsquirrel.lighting.enums.EffectCategory
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -24,7 +25,8 @@ class EffectResponseSerializationTest(
                 "speed" to 100,
                 "color" to "red"
             ),
-            status = LightEffectStatus.Playing
+            status = LightEffectStatus.Playing,
+            category = EffectCategory.Motion,
         )
 
         val json = objectMapper.writeValueAsString(originalResponse)
@@ -36,6 +38,7 @@ class EffectResponseSerializationTest(
         deserializedResponse.uuid shouldBe originalResponse.uuid
         deserializedResponse.status shouldBe originalResponse.status
         deserializedResponse.paletteUuid shouldBe originalResponse.paletteUuid
+        deserializedResponse.category shouldBe originalResponse.category
     }
 
     "GetPoolEffectResponse serialization" {
@@ -49,7 +52,8 @@ class EffectResponseSerializationTest(
                 "brightness" to 50,
                 "duration" to "5000"
             ),
-            status = LightEffectStatus.Paused
+            status = LightEffectStatus.Paused,
+            category = EffectCategory.Ambient,
         )
 
         val json = objectMapper.writeValueAsString(originalResponse)
@@ -60,6 +64,7 @@ class EffectResponseSerializationTest(
         deserializedResponse.poolUuid shouldBe originalResponse.poolUuid
         deserializedResponse.uuid shouldBe originalResponse.uuid
         deserializedResponse.status shouldBe originalResponse.status
+        deserializedResponse.category shouldBe originalResponse.category
     }
 
     "GetEffectsResponse serialization" {
@@ -70,7 +75,8 @@ class EffectResponseSerializationTest(
             stripUuid = UUID.randomUUID().toString(),
             paletteUuid = null,
             settings = mapOf("param" to "value"),
-            status = LightEffectStatus.Idle
+            status = LightEffectStatus.Idle,
+            category = EffectCategory.Static,
         )
 
         val poolEffect = GetPoolEffectResponse(
@@ -80,7 +86,8 @@ class EffectResponseSerializationTest(
             poolUuid = UUID.randomUUID().toString(),
             paletteUuid = null,
             settings = mapOf("param2" to "value2"),
-            status = LightEffectStatus.Playing
+            status = LightEffectStatus.Playing,
+            category = EffectCategory.Motion,
         )
 
         val originalResponse = GetEffectsResponse(
@@ -99,7 +106,8 @@ class EffectResponseSerializationTest(
             stripUuid = UUID.randomUUID().toString(),
             paletteUuid = null,
             settings = mapOf(),
-            status = LightEffectStatus.Stopped
+            status = LightEffectStatus.Stopped,
+            category = EffectCategory.Static,
         )
 
         val json = objectMapper.writeValueAsString(responseWithoutPalette)
@@ -115,7 +123,8 @@ class EffectResponseSerializationTest(
             poolUuid = UUID.randomUUID().toString(),
             paletteUuid = UUID.randomUUID().toString(),
             settings = mapOf(),
-            status = LightEffectStatus.Playing
+            status = LightEffectStatus.Playing,
+            category = EffectCategory.Ambient,
         )
 
         val json = objectMapper.writeValueAsString(responseWithoutStrip)

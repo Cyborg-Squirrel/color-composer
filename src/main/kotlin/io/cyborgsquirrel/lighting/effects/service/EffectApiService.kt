@@ -15,6 +15,7 @@ import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetPoolEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
+import io.cyborgsquirrel.lighting.enums.EffectCategory
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.util.exception.ClientRequestException
@@ -136,6 +137,7 @@ class EffectApiService(
                     settings = it.settings!!,
                     status = it.status!!,
                     type = it.type!!,
+                    category = EffectCategory.forEffect(it.type!!),
                 )
             }
 
@@ -159,6 +161,7 @@ class EffectApiService(
                     settings = it.settings!!,
                     status = it.status!!,
                     type = it.type!!,
+                    category = EffectCategory.forEffect(it.type!!),
                 )
             }
 
@@ -350,6 +353,7 @@ class EffectApiService(
                 settings = lightEffectEntity.settings!!,
                 status = lightEffectEntity.status!!,
                 type = lightEffectEntity.type!!,
+                category = EffectCategory.forEffect(lightEffectEntity.type!!),
             )
         } else if (lightEffectEntity.pool != null) {
             GetPoolEffectResponse(
@@ -360,6 +364,7 @@ class EffectApiService(
                 settings = lightEffectEntity.settings!!,
                 status = lightEffectEntity.status!!,
                 type = lightEffectEntity.type!!,
+                category = EffectCategory.forEffect(lightEffectEntity.type!!),
             )
         } else {
             // TODO throw Exception? For now let the user get all effects even if there is one with an invalid config.
