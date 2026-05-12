@@ -25,6 +25,7 @@ import io.cyborgsquirrel.lighting.filters.responses.GetFilterResponse
 import io.cyborgsquirrel.lighting.filters.responses.GetFiltersResponse
 import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterSettings
+import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrip
@@ -177,7 +178,7 @@ class EffectFilterControllerTest(
         )
         val effectUuid = createEffectHttpResponse.body() as String
 
-        val reflectionFilterSettings = ReflectionFilter(ReflectionType.CopyOverCenter)
+        val reflectionFilterSettings = ReflectionFilterSettings(ReflectionType.CopyOverCenter)
         val settingsAsMap = objectToMap(objectMapper, reflectionFilterSettings)
         val createRequest = CreateEffectFilterRequest(
             "My brightness fade filter",
@@ -187,7 +188,7 @@ class EffectFilterControllerTest(
         val createFilterHttpResponse = apiClient.createEffectFilter(createRequest)
         val filterUuid = createFilterHttpResponse.body() as String
 
-        val updatedSettings = reflectionFilterSettings.copy(ReflectionType.LowToHigh)
+        val updatedSettings = reflectionFilterSettings.copy(reflectionType = ReflectionType.LowToHigh)
         val updatedSettingsMap = objectToMap(objectMapper, updatedSettings)
         val updateRequest = UpdateEffectFilterRequest(
             name = "My reflection filter UPDATED",
@@ -238,7 +239,7 @@ class EffectFilterControllerTest(
         )
         val effectUuid = createEffectHttpResponse.body() as String
 
-        val reflectionFilterSettings = ReflectionFilter(ReflectionType.CopyOverCenter)
+        val reflectionFilterSettings = ReflectionFilterSettings(ReflectionType.CopyOverCenter)
         val settingsAsMap = objectToMap(objectMapper, reflectionFilterSettings)
         val createRequest = CreateEffectFilterRequest(
             "My brightness fade filter",

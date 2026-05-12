@@ -63,9 +63,9 @@ class LightEffectInitJobTest(
     private val streamJobManager: StreamJobManager
 ) : StringSpec({
 
-    val lightEffectSettings = SpectrumEffectSettings.default(60).copy(10)
-    val iterationTriggerSettings = EffectIterationTrigger(25)
-    val fadeFilterSettings = IntensityFadeFilter(0.0f, 1.0f, Duration.ofSeconds(20))
+    val lightEffectSettings = SpectrumEffectSettings.default(60).copy(colorPixelWidth = 10)
+    val iterationTriggerSettings = EffectIterationTriggerSettings(25)
+    val fadeFilterSettings = IntensityFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(20))
     lateinit var websocketManagerMock: StreamJobManager
 
     beforeTest {
@@ -217,7 +217,7 @@ class LightEffectInitJobTest(
         val triggers = triggerManager.getTriggers()
 
         triggers.size shouldBe 1
-        triggers.first()::class shouldBe EffectIterationTriggerSettings::class
+        triggers.first()::class shouldBe EffectIterationTrigger::class
         triggers.first().uuid shouldBe trigger.uuid
         triggers.first().settings::class shouldBe iterationTriggerSettings::class
         triggers.first().settings.triggerType shouldBe iterationTriggerSettings.triggerType
@@ -297,7 +297,7 @@ class LightEffectInitJobTest(
         val filters = activeEffectList.first().filters
 
         filters.size shouldBe 1
-        filters.first()::class shouldBe IntensityFadeFilterSettings::class
+        filters.first()::class shouldBe IntensityFadeFilter::class
         filters.first().uuid shouldBe filter.uuid
         (filters.first() as IntensityFadeFilter).settings::class shouldBe fadeFilterSettings::class
         (filters.first() as IntensityFadeFilter).settings.startingIntensity shouldBe fadeFilterSettings.startingIntensity

@@ -30,7 +30,7 @@ class IntensityFadeFilterTest : StringSpec({
         endingIntensity: Float,
         fadeDuration: Duration,
         uuid: String = "test-uuid"
-    ): IntensityFadeFilterSettings {
+    ): IntensityFadeFilter {
         val millisSinceEpoch = Timestamp.from(Instant.now()).time
         val mockTimeHelper = setupTimeHelper(millisSinceEpoch)
         val settings = IntensityFadeFilterSettings(
