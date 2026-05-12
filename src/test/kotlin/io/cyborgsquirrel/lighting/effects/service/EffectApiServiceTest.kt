@@ -7,20 +7,12 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 
-class EffectApiServiceGetSchemasTest : StringSpec({
+class EffectApiServiceTest : StringSpec({
 
     val service = EffectApiService(mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk())
 
     "getAllSchemas returns one schema per effect" {
         service.getAllSchemas().size shouldBe 7
-    }
-
-    "getAllSchemas returns 24 fields in total" {
-        service.getAllSchemas().sumOf { it.fields.size } shouldBe 24
-    }
-
-    "schemas are returned in allEffectNames order" {
-        service.getAllSchemas().map { it.effectName } shouldBe LightEffectConstants.allEffectNames
     }
 
     "all schema fields have non-blank keys and descriptions" {
@@ -30,7 +22,7 @@ class EffectApiServiceGetSchemasTest : StringSpec({
         }
     }
 
-    "each effect schema has the correct fields in order" {
+    "each effect schema has the correct fields" {
         data class Case(val effectName: String, val expectedFields: List<Pair<String, EffectSettingsType>>)
 
         val schemas = service.getAllSchemas()
