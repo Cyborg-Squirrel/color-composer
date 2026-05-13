@@ -35,11 +35,11 @@ data class LightEffectEntity(
     var uuid: String? = null,
 
     @TypeDef(type = DataType.JSON)
-    var settings: Map<String, Any>?,
+    var settings: Map<String, Any>,
 
-    var type: String?,
+    var type: String,
 
-    var name: String?,
+    var name: String,
 
     @Enumerated(EnumType.STRING)
     var status: LightEffectStatus?,

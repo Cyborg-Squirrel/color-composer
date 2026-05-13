@@ -36,6 +36,17 @@ class EffectController(
         }
     }
 
+    override fun getSchemas(): HttpResponse<Any> {
+        return try {
+            val schemas = effectApiService.getAllSchemas()
+            HttpResponse.ok(schemas)
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError(ex.message)
+        }
+    }
+
     override fun getEffect(uuid: String): HttpResponse<Any> {
         return try {
             val response = effectApiService.getEffectWithUuid(uuid)

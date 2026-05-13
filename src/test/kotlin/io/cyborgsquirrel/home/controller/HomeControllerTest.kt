@@ -95,11 +95,11 @@ class HomeControllerTest(
                 uuid = playingEffect.uuid!!,
                 status = LightEffectStatus.Playing,
                 stripUuid = strip.uuid!!,
-                name = playingEffect.name!!,
-                type = playingEffect.type!!,
-                settings = playingEffect.settings!!,
+                name = playingEffect.name,
+                type = playingEffect.type,
+                settings = playingEffect.settings,
                 paletteUuid = null,
-                category = EffectCategory.forEffect(playingEffect.type!!),
+                category = EffectCategory.forEffect(playingEffect.type),
             ),
         )
     }

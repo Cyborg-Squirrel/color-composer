@@ -5,6 +5,7 @@ import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
@@ -15,7 +16,10 @@ import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetPoolEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
+import io.cyborgsquirrel.lighting.effects.schemas.EffectSettingsSchema
+import io.cyborgsquirrel.lighting.effects.schemas.EffectSettingsSchemaBuilder
 import io.cyborgsquirrel.lighting.enums.EffectCategory
+import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
 import io.cyborgsquirrel.util.exception.ClientRequestException
@@ -105,7 +109,7 @@ class EffectApiService(
             strip.length()
         ) else null
         val lightEffect = createLightingService.createEffect(
-            effectEntity.settings!!, effectEntity.type!!, palette, strip.length()
+            effectEntity.settings, effectEntity.type, palette, strip.length()
         )
 
         val activeEffect = ActiveLightEffect(
@@ -130,14 +134,14 @@ class EffectApiService(
             val effectEntities = effectRepository.findByStrip(stripEntity)
             val effectList = effectEntities.map {
                 GetStripEffectResponse(
-                    name = it.name!!,
+                    name = it.name,
                     uuid = it.uuid!!,
                     stripUuid = stripEntity.uuid!!,
                     paletteUuid = it.palette?.uuid,
-                    settings = it.settings!!,
+                    settings = it.settings,
                     status = it.status!!,
-                    type = it.type!!,
-                    category = EffectCategory.forEffect(it.type!!),
+                    type = it.type,
+                    category = EffectCategory.forEffect(it.type),
                 )
             }
 
@@ -154,14 +158,14 @@ class EffectApiService(
             val effectEntities = effectRepository.findByPool(poolEntity)
             val effectList = effectEntities.map {
                 GetPoolEffectResponse(
-                    name = it.name!!,
+                    name = it.name,
                     uuid = it.uuid!!,
                     poolUuid = poolEntity.uuid!!,
                     paletteUuid = it.palette?.uuid,
-                    settings = it.settings!!,
+                    settings = it.settings,
                     status = it.status!!,
-                    type = it.type!!,
-                    category = EffectCategory.forEffect(it.type!!),
+                    type = it.type,
+                    category = EffectCategory.forEffect(it.type),
                 )
             }
 
@@ -185,7 +189,7 @@ class EffectApiService(
         val effectEntityOptional = effectRepository.findByUuid(uuid)
         if (effectEntityOptional.isPresent) {
             val effectEntity = effectEntityOptional.get()
-            val response =  getEffectResponseForEffect(effectEntity)
+            val response = getEffectResponseForEffect(effectEntity)
             if (response != null) {
                 return response
             }
@@ -284,7 +288,7 @@ class EffectApiService(
                     strip.length()
                 ) else null
                 val lightEffect = createLightingService.createEffect(
-                    effectEntity.settings!!, effectEntity.type!!, palette, strip.length()
+                    effectEntity.settings, effectEntity.type, palette, strip.length()
                 )
 
                 var activeEffect = activeEffectOptional.get()
@@ -346,29 +350,89 @@ class EffectApiService(
     fun getEffectResponseForEffect(lightEffectEntity: LightEffectEntity): GetEffectResponse? {
         return if (lightEffectEntity.strip != null) {
             GetStripEffectResponse(
-                name = lightEffectEntity.name!!,
+                name = lightEffectEntity.name,
                 uuid = lightEffectEntity.uuid!!,
                 stripUuid = lightEffectEntity.strip!!.uuid!!,
                 paletteUuid = lightEffectEntity.palette?.uuid,
-                settings = lightEffectEntity.settings!!,
+                settings = lightEffectEntity.settings,
                 status = lightEffectEntity.status!!,
-                type = lightEffectEntity.type!!,
-                category = EffectCategory.forEffect(lightEffectEntity.type!!),
+                type = lightEffectEntity.type,
+                category = EffectCategory.forEffect(lightEffectEntity.type),
             )
         } else if (lightEffectEntity.pool != null) {
             GetPoolEffectResponse(
-                name = lightEffectEntity.name!!,
+                name = lightEffectEntity.name,
                 uuid = lightEffectEntity.uuid!!,
                 poolUuid = lightEffectEntity.pool!!.uuid!!,
                 paletteUuid = lightEffectEntity.palette?.uuid,
-                settings = lightEffectEntity.settings!!,
+                settings = lightEffectEntity.settings,
                 status = lightEffectEntity.status!!,
-                type = lightEffectEntity.type!!,
-                category = EffectCategory.forEffect(lightEffectEntity.type!!),
+                type = lightEffectEntity.type,
+                category = EffectCategory.forEffect(lightEffectEntity.type),
             )
         } else {
             // TODO throw Exception? For now let the user get all effects even if there is one with an invalid config.
             null
+        }
+    }
+
+    fun getAllSchemas(): List<EffectSettingsSchema> = LightEffectConstants.allEffectNames.map { name ->
+        when (name) {
+            LightEffectConstants.SPECTRUM_NAME ->
+                EffectSettingsSchemaBuilder(name)
+                    .integer("colorPixelWidth", "Number of pixels per color band") { min(1.0) }
+                    .boolean("animated", "Whether the spectrum cycles through colors over time")
+                    .build()
+
+            LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME ->
+                EffectSettingsSchemaBuilder(name)
+                    .boolean("wrap", "Whether the fill wraps around the strip ends")
+                    .integer("updatesPerSecond", "Number of position updates per second") { min(1.0) }
+                    .number("brightnessScaling", "Brightness multiplier applied to the effect") { min(0.0); max(1.0) }
+                    .build()
+
+            LightEffectConstants.NIGHTRIDER_COMET_NAME ->
+                EffectSettingsSchemaBuilder(name)
+                    .integer("trailLength", "Number of pixels in the comet's trailing tail") { min(1.0) }
+                    .string("trailFadeCurve", "Brightness falloff curve along the trail") {
+                        options(FadeCurve.entries.map { it.name })
+                    }
+                    .boolean("wrap", "Whether the comet wraps around the strip ends")
+                    .integer("updatesPerSecond", "Number of position updates per second") { min(1.0) }
+                    .build()
+
+            LightEffectConstants.FLAME_EFFECT_NAME ->
+                EffectSettingsSchemaBuilder(name)
+                    .integer("cooling", "Rate at which heat dissipates up the strip") { min(1.0) }
+                    .integer("sparking", "Probability of new sparks igniting at the base (0–255)") { min(0.0); max(255.0) }
+                    .integer("sparks", "Number of sparks generated per update") { min(1.0) }
+                    .integer("sparkHeight", "Maximum height sparks can reach from the base") { min(1.0) }
+                    .build()
+
+            LightEffectConstants.BOUNCING_BALL_NAME ->
+                EffectSettingsSchemaBuilder(name)
+                    .integer("startingHeightPercent", "Initial drop height as a percentage of strip length") { min(0.0); max(100.0) }
+                    .integer("maxHeightPercent", "Maximum bounce height in pixels") { min(1.0) }
+                    .number("speed", "Initial speed of the ball") { min(0.0) }
+                    .number("gravity", "Gravitational acceleration applied to the ball")
+                    .number("minimumSpeed", "Speed below which the ball stops bouncing") { min(0.0) }
+                    .build()
+
+            LightEffectConstants.WAVE_EFFECT_NAME ->
+                EffectSettingsSchemaBuilder(name)
+                    .integer("startPoint", "Starting pixel position of the wave") { min(0.0) }
+                    .integer("waveLength", "Length of one full wave cycle in pixels") { min(1.0) }
+                    .boolean("repeat", "Whether the wave repeats continuously")
+                    .build()
+
+            LightEffectConstants.MARQUEE_EFFECT_NAME ->
+                EffectSettingsSchemaBuilder(name)
+                    .integer("dotLength", "Length of each dot in pixels") { min(1.0) }
+                    .integer("spaceBetweenDots", "Gap between dots in pixels") { min(0.0) }
+                    .integer("scrollAmountPerSecond", "Number of pixels the dots scroll per second") { min(1.0) }
+                    .build()
+
+            else -> error("Unknown effect name: $name")
         }
     }
 }

@@ -63,7 +63,7 @@ class LightEffectInitJobTest(
     private val streamJobManager: StreamJobManager
 ) : StringSpec({
 
-    val lightEffectSettings = SpectrumEffectSettings.default(60).copy(10)
+    val lightEffectSettings = SpectrumEffectSettings.default(60).copy(colorPixelWidth = 10)
     val iterationTriggerSettings = EffectIterationTriggerSettings(25)
     val fadeFilterSettings = IntensityFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(20))
     lateinit var websocketManagerMock: StreamJobManager

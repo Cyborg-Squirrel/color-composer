@@ -188,7 +188,7 @@ class EffectFilterControllerTest(
         val createFilterHttpResponse = apiClient.createEffectFilter(createRequest)
         val filterUuid = createFilterHttpResponse.body() as String
 
-        val updatedSettings = reflectionFilterSettings.copy(ReflectionType.LowToHigh)
+        val updatedSettings = reflectionFilterSettings.copy(reflectionType = ReflectionType.LowToHigh)
         val updatedSettingsMap = objectToMap(objectMapper, updatedSettings)
         val updateRequest = UpdateEffectFilterRequest(
             name = "My reflection filter UPDATED",

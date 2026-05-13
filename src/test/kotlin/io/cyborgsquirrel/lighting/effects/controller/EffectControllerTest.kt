@@ -104,7 +104,7 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings!!.map {
+        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -178,7 +178,7 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings!!.map {
+        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -212,7 +212,7 @@ class EffectControllerTest(
         effectEntity.strip?.uuid shouldBe request.stripUuid
         effectEntity.name shouldBe request.name
         effectEntity.uuid shouldBe effectUuid
-        effectEntity.settings!!.map { normalizeNumberTypes(it.value) } shouldBe request.settings.map {
+        effectEntity.settings.map { normalizeNumberTypes(it.value) } shouldBe request.settings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -288,7 +288,7 @@ class EffectControllerTest(
         effectEntities.first().strip?.uuid shouldBe strip.uuid
         effectEntities.first().name shouldBe updateRequest.name
         effectEntities.first().uuid shouldBe effectEntity.uuid
-        effectEntities.first().settings!!.map { normalizeNumberTypes(it.value) } shouldBe updateRequest.settings!!.map {
+        effectEntities.first().settings.map { normalizeNumberTypes(it.value) } shouldBe updateRequest.settings!!.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -686,7 +686,7 @@ class EffectControllerTest(
         updatedEffect.uuid shouldBe poolEffect.uuid
         updatedEffect.pool?.uuid shouldBe pool.uuid
         updatedEffect.strip shouldBe null
-        updatedEffect.settings!!.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
+        updatedEffect.settings.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -765,5 +765,13 @@ class EffectControllerTest(
         response.status shouldBe HttpStatus.OK
         val body = response.body() as GetEffectsResponse
         body.effects.isEmpty() shouldBe true
+    }
+
+    "Get effect schemas returns one schema per effect" {
+        val response = apiClient.getSchemas()
+        response.status shouldBe HttpStatus.OK
+        val body = response.body() as List<*>
+        // EffectApiServiceTest verifies details
+        body.size shouldBe 7
     }
 })
