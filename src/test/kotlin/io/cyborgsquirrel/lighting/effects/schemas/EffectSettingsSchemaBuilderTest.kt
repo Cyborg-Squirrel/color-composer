@@ -32,16 +32,16 @@ class EffectSettingsSchemaBuilderTest : StringSpec({
 
         listOf(
             Case(listOf(EffectSettingsValidator.Min(1.0))) {
-                EffectSettingsSchemaBuilder("e").integer("key").min(1.0).build().fields.first()
+                EffectSettingsSchemaBuilder("e").integer("key") { min(1.0) }.build().fields.first()
             },
             Case(listOf(EffectSettingsValidator.Max(10.0))) {
-                EffectSettingsSchemaBuilder("e").number("key").max(10.0).build().fields.first()
+                EffectSettingsSchemaBuilder("e").number("key") { max(10.0) }.build().fields.first()
             },
             Case(listOf(EffectSettingsValidator.Min(0.0), EffectSettingsValidator.Max(100.0))) {
-                EffectSettingsSchemaBuilder("e").integer("key").min(0.0).max(100.0).build().fields.first()
+                EffectSettingsSchemaBuilder("e").integer("key") { min(0.0); max(100.0) }.build().fields.first()
             },
             Case(listOf(EffectSettingsValidator.Options(listOf("Linear", "Logarithmic")))) {
-                EffectSettingsSchemaBuilder("e").string("key").options(listOf("Linear", "Logarithmic")).build().fields.first()
+                EffectSettingsSchemaBuilder("e").string("key") { options(listOf("Linear", "Logarithmic")) }.build().fields.first()
             },
         ).forEach { (expectedValidators, build) ->
             build().validators shouldContainExactly expectedValidators
@@ -50,8 +50,8 @@ class EffectSettingsSchemaBuilderTest : StringSpec({
 
     "validators only apply to their own field" {
         val schema = EffectSettingsSchemaBuilder("e")
-            .integer("a").min(1.0)
-            .integer("b").max(10.0)
+            .integer("a") { min(1.0) }
+            .integer("b") { max(10.0) }
             .build()
         schema.fields[0].validators shouldContainExactly listOf(EffectSettingsValidator.Min(1.0))
         schema.fields[1].validators shouldContainExactly listOf(EffectSettingsValidator.Max(10.0))
@@ -59,11 +59,11 @@ class EffectSettingsSchemaBuilderTest : StringSpec({
 
     "throws when duplicate validators are provided" {
         listOf(
-            { EffectSettingsSchemaBuilder("e").integer("key").min(1.0).min(2.0).build() },
-            { EffectSettingsSchemaBuilder("e").number("key").max(5.0).max(10.0).build() },
-            { EffectSettingsSchemaBuilder("e").string("key").options(listOf("a")).options(listOf("b")).build() },
+            { EffectSettingsSchemaBuilder("e").integer("key") { min(1.0); min(2.0) }.build() },
+            { EffectSettingsSchemaBuilder("e").number("key") { max(5.0); max(10.0) }.build() },
+            { EffectSettingsSchemaBuilder("e").string("key") { options(listOf("a")); options(listOf("b")) }.build() },
         ).forEach { build ->
-            shouldThrow<Exception> { build() }
+            shouldThrow<IllegalArgumentException> { build() }
         }
     }
 
@@ -73,8 +73,8 @@ class EffectSettingsSchemaBuilderTest : StringSpec({
             5.0 to 4.0,
             -1.0 to -2.0,
         ).forEach { (min, max) ->
-            shouldThrow<Exception> {
-                EffectSettingsSchemaBuilder("e").integer("key").min(min).max(max).build()
+            shouldThrow<IllegalArgumentException> {
+                EffectSettingsSchemaBuilder("e").integer("key") { min(min); max(max) }.build()
             }
         }
     }
@@ -85,7 +85,31 @@ class EffectSettingsSchemaBuilderTest : StringSpec({
             -10.0 to 10.0,
             1.0 to 100.0,
         ).forEach { (min, max) ->
-            EffectSettingsSchemaBuilder("e").integer("key").min(min).max(max).build()
+            EffectSettingsSchemaBuilder("e").integer("key") { min(min); max(max) }.build()
+        }
+    }
+
+    "throws when build is called twice" {
+        val builder = EffectSettingsSchemaBuilder("e").integer("key")
+        builder.build()
+        shouldThrow<IllegalStateException> { builder.build() }
+    }
+
+    "throws when min or max is applied to a non-numeric field" {
+        shouldThrow<IllegalArgumentException> {
+            EffectSettingsSchemaBuilder("e").boolean("key") { min(0.0) }.build()
+        }
+        shouldThrow<IllegalArgumentException> {
+            EffectSettingsSchemaBuilder("e").string("key") { max(10.0) }.build()
+        }
+    }
+
+    "throws when options is applied to a non-string field" {
+        shouldThrow<IllegalArgumentException> {
+            EffectSettingsSchemaBuilder("e").integer("key") { options(listOf("a")) }.build()
+        }
+        shouldThrow<IllegalArgumentException> {
+            EffectSettingsSchemaBuilder("e").boolean("key") { options(listOf("a")) }.build()
         }
     }
 })

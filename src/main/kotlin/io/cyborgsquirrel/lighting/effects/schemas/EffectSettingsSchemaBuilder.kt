@@ -1,53 +1,44 @@
 package io.cyborgsquirrel.lighting.effects.schemas
 
 class EffectSettingsSchemaBuilder(private val effectName: String) {
-    private val completedFields = mutableListOf<EffectSettingsSchemaField>()
-    private var fieldKey: String? = null
-    private var fieldDescription: String? = null
-    private var fieldType: EffectSettingsType? = null
-    private val validators = mutableListOf<EffectSettingsValidator>()
+    private val fields = mutableListOf<EffectSettingsSchemaField>()
+    private var built = false
 
-    fun integer(key: String, description: String) = fieldBuilder(key, EffectSettingsType.Integer, description)
-    fun number(key: String, description: String) = fieldBuilder(key, EffectSettingsType.Number, description)
-    fun string(key: String, description: String) = fieldBuilder(key, EffectSettingsType.String, description)
-    fun boolean(key: String, description: String) = fieldBuilder(key, EffectSettingsType.Boolean, description)
+    class FieldBuilder {
+        internal val validators = mutableListOf<EffectSettingsValidator>()
 
-    fun min(value: Double): EffectSettingsSchemaBuilder {
-        validators.add(EffectSettingsValidator.Min(value))
-        return this
+        fun min(value: Double) { validators.add(EffectSettingsValidator.Min(value)) }
+        fun max(value: Double) { validators.add(EffectSettingsValidator.Max(value)) }
+        fun options(values: List<String>) { validators.add(EffectSettingsValidator.Options(values)) }
     }
 
-    fun max(value: Double): EffectSettingsSchemaBuilder {
-        validators.add(EffectSettingsValidator.Max(value))
-        return this
-    }
+    fun integer(key: String, description: String = "", block: FieldBuilder.() -> Unit = {}) =
+        addField(key, EffectSettingsType.Integer, description, block)
 
-    fun options(values: List<String>): EffectSettingsSchemaBuilder {
-        validators.add(EffectSettingsValidator.Options(values))
-        return this
-    }
+    fun number(key: String, description: String = "", block: FieldBuilder.() -> Unit = {}) =
+        addField(key, EffectSettingsType.Number, description, block)
 
-    private fun fieldBuilder(
+    fun string(key: String, description: String = "", block: FieldBuilder.() -> Unit = {}) =
+        addField(key, EffectSettingsType.String, description, block)
+
+    fun boolean(key: String, description: String = "", block: FieldBuilder.() -> Unit = {}) =
+        addField(key, EffectSettingsType.Boolean, description, block)
+
+    private fun addField(
         key: String,
         type: EffectSettingsType,
-        description: String
+        description: String,
+        block: FieldBuilder.() -> Unit,
     ): EffectSettingsSchemaBuilder {
-        if (fieldKey != null && fieldDescription != null && fieldType != null) {
-            completedFields.add(EffectSettingsSchemaField(fieldKey!!, fieldType!!, validators.toList(), fieldDescription!!))
-        }
-
-        validators.clear()
-        fieldKey = key
-        fieldType = type
-        fieldDescription = description
+        val fb = FieldBuilder().apply(block)
+        fields.add(EffectSettingsSchemaField(key, type, fb.validators.toList(), description))
         return this
     }
 
     fun build(): EffectSettingsSchema {
-        if (fieldKey != null && fieldDescription != null && fieldType != null) {
-            completedFields.add(EffectSettingsSchemaField(fieldKey!!, fieldType!!, validators.toList(), fieldDescription!!))
-        }
-        completedFields.forEach { it.validate() }
-        return EffectSettingsSchema(effectName, completedFields)
+        check(!built) { "build() has already been called" }
+        built = true
+        fields.forEach { it.validate() }
+        return EffectSettingsSchema(effectName, fields)
     }
 }

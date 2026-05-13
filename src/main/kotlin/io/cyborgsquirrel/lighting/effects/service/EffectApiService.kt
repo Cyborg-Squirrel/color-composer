@@ -380,56 +380,56 @@ class EffectApiService(
         when (name) {
             LightEffectConstants.SPECTRUM_NAME ->
                 EffectSettingsSchemaBuilder(name)
-                    .integer("colorPixelWidth", "Number of pixels per color band").min(1.0)
+                    .integer("colorPixelWidth", "Number of pixels per color band") { min(1.0) }
                     .boolean("animated", "Whether the spectrum cycles through colors over time")
                     .build()
 
             LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME ->
                 EffectSettingsSchemaBuilder(name)
                     .boolean("wrap", "Whether the fill wraps around the strip ends")
-                    .integer("updatesPerSecond", "Number of position updates per second").min(1.0)
-                    .number("brightnessScaling", "Brightness multiplier applied to the effect").min(0.0).max(1.0)
+                    .integer("updatesPerSecond", "Number of position updates per second") { min(1.0) }
+                    .number("brightnessScaling", "Brightness multiplier applied to the effect") { min(0.0); max(1.0) }
                     .build()
 
             LightEffectConstants.NIGHTRIDER_COMET_NAME ->
                 EffectSettingsSchemaBuilder(name)
-                    .integer("trailLength", "Number of pixels in the comet's trailing tail").min(1.0)
-                    .string("trailFadeCurve", "Brightness falloff curve along the trail")
-                    .options(FadeCurve.entries.map { it.name })
+                    .integer("trailLength", "Number of pixels in the comet's trailing tail") { min(1.0) }
+                    .string("trailFadeCurve", "Brightness falloff curve along the trail") {
+                        options(FadeCurve.entries.map { it.name })
+                    }
                     .boolean("wrap", "Whether the comet wraps around the strip ends")
-                    .integer("updatesPerSecond", "Number of position updates per second").min(1.0)
+                    .integer("updatesPerSecond", "Number of position updates per second") { min(1.0) }
                     .build()
 
             LightEffectConstants.FLAME_EFFECT_NAME ->
                 EffectSettingsSchemaBuilder(name)
-                    .integer("cooling", "Rate at which heat dissipates up the strip").min(1.0)
-                    .integer("sparking", "Probability of new sparks igniting at the base (0–255)").min(0.0).max(255.0)
-                    .integer("sparks", "Number of sparks generated per update").min(1.0)
-                    .integer("sparkHeight", "Maximum height sparks can reach from the base").min(1.0)
+                    .integer("cooling", "Rate at which heat dissipates up the strip") { min(1.0) }
+                    .integer("sparking", "Probability of new sparks igniting at the base (0–255)") { min(0.0); max(255.0) }
+                    .integer("sparks", "Number of sparks generated per update") { min(1.0) }
+                    .integer("sparkHeight", "Maximum height sparks can reach from the base") { min(1.0) }
                     .build()
 
             LightEffectConstants.BOUNCING_BALL_NAME ->
                 EffectSettingsSchemaBuilder(name)
-                    .integer("startingHeightPercent", "Initial drop height as a percentage of strip length").min(0.0)
-                    .max(100.0)
-                    .integer("maxHeightPercent", "Maximum bounce height in pixels").min(1.0)
-                    .number("speed", "Initial speed of the ball").min(0.0)
+                    .integer("startingHeightPercent", "Initial drop height as a percentage of strip length") { min(0.0); max(100.0) }
+                    .integer("maxHeightPercent", "Maximum bounce height in pixels") { min(1.0) }
+                    .number("speed", "Initial speed of the ball") { min(0.0) }
                     .number("gravity", "Gravitational acceleration applied to the ball")
-                    .number("minimumSpeed", "Speed below which the ball stops bouncing").min(0.0)
+                    .number("minimumSpeed", "Speed below which the ball stops bouncing") { min(0.0) }
                     .build()
 
             LightEffectConstants.WAVE_EFFECT_NAME ->
                 EffectSettingsSchemaBuilder(name)
-                    .integer("startPoint", "Starting pixel position of the wave").min(0.0)
-                    .integer("waveLength", "Length of one full wave cycle in pixels").min(1.0)
+                    .integer("startPoint", "Starting pixel position of the wave") { min(0.0) }
+                    .integer("waveLength", "Length of one full wave cycle in pixels") { min(1.0) }
                     .boolean("repeat", "Whether the wave repeats continuously")
                     .build()
 
             LightEffectConstants.MARQUEE_EFFECT_NAME ->
                 EffectSettingsSchemaBuilder(name)
-                    .integer("dotLength", "Length of each dot in pixels").min(1.0)
-                    .integer("spaceBetweenDots", "Gap between dots in pixels").min(0.0)
-                    .integer("scrollAmountPerSecond", "Number of pixels the dots scroll per second").min(1.0)
+                    .integer("dotLength", "Length of each dot in pixels") { min(1.0) }
+                    .integer("spaceBetweenDots", "Gap between dots in pixels") { min(0.0) }
+                    .integer("scrollAmountPerSecond", "Number of pixels the dots scroll per second") { min(1.0) }
                     .build()
 
             else -> error("Unknown effect name: $name")
