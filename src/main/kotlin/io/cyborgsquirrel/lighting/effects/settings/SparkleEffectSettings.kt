@@ -9,6 +9,7 @@ data class SparkleEffectSettings(
     val fadeInMillisMin: Int,
     val fadeOutMillisMax: Int,
     val fadeOutMillisMin: Int,
+    val updatesPerSecond: Int,
 ) : LightEffectSettings() {
     companion object {
         fun default() = SparkleEffectSettings(
@@ -17,6 +18,7 @@ data class SparkleEffectSettings(
             fadeInMillisMin = 5,
             fadeOutMillisMax = 1000,
             fadeOutMillisMin = 150,
+            updatesPerSecond = 30,
         )
     }
 }

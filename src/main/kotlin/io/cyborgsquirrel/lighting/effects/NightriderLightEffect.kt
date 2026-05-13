@@ -34,7 +34,11 @@ class NightriderLightEffect(
 
     override fun getNextStep(): List<RgbColor> {
         val nowMillis = timeHelper.millisSinceEpoch()
-        if ((nowMillis - lastChangeMillis) / 1000f > 1 / settings.updatesPerSecond().toFloat()) {
+        val updatesPerSecond = when (settings) {
+            is NightriderColorFillEffectSettings -> settings.updatesPerSecond
+            is NightriderCometEffectSettings -> settings.updatesPerSecond
+        }
+        if ((nowMillis - lastChangeMillis) / 1000f > 1 / updatesPerSecond.toFloat()) {
             lastChangeMillis = nowMillis
             onNextStep()
         }

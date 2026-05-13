@@ -772,6 +772,6 @@ class EffectControllerTest(
         response.status shouldBe HttpStatus.OK
         val body = response.body() as List<*>
         // EffectApiServiceTest verifies details
-        body.size shouldBe 7
+        body.size shouldBe 8
     }
 })

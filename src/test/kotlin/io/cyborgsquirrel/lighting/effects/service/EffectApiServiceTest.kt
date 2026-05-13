@@ -12,7 +12,7 @@ class EffectApiServiceTest : StringSpec({
     val service = EffectApiService(mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk())
 
     "getAllSchemas returns one schema per effect" {
-        service.getAllSchemas().size shouldBe 7
+        service.getAllSchemas().size shouldBe 8
     }
 
     "all schema fields have non-blank keys and descriptions" {
@@ -29,8 +29,9 @@ class EffectApiServiceTest : StringSpec({
 
         listOf(
             Case(LightEffectConstants.SPECTRUM_NAME, listOf(
-                "colorPixelWidth" to EffectSettingsType.Integer,
-                "animated"        to EffectSettingsType.Boolean,
+                "colorPixelWidth"  to EffectSettingsType.Integer,
+                "animated"         to EffectSettingsType.Boolean,
+                "updatesPerSecond" to EffectSettingsType.Integer,
             )),
             Case(LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME, listOf(
                 "wrap"              to EffectSettingsType.Boolean,
@@ -44,10 +45,11 @@ class EffectApiServiceTest : StringSpec({
                 "updatesPerSecond" to EffectSettingsType.Integer,
             )),
             Case(LightEffectConstants.FLAME_EFFECT_NAME, listOf(
-                "cooling"     to EffectSettingsType.Integer,
-                "sparking"    to EffectSettingsType.Integer,
-                "sparks"      to EffectSettingsType.Integer,
-                "sparkHeight" to EffectSettingsType.Integer,
+                "cooling"          to EffectSettingsType.Integer,
+                "sparking"         to EffectSettingsType.Integer,
+                "sparks"           to EffectSettingsType.Integer,
+                "sparkHeight"      to EffectSettingsType.Integer,
+                "updatesPerSecond" to EffectSettingsType.Integer,
             )),
             Case(LightEffectConstants.BOUNCING_BALL_NAME, listOf(
                 "startingHeightPercent" to EffectSettingsType.Integer,
@@ -57,14 +59,23 @@ class EffectApiServiceTest : StringSpec({
                 "minimumSpeed"          to EffectSettingsType.Number,
             )),
             Case(LightEffectConstants.WAVE_EFFECT_NAME, listOf(
-                "startPoint" to EffectSettingsType.Integer,
-                "waveLength" to EffectSettingsType.Integer,
-                "repeat"     to EffectSettingsType.Boolean,
+                "startPoint"       to EffectSettingsType.Integer,
+                "waveLength"       to EffectSettingsType.Integer,
+                "repeat"           to EffectSettingsType.Boolean,
+                "updatesPerSecond" to EffectSettingsType.Integer,
             )),
             Case(LightEffectConstants.MARQUEE_EFFECT_NAME, listOf(
-                "dotLength"             to EffectSettingsType.Integer,
-                "spaceBetweenDots"      to EffectSettingsType.Integer,
-                "scrollAmountPerSecond" to EffectSettingsType.Integer,
+                "dotLength"        to EffectSettingsType.Integer,
+                "spaceBetweenDots" to EffectSettingsType.Integer,
+                "updatesPerSecond" to EffectSettingsType.Integer,
+            )),
+            Case(LightEffectConstants.SPARKLE_NAME, listOf(
+                "numDots"          to EffectSettingsType.Integer,
+                "fadeInMillisMax"   to EffectSettingsType.Integer,
+                "fadeInMillisMin"   to EffectSettingsType.Integer,
+                "fadeOutMillisMax"  to EffectSettingsType.Integer,
+                "fadeOutMillisMin"  to EffectSettingsType.Integer,
+                "updatesPerSecond" to EffectSettingsType.Integer,
             )),
         ).forEach { (effectName, expectedFields) ->
             val schema = schemas.first { it.effectName == effectName }

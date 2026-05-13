@@ -29,9 +29,15 @@ class SparkleLightEffect(
     private val dots = mutableListOf<Dot>()
     private var buffer = MutableList(numberOfLeds) { RgbColor.Blank }
     private var iterations = 0
+    private var lastChangeMillis = 0L
 
     override fun getNextStep(): List<RgbColor> {
         val now = timeHelper.millisSinceEpoch()
+        if ((now - lastChangeMillis) / 1000f <= 1 / settings.updatesPerSecond.toFloat()) {
+            return buffer
+        }
+        lastChangeMillis = now
+
 
         val iterator = dots.iterator()
         while (iterator.hasNext()) {

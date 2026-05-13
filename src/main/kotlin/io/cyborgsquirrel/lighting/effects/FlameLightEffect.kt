@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.effects
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.FlameEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.util.time.TimeHelper
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -16,15 +17,21 @@ class FlameLightEffect(
     private val numberOfLeds: Int,
     override val settings: FlameEffectSettings,
     override var palette: ColorPalette?,
+    private val timeHelper: TimeHelper,
 ) : LightEffect(settings, palette) {
 
     // TODO how do we count iterations? Do we count iterations for this effect?
     private var iterations = 0
     private val heat = IntArray(numberOfLeds)
+    private var lastChangeMillis = 0L
     private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
-        buffer = drawFire()
+        val nowMillis = timeHelper.millisSinceEpoch()
+        if ((nowMillis - lastChangeMillis) / 1000f > 1 / settings.updatesPerSecond.toFloat()) {
+            lastChangeMillis = nowMillis
+            buffer = drawFire()
+        }
         return buffer
     }
 

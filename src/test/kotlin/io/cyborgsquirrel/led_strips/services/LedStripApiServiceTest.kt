@@ -199,7 +199,10 @@ class LedStripApiServiceTest(
         every { mockPalette.getTertiaryColor(any()) } returns RgbColor.Yellow
         every { mockPalette.getOtherColors(any()) } returns listOf()
 
-        val spectrumLightEffect = SpectrumLightEffect(10, SpectrumEffectSettings(6, true), mockPalette)
+        val effectTimeHelper = mockk<TimeHelper>()
+        var t = 0L
+        every { effectTimeHelper.millisSinceEpoch() } answers { t.also { t += 10_000L } }
+        val spectrumLightEffect = SpectrumLightEffect(10, SpectrumEffectSettings(6, true, 30), mockPalette, effectTimeHelper)
 
         // Advance the light effect by 1 so when the new one is created we can verify the iterations reset to 0
         var i = 0

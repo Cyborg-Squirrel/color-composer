@@ -10,6 +10,4 @@ data class NightriderColorFillEffectSettings(
 ) : NightriderEffectSettings() {
 
     override fun wrap() = wrap
-
-    override fun updatesPerSecond() = updatesPerSecond
 }

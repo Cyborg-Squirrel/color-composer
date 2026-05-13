@@ -11,6 +11,4 @@ data class NightriderCometEffectSettings(
     val updatesPerSecond: Int,
 ) : NightriderEffectSettings() {
     override fun wrap() = wrap
-
-    override fun updatesPerSecond() = updatesPerSecond
 }

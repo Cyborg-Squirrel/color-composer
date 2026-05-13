@@ -382,6 +382,7 @@ class EffectApiService(
                 EffectSettingsSchemaBuilder(name)
                     .integer("colorPixelWidth", "Number of pixels per color band") { min(1.0) }
                     .boolean("animated", "Whether the spectrum cycles through colors over time")
+                    .integer("updatesPerSecond", "Number of animation steps per second") { min(1.0) }
                     .build()
 
             LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME ->
@@ -407,6 +408,7 @@ class EffectApiService(
                     .integer("sparking", "Probability of new sparks igniting at the base (0–255)") { min(0.0); max(255.0) }
                     .integer("sparks", "Number of sparks generated per update") { min(1.0) }
                     .integer("sparkHeight", "Maximum height sparks can reach from the base") { min(1.0) }
+                    .integer("updatesPerSecond", "Number of fire simulation steps per second") { min(1.0) }
                     .build()
 
             LightEffectConstants.BOUNCING_BALL_NAME ->
@@ -423,13 +425,24 @@ class EffectApiService(
                     .integer("startPoint", "Starting pixel position of the wave") { min(0.0) }
                     .integer("waveLength", "Length of one full wave cycle in pixels") { min(1.0) }
                     .boolean("repeat", "Whether the wave repeats continuously")
+                    .integer("updatesPerSecond", "Number of wave position steps per second") { min(1.0) }
                     .build()
 
             LightEffectConstants.MARQUEE_EFFECT_NAME ->
                 EffectSettingsSchemaBuilder(name)
                     .integer("dotLength", "Length of each dot in pixels") { min(1.0) }
                     .integer("spaceBetweenDots", "Gap between dots in pixels") { min(0.0) }
-                    .integer("scrollAmountPerSecond", "Number of pixels the dots scroll per second") { min(1.0) }
+                    .integer("updatesPerSecond", "Number of pixels the dots scroll per second") { min(1.0) }
+                    .build()
+
+            LightEffectConstants.SPARKLE_NAME ->
+                EffectSettingsSchemaBuilder(name)
+                    .integer("numDots", "Maximum number of simultaneous sparkle dots") { min(1.0) }
+                    .integer("fadeInMillisMax", "Maximum fade-in duration in milliseconds") { min(1.0) }
+                    .integer("fadeInMillisMin", "Minimum fade-in duration in milliseconds") { min(1.0) }
+                    .integer("fadeOutMillisMax", "Maximum fade-out duration in milliseconds") { min(1.0) }
+                    .integer("fadeOutMillisMin", "Minimum fade-out duration in milliseconds") { min(1.0) }
+                    .integer("updatesPerSecond", "Number of sparkle state updates per second") { min(1.0) }
                     .build()
 
             else -> error("Unknown effect name: $name")
