@@ -11,7 +11,6 @@ class EffectSettingsSchemaBuilder(private val effectName: String) {
     fun number(key: String, description: String = "") = fieldBuilder(key, EffectSettingsType.Number, description)
     fun string(key: String, description: String = "") = fieldBuilder(key, EffectSettingsType.String, description)
     fun boolean(key: String, description: String = "") = fieldBuilder(key, EffectSettingsType.Boolean, description)
-    fun color(key: String, description: String = "") = fieldBuilder(key, EffectSettingsType.RgbColor, description)
 
     fun min(value: Double): EffectSettingsSchemaBuilder {
         validators.add(EffectSettingsValidator.Min(value))

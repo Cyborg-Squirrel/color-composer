@@ -19,7 +19,6 @@ class EffectSettingsSchemaBuilderTest : StringSpec({
             Case(EffectSettingsType.Number) { EffectSettingsSchemaBuilder("e").number("key").build().fields.first() },
             Case(EffectSettingsType.String) { EffectSettingsSchemaBuilder("e").string("key").build().fields.first() },
             Case(EffectSettingsType.Boolean) { EffectSettingsSchemaBuilder("e").boolean("key").build().fields.first() },
-            Case(EffectSettingsType.RgbColor) { EffectSettingsSchemaBuilder("e").color("key").build().fields.first() },
         ).forEach { (expectedType, build) ->
             val field = build()
             field.key shouldBe "key"

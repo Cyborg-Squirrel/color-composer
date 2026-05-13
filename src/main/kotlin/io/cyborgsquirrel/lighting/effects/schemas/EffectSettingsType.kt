@@ -8,5 +8,4 @@ enum class EffectSettingsType {
     Integer,
     Number,
     String,
-    RgbColor,
 }

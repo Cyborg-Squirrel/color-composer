@@ -30,8 +30,5 @@ data class EffectSettingsSchemaField(
 
         fun boolean(key: String, validators: List<EffectSettingsValidator>, description: String) =
             EffectSettingsSchemaField(key, EffectSettingsType.Boolean, validators, description)
-
-        fun color(key: String, validators: List<EffectSettingsValidator>, description: String) =
-            EffectSettingsSchemaField(key, EffectSettingsType.RgbColor, validators, description)
     }
 }
