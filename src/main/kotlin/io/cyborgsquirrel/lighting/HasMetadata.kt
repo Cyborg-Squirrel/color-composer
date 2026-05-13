@@ -1,3 +1,5 @@
 package io.cyborgsquirrel.lighting
 
-open class HasMetadata(open val metadata: SettingsMetadata)
+interface HasMetadata {
+    val metadata: SettingsMetadata
+}

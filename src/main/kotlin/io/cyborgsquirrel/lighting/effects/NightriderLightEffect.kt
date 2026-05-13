@@ -32,9 +32,8 @@ class NightriderLightEffect(
     private var buffer = List(numberOfLeds) { RgbColor.Blank }
 
     override fun getNextStep(): List<RgbColor> {
-        if (isUpdateDue(settings.updatesPerSecond)) {
-            onNextStep()
-        }
+        if (!isUpdateDue(settings.updatesPerSecond)) return buffer
+        onNextStep()
 
         buffer = when (settings) {
             is NightriderColorFillEffectSettings -> renderNightriderColorFill()

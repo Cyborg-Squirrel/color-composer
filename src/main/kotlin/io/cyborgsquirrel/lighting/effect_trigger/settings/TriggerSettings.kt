@@ -12,4 +12,4 @@ open class TriggerSettings(
     val maxActivations: Int?,
     val triggerType: TriggerType,
     override val metadata: SettingsMetadata = SettingsMetadata()
-) : HasMetadata(metadata)
+) : HasMetadata
