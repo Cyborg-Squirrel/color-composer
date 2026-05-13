@@ -7,10 +7,10 @@ class EffectSettingsSchemaBuilder(private val effectName: String) {
     private var fieldType: EffectSettingsType? = null
     private val validators = mutableListOf<EffectSettingsValidator>()
 
-    fun integer(key: String, description: String = "") = fieldBuilder(key, EffectSettingsType.Integer, description)
-    fun number(key: String, description: String = "") = fieldBuilder(key, EffectSettingsType.Number, description)
-    fun string(key: String, description: String = "") = fieldBuilder(key, EffectSettingsType.String, description)
-    fun boolean(key: String, description: String = "") = fieldBuilder(key, EffectSettingsType.Boolean, description)
+    fun integer(key: String, description: String) = fieldBuilder(key, EffectSettingsType.Integer, description)
+    fun number(key: String, description: String) = fieldBuilder(key, EffectSettingsType.Number, description)
+    fun string(key: String, description: String) = fieldBuilder(key, EffectSettingsType.String, description)
+    fun boolean(key: String, description: String) = fieldBuilder(key, EffectSettingsType.Boolean, description)
 
     fun min(value: Double): EffectSettingsSchemaBuilder {
         validators.add(EffectSettingsValidator.Min(value))
