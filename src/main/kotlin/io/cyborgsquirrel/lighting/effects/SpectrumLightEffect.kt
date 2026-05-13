@@ -12,22 +12,17 @@ class SpectrumLightEffect(
     private val numberOfLeds: Int,
     override val settings: SpectrumEffectSettings,
     override var palette: ColorPalette?,
-    private val timeHelper: TimeHelper,
-) : LightEffect(settings, palette) {
+    timeHelper: TimeHelper,
+) : LightEffect(settings, palette, timeHelper) {
 
     private var frame = 0
     private var iterations = 0
     private var referenceFrame = mutableListOf<RgbColor>()
     private val colorWidth = getColorWidth()
-    private var lastChangeMillis = 0L
     private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
-        val nowMillis = timeHelper.millisSinceEpoch()
-        if (referenceFrame.isNotEmpty() && (nowMillis - lastChangeMillis) / 1000f <= 1 / settings.updatesPerSecond.toFloat()) {
-            return buffer
-        }
-        lastChangeMillis = nowMillis
+        if (referenceFrame.isNotEmpty() && !isUpdateDue(settings.updatesPerSecond)) return buffer
 
         val rgbList = mutableListOf<RgbColor>()
         val repeatOfColorsCount = ceil((numberOfLeds.toFloat() / colorWidth)).toInt()

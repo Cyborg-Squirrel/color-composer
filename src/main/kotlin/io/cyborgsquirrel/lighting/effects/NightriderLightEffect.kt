@@ -21,8 +21,8 @@ class NightriderLightEffect(
     private val numberOfLeds: Int,
     override val settings: NightriderEffectSettings,
     override var palette: ColorPalette?,
-    private val timeHelper: TimeHelper,
-) : LightEffect(settings, palette) {
+    timeHelper: TimeHelper,
+) : LightEffect(settings, palette, timeHelper) {
 
     private var frame: Long = 0
     private var reflect = false
@@ -30,16 +30,9 @@ class NightriderLightEffect(
     private var location = 0
     private var iterations = 0
     private var buffer = List(numberOfLeds) { RgbColor.Blank }
-    private var lastChangeMillis = 0L
 
     override fun getNextStep(): List<RgbColor> {
-        val nowMillis = timeHelper.millisSinceEpoch()
-        val updatesPerSecond = when (settings) {
-            is NightriderColorFillEffectSettings -> settings.updatesPerSecond
-            is NightriderCometEffectSettings -> settings.updatesPerSecond
-        }
-        if ((nowMillis - lastChangeMillis) / 1000f > 1 / updatesPerSecond.toFloat()) {
-            lastChangeMillis = nowMillis
+        if (isUpdateDue(settings.updatesPerSecond)) {
             onNextStep()
         }
 
@@ -161,7 +154,7 @@ class NightriderLightEffect(
     }
 
     private fun updatePointerLocation() {
-        if (settings.wrap()) {
+        if (settings.wrap) {
             location++
             if (location >= numberOfLeds) {
                 iterations++
@@ -191,7 +184,7 @@ class NightriderLightEffect(
     }
 
     private fun shouldReflect(): Boolean {
-        if (settings.wrap()) {
+        if (settings.wrap) {
             return false
         }
 

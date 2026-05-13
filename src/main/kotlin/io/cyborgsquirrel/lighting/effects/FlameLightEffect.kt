@@ -17,21 +17,17 @@ class FlameLightEffect(
     private val numberOfLeds: Int,
     override val settings: FlameEffectSettings,
     override var palette: ColorPalette?,
-    private val timeHelper: TimeHelper,
-) : LightEffect(settings, palette) {
+    timeHelper: TimeHelper,
+) : LightEffect(settings, palette, timeHelper) {
 
     // TODO how do we count iterations? Do we count iterations for this effect?
     private var iterations = 0
     private val heat = IntArray(numberOfLeds)
-    private var lastChangeMillis = 0L
     private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
-        val nowMillis = timeHelper.millisSinceEpoch()
-        if ((nowMillis - lastChangeMillis) / 1000f > 1 / settings.updatesPerSecond.toFloat()) {
-            lastChangeMillis = nowMillis
-            buffer = drawFire()
-        }
+        if (!isUpdateDue(settings.updatesPerSecond)) return buffer
+        buffer = drawFire()
         return buffer
     }
 

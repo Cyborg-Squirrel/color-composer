@@ -16,8 +16,8 @@ class WaveLightEffect(
     private val numberOfLeds: Int,
     override val settings: WaveEffectSettings,
     override var palette: ColorPalette?,
-    private val timeHelper: TimeHelper,
-) : LightEffect(settings, palette) {
+    timeHelper: TimeHelper,
+) : LightEffect(settings, palette, timeHelper) {
 
     private var waveALocation = 0
     private var waveBLocation = 0
@@ -27,15 +27,10 @@ class WaveLightEffect(
     private lateinit var waveB: Comet
     private val waveLength = settings.waveLength
     private val startPoint = settings.startPoint
-    private var lastChangeMillis = 0L
     private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
-        val nowMillis = timeHelper.millisSinceEpoch()
-        if (frame != 0 && (nowMillis - lastChangeMillis) / 1000f <= 1 / settings.updatesPerSecond.toFloat()) {
-            return buffer
-        }
-        lastChangeMillis = nowMillis
+        if (frame != 0 && !isUpdateDue(settings.updatesPerSecond)) return buffer
 
         val rgbData = mutableListOf<RgbColor>()
         if (waveALocation <= -waveLength && waveBLocation >= numberOfLeds + waveLength) {

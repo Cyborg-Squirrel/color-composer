@@ -271,7 +271,7 @@ class LedStripApiService(
                 lightEffect.palette
             )
 
-            is CustomLightEffect -> CustomLightEffect(lightEffect.settings, lightEffect.palette)
+            is CustomLightEffect -> CustomLightEffect(lightEffect.settings, lightEffect.palette, timeHelper)
             is FlameLightEffect -> FlameLightEffect(numberOfLeds, lightEffect.settings, lightEffect.palette, timeHelper)
             is MarqueeEffect -> MarqueeEffect(numberOfLeds, lightEffect.settings, lightEffect.palette, timeHelper)
             is NightriderLightEffect -> NightriderLightEffect(

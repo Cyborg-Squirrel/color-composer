@@ -14,10 +14,10 @@ import kotlin.math.sqrt
  */
 class BouncingBallLightEffect(
     private val numberOfLeds: Int,
-    private val timeHelper: TimeHelper,
+    timeHelper: TimeHelper,
     override val settings: BouncingBallEffectSettings,
     override var palette: ColorPalette?,
-) : LightEffect(settings, palette) {
+) : LightEffect(settings, palette, timeHelper) {
     // Higher values slow the effect
     private val speedKnob = settings.speed
 
