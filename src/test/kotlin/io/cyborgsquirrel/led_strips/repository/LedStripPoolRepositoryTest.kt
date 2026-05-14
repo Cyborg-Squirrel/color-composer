@@ -26,13 +26,6 @@ class LedStripPoolRepositoryTest(
     lateinit var ledStripA: LedStripEntity
     lateinit var ledStripB: LedStripEntity
 
-    afterTest {
-        poolMemberLedStripRepository.deleteAll()
-        ledStripPoolRepository.deleteAll()
-        ledStripPoolRepository.deleteAll()
-        clientRepository.deleteAll()
-    }
-
     fun createLedStripClientEntity(
         name: String,
         address: String,

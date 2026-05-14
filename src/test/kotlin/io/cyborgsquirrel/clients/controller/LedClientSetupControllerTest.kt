@@ -35,12 +35,6 @@ class LedClientSetupControllerTest(
     private val clientStatusService: ClientStatusService
 ) :
     StringSpec({
-        lateinit var mockClientStatusService: ClientStatusService
-
-        beforeTest {
-            mockClientStatusService = getMock(clientStatusService)
-        }
-
         afterTest {
             clientRepository.deleteAll()
         }
@@ -56,6 +50,7 @@ class LedClientSetupControllerTest(
 
             val client = createLedStripClientEntity(clientRepository, "Window lights", "192.168.1.53", 33, 44)
 
+            val mockClientStatusService = getMock(clientStatusService)
             val mockedStatus = ClientStatus.SetupIncomplete
             every {
                 mockClientStatusService.getStatusForClient(client)
@@ -146,7 +141,5 @@ class LedClientSetupControllerTest(
         }
     }) {
     @MockBean(ClientStatusService::class)
-    fun clientStatusService(): ClientStatusService {
-        return mockk()
-    }
+    fun clientStatusService(): ClientStatusService = mockk()
 }

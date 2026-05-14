@@ -40,7 +40,6 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.annotation.MockBean
-import io.micronaut.test.extensions.kotest5.MicronautKotest5Extension.getMock
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import io.mockk.mockk
 import java.time.Duration
@@ -66,10 +65,17 @@ class LightEffectInitJobTest(
     val lightEffectSettings = SpectrumEffectSettings.default(60).copy(colorPixelWidth = 10)
     val iterationTriggerSettings = EffectIterationTriggerSettings(25)
     val fadeFilterSettings = IntensityFadeFilterSettings(0.0f, 1.0f, Duration.ofSeconds(20))
-    lateinit var websocketManagerMock: StreamJobManager
+    lateinit var job: LightEffectInitJob
 
     beforeTest {
-        websocketManagerMock = getMock(streamJobManager)
+        job = LightEffectInitJob(
+            clientRepository,
+            lightEffectRepository,
+            activeLightEffectService,
+            triggerManager,
+            effectFactory,
+            streamJobManager
+        )
     }
 
     afterTest {
@@ -85,15 +91,6 @@ class LightEffectInitJobTest(
     }
 
     "Init light effect one strip - happy path" {
-        val job = LightEffectInitJob(
-            clientRepository,
-            lightEffectRepository,
-            activeLightEffectService,
-            triggerManager,
-            effectFactory,
-            websocketManagerMock
-        )
-
         val client = clientRepository.save(
             LedStripClientEntity(
                 name = "Living Room",
@@ -146,15 +143,6 @@ class LightEffectInitJobTest(
     }
 
     "Init light effect with trigger - happy path" {
-        val job = LightEffectInitJob(
-            clientRepository,
-            lightEffectRepository,
-            activeLightEffectService,
-            triggerManager,
-            effectFactory,
-            websocketManagerMock
-        )
-
         val client = clientRepository.save(
             LedStripClientEntity(
                 name = "Living Room",
@@ -226,15 +214,6 @@ class LightEffectInitJobTest(
     }
 
     "Init light effect with filter - happy path" {
-        val job = LightEffectInitJob(
-            clientRepository,
-            lightEffectRepository,
-            activeLightEffectService,
-            triggerManager,
-            effectFactory,
-            websocketManagerMock
-        )
-
         val client = clientRepository.save(
             LedStripClientEntity(
                 name = "Living Room",
@@ -306,15 +285,6 @@ class LightEffectInitJobTest(
     }
 
     "Init light effect one pool - happy path" {
-        val job = LightEffectInitJob(
-            clientRepository,
-            lightEffectRepository,
-            activeLightEffectService,
-            triggerManager,
-            effectFactory,
-            websocketManagerMock
-        )
-
         val client = clientRepository.save(
             LedStripClientEntity(
                 name = "Living Room",
@@ -377,7 +347,5 @@ class LightEffectInitJobTest(
     }
 }) {
     @MockBean(StreamJobManager::class)
-    fun websocketJobManager(): StreamJobManager {
-        return mockk()
-    }
+    fun websocketJobManager(): StreamJobManager = mockk(relaxed = true)
 }

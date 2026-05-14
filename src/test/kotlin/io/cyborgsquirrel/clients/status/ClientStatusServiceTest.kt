@@ -141,12 +141,8 @@ class ClientStatusServiceTest(
     }
 }) {
     @MockBean(ActiveLightEffectService::class)
-    fun activeLightEffectRegistry(): ActiveLightEffectService {
-        return mockk()
-    }
+    fun activeLightEffectRegistry(): ActiveLightEffectService = mockk()
 
     @MockBean(StreamJobManager::class)
-    fun jobsManager(): StreamJobManager {
-        return mockk()
-    }
+    fun jobsManager(): StreamJobManager = mockk()
 }

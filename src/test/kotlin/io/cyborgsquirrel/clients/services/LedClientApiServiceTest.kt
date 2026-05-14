@@ -22,6 +22,12 @@ class LedClientApiServiceTest(
     private val streamJobManager: StreamJobManager
 ) : StringSpec({
 
+    lateinit var mockStreamJobManager: StreamJobManager
+
+    beforeTest {
+        mockStreamJobManager = getMock(streamJobManager)
+    }
+
     afterTest {
         stripRepository.deleteAll()
         clientRepository.deleteAll()
@@ -48,9 +54,8 @@ class LedClientApiServiceTest(
 
         ledClientApiService.updateClient(client.uuid, updateRequest)
 
-        val streamJobManager = getMock(streamJobManager)
-        verify(atLeast = 1) { streamJobManager.stopWebsocketJob(any()) }
-        verify(atLeast = 1) { streamJobManager.startStreamingJob(any()) }
+        verify(atLeast = 1) { mockStreamJobManager.stopWebsocketJob(any()) }
+        verify(atLeast = 1) { mockStreamJobManager.startStreamingJob(any()) }
 
         val updatedClient = clientRepository.findByUuid(client.uuid).get()
         updatedClient.powerLimit shouldBe 100
@@ -76,9 +81,8 @@ class LedClientApiServiceTest(
 
         ledClientApiService.updateClient(client.uuid, updateRequest)
 
-        val streamJobManager = getMock(streamJobManager)
-        verify(atLeast = 1) { streamJobManager.stopWebsocketJob(any()) }
-        verify(atLeast = 1) { streamJobManager.startStreamingJob(any()) }
+        verify(atLeast = 1) { mockStreamJobManager.stopWebsocketJob(any()) }
+        verify(atLeast = 1) { mockStreamJobManager.startStreamingJob(any()) }
 
         val updatedClient = clientRepository.findByUuid(client.uuid).get()
         updatedClient.apiPort shouldBe 9000
@@ -104,9 +108,8 @@ class LedClientApiServiceTest(
 
         ledClientApiService.updateClient(client.uuid, updateRequest)
 
-        val streamJobManager = getMock(streamJobManager)
-        verify(atLeast = 1) { streamJobManager.stopWebsocketJob(any()) }
-        verify(atLeast = 1) { streamJobManager.startStreamingJob(any()) }
+        verify(atLeast = 1) { mockStreamJobManager.stopWebsocketJob(any()) }
+        verify(atLeast = 1) { mockStreamJobManager.startStreamingJob(any()) }
 
         val updatedClient = clientRepository.findByUuid(client.uuid).get()
         updatedClient.wsPort shouldBe 9001
@@ -132,9 +135,8 @@ class LedClientApiServiceTest(
 
         ledClientApiService.updateClient(client.uuid, updateRequest)
 
-        val streamJobManager = getMock(streamJobManager)
-        verify(atLeast = 1) { streamJobManager.stopWebsocketJob(any()) }
-        verify(atLeast = 1) { streamJobManager.startStreamingJob(any()) }
+        verify(atLeast = 1) { mockStreamJobManager.stopWebsocketJob(any()) }
+        verify(atLeast = 1) { mockStreamJobManager.startStreamingJob(any()) }
 
         val updatedClient = clientRepository.findByUuid(client.uuid).get()
         updatedClient.address shouldBe "192.168.1.200"
@@ -162,9 +164,8 @@ class LedClientApiServiceTest(
 
         ledClientApiService.updateClient(client.uuid, updateRequest)
 
-        val streamJobManager = getMock(streamJobManager)
-        verify(atLeast = 1) { streamJobManager.stopWebsocketJob(any()) }
-        verify(atLeast = 1) { streamJobManager.startStreamingJob(any()) }
+        verify(atLeast = 1) { mockStreamJobManager.stopWebsocketJob(any()) }
+        verify(atLeast = 1) { mockStreamJobManager.startStreamingJob(any()) }
     }
 
     "Update client with only name change does not trigger stream restart" {
@@ -187,16 +188,13 @@ class LedClientApiServiceTest(
 
         ledClientApiService.updateClient(client.uuid, updateRequest)
 
-        val streamJobManager = getMock(streamJobManager)
-        verify(exactly = 0) { streamJobManager.stopWebsocketJob(any()) }
-        verify(exactly = 0) { streamJobManager.startStreamingJob(any()) }
+        verify(exactly = 0) { mockStreamJobManager.stopWebsocketJob(any()) }
+        verify(exactly = 0) { mockStreamJobManager.startStreamingJob(any()) }
 
         val updatedClient = clientRepository.findByUuid(client.uuid).get()
         updatedClient.name shouldBe updateRequest.name
     }
 }) {
     @MockBean(StreamJobManager::class)
-    fun streamJobManager(): StreamJobManager {
-        return mockk(relaxed = true)
-    }
+    fun streamJobManager(): StreamJobManager = mockk(relaxed = true)
 }
