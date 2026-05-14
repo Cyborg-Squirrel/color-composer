@@ -2,13 +2,13 @@ package io.cyborgsquirrel.lighting.effect_palette.service
 
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
-import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
+import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_palette.requests.CreatePaletteRequest
 import io.cyborgsquirrel.lighting.effect_palette.requests.UpdatePaletteRequest
 import io.cyborgsquirrel.lighting.effect_palette.responses.GetAllPalettesResponse
 import io.cyborgsquirrel.lighting.effect_palette.responses.GetPaletteResponse
 import io.cyborgsquirrel.lighting.effect_palette.settings.*
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.util.exception.ClientRequestException
@@ -19,8 +19,8 @@ import java.util.*
 
 @Singleton
 class PaletteApiService(
-    private val paletteRepository: H2LightEffectPaletteRepository,
-    private val effectRepository: H2LightEffectRepository,
+    private val paletteRepository: LightEffectPaletteRepository,
+    private val effectRepository: LightEffectRepository,
     private val lightingService: CreateLightingService,
     private val effectRegistry: ActiveLightEffectService,
     private val objectMapper: ObjectMapper

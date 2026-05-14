@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effects.service
 
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
-import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.palette.*
 import io.cyborgsquirrel.lighting.effect_palette.settings.*
@@ -17,15 +17,15 @@ import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.settings.*
 import io.cyborgsquirrel.lighting.filters.*
-import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
+import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterJunctionRepository
 import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.IntensityFilterSettings
 import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
-import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
-import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.LocationConfigRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.cyborgsquirrel.util.time.TimeOfDayService
 import io.micronaut.json.tree.JsonNode
@@ -34,11 +34,11 @@ import jakarta.inject.Singleton
 
 @Singleton
 class CreateLightingService(
-    private val poolMemberLedStripRepository: H2PoolMemberLedStripRepository,
-    private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
-    private val locationConfigRepository: H2LocationConfigRepository,
-    private val junctionRepository: H2LightEffectFilterJunctionRepository,
-    private val stripRepository: H2LedStripRepository,
+    private val poolMemberLedStripRepository: PoolMemberLedStripRepository,
+    private val sunriseSunsetTimeRepository: SunriseSunsetTimeRepository,
+    private val locationConfigRepository: LocationConfigRepository,
+    private val junctionRepository: LightEffectFilterJunctionRepository,
+    private val stripRepository: LedStripRepository,
     private val activeLightEffectService: ActiveLightEffectService,
     private val timeHelper: TimeHelper,
     private val timeOfDayService: TimeOfDayService,

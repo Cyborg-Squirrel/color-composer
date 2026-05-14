@@ -3,12 +3,12 @@ package io.cyborgsquirrel.test_helpers
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
@@ -16,7 +16,7 @@ import io.micronaut.serde.ObjectMapper
 import java.util.*
 
 fun createLedStripClientEntity(
-    clientRepository: H2LedStripClientRepository,
+    clientRepository: LedStripClientRepository,
     name: String,
     address: String,
     apiPort: Int,
@@ -44,7 +44,7 @@ fun createLedStripClientEntity(
     )
 
 fun saveLedStrip(
-    stripRepository: H2LedStripRepository,
+    stripRepository: LedStripRepository,
     client: LedStripClientEntity,
     name: String, length: Int, pin: String, brightness: Int,
 ): LedStripEntity =
@@ -61,7 +61,7 @@ fun saveLedStrip(
     )
 
 fun saveLightEffect(
-    effectRepository: H2LightEffectRepository,
+    effectRepository: LightEffectRepository,
     objectMapper: ObjectMapper,
     strip: LedStripEntity,
     status: LightEffectStatus = LightEffectStatus.Idle,

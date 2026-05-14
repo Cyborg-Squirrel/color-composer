@@ -2,7 +2,7 @@ package io.cyborgsquirrel.clients.services
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ColorOrder
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
 import io.cyborgsquirrel.clients.responses.GetClientResponse
@@ -16,7 +16,7 @@ import java.util.*
 
 @Singleton
 class LedClientApiService(
-    private val clientRepository: H2LedStripClientRepository,
+    private val clientRepository: LedStripClientRepository,
     private val streamJobManager: StreamJobManager,
     private val clientStatusService: ClientStatusService,
 ) {

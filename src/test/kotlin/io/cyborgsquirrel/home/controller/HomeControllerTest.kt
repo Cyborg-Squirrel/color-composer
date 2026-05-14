@@ -1,14 +1,14 @@
 package io.cyborgsquirrel.home.controller
 
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.home.api.HomeApi
 import io.cyborgsquirrel.home.responses.HomeResponse
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
-import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.enums.EffectCategory
@@ -28,10 +28,10 @@ import java.util.*
 @MicronautTest
 class HomeControllerTest(
     @Client private val apiClient: HomeApi,
-    private val clientRepository: H2LedStripClientRepository,
-    private val stripRepository: H2LedStripRepository,
-    private val effectRepository: H2LightEffectRepository,
-    private val paletteRepository: H2LightEffectPaletteRepository,
+    private val clientRepository: LedStripClientRepository,
+    private val stripRepository: LedStripRepository,
+    private val effectRepository: LightEffectRepository,
+    private val paletteRepository: LightEffectPaletteRepository,
     private val activeLightEffectService: ActiveLightEffectService,
     private val objectMapper: ObjectMapper,
 ) : StringSpec({

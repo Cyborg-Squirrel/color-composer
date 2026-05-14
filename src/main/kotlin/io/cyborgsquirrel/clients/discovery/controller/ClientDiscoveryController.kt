@@ -7,7 +7,7 @@ import io.cyborgsquirrel.clients.discovery.model.DiscoveryStatusResponse
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.SelectClientRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
@@ -21,7 +21,7 @@ import java.util.*
 class ClientDiscoveryController(
     private val taskScheduler: TaskScheduler,
     private val discoveryJob: ClientDiscoveryJob,
-    private val clientRepository: H2LedStripClientRepository,
+    private val clientRepository: LedStripClientRepository,
 ) {
 
     @Post("/discover-clients")

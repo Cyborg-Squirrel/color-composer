@@ -2,8 +2,8 @@ package io.cyborgsquirrel.strip_pools.controller
 
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.enums.PoolType
-import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
-import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
+import io.cyborgsquirrel.led_strips.repository.PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.strip_pools.api.StripPoolApi
 import io.cyborgsquirrel.strip_pools.requests.CreateStripPoolRequest
@@ -21,8 +21,8 @@ import java.util.*
 @MicronautTest
 class StripPoolControllerTest(
     @Client private val apiClient: StripPoolApi,
-    private val poolRepository: H2LedStripPoolRepository,
-    private val poolMemberRepository: H2PoolMemberLedStripRepository
+    private val poolRepository: LedStripPoolRepository,
+    private val poolMemberRepository: PoolMemberLedStripRepository
 ) : StringSpec({
 
     afterTest {

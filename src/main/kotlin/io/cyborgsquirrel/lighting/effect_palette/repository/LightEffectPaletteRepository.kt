@@ -1,0 +1,14 @@
+package io.cyborgsquirrel.lighting.effect_palette.repository
+
+import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
+import io.micronaut.data.annotation.Join
+import io.micronaut.data.repository.CrudRepository
+import java.util.*
+
+interface LightEffectPaletteRepository : CrudRepository<LightEffectPaletteEntity, Long> {
+    @Join(value = "effects", type = Join.Type.LEFT_FETCH)
+    fun queryAll(): List<LightEffectPaletteEntity>
+
+    @Join(value = "effects", type = Join.Type.LEFT_FETCH)
+    fun findByUuid(uuid: String): Optional<LightEffectPaletteEntity>
+}

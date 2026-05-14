@@ -3,26 +3,26 @@ package io.cyborgsquirrel.jobs.init
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.enums.PoolType
-import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
-import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
-import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
+import io.cyborgsquirrel.lighting.effect_trigger.repository.LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
@@ -32,8 +32,8 @@ import io.cyborgsquirrel.lighting.filters.IntensityFadeFilter
 import io.cyborgsquirrel.lighting.filters.LightEffectFilterConstants
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
-import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
-import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
+import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterJunctionRepository
+import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.core.spec.style.StringSpec
@@ -48,15 +48,15 @@ import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
 class LightEffectInitJobTest(
-    private val clientRepository: H2LedStripClientRepository,
-    private val lightEffectRepository: H2LightEffectRepository,
-    private val ledStripRepository: H2LedStripRepository,
-    private val ledStripPoolRepository: H2LedStripPoolRepository,
-    private val poolMemberLedStripRepository: H2PoolMemberLedStripRepository,
+    private val clientRepository: LedStripClientRepository,
+    private val lightEffectRepository: LightEffectRepository,
+    private val ledStripRepository: LedStripRepository,
+    private val ledStripPoolRepository: LedStripPoolRepository,
+    private val poolMemberLedStripRepository: PoolMemberLedStripRepository,
     private val activeLightEffectService: ActiveLightEffectService,
-    private val triggerRepository: H2LightEffectTriggerRepository,
-    private val filterRepository: H2LightEffectFilterRepository,
-    private val junctionRepository: H2LightEffectFilterJunctionRepository,
+    private val triggerRepository: LightEffectTriggerRepository,
+    private val filterRepository: LightEffectFilterRepository,
+    private val junctionRepository: LightEffectFilterJunctionRepository,
     private val objectMapper: ObjectMapper,
     private val triggerManager: TriggerManager,
     private val effectFactory: CreateLightingService,

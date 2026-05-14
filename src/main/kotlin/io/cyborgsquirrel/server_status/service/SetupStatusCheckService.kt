@@ -1,16 +1,16 @@
 package io.cyborgsquirrel.server_status.service
 
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.server_status.responses.SetupStatus
 import jakarta.inject.Singleton
 
 @Singleton
 class SetupStatusCheckService(
-    private val clientRepository: H2LedStripClientRepository,
-    private val stripRepository: H2LedStripRepository,
-    private val effectRepository: H2LightEffectRepository,
+    private val clientRepository: LedStripClientRepository,
+    private val stripRepository: LedStripRepository,
+    private val effectRepository: LightEffectRepository,
 ) {
 
     fun getSetupStatus(): SetupStatus {

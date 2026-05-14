@@ -4,7 +4,7 @@ import io.cyborgsquirrel.clients.config.pi_client.PiClientSettings
 import io.cyborgsquirrel.clients.config.pi_client.PiClientStripConfig
 import io.cyborgsquirrel.clients.config.pi_client.PiConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
 import io.cyborgsquirrel.jobs.streaming.model.PiStreamingJobState
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
@@ -44,7 +44,7 @@ class PiClientWebSocketJob(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
     private val triggerManager: TriggerManager,
-    private val clientRepository: H2LedStripClientRepository,
+    private val clientRepository: LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private val piConfigClient: PiConfigClient,
     private var clientEntity: LedStripClientEntity,

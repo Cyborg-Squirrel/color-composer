@@ -1,12 +1,12 @@
 package io.cyborgsquirrel.lighting.filters.service
 
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
-import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
-import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
+import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterJunctionRepository
+import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.requests.CreateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.requests.UpdateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.responses.GetFilterResponse
@@ -17,9 +17,9 @@ import java.util.*
 
 @Singleton
 class EffectFilterApiService(
-    private val effectRepository: H2LightEffectRepository,
-    private val filterRepository: H2LightEffectFilterRepository,
-    private val junctionRepository: H2LightEffectFilterJunctionRepository,
+    private val effectRepository: LightEffectRepository,
+    private val filterRepository: LightEffectFilterRepository,
+    private val junctionRepository: LightEffectFilterJunctionRepository,
     private val effectRegistry: ActiveLightEffectService,
     private val effectLightingHelper: CreateLightingService,
 ) {

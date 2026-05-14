@@ -3,14 +3,14 @@ package io.cyborgsquirrel.strip_pools.services
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PoolType
-import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
-import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.strip_pools.requests.CreateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.requests.StripPoolMemberRequestModel
@@ -27,10 +27,10 @@ import java.util.*
 @MicronautTest
 class StripPoolApiServiceTest(
     private val stripPoolApiService: StripPoolApiService,
-    private val poolRepository: H2LedStripPoolRepository,
-    private val poolMemberRepository: H2PoolMemberLedStripRepository,
-    private val stripRepository: H2LedStripRepository,
-    private val clientRepository: H2LedStripClientRepository
+    private val poolRepository: LedStripPoolRepository,
+    private val poolMemberRepository: PoolMemberLedStripRepository,
+    private val stripRepository: LedStripRepository,
+    private val clientRepository: LedStripClientRepository
 ) : StringSpec({
 
     afterTest {

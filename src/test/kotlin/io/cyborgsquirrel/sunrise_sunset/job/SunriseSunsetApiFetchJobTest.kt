@@ -4,8 +4,8 @@ import io.cyborgsquirrel.sunrise_sunset.client.SunriseSunsetApiClient
 import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
 import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
 import io.cyborgsquirrel.sunrise_sunset.model.SunriseSunsetModel
-import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
-import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.LocationConfigRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.cyborgsquirrel.util.time.TimeHelperImpl
 import io.kotest.core.spec.style.StringSpec
@@ -27,8 +27,8 @@ import java.util.concurrent.CompletableFuture
 @MicronautTest(startApplication = false, transactional = false)
 class SunriseSunsetApiFetchJobTest(
     private val job: SunriseSunsetApiFetchJob,
-    private val locationConfigRepository: H2LocationConfigRepository,
-    private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
+    private val locationConfigRepository: LocationConfigRepository,
+    private val sunriseSunsetTimeRepository: SunriseSunsetTimeRepository,
     private val client: SunriseSunsetApiClient,
     private val objectMapper: ObjectMapper,
     private val timeHelper: TimeHelper,
@@ -190,13 +190,13 @@ class SunriseSunsetApiFetchJobTest(
         tomorrowSunriseSunsetTime.ymd shouldBe getYmdString(demoTomorrowDate)
     }
 }) {
-    @MockBean(H2SunriseSunsetTimeRepository::class)
-    fun sunriseSunsetRepository(): H2SunriseSunsetTimeRepository {
+    @MockBean(SunriseSunsetTimeRepository::class)
+    fun sunriseSunsetRepository(): SunriseSunsetTimeRepository {
         return mockk()
     }
 
-    @MockBean(H2LocationConfigRepository::class)
-    fun locationConfigRepository(): H2LocationConfigRepository {
+    @MockBean(LocationConfigRepository::class)
+    fun locationConfigRepository(): LocationConfigRepository {
         return mockk()
     }
 

@@ -9,8 +9,8 @@ import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 
 @MicronautTest(startApplication = false, transactional = false)
 class LocationConfigRepositoryTest(
-    private val locationConfigRepository: H2LocationConfigRepository,
-    private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
+    private val locationConfigRepository: LocationConfigRepository,
+    private val sunriseSunsetTimeRepository: SunriseSunsetTimeRepository,
 ) : StringSpec({
 
     // Seattle

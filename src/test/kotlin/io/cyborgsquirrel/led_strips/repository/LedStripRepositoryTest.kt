@@ -3,7 +3,7 @@ package io.cyborgsquirrel.led_strips.repository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
@@ -17,10 +17,10 @@ import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
 class LedStripRepositoryTest(
-    private val clientRepository: H2LedStripClientRepository,
-    private val ledStripRepository: H2LedStripRepository,
-    private val ledStripPoolRepository: H2LedStripPoolRepository,
-    private val poolMemberLedStripRepository: H2PoolMemberLedStripRepository,
+    private val clientRepository: LedStripClientRepository,
+    private val ledStripRepository: LedStripRepository,
+    private val ledStripPoolRepository: LedStripPoolRepository,
+    private val poolMemberLedStripRepository: PoolMemberLedStripRepository,
 ) : StringSpec({
 
     var clientEntity: LedStripClientEntity? = null

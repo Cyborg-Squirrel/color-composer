@@ -3,10 +3,10 @@ package io.cyborgsquirrel.led_strips.services
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ClientType
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.led_strips.responses.GetLedStripResponse
@@ -26,8 +26,8 @@ import kotlin.jvm.optionals.getOrNull
 @Singleton
 class LedStripApiService(
     private val activeLightEffectService: ActiveLightEffectService,
-    private val stripRepository: H2LedStripRepository,
-    private val clientRepository: H2LedStripClientRepository,
+    private val stripRepository: LedStripRepository,
+    private val clientRepository: LedStripClientRepository,
     private val clientStatusService: ClientStatusService,
     private val timeHelper: TimeHelper,
 ) {

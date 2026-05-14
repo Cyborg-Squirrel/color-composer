@@ -3,19 +3,19 @@ package io.cyborgsquirrel.lighting.effect_trigger.repository
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
-import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
-import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
@@ -31,12 +31,12 @@ import java.util.*
 @MicronautTest(startApplication = false, transactional = false)
 class LightEffectTriggerRepositoryTest(
     private val objectMapper: ObjectMapper,
-    private val lightEffectRepository: H2LightEffectRepository,
-    private val clientRepository: H2LedStripClientRepository,
-    private val ledStripRepository: H2LedStripRepository,
-    private val ledStripPoolRepository: H2LedStripPoolRepository,
-    private val poolMemberLedStripRepository: H2PoolMemberLedStripRepository,
-    private val lightEffectTriggerRepository: H2LightEffectTriggerRepository,
+    private val lightEffectRepository: LightEffectRepository,
+    private val clientRepository: LedStripClientRepository,
+    private val ledStripRepository: LedStripRepository,
+    private val ledStripPoolRepository: LedStripPoolRepository,
+    private val poolMemberLedStripRepository: PoolMemberLedStripRepository,
+    private val lightEffectTriggerRepository: LightEffectTriggerRepository,
 ) : StringSpec({
 
     val nightriderLightEffectSettings = NightriderEffectSettings.default()
