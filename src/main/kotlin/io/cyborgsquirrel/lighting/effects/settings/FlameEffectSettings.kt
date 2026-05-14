@@ -8,8 +8,9 @@ data class FlameEffectSettings(
     val sparking: Int,
     val sparks: Int,
     val sparkHeight: Int,
+    val updatesPerSecond: Int,
 ) : LightEffectSettings() {
     companion object {
-        fun default() = FlameEffectSettings(11, 140, 1, 3)
+        fun default() = FlameEffectSettings(11, 140, 1, 3, 30)
     }
 }

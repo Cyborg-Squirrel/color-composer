@@ -8,11 +8,12 @@ data class WaveEffectSettings(
     val startPoint: Int,
     val waveLength: Int,
     val repeat: Boolean,
+    val updatesPerSecond: Int,
 ) : LightEffectSettings() {
     companion object {
         fun default(numberOfLeds: Int) =
             WaveEffectSettings(
-                numberOfLeds / 2, min(numberOfLeds / 6, 10), false
+                numberOfLeds / 2, min(numberOfLeds / 6, 10), false, 30
             )
     }
 }

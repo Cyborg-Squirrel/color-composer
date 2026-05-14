@@ -10,16 +10,18 @@ class MarqueeEffect(
     private val numberOfLeds: Int,
     override val settings: MarqueeEffectSettings,
     override var palette: ColorPalette?,
-    private val timeHelper: TimeHelper,
-) : LightEffect(settings, palette) {
+    timeHelper: TimeHelper,
+) : LightEffect(settings, palette, timeHelper) {
 
     private var frame = 0
     private var iterations = 0
-    private var lastChangeMillis = timeHelper.millisSinceEpoch()
     private var shiftAmount = 0
     private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
+        if (buffer.isNotEmpty() && !isUpdateDue(settings.updatesPerSecond)) return buffer
+        shiftAmount = (shiftAmount + 1) % numberOfLeds
+
         val dotList = mutableListOf<Boolean>()
         val rgbList = mutableListOf<RgbColor>()
         var drawingDot = true
@@ -48,12 +50,6 @@ class MarqueeEffect(
             }
 
             i++
-        }
-
-        val nowMillis = timeHelper.millisSinceEpoch()
-        if ((nowMillis - lastChangeMillis) / 1000f > 1 / settings.scrollAmountPerSecond.toFloat()) {
-            shiftAmount = (shiftAmount + 1) % numberOfLeds
-            lastChangeMillis = nowMillis
         }
 
         val shiftedDotList = dotList.shift(shiftAmount)

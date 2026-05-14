@@ -13,6 +13,7 @@ object LightEffectConstants {
     const val BOUNCING_BALL_NAME = "Bouncing Ball"
     const val WAVE_EFFECT_NAME = "Wave"
     const val MARQUEE_EFFECT_NAME = "Marquee"
+    const val SPARKLE_NAME = "Sparkle"
 
     val allEffectNames = listOf(
         SPECTRUM_NAME,
@@ -21,6 +22,7 @@ object LightEffectConstants {
         FLAME_EFFECT_NAME,
         BOUNCING_BALL_NAME,
         WAVE_EFFECT_NAME,
-        MARQUEE_EFFECT_NAME
+        MARQUEE_EFFECT_NAME,
+        SPARKLE_NAME,
     )
 }

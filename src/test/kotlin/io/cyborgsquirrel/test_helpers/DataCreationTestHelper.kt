@@ -70,7 +70,7 @@ fun saveLightEffect(
         LightEffectEntity(
             strip = strip,
             uuid = UUID.randomUUID().toString(),
-            settings = objectToMap(objectMapper, SpectrumEffectSettings(strip.length!!, animated = false)),
+            settings = objectToMap(objectMapper, SpectrumEffectSettings(strip.length!!, animated = false, updatesPerSecond = 30)),
             type = LightEffectConstants.SPECTRUM_NAME,
             name = "My light effect",
             status = status

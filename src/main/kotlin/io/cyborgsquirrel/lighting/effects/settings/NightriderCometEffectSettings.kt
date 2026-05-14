@@ -7,10 +7,6 @@ import io.micronaut.serde.annotation.Serdeable
 data class NightriderCometEffectSettings(
     val trailLength: Int,
     val trailFadeCurve: FadeCurve,
-    val wrap: Boolean,
-    val updatesPerSecond: Int,
-) : NightriderEffectSettings() {
-    override fun wrap() = wrap
-
-    override fun updatesPerSecond() = updatesPerSecond
-}
+    override val wrap: Boolean,
+    override val updatesPerSecond: Int,
+) : NightriderEffectSettings()

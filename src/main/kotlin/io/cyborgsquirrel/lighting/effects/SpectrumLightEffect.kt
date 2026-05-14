@@ -5,13 +5,15 @@ import io.cyborgsquirrel.lighting.effect_palette.palette.GradientColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.shift
+import io.cyborgsquirrel.util.time.TimeHelper
 import kotlin.math.ceil
 
 class SpectrumLightEffect(
     private val numberOfLeds: Int,
     override val settings: SpectrumEffectSettings,
     override var palette: ColorPalette?,
-) : LightEffect(settings, palette) {
+    timeHelper: TimeHelper,
+) : LightEffect(settings, palette, timeHelper) {
 
     private var frame = 0
     private var iterations = 0
@@ -20,6 +22,8 @@ class SpectrumLightEffect(
     private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
+        if (referenceFrame.isNotEmpty() && !isUpdateDue(settings.updatesPerSecond)) return buffer
+
         val rgbList = mutableListOf<RgbColor>()
         val repeatOfColorsCount = ceil((numberOfLeds.toFloat() / colorWidth)).toInt()
 

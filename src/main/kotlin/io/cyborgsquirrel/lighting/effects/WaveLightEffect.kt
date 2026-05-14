@@ -6,6 +6,7 @@ import io.cyborgsquirrel.lighting.effects.shared.Comet
 import io.cyborgsquirrel.lighting.enums.Direction
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.util.time.TimeHelper
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -15,7 +16,8 @@ class WaveLightEffect(
     private val numberOfLeds: Int,
     override val settings: WaveEffectSettings,
     override var palette: ColorPalette?,
-) : LightEffect(settings, palette) {
+    timeHelper: TimeHelper,
+) : LightEffect(settings, palette, timeHelper) {
 
     private var waveALocation = 0
     private var waveBLocation = 0
@@ -28,6 +30,8 @@ class WaveLightEffect(
     private var buffer = listOf<RgbColor>()
 
     override fun getNextStep(): List<RgbColor> {
+        if (frame != 0 && !isUpdateDue(settings.updatesPerSecond)) return buffer
+
         val rgbData = mutableListOf<RgbColor>()
         if (waveALocation <= -waveLength && waveBLocation >= numberOfLeds + waveLength) {
             iterations++

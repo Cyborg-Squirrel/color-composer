@@ -180,7 +180,7 @@ class CreateLightingService(
             LightEffectConstants.FLAME_EFFECT_NAME -> FlameLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), FlameEffectSettings::class.java
-                ), palette
+                ), palette, timeHelper
             )
 
             LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME -> NightriderLightEffect(
@@ -198,18 +198,24 @@ class CreateLightingService(
             LightEffectConstants.SPECTRUM_NAME -> SpectrumLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), SpectrumEffectSettings::class.java
-                ), palette
+                ), palette, timeHelper
             )
 
             LightEffectConstants.WAVE_EFFECT_NAME -> WaveLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), WaveEffectSettings::class.java
-                ), palette
+                ), palette, timeHelper
             )
 
             LightEffectConstants.MARQUEE_EFFECT_NAME -> MarqueeEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), MarqueeEffectSettings::class.java
+                ), palette, timeHelper
+            )
+
+            LightEffectConstants.SPARKLE_NAME -> SparkleLightEffect(
+                numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
+                    JsonNode.from(settings), SparkleEffectSettings::class.java
                 ), palette, timeHelper
             )
 
