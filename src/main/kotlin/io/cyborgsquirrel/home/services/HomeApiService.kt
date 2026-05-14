@@ -1,22 +1,22 @@
 package io.cyborgsquirrel.home.services
 
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.clients.services.LedClientApiService
 import io.cyborgsquirrel.home.responses.HomeResponse
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.led_strips.services.LedStripApiService
-import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.EffectApiService
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import jakarta.inject.Singleton
 
 @Singleton
 class HomeApiService(
-    private val clientRepository: H2LedStripClientRepository,
-    private val stripRepository: H2LedStripRepository,
-    private val effectRepository: H2LightEffectRepository,
-    private val paletteRepository: H2LightEffectPaletteRepository,
+    private val clientRepository: LedStripClientRepository,
+    private val stripRepository: LedStripRepository,
+    private val effectRepository: LightEffectRepository,
+    private val paletteRepository: LightEffectPaletteRepository,
     private val effectApiService: EffectApiService,
     private val clientApiService: LedClientApiService,
     private val stripsApiService: LedStripApiService,

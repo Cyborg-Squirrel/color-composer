@@ -5,8 +5,8 @@ import io.cyborgsquirrel.lighting.effect_palette.settings.SettingsPalette
 import io.cyborgsquirrel.lighting.effect_palette.settings.TimeOfDayPaletteSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.sunrise_sunset.model.SunriseSunsetModel
-import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
-import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.LocationConfigRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.cyborgsquirrel.util.time.TimeOfDayService
 import io.cyborgsquirrel.util.time.localDateFromYmd
@@ -18,8 +18,8 @@ class TimeOfDayColorPalette(
     private val settings: TimeOfDayPaletteSettings,
     private val timeHelper: TimeHelper,
     private val timeOfDayService: TimeOfDayService,
-    private val locationConfigRepository: H2LocationConfigRepository,
-    private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
+    private val locationConfigRepository: LocationConfigRepository,
+    private val sunriseSunsetTimeRepository: SunriseSunsetTimeRepository,
     private val objectMapper: ObjectMapper,
     uuid: String,
     numberOfLeds: Int,

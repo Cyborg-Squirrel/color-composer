@@ -2,9 +2,9 @@ package io.cyborgsquirrel.strip_pools.services
 
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
-import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
-import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.PoolMemberLedStripRepository
 import io.cyborgsquirrel.strip_pools.requests.CreateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolMembersRequest
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
@@ -17,9 +17,9 @@ import java.util.*
 
 @Singleton
 class StripPoolApiService(
-    private val poolRepository: H2LedStripPoolRepository,
-    private val poolMemberRepository: H2PoolMemberLedStripRepository,
-    private val stripRepository: H2LedStripRepository
+    private val poolRepository: LedStripPoolRepository,
+    private val poolMemberRepository: PoolMemberLedStripRepository,
+    private val stripRepository: LedStripRepository
 ) {
 
     private fun mapPoolEntityToModel(poolEntity: LedStripPoolEntity, memberEntities: List<PoolMemberLedStripEntity>): GetStripPoolResponse {

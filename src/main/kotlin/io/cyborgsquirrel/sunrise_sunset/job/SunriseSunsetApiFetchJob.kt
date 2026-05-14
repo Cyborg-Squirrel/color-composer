@@ -3,8 +3,8 @@ package io.cyborgsquirrel.sunrise_sunset.job
 import io.cyborgsquirrel.sunrise_sunset.client.SunriseSunsetApiClient
 import io.cyborgsquirrel.sunrise_sunset.entity.LocationConfigEntity
 import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
-import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
-import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.LocationConfigRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.cyborgsquirrel.util.time.ymd
 import io.micronaut.serde.ObjectMapper
@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit
 @Singleton
 class SunriseSunsetApiFetchJob(
     private val api: SunriseSunsetApiClient,
-    private val locationRepository: H2LocationConfigRepository,
-    private val sunriseSunsetRepository: H2SunriseSunsetTimeRepository,
+    private val locationRepository: LocationConfigRepository,
+    private val sunriseSunsetRepository: SunriseSunsetTimeRepository,
     private val objectMapper: ObjectMapper,
     private val timeHelper: TimeHelper,
 ) : Runnable {

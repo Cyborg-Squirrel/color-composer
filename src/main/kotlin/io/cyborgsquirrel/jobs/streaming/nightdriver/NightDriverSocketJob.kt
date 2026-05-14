@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.jobs.streaming.nightdriver
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
 import io.cyborgsquirrel.jobs.streaming.model.NightDriverStreamingJobState
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
@@ -37,7 +37,7 @@ import java.net.URI
 class NightDriverSocketJob(
     private val renderer: LightEffectRenderer,
     private val triggerManager: TriggerManager,
-    private val clientRepository: H2LedStripClientRepository,
+    private val clientRepository: LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private var clientEntity: LedStripClientEntity,
     private var activeLightEffectService: ActiveLightEffectService,

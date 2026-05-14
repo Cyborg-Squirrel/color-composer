@@ -1,13 +1,13 @@
 package io.cyborgsquirrel.lighting.effects.service
 
-import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
-import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
-import io.cyborgsquirrel.lighting.effect_trigger.repository.H2LightEffectTriggerRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
+import io.cyborgsquirrel.lighting.effect_trigger.repository.LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.LightEffectStatusCommand
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
@@ -21,7 +21,7 @@ import io.cyborgsquirrel.lighting.effects.schemas.EffectSettingsSchemaBuilder
 import io.cyborgsquirrel.lighting.enums.EffectCategory
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
+import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterRepository
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import jakarta.inject.Singleton
@@ -29,12 +29,12 @@ import java.util.*
 
 @Singleton
 class EffectApiService(
-    private val stripRepository: H2LedStripRepository,
-    private val poolRepository: H2LedStripPoolRepository,
-    private val effectRepository: H2LightEffectRepository,
-    private val triggerRepository: H2LightEffectTriggerRepository,
-    private val filterRepository: H2LightEffectFilterRepository,
-    private val paletteRepository: H2LightEffectPaletteRepository,
+    private val stripRepository: LedStripRepository,
+    private val poolRepository: LedStripPoolRepository,
+    private val effectRepository: LightEffectRepository,
+    private val triggerRepository: LightEffectTriggerRepository,
+    private val filterRepository: LightEffectFilterRepository,
+    private val paletteRepository: LightEffectPaletteRepository,
     private val effectRegistry: ActiveLightEffectService,
     private val createLightingService: CreateLightingService,
 ) {

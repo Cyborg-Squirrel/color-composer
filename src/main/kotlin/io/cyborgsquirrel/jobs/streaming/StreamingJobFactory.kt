@@ -3,7 +3,7 @@ package io.cyborgsquirrel.jobs.streaming
 import io.cyborgsquirrel.clients.config.pi_client.PiConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientType
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketJob
 import io.cyborgsquirrel.jobs.streaming.pi_client.PiClientWebSocketJob
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
@@ -18,7 +18,7 @@ class StreamingJobFactory(
     private val webSocketClient: WebSocketClient,
     private val renderer: LightEffectRenderer,
     private val triggerManager: TriggerManager,
-    private val clientRepository: H2LedStripClientRepository,
+    private val clientRepository: LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private val piConfigClient: PiConfigClient,
     private val activeLightEffectService: ActiveLightEffectService
