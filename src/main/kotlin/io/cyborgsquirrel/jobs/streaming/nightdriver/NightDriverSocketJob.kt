@@ -67,7 +67,7 @@ class NightDriverSocketJob(
     private var exponentialReconnectionBackoffValue = 1
     private val exponentialReconnectionBackoffValueMax = 8
 
-    private val fps = 35
+    private val fps get() = clientEntity.fps
     private val millisPerFrame: Long
         get() = 1000L / fps
     private var shouldRun = true
