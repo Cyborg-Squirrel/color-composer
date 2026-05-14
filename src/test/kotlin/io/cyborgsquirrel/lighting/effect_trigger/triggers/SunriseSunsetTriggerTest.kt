@@ -251,22 +251,14 @@ class SunriseSunsetTriggerTest(
     }
 }) {
     @MockBean(SunriseSunsetTimeRepository::class)
-    fun sunriseSunsetRepository(): SunriseSunsetTimeRepository {
-        return mockk()
-    }
+    fun sunriseSunsetRepository(): SunriseSunsetTimeRepository = mockk()
 
     @MockBean(LocationConfigRepository::class)
-    fun locationConfigRepository(): LocationConfigRepository {
-        return mockk()
-    }
+    fun locationConfigRepository(): LocationConfigRepository = mockk()
 
     @MockBean(TimeHelperImpl::class)
-    fun timeHelper(): TimeHelper {
-        return mockk()
-    }
+    fun timeHelper(): TimeHelper = mockk()
 
     @MockBean(ActiveLightEffectServiceImpl::class)
-    fun activeEffectRepository(): ActiveLightEffectService {
-        return mockk()
-    }
+    fun activeEffectRepository(): ActiveLightEffectService = mockk()
 }
