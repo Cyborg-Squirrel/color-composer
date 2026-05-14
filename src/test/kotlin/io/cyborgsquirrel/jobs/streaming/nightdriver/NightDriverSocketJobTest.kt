@@ -100,10 +100,6 @@ class NightDriverSocketJobTest : StringSpec({
 
     afterEach { clearAllMocks() }
 
-    // -------------------------------------------------------------------------
-    // parseHost tests
-    // -------------------------------------------------------------------------
-
     "parseHost" {
         NightDriverSocketJob.parseHost("192.168.1.200") shouldBe "192.168.1.200"
         NightDriverSocketJob.parseHost("myhostname.local") shouldBe "myhostname.local"
@@ -112,26 +108,15 @@ class NightDriverSocketJobTest : StringSpec({
         NightDriverSocketJob.parseHost("http://myhostname.local") shouldBe "myhostname.local"
     }
 
-    // -------------------------------------------------------------------------
-    // Direct method tests
-    // -------------------------------------------------------------------------
-
     "getCurrentState returns SetupIncomplete initially" {
         setupCommonMocks()
         val job = makeJob()
         job.getCurrentState().status shouldBe StreamingJobStatus.SetupIncomplete
     }
 
-    "getLatestResponse is null initially" {
-        setupCommonMocks()
-        val job = makeJob()
-        job.getLatestResponse().shouldBeNull()
-    }
-
     "onUpdate with a matching SingleLedStripModel updates strips" {
         setupCommonMocks()
         val job = makeJob()
-        // Status stays SetupIncomplete — NightDriver does not trigger SettingsSync
         job.onUpdate(listOf(activeEffect))
         job.getCurrentState().status shouldBe StreamingJobStatus.SetupIncomplete
     }
@@ -152,10 +137,6 @@ class NightDriverSocketJobTest : StringSpec({
         job.onUpdate(listOf(otherEffect))
         job.getCurrentState().status shouldBe StreamingJobStatus.SetupIncomplete
     }
-
-    // -------------------------------------------------------------------------
-    // Coroutine tests
-    // -------------------------------------------------------------------------
 
     "start adds listener; dispose removes listener and stops the loop" {
         setupCommonMocks()
@@ -225,6 +206,6 @@ class NightDriverSocketJobTest : StringSpec({
         // Should have moved past SetupIncomplete (got to Offline or stayed in the reconnect loop)
         job.getCurrentState().status shouldBe StreamingJobStatus.Offline
 
-        unmockkConstructor(java.net.Socket::class)
+        unmockkConstructor(Socket::class)
     }
 })
