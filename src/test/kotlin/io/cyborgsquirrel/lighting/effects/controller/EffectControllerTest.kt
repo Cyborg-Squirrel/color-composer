@@ -1,21 +1,21 @@
 package io.cyborgsquirrel.lighting.effects.controller
 
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.enums.PoolType
-import io.cyborgsquirrel.led_strips.repository.H2LedStripPoolRepository
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
-import io.cyborgsquirrel.led_strips.repository.H2PoolMemberLedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
-import io.cyborgsquirrel.lighting.effect_palette.repository.H2LightEffectPaletteRepository
+import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_palette.settings.*
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
@@ -42,12 +42,12 @@ import java.util.*
 @MicronautTest
 class EffectControllerTest(
     @Client private val apiClient: EffectApi,
-    private val clientRepository: H2LedStripClientRepository,
-    private val stripRepository: H2LedStripRepository,
-    private val poolRepository: H2LedStripPoolRepository,
-    private val poolMemberRepository: H2PoolMemberLedStripRepository,
-    private val effectRepository: H2LightEffectRepository,
-    private val paletteRepository: H2LightEffectPaletteRepository,
+    private val clientRepository: LedStripClientRepository,
+    private val stripRepository: LedStripRepository,
+    private val poolRepository: LedStripPoolRepository,
+    private val poolMemberRepository: PoolMemberLedStripRepository,
+    private val effectRepository: LightEffectRepository,
+    private val paletteRepository: LightEffectPaletteRepository,
     private val objectMapper: ObjectMapper
 ) : StringSpec({
 

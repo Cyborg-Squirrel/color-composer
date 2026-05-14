@@ -9,7 +9,7 @@ import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.model.ClientTime
 import io.cyborgsquirrel.clients.model.ClientVersion
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PoolType
@@ -49,7 +49,7 @@ class PiClientWebSocketJobTest : StringSpec({
     val mockWebSocketClient = mockk<WebSocketClient>()
     val mockRenderer = mockk<LightEffectRenderer>()
     val mockTriggerManager = mockk<TriggerManager>()
-    val mockClientRepository = mockk<H2LedStripClientRepository>()
+    val mockClientRepository = mockk<LedStripClientRepository>()
     val mockTimeHelper = mockk<TimeHelper>()
     val mockPiConfigClient = mockk<PiConfigClient>()
     val mockActiveLightEffectService = mockk<ActiveLightEffectService>()

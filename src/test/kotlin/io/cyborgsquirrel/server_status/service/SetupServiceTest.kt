@@ -1,9 +1,9 @@
 package io.cyborgsquirrel.server_status.service
 
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.server_status.responses.SetupStatus
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrip
@@ -15,9 +15,9 @@ import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 
 @MicronautTest
 class SetupServiceTest(
-    private val clientRepository: H2LedStripClientRepository,
-    private val stripRepository: H2LedStripRepository,
-    private val effectRepository: H2LightEffectRepository,
+    private val clientRepository: LedStripClientRepository,
+    private val stripRepository: LedStripRepository,
+    private val effectRepository: LightEffectRepository,
     private val setupStatusCheckService: SetupStatusCheckService,
     private val objectMapper: ObjectMapper,
 ) : StringSpec({

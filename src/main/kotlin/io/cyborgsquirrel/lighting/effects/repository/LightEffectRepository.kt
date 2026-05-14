@@ -8,18 +8,60 @@ import io.micronaut.data.annotation.Join
 import io.micronaut.data.repository.CrudRepository
 import java.util.*
 
-@Join(value = "strip", type = Join.Type.LEFT_FETCH)
-@Join(value = "pool", type = Join.Type.LEFT_FETCH)
-@Join(value = "palette", type = Join.Type.LEFT_FETCH)
-@Join(value = "pool.members", type = Join.Type.LEFT_FETCH)
-@Join(value = "triggers", type = Join.Type.LEFT_FETCH)
-@Join(value = "filterJunctions", type = Join.Type.LEFT_FETCH)
 interface LightEffectRepository : CrudRepository<LightEffectEntity, Long> {
+    @Join(value = "strip", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool", type = Join.Type.LEFT_FETCH)
+    @Join(value = "palette", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
+    @Join(value = "filterJunctions", type = Join.Type.LEFT_FETCH)
     fun queryAll(): List<LightEffectEntity>
+
+    @Join(value = "strip", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool", type = Join.Type.LEFT_FETCH)
+    @Join(value = "palette", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
+    @Join(value = "filterJunctions", type = Join.Type.LEFT_FETCH)
     fun findByStrip(strip: LedStripEntity): List<LightEffectEntity>
+
+    @Join(value = "strip", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool", type = Join.Type.LEFT_FETCH)
+    @Join(value = "palette", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
+    @Join(value = "filterJunctions", type = Join.Type.LEFT_FETCH)
     fun findByPool(pool: LedStripPoolEntity): List<LightEffectEntity>
+
+    @Join(value = "strip", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool", type = Join.Type.LEFT_FETCH)
+    @Join(value = "palette", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
+    @Join(value = "filterJunctions", type = Join.Type.LEFT_FETCH)
     fun findByStatusIn(statuses: List<LightEffectStatus>): List<LightEffectEntity>
+
+    @Join(value = "strip", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool", type = Join.Type.LEFT_FETCH)
+    @Join(value = "palette", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
+    @Join(value = "filterJunctions", type = Join.Type.LEFT_FETCH)
     fun findByUuid(uuid: String): Optional<LightEffectEntity>
+
+    @Join(value = "strip", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool", type = Join.Type.LEFT_FETCH)
+    @Join(value = "palette", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
+    @Join(value = "filterJunctions", type = Join.Type.LEFT_FETCH)
     fun findByUuidIn(uuid: List<String>): List<LightEffectEntity>
+
+    @Join(value = "strip", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool", type = Join.Type.LEFT_FETCH)
+    @Join(value = "palette", type = Join.Type.LEFT_FETCH)
+    @Join(value = "pool.members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "triggers", type = Join.Type.LEFT_FETCH)
+    @Join(value = "filterJunctions", type = Join.Type.LEFT_FETCH)
     fun findByIdIn(ids: List<Long>): List<LightEffectEntity>
 }

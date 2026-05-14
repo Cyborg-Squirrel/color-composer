@@ -2,10 +2,10 @@ package io.cyborgsquirrel.led_strips.services
 
 import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ClientType
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.clients.status.ClientStatusInfo
 import io.cyborgsquirrel.clients.status.ClientStatusService
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.lighting.effect_palette.palette.StaticColorPalette
@@ -37,8 +37,8 @@ import java.util.*
 @MicronautTest
 class LedStripApiServiceTest(
     private val ledStripApiService: LedStripApiService,
-    private val stripRepository: H2LedStripRepository,
-    private val clientRepository: H2LedStripClientRepository,
+    private val stripRepository: LedStripRepository,
+    private val clientRepository: LedStripClientRepository,
     private val clientStatusService: ClientStatusService,
     private val activeLightEffectService: ActiveLightEffectService,
     private val timeHelper: TimeHelper,

@@ -1,12 +1,12 @@
 package io.cyborgsquirrel.lighting.filters.controller
 
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.repository.H2LightEffectRepository
+import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
@@ -17,8 +17,8 @@ import io.cyborgsquirrel.lighting.filters.ReflectionFilter
 import io.cyborgsquirrel.lighting.filters.api.EffectFilterApi
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
-import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterJunctionRepository
-import io.cyborgsquirrel.lighting.filters.repository.H2LightEffectFilterRepository
+import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterJunctionRepository
+import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterRepository
 import io.cyborgsquirrel.lighting.filters.requests.CreateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.requests.UpdateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.responses.GetFilterResponse
@@ -42,12 +42,12 @@ import java.util.*
 class EffectFilterControllerTest(
     @Client private val apiClient: EffectFilterApi,
     @Client private val effectApiClient: EffectApi,
-    private val clientRepository: H2LedStripClientRepository,
-    private val stripRepository: H2LedStripRepository,
-    private val effectRepository: H2LightEffectRepository,
-    private val filterRepository: H2LightEffectFilterRepository,
+    private val clientRepository: LedStripClientRepository,
+    private val stripRepository: LedStripRepository,
+    private val effectRepository: LightEffectRepository,
+    private val filterRepository: LightEffectFilterRepository,
     private val effectRegistry: ActiveLightEffectService,
-    private val junctionRepository: H2LightEffectFilterJunctionRepository,
+    private val junctionRepository: LightEffectFilterJunctionRepository,
     private val objectMapper: ObjectMapper
 ) : StringSpec({
 

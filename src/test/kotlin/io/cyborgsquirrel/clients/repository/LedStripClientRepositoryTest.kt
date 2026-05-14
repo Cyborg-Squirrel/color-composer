@@ -5,7 +5,7 @@ import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
@@ -17,8 +17,8 @@ import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
 class LedStripClientRepositoryTest(
-    private val ledStripClientRepository: H2LedStripClientRepository,
-    private val ledStripRepository: H2LedStripRepository
+    private val ledStripClientRepository: LedStripClientRepository,
+    private val ledStripRepository: LedStripRepository
 ) : StringSpec({
 
     val demoClientEntity = LedStripClientEntity(

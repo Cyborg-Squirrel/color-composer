@@ -14,8 +14,8 @@ import io.cyborgsquirrel.sunrise_sunset.entity.SunriseSunsetTimeEntity
 import io.cyborgsquirrel.sunrise_sunset.enums.TimeOfDay
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiTestData.Companion.apiResponse2025Jan21Json
 import io.cyborgsquirrel.sunrise_sunset.job.SunriseSunsetApiTestData.Companion.apiResponse2025Jan2Json
-import io.cyborgsquirrel.sunrise_sunset.repository.H2LocationConfigRepository
-import io.cyborgsquirrel.sunrise_sunset.repository.H2SunriseSunsetTimeRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.LocationConfigRepository
+import io.cyborgsquirrel.sunrise_sunset.repository.SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.*
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -33,15 +33,15 @@ import kotlin.jvm.optionals.getOrNull
 
 @MicronautTest(startApplication = false, transactional = false)
 class SunriseSunsetTriggerTest(
-    private val locationConfigRepository: H2LocationConfigRepository,
-    private val sunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository,
+    private val locationConfigRepository: LocationConfigRepository,
+    private val sunriseSunsetTimeRepository: SunriseSunsetTimeRepository,
     private val objectMapper: ObjectMapper,
     private val timeHelper: TimeHelper,
     private val activeLightEffectService: ActiveLightEffectService,
 ) : StringSpec({
     lateinit var mockTimeHelper: TimeHelper
-    lateinit var mockLocationConfigRepository: H2LocationConfigRepository
-    lateinit var mockSunriseSunsetTimeRepository: H2SunriseSunsetTimeRepository
+    lateinit var mockLocationConfigRepository: LocationConfigRepository
+    lateinit var mockSunriseSunsetTimeRepository: SunriseSunsetTimeRepository
     lateinit var mockActiveLightEffectService: ActiveLightEffectService
     lateinit var timeOfDayService: TimeOfDayService
 
@@ -250,13 +250,13 @@ class SunriseSunsetTriggerTest(
         activationOptional.isEmpty shouldBe true
     }
 }) {
-    @MockBean(H2SunriseSunsetTimeRepository::class)
-    fun sunriseSunsetRepository(): H2SunriseSunsetTimeRepository {
+    @MockBean(SunriseSunsetTimeRepository::class)
+    fun sunriseSunsetRepository(): SunriseSunsetTimeRepository {
         return mockk()
     }
 
-    @MockBean(H2LocationConfigRepository::class)
-    fun locationConfigRepository(): H2LocationConfigRepository {
+    @MockBean(LocationConfigRepository::class)
+    fun locationConfigRepository(): LocationConfigRepository {
         return mockk()
     }
 

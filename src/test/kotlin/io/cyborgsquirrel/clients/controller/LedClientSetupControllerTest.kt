@@ -5,7 +5,7 @@ import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.enums.ColorOrder
-import io.cyborgsquirrel.clients.repository.H2LedStripClientRepository
+import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
 import io.cyborgsquirrel.clients.responses.GetClientResponse
@@ -13,7 +13,7 @@ import io.cyborgsquirrel.clients.responses.GetClientsResponse
 import io.cyborgsquirrel.clients.status.ClientStatusInfo
 import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
-import io.cyborgsquirrel.led_strips.repository.H2LedStripRepository
+import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.kotest.core.spec.style.StringSpec
@@ -30,8 +30,8 @@ import java.util.*
 @MicronautTest
 class LedClientSetupControllerTest(
     @Client private val apiClient: LedClientApi,
-    private val clientRepository: H2LedStripClientRepository,
-    private val stripRepository: H2LedStripRepository,
+    private val clientRepository: LedStripClientRepository,
+    private val stripRepository: LedStripRepository,
     private val clientStatusService: ClientStatusService
 ) :
     StringSpec({
