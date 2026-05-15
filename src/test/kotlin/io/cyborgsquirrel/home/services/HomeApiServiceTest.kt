@@ -8,7 +8,7 @@ import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.EffectCategory
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
@@ -28,7 +28,7 @@ class HomeApiServiceTest(
     private val stripRepository: LedStripRepository,
     private val effectRepository: LightEffectRepository,
     private val paletteRepository: LightEffectPaletteRepository,
-    private val activeLightEffectService: ActiveLightEffectService,
+    private val activeLightEffectService: LightEffectRegistry,
     private val objectMapper: ObjectMapper,
 ) : StringSpec({
 

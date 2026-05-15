@@ -4,8 +4,8 @@ import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectServiceImpl
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistryImpl
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
@@ -29,15 +29,15 @@ import kotlin.jvm.optionals.getOrNull
 @MicronautTest(startApplication = false, transactional = false)
 class TimeTriggerTest(
     private val timeHelper: TimeHelper,
-    private val activeLightEffectService: ActiveLightEffectService,
+    private val activeLightEffectService: LightEffectRegistry,
 ) : BehaviorSpec({
     lateinit var mockTimeHelper: TimeHelper
     lateinit var activeEffect: ActiveLightEffect
-    lateinit var mockActiveLightEffectService: ActiveLightEffectService
+    lateinit var mockLightEffectRegistry: LightEffectRegistry
 
     beforeTest {
         mockTimeHelper = getMock(timeHelper)
-        mockActiveLightEffectService = getMock(activeLightEffectService)
+        mockLightEffectRegistry = getMock(activeLightEffectService)
 
         val mockStrip = mockk<SingleLedStripModel>()
         val effect = SpectrumLightEffect(60, SpectrumEffectSettings.default(60), null, mockTimeHelper)
@@ -52,7 +52,7 @@ class TimeTriggerTest(
         )
 
         every {
-            mockActiveLightEffectService.getEffectWithUuid(activeEffect.effectUuid)
+            mockLightEffectRegistry.getEffectWithUuid(activeEffect.effectUuid)
         } returns Optional.of(activeEffect)
     }
 
@@ -90,8 +90,8 @@ class TimeTriggerTest(
         return mockk()
     }
 
-    @MockBean(ActiveLightEffectServiceImpl::class)
-    fun activeEffectRepository(): ActiveLightEffectService {
+    @MockBean(LightEffectRegistryImpl::class)
+    fun activeEffectRepository(): LightEffectRegistry {
         return mockk()
     }
 }

@@ -11,7 +11,7 @@ import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.lighting.effect_palette.palette.StaticColorPalette
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
@@ -40,7 +40,7 @@ class LedStripApiServiceTest(
     private val stripRepository: LedStripRepository,
     private val clientRepository: LedStripClientRepository,
     private val clientStatusService: ClientStatusService,
-    private val activeLightEffectService: ActiveLightEffectService,
+    private val activeLightEffectService: LightEffectRegistry,
     private val timeHelper: TimeHelper,
 ) : StringSpec({
 
@@ -56,7 +56,7 @@ class LedStripApiServiceTest(
     }
 
     "getStrip should return strip by uuid" {
-        val mockActiveLightEffectService = getMock(activeLightEffectService)
+        val mockLightEffectRegistry = getMock(activeLightEffectService)
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
         val statusService = getMock(clientStatusService)
@@ -64,7 +64,7 @@ class LedStripApiServiceTest(
             statusService.getStatusForClient(client)
         } returns Optional.of(ClientStatusInfo(ClientStatus.Active, 1))
         val service = LedStripApiService(
-            mockActiveLightEffectService, stripRepository, clientRepository, statusService, timeHelper
+            mockLightEffectRegistry, stripRepository, clientRepository, statusService, timeHelper
         )
 
         val mockEffectA = mockk<ActiveLightEffect>()
@@ -75,7 +75,7 @@ class LedStripApiServiceTest(
         every { mockEffectA.strip } returns mockStrip
         every { mockEffectB.status } returns LightEffectStatus.Stopped
         every { mockEffectB.strip } returns mockStrip
-        every { mockActiveLightEffectService.getAllEffects() } returns listOf(mockEffectA, mockEffectB)
+        every { mockLightEffectRegistry.getAllEffects() } returns listOf(mockEffectA, mockEffectB)
 
         val result = service.getStrip(strip.uuid!!)
         result.uuid shouldBe strip.uuid
@@ -192,7 +192,7 @@ class LedStripApiServiceTest(
     }
 
     "updateStrip should recreate effect when length changes" {
-        val mockActiveLightEffectService = getMock(activeLightEffectService)
+        val mockLightEffectRegistry = getMock(activeLightEffectService)
         val mockPalette = mockk<StaticColorPalette>()
         every { mockPalette.getPrimaryColor(any()) } returns RgbColor.Red
         every { mockPalette.getSecondaryColor(any()) } returns RgbColor.Orange
@@ -213,7 +213,7 @@ class LedStripApiServiceTest(
         spectrumLightEffect.getIterations() shouldBe 1
 
         val service = LedStripApiService(
-            mockActiveLightEffectService, stripRepository, clientRepository, clientStatusService, timeHelper
+            mockLightEffectRegistry, stripRepository, clientRepository, clientStatusService, timeHelper
         )
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Original Strip", 10, "D10", 100)
@@ -229,10 +229,10 @@ class LedStripApiServiceTest(
             listOf(),
             mockStrip
         )
-        every { mockActiveLightEffectService.getAllEffectsForStrip(strip.uuid!!) } returns listOf(mockActiveLightEffect)
+        every { mockLightEffectRegistry.getAllEffectsForStrip(strip.uuid!!) } returns listOf(mockActiveLightEffect)
 
         val activeEffectSlot = slot<ActiveLightEffect>()
-        every { mockActiveLightEffectService.addOrUpdateEffect(capture(activeEffectSlot)) } returns Unit
+        every { mockLightEffectRegistry.addOrUpdateEffect(capture(activeEffectSlot)) } returns Unit
 
         val request = UpdateLedStripRequest(
             name = strip.name,
@@ -247,7 +247,7 @@ class LedStripApiServiceTest(
         service.updateStrip(strip.uuid!!, request)
 
         verify(exactly = 1) {
-            mockActiveLightEffectService.addOrUpdateEffect(any())
+            mockLightEffectRegistry.addOrUpdateEffect(any())
         }
 
         activeEffectSlot.isCaptured shouldBe true
@@ -311,15 +311,15 @@ class LedStripApiServiceTest(
     }
 
     "delete an existing strip" {
-        val mockActiveLightEffectService = getMock(activeLightEffectService)
+        val mockLightEffectRegistry = getMock(activeLightEffectService)
         val service = LedStripApiService(
-            mockActiveLightEffectService, stripRepository, clientRepository, clientStatusService, timeHelper
+            mockLightEffectRegistry, stripRepository, clientRepository, clientStatusService, timeHelper
         )
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
 
         val mockEffect = mockk<ActiveLightEffect>()
-        every { mockActiveLightEffectService.getAllEffectsForStrip(strip.uuid!!) } returns listOf(mockEffect)
+        every { mockLightEffectRegistry.getAllEffectsForStrip(strip.uuid!!) } returns listOf(mockEffect)
 
         service.onStripDeleted(strip.uuid!!)
 
@@ -327,7 +327,7 @@ class LedStripApiServiceTest(
         deletedStrip.isEmpty shouldBe true
 
         verify(exactly = 1) {
-            mockActiveLightEffectService.removeEffect(mockEffect)
+            mockLightEffectRegistry.removeEffect(mockEffect)
         }
     }
 
@@ -338,8 +338,8 @@ class LedStripApiServiceTest(
     }
 }) {
 
-    @MockBean(ActiveLightEffectService::class)
-    fun activeLightEffectService(): ActiveLightEffectService {
+    @MockBean(LightEffectRegistry::class)
+    fun activeLightEffectService(): LightEffectRegistry {
         return mockk(relaxed = true)
     }
 

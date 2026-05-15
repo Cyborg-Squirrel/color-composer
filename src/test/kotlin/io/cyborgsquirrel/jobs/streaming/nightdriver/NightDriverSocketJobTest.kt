@@ -9,7 +9,7 @@ import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.LightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
@@ -37,7 +37,7 @@ class NightDriverSocketJobTest : StringSpec({
     val mockTriggerManager = mockk<TriggerManager>()
     val mockClientRepository = mockk<LedStripClientRepository>()
     val mockTimeHelper = mockk<TimeHelper>()
-    val mockActiveLightEffectService = mockk<ActiveLightEffectService>()
+    val mockLightEffectRegistry = mockk<LightEffectRegistry>()
     val mockStripEntity = mockk<LedStripEntity>()
 
     val strip = SingleLedStripModel(
@@ -82,18 +82,18 @@ class NightDriverSocketJobTest : StringSpec({
         clientRepository = mockClientRepository,
         timeHelper = mockTimeHelper,
         clientEntity = clientEntity,
-        activeLightEffectService = mockActiveLightEffectService,
+        activeLightEffectService = mockLightEffectRegistry,
     )
 
     fun setupCommonMocks() {
-        every { mockActiveLightEffectService.addListener(any()) } answers {}
-        every { mockActiveLightEffectService.removeListener(any()) } answers {}
+        every { mockLightEffectRegistry.addListener(any()) } answers {}
+        every { mockLightEffectRegistry.removeListener(any()) } answers {}
         every { mockTimeHelper.millisSinceEpoch() } returns NOW_MILLIS
         every { mockTimeHelper.dateTimeFromMillis(any()) } returns LocalDateTime.of(2024, 1, 1, 0, 0)
         every { mockClientRepository.findByUuid(CLIENT_UUID) } returns Optional.of(clientEntity)
         every { mockClientRepository.findById(1L) } returns Optional.of(clientEntity)
         every { mockClientRepository.update(any()) } answers { firstArg() }
-        every { mockActiveLightEffectService.getEffectsForClient(CLIENT_UUID) } returns listOf(activeEffect)
+        every { mockLightEffectRegistry.getEffectsForClient(CLIENT_UUID) } returns listOf(activeEffect)
         every { mockTriggerManager.processTriggers() } answers {}
         every { mockRenderer.renderFrames(any(), any()) } returns emptyList()
     }
@@ -147,13 +147,13 @@ class NightDriverSocketJobTest : StringSpec({
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         val coroutineJob = job.start(scope)
-        verify { mockActiveLightEffectService.addListener(job) }
+        verify { mockLightEffectRegistry.addListener(job) }
 
         job.dispose()
         coroutineJob.join()
         scope.cancel()
 
-        verify { mockActiveLightEffectService.removeListener(job) }
+        verify { mockLightEffectRegistry.removeListener(job) }
     }
 
     "SetupIncomplete: stays when client has no strips configured" {
@@ -182,7 +182,7 @@ class NightDriverSocketJobTest : StringSpec({
         coroutineJob.join()
         scope.cancel()
 
-        verify { mockActiveLightEffectService.removeListener(job) }
+        verify { mockLightEffectRegistry.removeListener(job) }
     }
 
     "RenderingEffect with empty frames transitions to BufferFullWaiting" {

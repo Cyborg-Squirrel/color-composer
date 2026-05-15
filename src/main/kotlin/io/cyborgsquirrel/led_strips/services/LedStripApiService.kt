@@ -12,7 +12,7 @@ import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.led_strips.responses.GetLedStripResponse
 import io.cyborgsquirrel.led_strips.responses.GetLedStripsResponse
 import io.cyborgsquirrel.lighting.effects.*
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
@@ -25,7 +25,7 @@ import kotlin.jvm.optionals.getOrNull
 
 @Singleton
 class LedStripApiService(
-    private val activeLightEffectService: ActiveLightEffectService,
+    private val activeLightEffectService: LightEffectRegistry,
     private val stripRepository: LedStripRepository,
     private val clientRepository: LedStripClientRepository,
     private val clientStatusService: ClientStatusService,

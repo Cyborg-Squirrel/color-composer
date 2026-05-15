@@ -10,7 +10,7 @@ import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.RgbFrameData
@@ -40,7 +40,7 @@ class NightDriverSocketJob(
     private val clientRepository: LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private var clientEntity: LedStripClientEntity,
-    private var activeLightEffectService: ActiveLightEffectService,
+    private var activeLightEffectService: LightEffectRegistry,
 ) : ClientStreamingJob, ActiveLightEffectChangeListener {
 
     // NightDriver TCP connection

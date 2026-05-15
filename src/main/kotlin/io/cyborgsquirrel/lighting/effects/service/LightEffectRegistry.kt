@@ -3,7 +3,7 @@ package io.cyborgsquirrel.lighting.effects.service
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import java.util.*
 
-interface ActiveLightEffectService {
+interface LightEffectRegistry {
 
     fun addOrUpdateEffect(lightEffect: ActiveLightEffect)
 

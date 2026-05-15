@@ -35,7 +35,7 @@ class EffectApiService(
     private val triggerRepository: LightEffectTriggerRepository,
     private val filterRepository: LightEffectFilterRepository,
     private val paletteRepository: LightEffectPaletteRepository,
-    private val effectRegistry: ActiveLightEffectService,
+    private val effectRegistry: LightEffectRegistry,
     private val createLightingService: CreateLightingService,
 ) {
 
