@@ -6,99 +6,63 @@ import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.Semaphore
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * A service for memory storage of [ActiveLightEffect]s.
  */
 @Singleton
 class LightEffectRegistryImpl : LightEffectRegistry {
-    private val listeners = mutableListOf<ActiveLightEffectChangeListener>()
-    private var effectList = mutableListOf<ActiveLightEffect>()
-    private val lock = Semaphore(1)
+    private val listeners = CopyOnWriteArrayList<ActiveLightEffectChangeListener>()
+    private val effectListRef = AtomicReference(listOf<ActiveLightEffect>())
+    private val writeLock = ReentrantLock()
 
     override fun addOrUpdateEffect(lightEffect: ActiveLightEffect) {
-        try {
-            lock.acquire()
-            if (effectList.none { it.effectUuid == lightEffect.effectUuid }) {
+        val snapshot: List<ActiveLightEffect> = writeLock.withLock {
+            val current = effectListRef.get()
+            val updated = if (current.none { it.effectUuid == lightEffect.effectUuid }) {
                 logger.info("New light effect $lightEffect")
-                effectList.add(lightEffect)
+                current + lightEffect
             } else {
                 logger.info("Updating light effect $lightEffect")
-                effectList.replaceAll { if (it.effectUuid == lightEffect.effectUuid) lightEffect else it }
+                current.map { if (it.effectUuid == lightEffect.effectUuid) lightEffect else it }
             }
-
-            onUpdate(effectList)
-        } finally {
-            lock.release()
+            effectListRef.set(updated)
+            updated
         }
+        onUpdate(snapshot)
     }
 
     override fun removeEffect(lightEffect: ActiveLightEffect) {
-        try {
-            lock.acquire()
+        val snapshot: List<ActiveLightEffect> = writeLock.withLock {
             logger.info("Removing light effect $lightEffect")
-            effectList.remove(lightEffect)
-            onUpdate(effectList)
-        } finally {
-            lock.release()
+            val updated = effectListRef.get() - lightEffect
+            effectListRef.set(updated)
+            updated
         }
+        onUpdate(snapshot)
     }
 
     override fun getEffectWithUuid(uuid: String): Optional<ActiveLightEffect> {
-        val effect: ActiveLightEffect?
-        try {
-            lock.acquire()
-            effect = effectList.firstOrNull { it.effectUuid == uuid }
-        } finally {
-            lock.release()
-        }
-
+        val effect = effectListRef.get().firstOrNull { it.effectUuid == uuid }
         return if (effect == null) Optional.empty() else Optional.of(effect)
     }
 
-    override fun getEffectsForClient(clientUuid: String): List<ActiveLightEffect> {
-        val effects = mutableListOf<ActiveLightEffect>()
-        try {
-            lock.acquire()
-            effects.addAll(effectList.filter {
-                when (it.strip) {
-                    is LedStripPoolModel -> it.strip.clientUuids().contains(clientUuid)
-                    is SingleLedStripModel -> it.strip.clientUuid == clientUuid
-                }
-            })
-        } finally {
-            lock.release()
+    override fun getEffectsForClient(clientUuid: String): List<ActiveLightEffect> =
+        effectListRef.get().filter {
+            when (it.strip) {
+                is LedStripPoolModel -> it.strip.clientUuids().contains(clientUuid)
+                is SingleLedStripModel -> it.strip.clientUuid == clientUuid
+            }
         }
 
-        return effects
-    }
+    override fun getAllEffectsForStrip(stripUuid: String): List<ActiveLightEffect> =
+        effectListRef.get().filter { it.strip.uuid == stripUuid }
 
-    override fun getAllEffectsForStrip(stripUuid: String): List<ActiveLightEffect> {
-        val effects = mutableListOf<ActiveLightEffect>()
-        try {
-            lock.acquire()
-            effects.addAll(effectList.filter {
-                it.strip.uuid == stripUuid
-            })
-        } finally {
-            lock.release()
-        }
-
-        return effects
-    }
-
-    override fun getAllEffects(): List<ActiveLightEffect> {
-        val effects = mutableListOf<ActiveLightEffect>()
-        try {
-            lock.acquire()
-            effects.addAll(effectList)
-        } finally {
-            lock.release()
-        }
-
-        return effects
-    }
+    override fun getAllEffects(): List<ActiveLightEffect> = effectListRef.get()
 
     override fun addListener(listener: ActiveLightEffectChangeListener) {
         listeners.add(listener)
@@ -109,13 +73,10 @@ class LightEffectRegistryImpl : LightEffectRegistry {
     }
 
     override fun removeAllEffects() {
-        try {
-            lock.acquire()
-            effectList.clear()
-            onUpdate(effectList)
-        } finally {
-            lock.release()
+        writeLock.withLock {
+            effectListRef.set(emptyList())
         }
+        onUpdate(emptyList())
     }
 
     private fun onUpdate(updatedEffectList: List<ActiveLightEffect>) {
