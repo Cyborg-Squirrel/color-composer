@@ -3,7 +3,7 @@ package io.cyborgsquirrel.lighting.filters.controller
 import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
-import io.cyborgsquirrel.lighting.effects.LightEffectConstants
+import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
@@ -88,7 +88,7 @@ class EffectFilterControllerTest(
         var effectEntity = LightEffectEntity(
             strip = strips.last(),
             name = "Super cool effect",
-            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Idle,
             settings = defaultNrSettings
@@ -126,7 +126,7 @@ class EffectFilterControllerTest(
             CreateEffectRequest(
                 strip.uuid!!,
                 null,
-                LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 "Super cool effect",
                 defaultNrSettings,
                 null
@@ -170,7 +170,7 @@ class EffectFilterControllerTest(
             CreateEffectRequest(
                 strip.uuid!!,
                 null,
-                LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 "Super cool effect",
                 defaultNrSettings,
                 null
@@ -231,7 +231,7 @@ class EffectFilterControllerTest(
             CreateEffectRequest(
                 strip.uuid!!,
                 null,
-                LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 "Super cool effect",
                 defaultNrSettings,
                 null
