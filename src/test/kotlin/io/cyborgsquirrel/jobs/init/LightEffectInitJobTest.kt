@@ -19,7 +19,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.repository.LightEffectTriggerRe
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
-import io.cyborgsquirrel.lighting.effects.LightEffectConstants
+import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
@@ -120,7 +120,7 @@ class LightEffectInitJobTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
-                type = LightEffectConstants.SPECTRUM_NAME,
+                type = LightEffectType.SPECTRUM.displayName,
                 name = "Happy path effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
@@ -172,7 +172,7 @@ class LightEffectInitJobTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = lightEffectSettingsJson,
-                type = LightEffectConstants.SPECTRUM_NAME,
+                type = LightEffectType.SPECTRUM.displayName,
                 name = "A light effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
@@ -243,7 +243,7 @@ class LightEffectInitJobTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = lightEffectSettingsJson,
-                type = LightEffectConstants.SPECTRUM_NAME,
+                type = LightEffectType.SPECTRUM.displayName,
                 name = "Effect A",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
@@ -325,7 +325,7 @@ class LightEffectInitJobTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
-                type = LightEffectConstants.SPECTRUM_NAME,
+                type = LightEffectType.SPECTRUM.displayName,
                 name = "Effect C",
                 pool = pool,
                 uuid = UUID.randomUUID().toString(),

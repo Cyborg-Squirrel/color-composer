@@ -12,7 +12,7 @@ import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.led_strips.repository.PoolMemberLedStripRepository
-import io.cyborgsquirrel.lighting.effects.LightEffectConstants
+import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
@@ -90,7 +90,7 @@ class LightEffectRepositoryTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
-                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 name = "Super cool effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
@@ -151,7 +151,7 @@ class LightEffectRepositoryTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = settingsJson,
-                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 name = "My effect",
                 pool = pool,
                 uuid = UUID.randomUUID().toString(),

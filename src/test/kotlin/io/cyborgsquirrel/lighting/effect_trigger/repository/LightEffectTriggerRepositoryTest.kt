@@ -13,7 +13,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
-import io.cyborgsquirrel.lighting.effects.LightEffectConstants
+import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
@@ -94,7 +94,7 @@ class LightEffectTriggerRepositoryTest(
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
                 settings = lightEffectSettingsJson,
-                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 name = "My nightrider effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),

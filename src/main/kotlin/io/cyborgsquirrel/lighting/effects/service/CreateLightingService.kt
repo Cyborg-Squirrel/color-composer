@@ -170,56 +170,54 @@ class CreateLightingService(
     fun createEffect(
         settings: Map<String, Any>, effectType: String, palette: ColorPalette?, numberOfLeds: Int
     ): LightEffect {
-        return when (effectType) {
-            LightEffectConstants.BOUNCING_BALL_NAME -> BouncingBallLightEffect(
+        return when (LightEffectType.fromName(effectType)) {
+            LightEffectType.BOUNCING_BALL -> BouncingBallLightEffect(
                 numberOfLeds = numberOfLeds, timeHelper = timeHelper, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), BouncingBallEffectSettings::class.java
                 ), palette
             )
 
-            LightEffectConstants.FLAME_EFFECT_NAME -> FlameLightEffect(
+            LightEffectType.FLAME -> FlameLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), FlameEffectSettings::class.java
                 ), palette, timeHelper
             )
 
-            LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME -> NightriderLightEffect(
+            LightEffectType.NIGHTRIDER_COLOR_FILL -> NightriderLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), NightriderColorFillEffectSettings::class.java
                 ), palette, timeHelper
             )
 
-            LightEffectConstants.NIGHTRIDER_COMET_NAME -> NightriderLightEffect(
+            LightEffectType.NIGHTRIDER_COMET -> NightriderLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), NightriderCometEffectSettings::class.java
                 ), palette, timeHelper
             )
 
-            LightEffectConstants.SPECTRUM_NAME -> SpectrumLightEffect(
+            LightEffectType.SPECTRUM -> SpectrumLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), SpectrumEffectSettings::class.java
                 ), palette, timeHelper
             )
 
-            LightEffectConstants.WAVE_EFFECT_NAME -> WaveLightEffect(
+            LightEffectType.WAVE -> WaveLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), WaveEffectSettings::class.java
                 ), palette, timeHelper
             )
 
-            LightEffectConstants.MARQUEE_EFFECT_NAME -> MarqueeEffect(
+            LightEffectType.MARQUEE -> MarqueeEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), MarqueeEffectSettings::class.java
                 ), palette, timeHelper
             )
 
-            LightEffectConstants.SPARKLE_NAME -> SparkleLightEffect(
+            LightEffectType.SPARKLE -> SparkleLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), SparkleEffectSettings::class.java
                 ), palette, timeHelper
             )
-
-            else -> throw IllegalArgumentException("Unknown LightEffect name: $effectType")
         }
     }
 

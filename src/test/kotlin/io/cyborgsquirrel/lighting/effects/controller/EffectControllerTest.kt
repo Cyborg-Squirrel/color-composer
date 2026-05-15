@@ -12,7 +12,7 @@ import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_palette.settings.*
-import io.cyborgsquirrel.lighting.effects.LightEffectConstants
+import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
@@ -87,7 +87,7 @@ class EffectControllerTest(
             strip = strip,
             palette = palette,
             name = "Super cool effect",
-            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Idle,
             settings = defaultNrSettings
@@ -157,7 +157,7 @@ class EffectControllerTest(
             strip = strips.last(),
             palette = palette,
             name = "Super cool effect",
-            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Idle,
             settings = defaultNrSettings
@@ -195,7 +195,7 @@ class EffectControllerTest(
         val request = CreateEffectRequest(
             strip.uuid!!,
             null,
-            LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             "Rainbow Nightrider",
             defaultNrSettings,
             paletteUuid = null,
@@ -265,7 +265,7 @@ class EffectControllerTest(
             strip = strip,
             palette = palette,
             name = "Super cool light effect",
-            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Idle,
             settings = defaultNrSettings
@@ -339,7 +339,7 @@ class EffectControllerTest(
             strip = strip,
             palette = palette,
             name = "Super cool effect",
-            type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Idle,
             settings = defaultNrSettings
@@ -397,7 +397,7 @@ class EffectControllerTest(
         val createEffectRequest = CreateEffectRequest(
             stripUuid = null,
             poolUuid = pool.uuid,
-            effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             name = "Pool Nightrider Effect",
             settings = defaultNrSettings,
             paletteUuid = palette.uuid
@@ -425,7 +425,7 @@ class EffectControllerTest(
         val createEffectRequest = CreateEffectRequest(
             stripUuid = strip.uuid,
             poolUuid = null,
-            effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             name = "Get Test Effect",
             settings = defaultNrSettings,
             paletteUuid = null,
@@ -446,7 +446,7 @@ class EffectControllerTest(
         val invalidRequest = CreateEffectRequest(
             stripUuid = null,
             poolUuid = null,
-            effectType = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+            effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             name = "Invalid Effect",
             settings = emptyMap(),
             paletteUuid = null,
@@ -526,7 +526,7 @@ class EffectControllerTest(
                 pool = pool,
                 palette = palette,
                 name = "Pool Effect 1",
-                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
                 settings = defaultNrSettings
@@ -537,7 +537,7 @@ class EffectControllerTest(
                 pool = pool,
                 palette = palette,
                 name = "Pool Effect 2",
-                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
                 settings = defaultNrSettings
@@ -598,7 +598,7 @@ class EffectControllerTest(
                 pool = pool,
                 palette = palette,
                 name = "Garage Pool Effect",
-                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
                 settings = defaultNrSettings
@@ -657,7 +657,7 @@ class EffectControllerTest(
                 pool = pool,
                 palette = palette,
                 name = "Original Pool Effect",
-                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
                 settings = defaultNrSettings
@@ -735,7 +735,7 @@ class EffectControllerTest(
                 pool = pool,
                 palette = palette,
                 name = "Patio Pool Effect",
-                type = LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME,
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
                 settings = defaultNrSettings

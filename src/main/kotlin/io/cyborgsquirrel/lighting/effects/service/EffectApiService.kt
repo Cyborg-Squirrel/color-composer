@@ -5,7 +5,7 @@ import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.LightEffectConstants
+import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
@@ -376,24 +376,24 @@ class EffectApiService(
         }
     }
 
-    fun getAllSchemas(): List<EffectSettingsSchema> = LightEffectConstants.allEffectNames.map { name ->
-        when (name) {
-            LightEffectConstants.SPECTRUM_NAME ->
-                EffectSettingsSchemaBuilder(name)
+    fun getAllSchemas(): List<EffectSettingsSchema> = LightEffectType.entries.map { effectType ->
+        when (effectType) {
+            LightEffectType.SPECTRUM ->
+                EffectSettingsSchemaBuilder(effectType.displayName)
                     .integer("colorPixelWidth", "Number of pixels per color band") { min(1.0) }
                     .boolean("animated", "Whether the spectrum cycles through colors over time")
                     .integer("updatesPerSecond", "Number of animation steps per second") { min(1.0) }
                     .build()
 
-            LightEffectConstants.NIGHTRIDER_COLOR_FILL_NAME ->
-                EffectSettingsSchemaBuilder(name)
+            LightEffectType.NIGHTRIDER_COLOR_FILL ->
+                EffectSettingsSchemaBuilder(effectType.displayName)
                     .boolean("wrap", "Whether the fill wraps around the strip ends")
                     .integer("updatesPerSecond", "Number of position updates per second") { min(1.0) }
                     .number("brightnessScaling", "Brightness multiplier applied to the effect") { min(0.0); max(1.0) }
                     .build()
 
-            LightEffectConstants.NIGHTRIDER_COMET_NAME ->
-                EffectSettingsSchemaBuilder(name)
+            LightEffectType.NIGHTRIDER_COMET ->
+                EffectSettingsSchemaBuilder(effectType.displayName)
                     .integer("trailLength", "Number of pixels in the comet's trailing tail") { min(1.0) }
                     .string("trailFadeCurve", "Brightness falloff curve along the trail") {
                         options(FadeCurve.entries.map { it.name })
@@ -402,8 +402,8 @@ class EffectApiService(
                     .integer("updatesPerSecond", "Number of position updates per second") { min(1.0) }
                     .build()
 
-            LightEffectConstants.FLAME_EFFECT_NAME ->
-                EffectSettingsSchemaBuilder(name)
+            LightEffectType.FLAME ->
+                EffectSettingsSchemaBuilder(effectType.displayName)
                     .integer("cooling", "Rate at which heat dissipates up the strip") { min(1.0) }
                     .integer("sparking", "Probability of new sparks igniting at the base (0–255)") { min(0.0); max(255.0) }
                     .integer("sparks", "Number of sparks generated per update") { min(1.0) }
@@ -411,8 +411,8 @@ class EffectApiService(
                     .integer("updatesPerSecond", "Number of fire simulation steps per second") { min(1.0) }
                     .build()
 
-            LightEffectConstants.BOUNCING_BALL_NAME ->
-                EffectSettingsSchemaBuilder(name)
+            LightEffectType.BOUNCING_BALL ->
+                EffectSettingsSchemaBuilder(effectType.displayName)
                     .integer("startingHeightPercent", "Initial drop height as a percentage of strip length") { min(0.0); max(100.0) }
                     .integer("maxHeightPercent", "Maximum bounce height in pixels") { min(1.0) }
                     .number("speed", "Initial speed of the ball") { min(0.0) }
@@ -420,23 +420,23 @@ class EffectApiService(
                     .number("minimumSpeed", "Speed below which the ball stops bouncing") { min(0.0) }
                     .build()
 
-            LightEffectConstants.WAVE_EFFECT_NAME ->
-                EffectSettingsSchemaBuilder(name)
+            LightEffectType.WAVE ->
+                EffectSettingsSchemaBuilder(effectType.displayName)
                     .integer("startPoint", "Starting pixel position of the wave") { min(0.0) }
                     .integer("waveLength", "Length of one full wave cycle in pixels") { min(1.0) }
                     .boolean("repeat", "Whether the wave repeats continuously")
                     .integer("updatesPerSecond", "Number of wave position steps per second") { min(1.0) }
                     .build()
 
-            LightEffectConstants.MARQUEE_EFFECT_NAME ->
-                EffectSettingsSchemaBuilder(name)
+            LightEffectType.MARQUEE ->
+                EffectSettingsSchemaBuilder(effectType.displayName)
                     .integer("dotLength", "Length of each dot in pixels") { min(1.0) }
                     .integer("spaceBetweenDots", "Gap between dots in pixels") { min(0.0) }
                     .integer("updatesPerSecond", "Number of pixels the dots scroll per second") { min(1.0) }
                     .build()
 
-            LightEffectConstants.SPARKLE_NAME ->
-                EffectSettingsSchemaBuilder(name)
+            LightEffectType.SPARKLE ->
+                EffectSettingsSchemaBuilder(effectType.displayName)
                     .integer("numDots", "Maximum number of simultaneous sparkle dots") { min(1.0) }
                     .integer("fadeInMillisMax", "Maximum fade-in duration in milliseconds") { min(1.0) }
                     .integer("fadeInMillisMin", "Minimum fade-in duration in milliseconds") { min(1.0) }
@@ -444,8 +444,6 @@ class EffectApiService(
                     .integer("fadeOutMillisMin", "Minimum fade-out duration in milliseconds") { min(1.0) }
                     .integer("updatesPerSecond", "Number of sparkle state updates per second") { min(1.0) }
                     .build()
-
-            else -> error("Unknown effect name: $name")
         }
     }
 }
