@@ -13,7 +13,7 @@ import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.model.*
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameSegmentModel
@@ -24,8 +24,6 @@ import kotlinx.coroutines.*
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
-import java.sql.Timestamp
-import java.time.Instant
 
 /**
  * Background job for streaming light effects to Raspberry Pi clients
@@ -48,7 +46,7 @@ class PiClientWebSocketJob(
     private val timeHelper: TimeHelper,
     private val piConfigClient: PiConfigClient,
     private var clientEntity: LedStripClientEntity,
-    private var activeLightEffectService: ActiveLightEffectService,
+    private var activeLightEffectService: LightEffectRegistry,
 ) : ClientStreamingJob, ActiveLightEffectChangeListener {
 
     // Pi WebSocket client
@@ -189,8 +187,7 @@ class PiClientWebSocketJob(
                             timestampMillis += 1000 / fps
                             renderAndSendFrames(frames)
 
-                            val nowPlusBufferMillis =
-                                Timestamp.from(Instant.now().plusMillis(bufferTimeInMilliseconds)).time
+                            val nowPlusBufferMillis = timeHelper.millisSinceEpoch() + bufferTimeInMilliseconds
                             if (nowPlusBufferMillis < timestampMillis) {
                                 sleepMillis = timestampMillis - nowPlusBufferMillis
                                 status = StreamingJobStatus.BufferFullWaiting
@@ -199,8 +196,13 @@ class PiClientWebSocketJob(
                     }
                 }
             }
+        } catch (ex: CancellationException) {
+            throw ex
         } catch (ex: Exception) {
             logger.error("Error while processing state $status", ex)
+            if (status == StreamingJobStatus.WaitingForConnection) {
+                status = StreamingJobStatus.Offline
+            }
             delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
             if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
         }

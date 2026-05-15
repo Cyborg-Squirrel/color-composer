@@ -7,7 +7,7 @@ import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.nightdriver.NightDriverSocketJob
 import io.cyborgsquirrel.jobs.streaming.pi_client.PiClientWebSocketJob
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.micronaut.websocket.WebSocketClient
@@ -21,7 +21,7 @@ class StreamingJobFactory(
     private val clientRepository: LedStripClientRepository,
     private val timeHelper: TimeHelper,
     private val piConfigClient: PiConfigClient,
-    private val activeLightEffectService: ActiveLightEffectService
+    private val activeLightEffectService: LightEffectRegistry
 ) {
 
     fun createJob(client: LedStripClientEntity): ClientStreamingJob {

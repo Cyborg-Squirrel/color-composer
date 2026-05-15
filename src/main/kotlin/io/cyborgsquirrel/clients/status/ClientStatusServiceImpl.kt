@@ -4,14 +4,14 @@ import io.cyborgsquirrel.clients.entity.LedStripClientEntity
 import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.isActive
 import jakarta.inject.Singleton
 import java.util.*
 
 @Singleton
 class ClientStatusServiceImpl(
-    private val activeLightEffectService: ActiveLightEffectService,
+    private val activeLightEffectService: LightEffectRegistry,
     private val jobsManager: StreamJobManager
 ) : ClientStatusService {
 

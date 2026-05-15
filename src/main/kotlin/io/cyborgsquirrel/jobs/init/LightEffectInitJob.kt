@@ -5,7 +5,7 @@ import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
@@ -15,13 +15,13 @@ import java.util.concurrent.Semaphore
  * Server startup job to initialize from the last saved state.
  *
  * This job reads configured effects, filters, palettes, triggers, and clients from the database. Then registers each
- * with the corresponding service (e.g. [TriggerManager], [ActiveLightEffectService], [StreamJobManager]).
+ * with the corresponding service (e.g. [TriggerManager], [LightEffectRegistry], [StreamJobManager]).
  */
 @Singleton
 class LightEffectInitJob(
     private val clientRepository: LedStripClientRepository,
     private val lightEffectRepository: LightEffectRepository,
-    private val activeLightEffectService: ActiveLightEffectService,
+    private val activeLightEffectService: LightEffectRegistry,
     private val triggerManager: TriggerManager,
     private val createLightingService: CreateLightingService,
     private val streamJobManager: StreamJobManager,

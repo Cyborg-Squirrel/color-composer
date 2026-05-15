@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.rendering
 
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.isActive
 import io.cyborgsquirrel.lighting.model.LedStripModel
@@ -20,7 +20,7 @@ import java.util.concurrent.Semaphore
 
 @Singleton
 class LightEffectRendererImpl(
-    private val effectRepository: ActiveLightEffectService,
+    private val effectRepository: LightEffectRegistry,
 ) : LightEffectRenderer {
 
     private val lock = Semaphore(1)

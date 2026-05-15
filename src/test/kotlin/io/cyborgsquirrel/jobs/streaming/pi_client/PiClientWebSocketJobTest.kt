@@ -16,7 +16,7 @@ import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.LightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
@@ -52,7 +52,7 @@ class PiClientWebSocketJobTest : StringSpec({
     val mockClientRepository = mockk<LedStripClientRepository>()
     val mockTimeHelper = mockk<TimeHelper>()
     val mockPiConfigClient = mockk<PiConfigClient>()
-    val mockActiveLightEffectService = mockk<ActiveLightEffectService>()
+    val mockLightEffectRegistry = mockk<LightEffectRegistry>()
     val mockPiWebSocketClient = mockk<PiWebSocketClient>()
     val mockStripEntity = mockk<LedStripEntity>()
 
@@ -109,21 +109,21 @@ class PiClientWebSocketJobTest : StringSpec({
         timeHelper = mockTimeHelper,
         piConfigClient = mockPiConfigClient,
         clientEntity = clientEntity,
-        activeLightEffectService = mockActiveLightEffectService,
+        activeLightEffectService = mockLightEffectRegistry,
     )
 
     var mockResponseQueue = ConcurrentLinkedQueue<ByteArray>()
 
     fun setupCommonMocks() {
         mockResponseQueue = ConcurrentLinkedQueue()
-        every { mockActiveLightEffectService.addListener(any()) } answers {}
-        every { mockActiveLightEffectService.removeListener(any()) } answers {}
+        every { mockLightEffectRegistry.addListener(any()) } answers {}
+        every { mockLightEffectRegistry.removeListener(any()) } answers {}
         every { mockTimeHelper.millisSinceEpoch() } returns NOW_MILLIS
         every { mockTimeHelper.dateTimeFromMillis(any()) } returns LocalDateTime.of(2024, 1, 1, 0, 0)
         every { mockClientRepository.findByUuid(CLIENT_UUID) } returns Optional.of(clientEntity)
         every { mockClientRepository.findById(1L) } returns Optional.of(clientEntity)
         every { mockClientRepository.update(any()) } answers { firstArg() }
-        every { mockActiveLightEffectService.getEffectsForClient(CLIENT_UUID) } returns listOf(activeEffect)
+        every { mockLightEffectRegistry.getEffectsForClient(CLIENT_UUID) } returns listOf(activeEffect)
         every { mockTriggerManager.processTriggers() } answers {}
         every { mockRenderer.renderFrames(any(), any()) } returns emptyList()
         every { mockPiWebSocketClient.registerOnDisconnectedCallback(any()) } answers {}
@@ -208,13 +208,13 @@ class PiClientWebSocketJobTest : StringSpec({
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         val coroutineJob = job.start(scope)
-        verify { mockActiveLightEffectService.addListener(job) }
+        verify { mockLightEffectRegistry.addListener(job) }
 
         job.dispose()
         coroutineJob.join()
         scope.cancel()
 
-        verify { mockActiveLightEffectService.removeListener(job) }
+        verify { mockLightEffectRegistry.removeListener(job) }
     }
 
     "SetupIncomplete: stays in SetupIncomplete when client has no strips configured" {
@@ -243,7 +243,7 @@ class PiClientWebSocketJobTest : StringSpec({
         coroutineJob.join() // dispose() sets shouldRun=false so the loop exits naturally
         scope.cancel()
 
-        verify { mockActiveLightEffectService.removeListener(job) }
+        verify { mockLightEffectRegistry.removeListener(job) }
     }
 
     "happy path: transitions from SetupIncomplete all the way to RenderingEffect" {

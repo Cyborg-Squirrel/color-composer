@@ -7,7 +7,7 @@ import io.cyborgsquirrel.jobs.streaming.model.PiStreamingJobState
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -20,15 +20,15 @@ import java.util.*
 
 @MicronautTest(startApplication = false, transactional = false)
 class ClientStatusServiceTest(
-    private val activeLightEffectService: ActiveLightEffectService,
+    private val activeLightEffectService: LightEffectRegistry,
     private val jobsManager: StreamJobManager,
     private val service: ClientStatusService
 ) : StringSpec({
-    lateinit var mockActiveLightEffectService: ActiveLightEffectService
+    lateinit var mockLightEffectRegistry: LightEffectRegistry
     lateinit var mockJobsManager: StreamJobManager
 
     beforeTest {
-        mockActiveLightEffectService = getMock(activeLightEffectService)
+        mockLightEffectRegistry = getMock(activeLightEffectService)
         mockJobsManager = getMock(jobsManager)
     }
 
@@ -60,7 +60,7 @@ class ClientStatusServiceTest(
             mockJobsManager.getJobState(any())
         } returns PiStreamingJobState(StreamingJobStatus.ConnectedIdle)
         every {
-            mockActiveLightEffectService.getAllEffectsForStrip(any())
+            mockLightEffectRegistry.getAllEffectsForStrip(any())
         } returns listOf()
 
         val mockClientEntity = mockk<LedStripClientEntity>()
@@ -91,7 +91,7 @@ class ClientStatusServiceTest(
             mockJobsManager.getJobState(any())
         } returns PiStreamingJobState(StreamingJobStatus.SetupIncomplete)
         every {
-            mockActiveLightEffectService.getAllEffectsForStrip(any())
+            mockLightEffectRegistry.getAllEffectsForStrip(any())
         } returns listOf()
 
         val mockClientEntity = mockk<LedStripClientEntity>()
@@ -115,7 +115,7 @@ class ClientStatusServiceTest(
             mockJobsManager.getJobState(any())
         } returns PiStreamingJobState(StreamingJobStatus.RenderingEffect)
         every {
-            mockActiveLightEffectService.getEffectsForClient(any())
+            mockLightEffectRegistry.getEffectsForClient(any())
         } returns listOf()
         every { mockClientEntity.uuid } returns clientUuid
 
@@ -140,8 +140,8 @@ class ClientStatusServiceTest(
         statusInfo.activeEffects shouldBe 1
     }
 }) {
-    @MockBean(ActiveLightEffectService::class)
-    fun activeLightEffectRegistry(): ActiveLightEffectService = mockk()
+    @MockBean(LightEffectRegistry::class)
+    fun activeLightEffectRegistry(): LightEffectRegistry = mockk()
 
     @MockBean(StreamJobManager::class)
     fun jobsManager(): StreamJobManager = mockk()

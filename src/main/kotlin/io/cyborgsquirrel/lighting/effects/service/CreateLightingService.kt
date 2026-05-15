@@ -39,7 +39,7 @@ class CreateLightingService(
     private val locationConfigRepository: LocationConfigRepository,
     private val junctionRepository: LightEffectFilterJunctionRepository,
     private val stripRepository: LedStripRepository,
-    private val activeLightEffectService: ActiveLightEffectService,
+    private val activeLightEffectService: LightEffectRegistry,
     private val timeHelper: TimeHelper,
     private val timeOfDayService: TimeOfDayService,
     private val objectMapper: ObjectMapper

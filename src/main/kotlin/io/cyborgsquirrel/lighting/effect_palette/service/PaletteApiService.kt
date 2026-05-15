@@ -9,7 +9,7 @@ import io.cyborgsquirrel.lighting.effect_palette.responses.GetAllPalettesRespons
 import io.cyborgsquirrel.lighting.effect_palette.responses.GetPaletteResponse
 import io.cyborgsquirrel.lighting.effect_palette.settings.*
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.json.tree.JsonNode
@@ -22,7 +22,7 @@ class PaletteApiService(
     private val paletteRepository: LightEffectPaletteRepository,
     private val effectRepository: LightEffectRepository,
     private val lightingService: CreateLightingService,
-    private val effectRegistry: ActiveLightEffectService,
+    private val effectRegistry: LightEffectRegistry,
     private val objectMapper: ObjectMapper
 ) {
 

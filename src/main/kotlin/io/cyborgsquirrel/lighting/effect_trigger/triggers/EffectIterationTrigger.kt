@@ -3,7 +3,7 @@ package io.cyborgsquirrel.lighting.effect_trigger.triggers
 import io.cyborgsquirrel.lighting.effect_trigger.model.TriggerActivation
 import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
 import io.cyborgsquirrel.lighting.effects.LightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.util.time.TimeHelper
 import java.time.LocalDateTime
 import java.util.*
@@ -14,7 +14,7 @@ import java.util.*
  */
 class EffectIterationTrigger(
     private val timeHelper: TimeHelper,
-    private val effectRegistry: ActiveLightEffectService,
+    private val effectRegistry: LightEffectRegistry,
     settings: EffectIterationTriggerSettings,
     uuid: String,
     effectUuid: String,

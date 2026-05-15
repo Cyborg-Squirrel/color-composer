@@ -4,8 +4,8 @@ import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeOfDayTriggerSettings
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectServiceImpl
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistryImpl
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
@@ -37,12 +37,12 @@ class SunriseSunsetTriggerTest(
     private val sunriseSunsetTimeRepository: SunriseSunsetTimeRepository,
     private val objectMapper: ObjectMapper,
     private val timeHelper: TimeHelper,
-    private val activeLightEffectService: ActiveLightEffectService,
+    private val activeLightEffectService: LightEffectRegistry,
 ) : StringSpec({
     lateinit var mockTimeHelper: TimeHelper
     lateinit var mockLocationConfigRepository: LocationConfigRepository
     lateinit var mockSunriseSunsetTimeRepository: SunriseSunsetTimeRepository
-    lateinit var mockActiveLightEffectService: ActiveLightEffectService
+    lateinit var mockLightEffectRegistry: LightEffectRegistry
     lateinit var timeOfDayService: TimeOfDayService
 
     // Location option 1
@@ -59,7 +59,7 @@ class SunriseSunsetTriggerTest(
         timeOfDayService = TimeOfDayServiceImpl(mockTimeHelper)
         mockLocationConfigRepository = getMock(locationConfigRepository)
         mockSunriseSunsetTimeRepository = getMock(sunriseSunsetTimeRepository)
-        mockActiveLightEffectService = getMock(activeLightEffectService)
+        mockLightEffectRegistry = getMock(activeLightEffectService)
 
         val mockStrip = mockk<SingleLedStripModel>()
         val effect = SpectrumLightEffect(60, SpectrumEffectSettings.default(60), null, mockTimeHelper)
@@ -74,7 +74,7 @@ class SunriseSunsetTriggerTest(
         )
 
         every {
-            mockActiveLightEffectService.getEffectWithUuid(activeEffect.effectUuid)
+            mockLightEffectRegistry.getEffectWithUuid(activeEffect.effectUuid)
         } returns Optional.of(activeEffect)
     }
 
@@ -259,6 +259,6 @@ class SunriseSunsetTriggerTest(
     @MockBean(TimeHelperImpl::class)
     fun timeHelper(): TimeHelper = mockk()
 
-    @MockBean(ActiveLightEffectServiceImpl::class)
-    fun activeEffectRepository(): ActiveLightEffectService = mockk()
+    @MockBean(LightEffectRegistryImpl::class)
+    fun activeEffectRepository(): LightEffectRegistry = mockk()
 }

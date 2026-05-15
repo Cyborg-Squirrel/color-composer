@@ -8,7 +8,7 @@ import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
@@ -46,7 +46,7 @@ class EffectFilterControllerTest(
     private val stripRepository: LedStripRepository,
     private val effectRepository: LightEffectRepository,
     private val filterRepository: LightEffectFilterRepository,
-    private val effectRegistry: ActiveLightEffectService,
+    private val effectRegistry: LightEffectRegistry,
     private val junctionRepository: LightEffectFilterJunctionRepository,
     private val objectMapper: ObjectMapper
 ) : StringSpec({

@@ -23,7 +23,7 @@ import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
@@ -52,7 +52,7 @@ class LightEffectInitJobTest(
     private val ledStripRepository: LedStripRepository,
     private val ledStripPoolRepository: LedStripPoolRepository,
     private val poolMemberLedStripRepository: PoolMemberLedStripRepository,
-    private val activeLightEffectService: ActiveLightEffectService,
+    private val activeLightEffectService: LightEffectRegistry,
     private val triggerRepository: LightEffectTriggerRepository,
     private val filterRepository: LightEffectFilterRepository,
     private val junctionRepository: LightEffectFilterJunctionRepository,

@@ -12,7 +12,7 @@ import java.util.concurrent.Semaphore
  * A service for memory storage of [ActiveLightEffect]s.
  */
 @Singleton
-class ActiveLightEffectServiceImpl : ActiveLightEffectService {
+class LightEffectRegistryImpl : LightEffectRegistry {
     private val listeners = mutableListOf<ActiveLightEffectChangeListener>()
     private var effectList = mutableListOf<ActiveLightEffect>()
     private val lock = Semaphore(1)
@@ -123,6 +123,6 @@ class ActiveLightEffectServiceImpl : ActiveLightEffectService {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ActiveLightEffectServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(LightEffectRegistryImpl::class.java)
     }
 }
