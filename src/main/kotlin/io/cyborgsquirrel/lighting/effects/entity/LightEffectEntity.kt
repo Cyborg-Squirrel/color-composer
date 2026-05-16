@@ -32,7 +32,7 @@ data class LightEffectEntity(
     @Relation(value = Relation.Kind.MANY_TO_ONE)
     var palette: LightEffectPaletteEntity? = null,
 
-    var uuid: String? = null,
+    var uuid: String,
 
     @TypeDef(type = DataType.JSON)
     var settings: Map<String, Any>,

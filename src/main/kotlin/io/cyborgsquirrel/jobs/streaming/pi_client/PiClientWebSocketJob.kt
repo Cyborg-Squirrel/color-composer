@@ -12,8 +12,8 @@ import io.cyborgsquirrel.jobs.streaming.serialization.PiFrameDataSerializer
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
+import reactor.core.Disposable
 import io.cyborgsquirrel.lighting.model.*
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameSegmentModel
@@ -47,10 +47,11 @@ class PiClientWebSocketJob(
     private val piConfigClient: PiConfigClient,
     private var clientEntity: LedStripClientEntity,
     private var activeLightEffectService: LightEffectRegistry,
-) : ClientStreamingJob, ActiveLightEffectChangeListener {
+) : ClientStreamingJob {
 
     // Pi WebSocket client
     private var client: PiWebSocketClient? = null
+    private var effectsSubscription: Disposable? = null
 
     // Client data — written from both the coroutine and the onUpdate listener callback
     @Volatile
@@ -84,7 +85,7 @@ class PiClientWebSocketJob(
      * Returns the Job instance.
      */
     override fun start(scope: CoroutineScope): Job {
-        activeLightEffectService.addListener(this)
+        effectsSubscription = activeLightEffectService.updates.subscribe { onEffectsUpdate(it) }
         return scope.launch {
             logger.info("Start")
             while (isActive && shouldRun) {
@@ -364,7 +365,7 @@ class PiClientWebSocketJob(
         }
     }
 
-    override fun onUpdate(newEffects: List<ActiveLightEffect>) {
+    internal fun onEffectsUpdate(newEffects: List<ActiveLightEffect>) {
         val matchingStrips = newEffects.filter {
             val strip = it.strip
             val clientUuid = clientEntity.uuid
@@ -400,7 +401,7 @@ class PiClientWebSocketJob(
     }
 
     override fun dispose() {
-        activeLightEffectService.removeListener(this)
+        effectsSubscription?.dispose()
         shouldRun = false
         client?.unregisterOnDisconnectedCallback()
         client?.close()

@@ -1,5 +1,7 @@
 package io.cyborgsquirrel.lighting.effects.service
 
+import io.cyborgsquirrel.event_source.model.LightEffectEvent
+import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
@@ -37,6 +39,7 @@ class EffectApiService(
     private val paletteRepository: LightEffectPaletteRepository,
     private val effectRegistry: LightEffectRegistry,
     private val createLightingService: CreateLightingService,
+    private val sseEventEmitter: SseEventEmitter,
 ) {
 
     fun createEffect(request: CreateEffectRequest): String {
@@ -113,7 +116,7 @@ class EffectApiService(
         )
 
         val activeEffect = ActiveLightEffect(
-            effectUuid = effectEntity.uuid!!,
+            effectUuid = effectEntity.uuid,
             // TODO add priority to persistence layer
             priority = 0,
             skipFramesIfBlank = true,
@@ -124,7 +127,8 @@ class EffectApiService(
         )
 
         effectRegistry.addOrUpdateEffect(activeEffect)
-        return effectEntity.uuid!!
+        sseEventEmitter.emit(LightEffectEvent.LightEffectCreated(effectEntity.uuid))
+        return effectEntity.uuid
     }
 
     fun getEffectsForStrip(stripUuid: String): GetEffectsResponse {
@@ -135,7 +139,7 @@ class EffectApiService(
             val effectList = effectEntities.map {
                 GetStripEffectResponse(
                     name = it.name,
-                    uuid = it.uuid!!,
+                    uuid = it.uuid,
                     stripUuid = stripEntity.uuid!!,
                     paletteUuid = it.palette?.uuid,
                     settings = it.settings,
@@ -159,7 +163,7 @@ class EffectApiService(
             val effectList = effectEntities.map {
                 GetPoolEffectResponse(
                     name = it.name,
-                    uuid = it.uuid!!,
+                    uuid = it.uuid,
                     poolUuid = poolEntity.uuid!!,
                     paletteUuid = it.palette?.uuid,
                     settings = it.settings,
@@ -213,10 +217,11 @@ class EffectApiService(
             triggerEntities.forEach { triggerRepository.delete(it) }
             effectRepository.delete(effectEntity)
 
-            val activeEffectOptional = effectRegistry.getEffectWithUuid(effectUuid)
-            if (activeEffectOptional.isPresent) {
-                effectRegistry.removeEffect(activeEffectOptional.get())
+            val activeEffect = effectRegistry.getEffectWithUuid(effectUuid)
+            if (activeEffect != null) {
+                effectRegistry.removeEffect(activeEffect)
             }
+            sseEventEmitter.emit(LightEffectEvent.LightEffectDeleted(effectUuid))
         } else {
             throw ResourceNotFoundException("Effect with uuid $effectUuid doesn't exist!")
         }
@@ -278,8 +283,8 @@ class EffectApiService(
 
             effectEntity = effectRepository.update(effectEntity)
 
-            val activeEffectOptional = effectRegistry.getEffectWithUuid(uuid)
-            if (activeEffectOptional.isPresent) {
+            var effectModel = effectRegistry.getEffectWithUuid(uuid)
+            if (effectModel != null) {
                 val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
                 val palette = if (effectEntity.palette != null) createLightingService.createPalette(
                     effectEntity.palette!!.settings!!,
@@ -291,16 +296,15 @@ class EffectApiService(
                     effectEntity.settings, effectEntity.type, palette, strip.length()
                 )
 
-                var activeEffect = activeEffectOptional.get()
                 val onlyPaletteChange =
                     updateEffectRequest.stripUuid == null && updateEffectRequest.paletteUuid != null && updateEffectRequest.name == null && updateEffectRequest.settings == null
                 if (onlyPaletteChange && palette != null) {
                     // If the palette is the only update, don't create a new ActiveEffect with copy()
                     // This retains the state of the effect and just swaps the palette.
-                    activeEffect.effect.updatePalette(palette)
+                    effectModel.effect.updatePalette(palette)
                 } else {
-                    activeEffect = activeEffect.copy(
-                        effectUuid = effectEntity.uuid!!,
+                    effectModel = effectModel.copy(
+                        effectUuid = effectEntity.uuid,
                         // TODO add priority to persistence layer
                         priority = 0,
                         skipFramesIfBlank = true,
@@ -309,9 +313,10 @@ class EffectApiService(
                         effect = lightEffect,
                     )
 
-                    effectRegistry.addOrUpdateEffect(activeEffect)
+                    effectRegistry.addOrUpdateEffect(effectModel)
                 }
             }
+            sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(uuid))
         } else {
             throw ResourceNotFoundException("Effect with uuid $uuid doesn't exist!")
         }
@@ -322,12 +327,12 @@ class EffectApiService(
         val activeEffects = mutableListOf<ActiveLightEffect>()
         request.uuids.forEach { uuid ->
             val effectEntityOptional = effectRepository.findByUuid(uuid)
-            val activeEffectOptional = effectRegistry.getEffectWithUuid(uuid)
-            if (effectEntityOptional.isEmpty || activeEffectOptional.isEmpty) {
+            val activeEffect = effectRegistry.getEffectWithUuid(uuid)
+            if (effectEntityOptional.isEmpty || activeEffect == null) {
                 throw ClientRequestException("Effect with uuid $uuid doesn't exist!")
             } else {
                 effectEntities.add(effectEntityOptional.get())
-                activeEffects.add(activeEffectOptional.get())
+                activeEffects.add(activeEffect)
             }
         }
 
@@ -336,6 +341,7 @@ class EffectApiService(
             val newStatus = effectStatusFromCommand(request.command)
             effectRegistry.addOrUpdateEffect(activeEffect.copy(status = newStatus))
             effectRepository.update(entity.copy(status = newStatus))
+            sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(entity.uuid))
         }
     }
 
@@ -351,7 +357,7 @@ class EffectApiService(
         return if (lightEffectEntity.strip != null) {
             GetStripEffectResponse(
                 name = lightEffectEntity.name,
-                uuid = lightEffectEntity.uuid!!,
+                uuid = lightEffectEntity.uuid,
                 stripUuid = lightEffectEntity.strip!!.uuid!!,
                 paletteUuid = lightEffectEntity.palette?.uuid,
                 settings = lightEffectEntity.settings,
@@ -362,7 +368,7 @@ class EffectApiService(
         } else if (lightEffectEntity.pool != null) {
             GetPoolEffectResponse(
                 name = lightEffectEntity.name,
-                uuid = lightEffectEntity.uuid!!,
+                uuid = lightEffectEntity.uuid,
                 poolUuid = lightEffectEntity.pool!!.uuid!!,
                 paletteUuid = lightEffectEntity.palette?.uuid,
                 settings = lightEffectEntity.settings,

@@ -5,8 +5,8 @@ import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
-import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Sinks
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -16,9 +16,11 @@ import kotlin.concurrent.withLock
  */
 @Singleton
 class LightEffectRegistryImpl : LightEffectRegistry {
-    private val listeners = CopyOnWriteArrayList<ActiveLightEffectChangeListener>()
+    private val sink: Sinks.Many<List<ActiveLightEffect>> = Sinks.many().multicast().onBackpressureBuffer()
     private val effectListRef = AtomicReference(listOf<ActiveLightEffect>())
     private val writeLock = ReentrantLock()
+
+    override val updates: Flux<List<ActiveLightEffect>> = sink.asFlux()
 
     override fun addOrUpdateEffect(lightEffect: ActiveLightEffect) {
         val snapshot: List<ActiveLightEffect> = writeLock.withLock {
@@ -33,7 +35,7 @@ class LightEffectRegistryImpl : LightEffectRegistry {
             effectListRef.set(updated)
             updated
         }
-        onUpdate(snapshot)
+        sink.tryEmitNext(snapshot)
     }
 
     override fun removeEffect(lightEffect: ActiveLightEffect) {
@@ -43,13 +45,10 @@ class LightEffectRegistryImpl : LightEffectRegistry {
             effectListRef.set(updated)
             updated
         }
-        onUpdate(snapshot)
+        sink.tryEmitNext(snapshot)
     }
 
-    override fun getEffectWithUuid(uuid: String): Optional<ActiveLightEffect> {
-        val effect = effectListRef.get().firstOrNull { it.effectUuid == uuid }
-        return if (effect == null) Optional.empty() else Optional.of(effect)
-    }
+    override fun getEffectWithUuid(uuid: String) = effectListRef.get().firstOrNull { it.effectUuid == uuid }
 
     override fun getEffectsForClient(clientUuid: String): List<ActiveLightEffect> =
         effectListRef.get().filter {
@@ -64,23 +63,11 @@ class LightEffectRegistryImpl : LightEffectRegistry {
 
     override fun getAllEffects(): List<ActiveLightEffect> = effectListRef.get()
 
-    override fun addListener(listener: ActiveLightEffectChangeListener) {
-        listeners.add(listener)
-    }
-
-    override fun removeListener(listener: ActiveLightEffectChangeListener) {
-        listeners.remove(listener)
-    }
-
     override fun removeAllEffects() {
         writeLock.withLock {
             effectListRef.set(emptyList())
         }
-        onUpdate(emptyList())
-    }
-
-    private fun onUpdate(updatedEffectList: List<ActiveLightEffect>) {
-        listeners.forEach { it.onUpdate(updatedEffectList) }
+        sink.tryEmitNext(emptyList())
     }
 
     companion object {

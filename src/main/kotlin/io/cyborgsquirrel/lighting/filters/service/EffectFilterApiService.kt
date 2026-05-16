@@ -1,8 +1,8 @@
 package io.cyborgsquirrel.lighting.filters.service
 
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
+import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterEntity
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
 import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterJunctionRepository
@@ -35,7 +35,7 @@ class EffectFilterApiService(
                     filter.name!!,
                     filter.type!!,
                     filter.uuid!!,
-                    listOf(effectEntity.uuid!!),
+                    listOf(effectEntity.uuid),
                     filter.settings!!
                 )
             }
@@ -55,7 +55,7 @@ class EffectFilterApiService(
                 filter.name!!,
                 filter.type!!,
                 filter.uuid!!,
-                effectEntities.map { it.uuid!! },
+                effectEntities.map { it.uuid },
                 filter.settings!!
             )
         } else {
@@ -106,7 +106,7 @@ class EffectFilterApiService(
 
             val junctionEntities = junctionRepository.findByFilter(filterEntity)
             val effectEntities = junctionEntities.mapNotNull { it.effect }
-            val currentEffectUuids = if (effectEntities.isEmpty()) listOf() else effectEntities.map { it.uuid!! }
+            val currentEffectUuids = if (effectEntities.isEmpty()) listOf() else effectEntities.map { it.uuid }
             val junctionsToRemove = mutableSetOf<LightEffectFilterJunctionEntity>()
             val junctionsToAdd = mutableSetOf<LightEffectFilterJunctionEntity>()
             val junctionsToUpdate = mutableSetOf<LightEffectFilterJunctionEntity>()
@@ -139,26 +139,23 @@ class EffectFilterApiService(
 
             for (junction in junctionsToRemove) {
                 junctionRepository.delete(junction)
-                val activeEffectOptional = effectRegistry.getEffectWithUuid(junction.effect!!.uuid!!)
-                if (activeEffectOptional.isPresent) {
-                    val activeEffect = activeEffectOptional.get()
+                val activeEffect = effectRegistry.getEffectWithUuid(junction.effect!!.uuid)
+                if (activeEffect != null) {
                     effectRegistry.addOrUpdateEffect(activeEffect.copy(filters = activeEffect.filters.filter { it.uuid != activeFilter.uuid }))
                 }
             }
 
             for (junction in junctionsToAdd) {
                 junctionRepository.save(junction)
-                val activeEffectOptional = effectRegistry.getEffectWithUuid(junction.effect!!.uuid!!)
-                if (activeEffectOptional.isPresent) {
-                    val activeEffect = activeEffectOptional.get()
+                val activeEffect = effectRegistry.getEffectWithUuid(junction.effect!!.uuid)
+                if (activeEffect != null) {
                     effectRegistry.addOrUpdateEffect(activeEffect.copy(filters = activeEffect.filters + activeFilter))
                 }
             }
 
             for (junction in junctionsToUpdate) {
-                val activeEffectOptional = effectRegistry.getEffectWithUuid(junction.effect!!.uuid!!)
-                if (activeEffectOptional.isPresent) {
-                    val activeEffect = activeEffectOptional.get()
+                val activeEffect = effectRegistry.getEffectWithUuid(junction.effect!!.uuid)
+                if (activeEffect != null) {
                     val newFilters = activeEffect.filters.filter { it.uuid != activeFilter.uuid } + activeFilter
                     effectRegistry.addOrUpdateEffect(activeEffect.copy(filters = newFilters))
                 }
@@ -176,9 +173,8 @@ class EffectFilterApiService(
 
             for (junction in junctionEntities) {
                 val effect = junction.effect
-                val activeEffectOptional = effectRegistry.getEffectWithUuid(effect!!.uuid!!)
-                if (activeEffectOptional.isPresent) {
-                    val activeEffect = activeEffectOptional.get()
+                val activeEffect = effectRegistry.getEffectWithUuid(effect!!.uuid)
+                if (activeEffect != null) {
                     val filters = activeEffect.filters.filter { it.uuid != uuid }
                     effectRegistry.addOrUpdateEffect(activeEffect.copy(filters = filters))
                 }

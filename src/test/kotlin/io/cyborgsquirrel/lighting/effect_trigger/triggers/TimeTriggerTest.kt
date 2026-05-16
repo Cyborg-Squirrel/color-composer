@@ -53,7 +53,7 @@ class TimeTriggerTest(
 
         every {
             mockLightEffectRegistry.getEffectWithUuid(activeEffect.effectUuid)
-        } returns Optional.of(activeEffect)
+        } returns activeEffect
     }
 
     fun mockResponses(date: LocalDate, time: LocalTime) {
