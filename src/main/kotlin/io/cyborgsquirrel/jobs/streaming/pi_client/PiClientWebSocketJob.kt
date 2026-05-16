@@ -186,7 +186,8 @@ class PiClientWebSocketJob(
                             // Reset so the strip is cleared immediately when effects stop
                             lastKeepaliveFrameSentAt = null
                             timestampMillis += 1000 / fps
-                            serializeAndSendFrames(frames)
+                            val serializedFrames = serializeFrames(frames)
+                            sendFrames(serializedFrames)
 
                             val nowPlusBufferMillis = timeHelper.millisSinceEpoch() + bufferTimeInMilliseconds
                             if (nowPlusBufferMillis < timestampMillis) {
@@ -209,14 +210,19 @@ class PiClientWebSocketJob(
         }
     }
 
-    private suspend fun serializeAndSendFrames(frames: List<RenderedFrameSegmentModel>) {
-        for (frame in frames) {
-            val encodedFrame = serializer.encode(
+    private fun serializeFrames(frames: List<RenderedFrameSegmentModel>): List<ByteArray> {
+        return frames.map { frame ->
+            serializer.encode(
                 RgbFrameData(timestampMillis, frame.frameData),
                 frame.strip.pin,
                 RgbFrameOptionsBuilder().build(),
             )
-            withContext(Dispatchers.IO) { client?.send(encodedFrame) }
+        }
+    }
+
+    private suspend fun sendFrames(frames: List<ByteArray>) {
+        frames.forEach { frame ->
+            withContext(Dispatchers.IO) { client?.send(frame) }
         }
     }
 
