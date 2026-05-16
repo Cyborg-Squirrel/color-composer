@@ -18,6 +18,7 @@ import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import reactor.core.Disposable
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
@@ -44,6 +45,7 @@ class NightDriverSocketJob(
 
     // NightDriver TCP connection
     private var socket: Socket? = null
+    private var effectsSubscription: Disposable? = null
 
     // Client data — written from both the coroutine and the onUpdate listener callback
     @Volatile
@@ -87,7 +89,7 @@ class NightDriverSocketJob(
      * Returns the Job instance.
      */
     override fun start(scope: CoroutineScope): Job {
-        activeLightEffectService.updates.subscribe { onUpdate(it) }
+        effectsSubscription = activeLightEffectService.updates.subscribe { onUpdate(it) }
         return scope.launch {
             logger.info("Start")
             while (isActive && shouldRun) {
@@ -306,6 +308,7 @@ class NightDriverSocketJob(
     }
 
     override fun dispose() {
+        effectsSubscription?.dispose()
         shouldRun = false
         socket?.close()
     }

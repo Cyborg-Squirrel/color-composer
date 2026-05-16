@@ -2,6 +2,7 @@ package io.cyborgsquirrel.event_source.service
 
 import io.cyborgsquirrel.event_source.model.SseEvent
 import jakarta.inject.Singleton
+import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Sinks
 
@@ -12,6 +13,13 @@ class SseEventEmitter {
     val events: Flux<SseEvent> = sink.asFlux()
 
     fun emit(event: SseEvent) {
-        sink.tryEmitNext(event)
+        val result = sink.tryEmitNext(event)
+        if (result.isFailure) {
+            logger.warn("Failed to emit SSE event {}: {}", event, result)
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(SseEventEmitter::class.java)
     }
 }
