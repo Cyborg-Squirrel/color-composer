@@ -1,5 +1,7 @@
 package io.cyborgsquirrel.strip_pools.services
 
+import io.cyborgsquirrel.event_source.model.StripPoolEvent
+import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
@@ -19,7 +21,8 @@ import java.util.*
 class StripPoolApiService(
     private val poolRepository: LedStripPoolRepository,
     private val poolMemberRepository: PoolMemberLedStripRepository,
-    private val stripRepository: LedStripRepository
+    private val stripRepository: LedStripRepository,
+    private val sseEventEmitter: SseEventEmitter,
 ) {
 
     private fun mapPoolEntityToModel(poolEntity: LedStripPoolEntity, memberEntities: List<PoolMemberLedStripEntity>): GetStripPoolResponse {
@@ -63,6 +66,7 @@ class StripPoolApiService(
                 uuid = uuid
             )
         poolRepository.save(poolEntity)
+        sseEventEmitter.emit(StripPoolEvent.StripPoolCreated(uuid))
         return uuid
     }
 
@@ -84,6 +88,7 @@ class StripPoolApiService(
         }
 
         poolRepository.update(poolEntity)
+        sseEventEmitter.emit(StripPoolEvent.StripPoolUpdated(uuid))
     }
 
     fun updatePoolMembers(uuid: String, request: UpdateStripPoolMembersRequest) {
@@ -129,6 +134,7 @@ class StripPoolApiService(
                 poolMemberRepository.save(newMember)
             }
         }
+        sseEventEmitter.emit(StripPoolEvent.StripPoolUpdated(uuid))
     }
 
     fun deletePool(uuid: String) {
@@ -139,5 +145,6 @@ class StripPoolApiService(
         }
 
         poolRepository.delete(poolEntityOptional.get())
+        sseEventEmitter.emit(StripPoolEvent.StripPoolDeleted(uuid))
     }
 }

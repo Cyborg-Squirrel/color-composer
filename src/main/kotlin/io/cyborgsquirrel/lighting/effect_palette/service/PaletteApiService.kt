@@ -1,5 +1,7 @@
 package io.cyborgsquirrel.lighting.effect_palette.service
 
+import io.cyborgsquirrel.event_source.model.PaletteEvent
+import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
@@ -23,7 +25,8 @@ class PaletteApiService(
     private val effectRepository: LightEffectRepository,
     private val lightingService: CreateLightingService,
     private val effectRegistry: LightEffectRegistry,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val sseEventEmitter: SseEventEmitter,
 ) {
 
     fun getPalette(uuid: String): GetPaletteResponse {
@@ -61,6 +64,7 @@ class PaletteApiService(
             )
 
             paletteEntity = paletteRepository.save(paletteEntity)
+            sseEventEmitter.emit(PaletteEvent.PaletteCreated(paletteEntity.uuid!!))
             return paletteEntity.uuid!!
         } else {
             throw ClientRequestException("Palette settings are invalid")
@@ -88,9 +92,8 @@ class PaletteApiService(
             paletteEntity = paletteRepository.update(paletteEntity)
 
             for (effectEntity in paletteEntity.effects) {
-                val activeEffectOptional = effectRegistry.getEffectWithUuid(effectEntity.uuid!!)
-                if (activeEffectOptional.isPresent) {
-                    val activeEffect = activeEffectOptional.get()
+                val activeEffect = effectRegistry.getEffectWithUuid(effectEntity.uuid)
+                if (activeEffect != null) {
                     val strip = lightingService.ledStripFromEffectEntity(effectEntity)
                     val palette = lightingService.createPalette(
                         paletteEntity.settings!!,
@@ -101,6 +104,7 @@ class PaletteApiService(
                     activeEffect.effect.updatePalette(palette)
                 }
             }
+            sseEventEmitter.emit(PaletteEvent.PaletteUpdated(uuid))
         } else {
             throw ClientRequestException("Palette with uuid $uuid doesn't exist!")
         }
@@ -117,6 +121,7 @@ class PaletteApiService(
             }
 
             paletteRepository.delete(paletteEntity)
+            sseEventEmitter.emit(PaletteEvent.PaletteDeleted(uuid))
         } else {
             throw ClientRequestException("Palette with uuid $uuid doesn't exist!")
         }

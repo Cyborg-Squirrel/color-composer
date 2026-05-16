@@ -9,7 +9,7 @@ import io.mockk.mockk
 
 class EffectApiServiceTest : StringSpec({
 
-    val service = EffectApiService(mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk())
+    val service = EffectApiService(mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk())
 
     "getAllSchemas returns one schema per effect" {
         service.getAllSchemas().size shouldBe 8

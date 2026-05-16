@@ -31,6 +31,7 @@ import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.serde.ObjectMapper
@@ -104,7 +105,7 @@ class EffectFilterControllerTest(
         val junctionEntity = LightEffectFilterJunctionEntity(filter = filterEntity, effect = effectEntity)
         junctionRepository.save(junctionEntity)
 
-        val getAllFiltersHttpResponse = apiClient.getFiltersForEffect(effectEntity.uuid!!)
+        val getAllFiltersHttpResponse = apiClient.getFiltersForEffect(effectEntity.uuid)
         getAllFiltersHttpResponse.status shouldBe HttpStatus.OK
 
         val getAllFilterResponse = getAllFiltersHttpResponse.body() as GetFiltersResponse
@@ -154,12 +155,11 @@ class EffectFilterControllerTest(
         filterEntity.type shouldBe request.filterType
         filterEntity.settings shouldBe request.settings
 
-        val activeEffectOptional = effectRegistry.getEffectWithUuid(effectUuid)
-        activeEffectOptional.isPresent shouldBe true
-        val activeEffect = activeEffectOptional.get()
+        val activeEffect = effectRegistry.getEffectWithUuid(effectUuid)
 
         // Filter was created but not assigned to an effect
-        activeEffect.filters.isEmpty() shouldBe true
+        activeEffect shouldNotBe null
+        activeEffect?.filters?.isEmpty() shouldBe true
     }
 
     "Updating a filter" {
@@ -212,12 +212,11 @@ class EffectFilterControllerTest(
         filterEntity.settings shouldBe updateRequest.settings
         filterEntity.type shouldBe createRequest.filterType
 
-        val activeEffectOptional = effectRegistry.getEffectWithUuid(effectUuid)
-        activeEffectOptional.isPresent shouldBe true
-        val activeEffect = activeEffectOptional.get()
+        val activeEffect = effectRegistry.getEffectWithUuid(effectUuid)
 
-        activeEffect.filters.size shouldBe 1
-        val activeFilter = activeEffect.filters.first()
+        activeEffect shouldNotBe null
+        activeEffect?.filters?.size shouldBe 1
+        val activeFilter = activeEffect?.filters?.first()
 
         (activeFilter as ReflectionFilter).uuid shouldBe filterUuid
         activeFilter.settings shouldBe updatedSettings

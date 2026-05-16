@@ -9,6 +9,8 @@ import io.cyborgsquirrel.clients.responses.GetClientResponse
 import io.cyborgsquirrel.clients.responses.GetClientsResponse
 import io.cyborgsquirrel.clients.status.ClientStatusInfo
 import io.cyborgsquirrel.clients.status.ClientStatusService
+import io.cyborgsquirrel.event_source.model.LedClientEvent
+import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import jakarta.inject.Singleton
@@ -19,6 +21,7 @@ class LedClientApiService(
     private val clientRepository: LedStripClientRepository,
     private val streamJobManager: StreamJobManager,
     private val clientStatusService: ClientStatusService,
+    private val sseEventEmitter: SseEventEmitter,
 ) {
 
     fun getAllClients(): GetClientsResponse {
@@ -64,6 +67,7 @@ class LedClientApiService(
             )
 
             streamJobManager.startStreamingJob(clientEntity)
+            sseEventEmitter.emit(LedClientEvent.LedClientCreated(clientEntity.uuid))
             clientEntity.uuid
         }
     }
@@ -91,6 +95,7 @@ class LedClientApiService(
             } else {
                 clientRepository.update(newEntity)
             }
+            sseEventEmitter.emit(LedClientEvent.LedClientUpdated(uuid))
         } else {
             throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")
         }
@@ -119,6 +124,7 @@ class LedClientApiService(
             if (entity.strips.isEmpty()) {
                 streamJobManager.stopWebsocketJob(entity)
                 clientRepository.deleteById(entityOptional.get().id)
+                sseEventEmitter.emit(LedClientEvent.LedClientDeleted(uuid))
             } else {
                 throw ClientRequestException("Could not delete client with uuid $uuid. Please delete its LED strips first.")
             }

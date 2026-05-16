@@ -5,6 +5,8 @@ import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.clients.status.ClientStatusService
+import io.cyborgsquirrel.event_source.model.LedStripEvent
+import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
@@ -30,6 +32,7 @@ class LedStripApiService(
     private val clientRepository: LedStripClientRepository,
     private val clientStatusService: ClientStatusService,
     private val timeHelper: TimeHelper,
+    private val sseEventEmitter: SseEventEmitter,
 ) {
 
     private val validPiPins = listOf("D10", "D12", "D18", "D21")
@@ -83,6 +86,7 @@ class LedStripApiService(
                 blendMode = request.blendMode ?: BlendMode.Additive
             )
             stripRepository.save(stripEntity)
+            sseEventEmitter.emit(LedStripEvent.LedStripCreated(stripEntity.uuid!!))
             return stripEntity.uuid!!
         } else {
             throw ClientRequestException("No client exists with uuid ${request.clientUuid}!")
@@ -173,6 +177,7 @@ class LedStripApiService(
                         activeLightEffectService.addOrUpdateEffect(newEffect)
                     }
                 }
+                sseEventEmitter.emit(LedStripEvent.LedStripUpdated(uuid))
             }
         } else {
             throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")
@@ -189,6 +194,7 @@ class LedStripApiService(
                 effects.forEach {
                     activeLightEffectService.removeEffect(it)
                 }
+                sseEventEmitter.emit(LedStripEvent.LedStripDeleted(uuid))
             } else {
                 throw ClientRequestException("Could not delete strip with uuid $uuid. Please delete or reassign its effects and pool member strips first.")
             }

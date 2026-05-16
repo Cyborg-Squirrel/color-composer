@@ -9,7 +9,6 @@ import io.cyborgsquirrel.jobs.streaming.serialization.NightDriverFrameDataSerial
 import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
-import io.cyborgsquirrel.lighting.effects.service.ActiveLightEffectChangeListener
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
@@ -41,7 +40,7 @@ class NightDriverSocketJob(
     private val timeHelper: TimeHelper,
     private var clientEntity: LedStripClientEntity,
     private var activeLightEffectService: LightEffectRegistry,
-) : ClientStreamingJob, ActiveLightEffectChangeListener {
+) : ClientStreamingJob {
 
     // NightDriver TCP connection
     private var socket: Socket? = null
@@ -71,10 +70,13 @@ class NightDriverSocketJob(
     private val millisPerFrame: Long
         get() = 1000L / fps
     private var shouldRun = true
+
     @Volatile
     private var status = StreamingJobStatus.SetupIncomplete
+
     @Volatile
     private var lastResponse: NightDriverSocketResponse? = null
+
     @Volatile
     private var lastResponseReceivedAt = 0L
 
@@ -85,7 +87,7 @@ class NightDriverSocketJob(
      * Returns the Job instance.
      */
     override fun start(scope: CoroutineScope): Job {
-        activeLightEffectService.addListener(this)
+        activeLightEffectService.updates.subscribe { onUpdate(it) }
         return scope.launch {
             logger.info("Start")
             while (isActive && shouldRun) {
@@ -247,7 +249,10 @@ class NightDriverSocketJob(
                         lastResponse = bytes.toNightDriverSocketResponse(timeHelper)
                         lastResponseReceivedAt = timeHelper.millisSinceEpoch()
                         logger.debug("Night Driver client {} status {}", clientEntity, lastResponse)
-                        logger.debug("Client clock {}", timeHelper.dateTimeFromMillis(lastResponse!!.currentClockMillis()))
+                        logger.debug(
+                            "Client clock {}",
+                            timeHelper.dateTimeFromMillis(lastResponse!!.currentClockMillis())
+                        )
                     }
                 }
             }
@@ -301,12 +306,11 @@ class NightDriverSocketJob(
     }
 
     override fun dispose() {
-        activeLightEffectService.removeListener(this)
         shouldRun = false
         socket?.close()
     }
 
-    override fun onUpdate(newEffects: List<ActiveLightEffect>) {
+    internal fun onUpdate(newEffects: List<ActiveLightEffect>) {
         val matchingStrips = newEffects.filter {
             val strip = it.strip
             val clientUuid = clientEntity.uuid

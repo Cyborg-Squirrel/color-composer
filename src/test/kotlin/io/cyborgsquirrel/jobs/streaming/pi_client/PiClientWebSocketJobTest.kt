@@ -31,6 +31,7 @@ import io.micronaut.websocket.WebSocketClient
 import io.mockk.*
 import kotlinx.coroutines.*
 import org.reactivestreams.Publisher
+import reactor.core.publisher.Flux
 import org.reactivestreams.Subscription
 import java.time.LocalDateTime
 import java.util.*
@@ -116,8 +117,7 @@ class PiClientWebSocketJobTest : StringSpec({
 
     fun setupCommonMocks() {
         mockResponseQueue = ConcurrentLinkedQueue()
-        every { mockLightEffectRegistry.addListener(any()) } answers {}
-        every { mockLightEffectRegistry.removeListener(any()) } answers {}
+        every { mockLightEffectRegistry.updates } returns Flux.never()
         every { mockTimeHelper.millisSinceEpoch() } returns NOW_MILLIS
         every { mockTimeHelper.dateTimeFromMillis(any()) } returns LocalDateTime.of(2024, 1, 1, 0, 0)
         every { mockClientRepository.findByUuid(CLIENT_UUID) } returns Optional.of(clientEntity)
@@ -159,7 +159,7 @@ class PiClientWebSocketJobTest : StringSpec({
     "onUpdate with a matching SingleLedStripModel sets SettingsSync" {
         setupCommonMocks()
         val job = makeJob()
-        job.onUpdate(listOf(activeEffect))
+        job.onEffectsUpdate(listOf(activeEffect))
         job.getCurrentState().status shouldBe StreamingJobStatus.SettingsSync
     }
 
@@ -173,16 +173,16 @@ class PiClientWebSocketJobTest : StringSpec({
             poolType = PoolType.Sync,
             strips = listOf(strip),
         )
-        job.onUpdate(listOf(activeEffect.copy(strip = poolStrip)))
+        job.onEffectsUpdate(listOf(activeEffect.copy(strip = poolStrip)))
         job.getCurrentState().status shouldBe StreamingJobStatus.SettingsSync
     }
 
     "onUpdate called twice with the same strips does not change status a second time" {
         setupCommonMocks()
         val job = makeJob()
-        job.onUpdate(listOf(activeEffect))
+        job.onEffectsUpdate(listOf(activeEffect))
         val statusAfterFirst = job.getCurrentState().status
-        job.onUpdate(listOf(activeEffect))
+        job.onEffectsUpdate(listOf(activeEffect))
         job.getCurrentState().status shouldBe statusAfterFirst
     }
 
@@ -190,7 +190,7 @@ class PiClientWebSocketJobTest : StringSpec({
         setupCommonMocks()
         val job = makeJob()
         val otherEffect = activeEffect.copy(strip = strip.copy(clientUuid = "other-client"))
-        job.onUpdate(listOf(otherEffect))
+        job.onEffectsUpdate(listOf(otherEffect))
         job.getCurrentState().status shouldBe StreamingJobStatus.SetupIncomplete
     }
 
@@ -208,13 +208,11 @@ class PiClientWebSocketJobTest : StringSpec({
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         val coroutineJob = job.start(scope)
-        verify { mockLightEffectRegistry.addListener(job) }
+        verify { mockLightEffectRegistry.updates }
 
         job.dispose()
         coroutineJob.join()
         scope.cancel()
-
-        verify { mockLightEffectRegistry.removeListener(job) }
     }
 
     "SetupIncomplete: stays in SetupIncomplete when client has no strips configured" {
@@ -242,8 +240,6 @@ class PiClientWebSocketJobTest : StringSpec({
         val coroutineJob = job.start(scope)
         coroutineJob.join() // dispose() sets shouldRun=false so the loop exits naturally
         scope.cancel()
-
-        verify { mockLightEffectRegistry.removeListener(job) }
     }
 
     "happy path: transitions from SetupIncomplete all the way to RenderingEffect" {

@@ -11,6 +11,7 @@ import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.lighting.effect_palette.palette.StaticColorPalette
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
+import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
@@ -64,7 +65,7 @@ class LedStripApiServiceTest(
             statusService.getStatusForClient(client)
         } returns Optional.of(ClientStatusInfo(ClientStatus.Active, 1))
         val service = LedStripApiService(
-            mockLightEffectRegistry, stripRepository, clientRepository, statusService, timeHelper
+            mockLightEffectRegistry, stripRepository, clientRepository, statusService, timeHelper, mockk(relaxed = true)
         )
 
         val mockEffectA = mockk<ActiveLightEffect>()
@@ -213,7 +214,7 @@ class LedStripApiServiceTest(
         spectrumLightEffect.getIterations() shouldBe 1
 
         val service = LedStripApiService(
-            mockLightEffectRegistry, stripRepository, clientRepository, clientStatusService, timeHelper
+            mockLightEffectRegistry, stripRepository, clientRepository, clientStatusService, timeHelper, mockk(relaxed = true)
         )
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Original Strip", 10, "D10", 100)
@@ -313,7 +314,7 @@ class LedStripApiServiceTest(
     "delete an existing strip" {
         val mockLightEffectRegistry = getMock(activeLightEffectService)
         val service = LedStripApiService(
-            mockLightEffectRegistry, stripRepository, clientRepository, clientStatusService, timeHelper
+            mockLightEffectRegistry, stripRepository, clientRepository, clientStatusService, timeHelper, mockk(relaxed = true)
         )
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)

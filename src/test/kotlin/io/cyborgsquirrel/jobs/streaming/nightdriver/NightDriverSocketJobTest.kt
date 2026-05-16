@@ -20,6 +20,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.*
 import kotlinx.coroutines.*
+import reactor.core.publisher.Flux
 import java.net.Socket
 import java.time.LocalDateTime
 import java.util.*
@@ -86,8 +87,7 @@ class NightDriverSocketJobTest : StringSpec({
     )
 
     fun setupCommonMocks() {
-        every { mockLightEffectRegistry.addListener(any()) } answers {}
-        every { mockLightEffectRegistry.removeListener(any()) } answers {}
+        every { mockLightEffectRegistry.updates } returns Flux.never()
         every { mockTimeHelper.millisSinceEpoch() } returns NOW_MILLIS
         every { mockTimeHelper.dateTimeFromMillis(any()) } returns LocalDateTime.of(2024, 1, 1, 0, 0)
         every { mockClientRepository.findByUuid(CLIENT_UUID) } returns Optional.of(clientEntity)
@@ -147,13 +147,11 @@ class NightDriverSocketJobTest : StringSpec({
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         val coroutineJob = job.start(scope)
-        verify { mockLightEffectRegistry.addListener(job) }
+        verify { mockLightEffectRegistry.updates }
 
         job.dispose()
         coroutineJob.join()
         scope.cancel()
-
-        verify { mockLightEffectRegistry.removeListener(job) }
     }
 
     "SetupIncomplete: stays when client has no strips configured" {
@@ -181,8 +179,6 @@ class NightDriverSocketJobTest : StringSpec({
         val coroutineJob = job.start(scope)
         coroutineJob.join()
         scope.cancel()
-
-        verify { mockLightEffectRegistry.removeListener(job) }
     }
 
     "RenderingEffect with empty frames transitions to BufferFullWaiting" {

@@ -75,7 +75,7 @@ class SunriseSunsetTriggerTest(
 
         every {
             mockLightEffectRegistry.getEffectWithUuid(activeEffect.effectUuid)
-        } returns Optional.of(activeEffect)
+        } returns activeEffect
     }
 
     fun mockTime(date: LocalDate, time: LocalTime) {
