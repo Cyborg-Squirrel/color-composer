@@ -45,31 +45,37 @@ class LightEffectInitJob(
                         effectEntity.palette!!.uuid!!,
                         strip.length()
                     ) else null
-                    val lightEffect = createLightingService.createEffect(
-                        effectEntity.settings,
-                        effectEntity.type,
-                        palette,
-                        strip.length()
-                    )
-                    val filters = createLightingService.createEffectFilterFromEntity(effectEntity)
-                    val activeEffect = ActiveLightEffect(
-                        effectUuid = effectEntity.uuid!!,
-                        // TODO add priority to persistence layer
-                        priority = 0,
-                        skipFramesIfBlank = true,
-                        status = effectEntity.status!!,
-                        strip = strip,
-                        effect = lightEffect,
-                        filters = filters,
-                    )
+                    val effectSettings = effectEntity.effectSettings
+                    if (effectSettings != null) {
+                        val lightEffect = createLightingService.createEffect(
+                            effectSettings.settings,
+                            effectSettings.type,
+                            palette,
+                            strip.length()
+                        )
+                        val filters = createLightingService.createEffectFilterFromEntity(effectEntity)
+                        val activeEffect = ActiveLightEffect(
+                            effectUuid = effectEntity.uuid,
+                            // TODO add priority and skipFramesIfBlank to persistence layer
+                            priority = 0,
+                            skipFramesIfBlank = true,
+                            status = effectEntity.status!!,
+                            strip = strip,
+                            effect = lightEffect,
+                            filters = filters,
+                        )
 
-                    activeLightEffectService.addOrUpdateEffect(activeEffect)
+                        activeLightEffectService.addOrUpdateEffect(activeEffect)
 
-                    val triggers = createLightingService.effectTriggerFromEntity(effectEntity)
-                    if (triggers.isNotEmpty()) {
-                        triggers.forEach {
-                            triggerManager.addTrigger(it)
+                        val triggers = createLightingService.effectTriggerFromEntity(effectEntity)
+                        if (triggers.isNotEmpty()) {
+                            triggers.forEach {
+                                triggerManager.addTrigger(it)
+                            }
                         }
+                    } else {
+                        // Shouldn't be possible due to SQL constraints, if this happens something went very wrong.
+                        logger.warn("Light effect ${effectEntity.uuid} is missing settings!")
                     }
                 }
 

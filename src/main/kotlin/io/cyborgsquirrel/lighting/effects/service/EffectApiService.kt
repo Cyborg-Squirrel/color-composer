@@ -1,32 +1,48 @@
 package io.cyborgsquirrel.lighting.effects.service
 
+import io.cyborgsquirrel.event_source.model.EffectSettingsEvent
 import io.cyborgsquirrel.event_source.model.LightEffectEvent
 import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
+import io.cyborgsquirrel.lighting.effect_settings.entity.LightEffectSettingsEntity
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.CreateEffectSettingsRequest
 import io.cyborgsquirrel.lighting.effects.requests.LightEffectStatusCommand
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectSettingsRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
+import io.cyborgsquirrel.lighting.effects.responses.GetAllEffectSettingsResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
+import io.cyborgsquirrel.lighting.effects.responses.GetEffectSettingsResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetPoolEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetUnassignedEffectResponse
 import io.cyborgsquirrel.lighting.effects.schemas.EffectSettingsSchema
 import io.cyborgsquirrel.lighting.effects.schemas.EffectSettingsSchemaBuilder
+import io.cyborgsquirrel.lighting.effects.settings.BouncingBallEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.FlameEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.MarqueeEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.SparkleEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.WaveEffectSettings
 import io.cyborgsquirrel.lighting.enums.EffectCategory
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterRepository
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.cyborgsquirrel.util.exception.ResourceNotFoundException
+import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
 import java.util.*
 
@@ -38,9 +54,11 @@ class EffectApiService(
     private val triggerRepository: LightEffectTriggerRepository,
     private val filterRepository: LightEffectFilterRepository,
     private val paletteRepository: LightEffectPaletteRepository,
+    private val settingsRepository: LightEffectSettingsRepository,
     private val effectRegistry: LightEffectRegistry,
     private val createLightingService: CreateLightingService,
     private val sseEventEmitter: SseEventEmitter,
+    private val objectMapper: ObjectMapper,
 ) {
 
     fun createEffect(request: CreateEffectRequest): String {
@@ -48,7 +66,9 @@ class EffectApiService(
         val poolUuid = request.poolUuid
 
         if (stripUuid != null && poolUuid != null) {
-            throw ClientRequestException("Cannot assign effect to both a strip and a strip pool. Please specify only either 'stripUuid' or 'poolUuid'.")
+            throw ClientRequestException("Cannot assign effect to both a strip and a strip pool. Create request must only specify either 'stripUuid' or 'poolUuid'.")
+        } else if (request.settingsUuid != null && request.settings != null) {
+            throw ClientRequestException("A settings uuid and settings object were included in the create request. Create request must only specify either 'settingsUuid' or 'settings'.")
         }
 
         val paletteEntity = if (request.paletteUuid != null) {
@@ -61,6 +81,8 @@ class EffectApiService(
             null
         }
 
+        val settingsEntity = resolveSettingsOnCreate(request.settingsUuid, request.effectType, request.settings)
+
         val effectEntity = when {
             stripUuid != null -> {
                 val stripEntityOptional = stripRepository.findByUuid(stripUuid)
@@ -70,10 +92,9 @@ class EffectApiService(
                             strip = stripEntityOptional.get(),
                             uuid = UUID.randomUUID().toString(),
                             name = request.name,
-                            type = request.effectType,
                             status = LightEffectStatus.Idle,
-                            settings = request.settings,
-                            palette = paletteEntity
+                            effectSettings = settingsEntity,
+                            palette = paletteEntity,
                         )
                     )
                 } else {
@@ -89,10 +110,9 @@ class EffectApiService(
                             pool = poolEntityOptional.get(),
                             uuid = UUID.randomUUID().toString(),
                             name = request.name,
-                            type = request.effectType,
                             status = LightEffectStatus.Idle,
-                            settings = request.settings,
-                            palette = paletteEntity
+                            palette = paletteEntity,
+                            effectSettings = settingsEntity,
                         )
                     )
                 } else {
@@ -113,7 +133,7 @@ class EffectApiService(
             strip.length()
         ) else null
         val lightEffect = createLightingService.createEffect(
-            effectEntity.settings, effectEntity.type, palette, strip.length()
+            settingsEntity.settings, settingsEntity.type, palette, strip.length()
         )
 
         val activeEffect = ActiveLightEffect(
@@ -138,15 +158,16 @@ class EffectApiService(
             val stripEntity = stripEntityOptional.get()
             val effectEntities = effectRepository.findByStrip(stripEntity)
             val effectList = effectEntities.map {
+                val settingsEntity = getSettings(it)
                 GetStripEffectResponse(
                     name = it.name,
                     uuid = it.uuid,
                     stripUuid = stripEntity.uuid!!,
                     paletteUuid = it.palette?.uuid,
-                    settings = it.settings,
+                    settingsUuid = settingsEntity.uuid,
                     status = it.status!!,
-                    type = it.type,
-                    category = EffectCategory.forEffect(it.type),
+                    type = settingsEntity.type,
+                    category = EffectCategory.forEffect(settingsEntity.type),
                 )
             }
 
@@ -162,15 +183,16 @@ class EffectApiService(
             val poolEntity = poolEntityOptional.get()
             val effectEntities = effectRepository.findByPool(poolEntity)
             val effectList = effectEntities.map {
+                val settingsEntity = getSettings(it)
                 GetPoolEffectResponse(
                     name = it.name,
                     uuid = it.uuid,
                     poolUuid = poolEntity.uuid!!,
                     paletteUuid = it.palette?.uuid,
-                    settings = it.settings,
+                    settingsUuid = settingsEntity.uuid,
                     status = it.status!!,
-                    type = it.type,
-                    category = EffectCategory.forEffect(it.type),
+                    type = settingsEntity.type,
+                    category = EffectCategory.forEffect(settingsEntity.type),
                 )
             }
 
@@ -181,7 +203,6 @@ class EffectApiService(
     }
 
     fun getAllEffects(): GetEffectsResponse {
-        // TODO strip vs strip pool differentiation, strip pool support
         val effectEntities = effectRepository.queryAll()
         val effectList: List<GetEffectResponse?> = effectEntities.map {
             getEffectResponseForEffect(it)
@@ -232,15 +253,10 @@ class EffectApiService(
         val effectEntityOptional = effectRepository.findByUuid(uuid)
         if (effectEntityOptional.isPresent) {
             var effectEntity = effectEntityOptional.get()
+            val settingsEntity = getSettings(effectEntity)
             if (!updateEffectRequest.name.isNullOrBlank()) {
                 effectEntity = effectEntity.copy(
                     name = updateEffectRequest.name
-                )
-            }
-
-            if (updateEffectRequest.settings != null) {
-                effectEntity = effectEntity.copy(
-                    settings = updateEffectRequest.settings
                 )
             }
 
@@ -251,9 +267,11 @@ class EffectApiService(
                 throw ClientRequestException("Cannot assign effect to both a strip and a strip pool. Specify either 'stripUuid' or 'poolUuid'.")
             }
 
+            var stripAssignmentChanged: Boolean
             if (stripUuid != null && updateEffectRequest.stripUuid != effectEntity.strip?.uuid) {
                 val stripEntityOptional = stripRepository.findByUuid(updateEffectRequest.stripUuid)
                 if (stripEntityOptional.isPresent) {
+                    stripAssignmentChanged = effectEntity.strip!!.uuid != updateEffectRequest.stripUuid
                     effectEntity = effectEntity.copy(
                         strip = stripEntityOptional.get()
                     )
@@ -263,12 +281,17 @@ class EffectApiService(
             } else if (poolUuid != null && updateEffectRequest.poolUuid != effectEntity.pool?.uuid) {
                 val poolEntityOptional = poolRepository.findByUuid(updateEffectRequest.poolUuid)
                 if (poolEntityOptional.isPresent) {
+                    stripAssignmentChanged = effectEntity.pool!!.uuid != updateEffectRequest.poolUuid
                     effectEntity = effectEntity.copy(
                         pool = poolEntityOptional.get()
                     )
                 } else {
                     throw ClientRequestException("No strip pool found with uuid ${updateEffectRequest.poolUuid}")
                 }
+            } else {
+                // stripUuid and poolUuid are null, unassigning the effect from the strip or pool.
+                stripAssignmentChanged = effectEntity.pool != null || effectEntity.strip != null
+                effectEntity = effectEntity.copy(strip = null, pool = null)
             }
 
             if (updateEffectRequest.paletteUuid != null && updateEffectRequest.paletteUuid != effectEntity.palette?.uuid) {
@@ -279,6 +302,15 @@ class EffectApiService(
                     )
                 } else {
                     throw ClientRequestException("No palette with uuid ${updateEffectRequest.paletteUuid}")
+                }
+            }
+
+            if (updateEffectRequest.settingsUuid != null && updateEffectRequest.settingsUuid != settingsEntity.uuid) {
+                val settingsOptional = settingsRepository.findByUuid(updateEffectRequest.settingsUuid)
+                if (settingsOptional.isPresent) {
+                    effectEntity = effectEntity.copy(effectSettings = settingsOptional.get())
+                } else {
+                    throw ClientRequestException("No effect settings with uuid ${updateEffectRequest.settingsUuid}")
                 }
             }
 
@@ -293,12 +325,14 @@ class EffectApiService(
                     effectEntity.palette!!.uuid!!,
                     strip.length()
                 ) else null
+                val runtimeSettings = effectEntity.effectSettings?.settings ?: emptyMap()
+                val runtimeType = effectEntity.effectSettings?.type ?: ""
                 val lightEffect = createLightingService.createEffect(
-                    effectEntity.settings, effectEntity.type, palette, strip.length()
+                    runtimeSettings, runtimeType, palette, strip.length()
                 )
 
                 val onlyPaletteChange =
-                    updateEffectRequest.stripUuid == null && updateEffectRequest.paletteUuid != null && updateEffectRequest.name == null && updateEffectRequest.settings == null
+                    stripAssignmentChanged && updateEffectRequest.paletteUuid != null && updateEffectRequest.name == null && updateEffectRequest.settingsUuid == null
                 if (onlyPaletteChange && palette != null) {
                     // If the palette is the only update, don't create a new ActiveEffect with copy()
                     // This retains the state of the effect and just swaps the palette.
@@ -355,16 +389,17 @@ class EffectApiService(
     }
 
     fun getEffectResponseForEffect(lightEffectEntity: LightEffectEntity): GetEffectResponse? {
+        val settingsEntity = getSettings(lightEffectEntity)
         return if (lightEffectEntity.strip != null) {
             GetStripEffectResponse(
                 name = lightEffectEntity.name,
                 uuid = lightEffectEntity.uuid,
                 stripUuid = lightEffectEntity.strip!!.uuid!!,
                 paletteUuid = lightEffectEntity.palette?.uuid,
-                settings = lightEffectEntity.settings,
+                settingsUuid = lightEffectEntity.effectSettings?.uuid,
                 status = lightEffectEntity.status!!,
-                type = lightEffectEntity.type,
-                category = EffectCategory.forEffect(lightEffectEntity.type),
+                type = settingsEntity.type,
+                category = EffectCategory.forEffect(settingsEntity.type),
             )
         } else if (lightEffectEntity.pool != null) {
             GetPoolEffectResponse(
@@ -372,98 +407,213 @@ class EffectApiService(
                 uuid = lightEffectEntity.uuid,
                 poolUuid = lightEffectEntity.pool!!.uuid!!,
                 paletteUuid = lightEffectEntity.palette?.uuid,
-                settings = lightEffectEntity.settings,
+                settingsUuid = lightEffectEntity.effectSettings?.uuid,
                 status = lightEffectEntity.status!!,
-                type = lightEffectEntity.type,
-                category = EffectCategory.forEffect(lightEffectEntity.type),
+                type = settingsEntity.type,
+                category = EffectCategory.forEffect(settingsEntity.type),
             )
         } else {
             GetUnassignedEffectResponse(
                 name = lightEffectEntity.name,
                 uuid = lightEffectEntity.uuid,
                 paletteUuid = lightEffectEntity.palette?.uuid,
-                settings = lightEffectEntity.settings,
+                settingsUuid = lightEffectEntity.effectSettings?.uuid,
                 status = lightEffectEntity.status!!,
-                type = lightEffectEntity.type,
-                category = EffectCategory.forEffect(lightEffectEntity.type),
+                type = settingsEntity.type,
+                category = EffectCategory.forEffect(settingsEntity.type),
             )
         }
     }
 
+    /**
+     * Gets effect settings with the following logic.
+     *
+     * 1. [settingsUuid] is not null, fetch it from the database and throw a [ClientRequestException] if it isn't found.
+     * 2. Query the database for a default settings entity matching [effectType].
+     * 3. If default settings aren't found, create a settings entry in the database with default values for the effect type.
+     *
+     */
+    private fun resolveSettingsOnCreate(
+        settingsUuid: String?, effectType: String, settings: Map<String, Any>?
+    ): LightEffectSettingsEntity {
+
+        if (settingsUuid != null) {
+            val settingsOptional = settingsRepository.findByUuid(settingsUuid)
+            if (settingsOptional.isEmpty) {
+                throw ClientRequestException("Effect settings with uuid $settingsUuid don't exist")
+            }
+            val entity = settingsOptional.get()
+            return entity
+        }
+
+        val defaultEntity = settingsRepository.findByTypeAndIsDefault(effectType, true).orElse(null)
+        if (defaultEntity != null) {
+            return defaultEntity
+        }
+
+        val settingsMap = settings ?: defaultSettingsMapForType(effectType)
+        val newEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = effectType,
+                name = "Default $effectType",
+                settings = settingsMap,
+                isDefault = true,
+            )
+        )
+        return newEntity
+    }
+
+    private fun defaultSettingsMapForType(effectType: String): Map<String, Any> {
+        val defaults: Any = when (LightEffectType.fromName(effectType)) {
+            LightEffectType.SPECTRUM -> SpectrumEffectSettings()
+            LightEffectType.NIGHTRIDER_COLOR_FILL -> NightriderColorFillEffectSettings()
+            LightEffectType.NIGHTRIDER_COMET -> NightriderCometEffectSettings()
+            LightEffectType.FLAME -> FlameEffectSettings()
+            LightEffectType.BOUNCING_BALL -> BouncingBallEffectSettings()
+            LightEffectType.WAVE -> WaveEffectSettings()
+            LightEffectType.MARQUEE -> MarqueeEffectSettings()
+            LightEffectType.SPARKLE -> SparkleEffectSettings()
+        }
+        @Suppress("UNCHECKED_CAST") return objectMapper.readValue(
+            objectMapper.writeValueAsString(defaults),
+            Map::class.java
+        ) as Map<String, Any>
+    }
+
+    fun getAllEffectSettings(): GetAllEffectSettingsResponse {
+        val entities = settingsRepository.queryAll()
+        return GetAllEffectSettingsResponse(entities.map { it.toResponse() })
+    }
+
+    fun getEffectSettings(uuid: String): GetEffectSettingsResponse {
+        val entity = settingsRepository.findByUuid(uuid)
+            .orElseThrow { ResourceNotFoundException("Effect settings with uuid $uuid not found") }
+        return entity.toResponse()
+    }
+
+    fun createEffectSettings(request: CreateEffectSettingsRequest): String {
+        if (request.isDefault) {
+            clearExistingDefault(request.type)
+        }
+        val entity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = request.type,
+                name = request.name,
+                settings = request.settings,
+                isDefault = request.isDefault,
+            )
+        )
+        sseEventEmitter.emit(EffectSettingsEvent.EffectSettingsCreated(entity.uuid))
+        return entity.uuid
+    }
+
+    fun updateEffectSettings(uuid: String, request: UpdateEffectSettingsRequest) {
+        var entity = settingsRepository.findByUuid(uuid)
+            .orElseThrow { ResourceNotFoundException("Effect settings with uuid $uuid not found") }
+
+        if (request.isDefault == true && !entity.isDefault) {
+            clearExistingDefault(entity.type)
+        }
+
+        entity = entity.copy(
+            name = request.name ?: entity.name,
+            settings = request.settings ?: entity.settings,
+            isDefault = request.isDefault ?: entity.isDefault,
+        )
+        settingsRepository.update(entity)
+        sseEventEmitter.emit(EffectSettingsEvent.EffectSettingsUpdated(uuid))
+    }
+
+    fun deleteEffectSettings(uuid: String) {
+        val entity = settingsRepository.findByUuid(uuid)
+            .orElseThrow { ResourceNotFoundException("Effect settings with uuid $uuid not found") }
+        settingsRepository.delete(entity)
+        sseEventEmitter.emit(EffectSettingsEvent.EffectSettingsDeleted(uuid))
+    }
+
+    private fun clearExistingDefault(type: String) {
+        val existing = settingsRepository.findByTypeAndIsDefault(type, true).orElse(null)
+        if (existing != null) {
+            settingsRepository.update(existing.copy(isDefault = false))
+        }
+    }
+
+    private fun getSettings(entity: LightEffectEntity): LightEffectSettingsEntity {
+        // Missing settings shouldn't be possible due to SQL constraints, if this happens something went very wrong.
+        return entity.effectSettings
+            ?: throw ClientRequestException("Effect ${entity.uuid} does not have settings!")
+    }
+
+    private fun LightEffectSettingsEntity.toResponse() = GetEffectSettingsResponse(
+        uuid = uuid,
+        type = type,
+        name = name,
+        settings = settings,
+        isDefault = isDefault,
+    )
+
     fun getAllSchemas(): List<EffectSettingsSchema> = LightEffectType.entries.map { effectType ->
         when (effectType) {
-            LightEffectType.SPECTRUM ->
-                EffectSettingsSchemaBuilder(effectType.displayName)
-                    .integer("colorPixelWidth", "Number of pixels per color band") { min(1.0) }
-                    .boolean("animated", "Whether the spectrum cycles through colors over time")
-                    .integer("updatesPerSecond", "Number of animation steps per second") { min(1.0) }
-                    .build()
+            LightEffectType.SPECTRUM -> EffectSettingsSchemaBuilder(effectType.displayName).integer(
+                    "colorPixelWidth",
+                    "Number of pixels per color band"
+                ) { min(1.0) }.boolean("animated", "Whether the spectrum cycles through colors over time")
+                .integer("updatesPerSecond", "Number of animation steps per second") { min(1.0) }.build()
 
-            LightEffectType.NIGHTRIDER_COLOR_FILL ->
-                EffectSettingsSchemaBuilder(effectType.displayName)
-                    .boolean("wrap", "Whether the fill wraps around the strip ends")
-                    .integer("updatesPerSecond", "Number of position updates per second") { min(1.0) }
-                    .number("brightnessScaling", "Brightness multiplier applied to the effect") { min(0.0); max(1.0) }
-                    .build()
+            LightEffectType.NIGHTRIDER_COLOR_FILL -> EffectSettingsSchemaBuilder(effectType.displayName).boolean(
+                    "wrap",
+                    "Whether the fill wraps around the strip ends"
+                ).integer("updatesPerSecond", "Number of position updates per second") { min(1.0) }
+                .number("brightnessScaling", "Brightness multiplier applied to the effect") { min(0.0); max(1.0) }
+                .build()
 
-            LightEffectType.NIGHTRIDER_COMET ->
-                EffectSettingsSchemaBuilder(effectType.displayName)
-                    .integer("trailLength", "Number of pixels in the comet's trailing tail") { min(1.0) }
-                    .string("trailFadeCurve", "Brightness falloff curve along the trail") {
-                        options(FadeCurve.entries.map { it.name })
-                    }
-                    .boolean("wrap", "Whether the comet wraps around the strip ends")
-                    .integer("updatesPerSecond", "Number of position updates per second") { min(1.0) }
-                    .build()
+            LightEffectType.NIGHTRIDER_COMET -> EffectSettingsSchemaBuilder(effectType.displayName).integer(
+                    "trailLength",
+                    "Number of pixels in the comet's trailing tail"
+                ) { min(1.0) }.string("trailFadeCurve", "Brightness falloff curve along the trail") {
+                    options(FadeCurve.entries.map { it.name })
+                }.boolean("wrap", "Whether the comet wraps around the strip ends")
+                .integer("updatesPerSecond", "Number of position updates per second") { min(1.0) }.build()
 
-            LightEffectType.FLAME ->
-                EffectSettingsSchemaBuilder(effectType.displayName)
-                    .integer("cooling", "Rate at which heat dissipates up the strip") { min(1.0) }
-                    .integer(
-                        "sparking",
-                        "Probability of new sparks igniting at the base (0–255)"
-                    ) { min(0.0); max(255.0) }
-                    .integer("sparks", "Number of sparks generated per update") { min(1.0) }
-                    .integer("sparkHeight", "Maximum height sparks can reach from the base") { min(1.0) }
-                    .integer("updatesPerSecond", "Number of fire simulation steps per second") { min(1.0) }
-                    .build()
+            LightEffectType.FLAME -> EffectSettingsSchemaBuilder(effectType.displayName).integer(
+                    "cooling",
+                    "Rate at which heat dissipates up the strip"
+                ) { min(1.0) }.integer(
+                    "sparking", "Probability of new sparks igniting at the base (0–255)"
+                ) { min(0.0); max(255.0) }.integer("sparks", "Number of sparks generated per update") { min(1.0) }
+                .integer("sparkHeight", "Maximum height sparks can reach from the base") { min(1.0) }
+                .integer("updatesPerSecond", "Number of fire simulation steps per second") { min(1.0) }.build()
 
-            LightEffectType.BOUNCING_BALL ->
-                EffectSettingsSchemaBuilder(effectType.displayName)
-                    .integer(
-                        "startingHeightPercent",
-                        "Initial drop height as a percentage of strip length"
-                    ) { min(0.0); max(100.0) }
-                    .integer("maxHeightPercent", "Maximum bounce height in pixels") { min(1.0) }
-                    .number("speed", "Initial speed of the ball") { min(0.0) }
-                    .number("gravity", "Gravitational acceleration applied to the ball")
-                    .number("minimumSpeed", "Speed below which the ball stops bouncing") { min(0.0) }
-                    .build()
+            LightEffectType.BOUNCING_BALL -> EffectSettingsSchemaBuilder(effectType.displayName).integer(
+                    "startingHeightPercent", "Initial drop height as a percentage of strip length"
+                ) { min(0.0); max(100.0) }.integer("maxHeightPercent", "Maximum bounce height in pixels") { min(1.0) }
+                .number("speed", "Initial speed of the ball") { min(0.0) }
+                .number("gravity", "Gravitational acceleration applied to the ball")
+                .number("minimumSpeed", "Speed below which the ball stops bouncing") { min(0.0) }.build()
 
-            LightEffectType.WAVE ->
-                EffectSettingsSchemaBuilder(effectType.displayName)
-                    .integer("startPoint", "Starting pixel position of the wave") { min(0.0) }
-                    .integer("waveLength", "Length of one full wave cycle in pixels") { min(1.0) }
-                    .boolean("repeat", "Whether the wave repeats continuously")
-                    .integer("updatesPerSecond", "Number of wave position steps per second") { min(1.0) }
-                    .build()
+            LightEffectType.WAVE -> EffectSettingsSchemaBuilder(effectType.displayName).integer(
+                    "startPoint",
+                    "Starting pixel position of the wave"
+                ) { min(0.0) }.integer("waveLength", "Length of one full wave cycle in pixels") { min(1.0) }
+                .boolean("repeat", "Whether the wave repeats continuously")
+                .integer("updatesPerSecond", "Number of wave position steps per second") { min(1.0) }.build()
 
-            LightEffectType.MARQUEE ->
-                EffectSettingsSchemaBuilder(effectType.displayName)
-                    .integer("dotLength", "Length of each dot in pixels") { min(1.0) }
-                    .integer("spaceBetweenDots", "Gap between dots in pixels") { min(0.0) }
-                    .integer("updatesPerSecond", "Number of pixels the dots scroll per second") { min(1.0) }
-                    .build()
+            LightEffectType.MARQUEE -> EffectSettingsSchemaBuilder(effectType.displayName).integer(
+                    "dotLength",
+                    "Length of each dot in pixels"
+                ) { min(1.0) }.integer("spaceBetweenDots", "Gap between dots in pixels") { min(0.0) }
+                .integer("updatesPerSecond", "Number of pixels the dots scroll per second") { min(1.0) }.build()
 
-            LightEffectType.SPARKLE ->
-                EffectSettingsSchemaBuilder(effectType.displayName)
-                    .integer("numDots", "Maximum number of simultaneous sparkle dots") { min(1.0) }
-                    .integer("fadeInMillisMax", "Maximum fade-in duration in milliseconds") { min(1.0) }
-                    .integer("fadeInMillisMin", "Minimum fade-in duration in milliseconds") { min(1.0) }
-                    .integer("fadeOutMillisMax", "Maximum fade-out duration in milliseconds") { min(1.0) }
-                    .integer("fadeOutMillisMin", "Minimum fade-out duration in milliseconds") { min(1.0) }
-                    .integer("updatesPerSecond", "Number of sparkle state updates per second") { min(1.0) }
-                    .build()
+            LightEffectType.SPARKLE -> EffectSettingsSchemaBuilder(effectType.displayName).integer(
+                    "numDots",
+                    "Maximum number of simultaneous sparkle dots"
+                ) { min(1.0) }.integer("fadeInMillisMax", "Maximum fade-in duration in milliseconds") { min(1.0) }
+                .integer("fadeInMillisMin", "Minimum fade-in duration in milliseconds") { min(1.0) }
+                .integer("fadeOutMillisMax", "Maximum fade-out duration in milliseconds") { min(1.0) }
+                .integer("fadeOutMillisMin", "Minimum fade-out duration in milliseconds") { min(1.0) }
+                .integer("updatesPerSecond", "Number of sparkle state updates per second") { min(1.0) }.build()
         }
     }
 }

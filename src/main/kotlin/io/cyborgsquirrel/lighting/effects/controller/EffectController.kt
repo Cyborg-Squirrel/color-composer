@@ -2,7 +2,9 @@ package io.cyborgsquirrel.lighting.effects.controller
 
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.CreateEffectSettingsRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
+import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectSettingsRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
 import io.cyborgsquirrel.lighting.effects.service.EffectApiService
 import io.cyborgsquirrel.util.exception.ClientRequestException
@@ -105,6 +107,57 @@ class EffectController(
             HttpResponse.notFound()
         } catch (cre: ClientRequestException) {
             HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError(ex.message)
+        }
+    }
+
+    override fun getAllEffectSettings(): HttpResponse<Any> {
+        return try {
+            HttpResponse.ok(effectApiService.getAllEffectSettings())
+        } catch (ex: Exception) {
+            HttpResponse.serverError(ex.message)
+        }
+    }
+
+    override fun getEffectSettings(uuid: String): HttpResponse<Any> {
+        return try {
+            HttpResponse.ok(effectApiService.getEffectSettings(uuid))
+        } catch (rnfe: ResourceNotFoundException) {
+            HttpResponse.notFound()
+        } catch (ex: Exception) {
+            HttpResponse.serverError(ex.message)
+        }
+    }
+
+    override fun createEffectSettings(request: CreateEffectSettingsRequest): HttpResponse<Any> {
+        return try {
+            val uuid = effectApiService.createEffectSettings(request)
+            HttpResponse.created(uuid)
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message)
+        } catch (ex: Exception) {
+            HttpResponse.serverError(ex.message)
+        }
+    }
+
+    override fun updateEffectSettings(uuid: String, request: UpdateEffectSettingsRequest): HttpResponse<Any> {
+        return try {
+            effectApiService.updateEffectSettings(uuid, request)
+            HttpResponse.noContent()
+        } catch (rnfe: ResourceNotFoundException) {
+            HttpResponse.notFound()
+        } catch (ex: Exception) {
+            HttpResponse.serverError(ex.message)
+        }
+    }
+
+    override fun deleteEffectSettings(uuid: String): HttpResponse<Any> {
+        return try {
+            effectApiService.deleteEffectSettings(uuid)
+            HttpResponse.noContent()
+        } catch (rnfe: ResourceNotFoundException) {
+            HttpResponse.notFound()
         } catch (ex: Exception) {
             HttpResponse.serverError(ex.message)
         }

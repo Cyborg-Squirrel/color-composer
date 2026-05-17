@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.effects.entity
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
+import io.cyborgsquirrel.lighting.effect_settings.entity.LightEffectSettingsEntity
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
@@ -32,20 +33,16 @@ data class LightEffectEntity(
     @Relation(value = Relation.Kind.MANY_TO_ONE)
     var palette: LightEffectPaletteEntity? = null,
 
+    @Relation(value = Relation.Kind.MANY_TO_ONE)
+    var effectSettings: LightEffectSettingsEntity? = null,
+
     var uuid: String,
-
-    @TypeDef(type = DataType.JSON)
-    var settings: Map<String, Any>,
-
-    var type: String,
 
     var name: String,
 
     @Enumerated(EnumType.STRING)
     var status: LightEffectStatus?,
 ) {
-    // Overrides to prevent infinite looping
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is LightEffectEntity) return false
@@ -54,10 +51,8 @@ data class LightEffectEntity(
         if (strip?.id != other.strip?.id) return false
         if (pool?.id != other.pool?.id) return false
         if (palette?.id != other.palette?.id) return false
+        if (effectSettings?.id != other.effectSettings?.id) return false
         if (uuid != other.uuid) return false
-        if (type != other.type) return false
-        if (name != other.name) return false
-        if (settings != other.settings) return false
         if (status != other.status) return false
 
         return true
@@ -69,14 +64,12 @@ data class LightEffectEntity(
         result = 31 * result + (strip?.id ?: 0).hashCode()
         result = 31 * result + (pool?.id ?: 0).hashCode()
         result = 31 * result + (palette?.id ?: 0).hashCode()
+        result = 31 * result + (effectSettings?.id ?: 0).hashCode()
         result = 31 * result + status.hashCode()
-        result = 31 * result + type.hashCode()
-        result = 31 * result + name.hashCode()
-        result = 31 * result + settings.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "LightEffectLedStripAssociationEntity(strip=${strip?.id}, pool=${pool?.id}, palette=${palette?.id} effectType=$type, name=$name, id=$id, uuid=$uuid, status=$status, settings=$settings)"
+        return "LightEffectEntity(strip=${strip?.id}, pool=${pool?.id}, palette=${palette?.id}, effectSettings=${effectSettings?.id}, id=$id, uuid=$uuid, name=$name, status=$status)"
     }
 }
