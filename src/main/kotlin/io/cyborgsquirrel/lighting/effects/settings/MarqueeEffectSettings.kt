@@ -3,9 +3,8 @@ package io.cyborgsquirrel.lighting.effects.settings
 import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
-data class MarqueeEffectSettings(val dotLength: Int, val spaceBetweenDots: Int, val updatesPerSecond: Int) :
-    LightEffectSettings() {
-    companion object {
-        fun default() = MarqueeEffectSettings(2, 2, 8)
-    }
-}
+data class MarqueeEffectSettings(
+    val dotLength: Int = 2,
+    val spaceBetweenDots: Int = 2,
+    val updatesPerSecond: Int = 8,
+) : LightEffectSettings()

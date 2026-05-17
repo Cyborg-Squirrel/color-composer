@@ -18,6 +18,7 @@ import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetEffectsResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetPoolEffectResponse
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
+import io.cyborgsquirrel.lighting.effects.responses.GetUnassignedEffectResponse
 import io.cyborgsquirrel.lighting.effects.schemas.EffectSettingsSchema
 import io.cyborgsquirrel.lighting.effects.schemas.EffectSettingsSchemaBuilder
 import io.cyborgsquirrel.lighting.enums.EffectCategory
@@ -377,8 +378,15 @@ class EffectApiService(
                 category = EffectCategory.forEffect(lightEffectEntity.type),
             )
         } else {
-            // TODO throw Exception? For now let the user get all effects even if there is one with an invalid config.
-            null
+            GetUnassignedEffectResponse(
+                name = lightEffectEntity.name,
+                uuid = lightEffectEntity.uuid,
+                paletteUuid = lightEffectEntity.palette?.uuid,
+                settings = lightEffectEntity.settings,
+                status = lightEffectEntity.status!!,
+                type = lightEffectEntity.type,
+                category = EffectCategory.forEffect(lightEffectEntity.type),
+            )
         }
     }
 
@@ -411,7 +419,10 @@ class EffectApiService(
             LightEffectType.FLAME ->
                 EffectSettingsSchemaBuilder(effectType.displayName)
                     .integer("cooling", "Rate at which heat dissipates up the strip") { min(1.0) }
-                    .integer("sparking", "Probability of new sparks igniting at the base (0–255)") { min(0.0); max(255.0) }
+                    .integer(
+                        "sparking",
+                        "Probability of new sparks igniting at the base (0–255)"
+                    ) { min(0.0); max(255.0) }
                     .integer("sparks", "Number of sparks generated per update") { min(1.0) }
                     .integer("sparkHeight", "Maximum height sparks can reach from the base") { min(1.0) }
                     .integer("updatesPerSecond", "Number of fire simulation steps per second") { min(1.0) }
@@ -419,7 +430,10 @@ class EffectApiService(
 
             LightEffectType.BOUNCING_BALL ->
                 EffectSettingsSchemaBuilder(effectType.displayName)
-                    .integer("startingHeightPercent", "Initial drop height as a percentage of strip length") { min(0.0); max(100.0) }
+                    .integer(
+                        "startingHeightPercent",
+                        "Initial drop height as a percentage of strip length"
+                    ) { min(0.0); max(100.0) }
                     .integer("maxHeightPercent", "Maximum bounce height in pixels") { min(1.0) }
                     .number("speed", "Initial speed of the ball") { min(0.0) }
                     .number("gravity", "Gravitational acceleration applied to the ball")

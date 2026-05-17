@@ -16,7 +16,7 @@ import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.test_helpers.objectToMap
@@ -39,7 +39,7 @@ class LightEffectTriggerRepositoryTest(
     private val lightEffectTriggerRepository: LightEffectTriggerRepository,
 ) : StringSpec({
 
-    val nightriderLightEffectSettings = NightriderEffectSettings.default()
+    val nightriderLightEffectSettings = NightriderColorFillEffectSettings()
     val timeTriggerSettings =
         TimeTriggerSettings(
             LocalTime.of(19, 0), null, Duration.ofHours(4), maxActivations = null, triggerType = TriggerType.StartEffect

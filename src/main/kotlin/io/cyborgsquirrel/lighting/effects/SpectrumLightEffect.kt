@@ -93,10 +93,10 @@ class SpectrumLightEffect(
     }
 
     private fun getColorWidth(): Int {
-        return if (settings.colorPixelWidth <= 0) {
+        return if (settings.colorBandPercentage <= 0) {
             colorList(1).size
         } else {
-            settings.colorPixelWidth
+            (settings.colorBandPercentage / 100.0 * numberOfLeds).toInt()
         }
     }
 

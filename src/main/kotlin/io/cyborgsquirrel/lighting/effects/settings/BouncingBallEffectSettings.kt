@@ -5,20 +5,9 @@ import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
 data class BouncingBallEffectSettings(
-    val startingHeightPercent: Int,
-    val maxHeightPercent: Int,
-    val speed: Double,
-    val gravity: Double,
-    val minimumSpeed: Double,
-) : LightEffectSettings() {
-    companion object {
-        fun default(numberOfLeds: Int) =
-            BouncingBallEffectSettings(
-                1,
-                numberOfLeds - 1,
-                4.0,
-                LightEffectConstants.EARTH_GRAVITY,
-                0.05,
-            )
-    }
-}
+    val startingHeightPercent: Int = 1,
+    val maxHeightPercent: Int = 100,
+    val speed: Double = 4.0,
+    val gravity: Double = LightEffectConstants.EARTH_GRAVITY,
+    val minimumSpeed: Double = 0.05,
+) : LightEffectSettings()

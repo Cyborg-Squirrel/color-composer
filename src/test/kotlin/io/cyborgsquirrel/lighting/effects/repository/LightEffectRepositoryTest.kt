@@ -14,7 +14,7 @@ import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.led_strips.repository.PoolMemberLedStripRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.test_helpers.normalizeNumberTypes
@@ -35,7 +35,7 @@ class LightEffectRepositoryTest(
     private val poolMemberLedStripRepository: PoolMemberLedStripRepository,
 ) : StringSpec({
 
-    val settings = NightriderEffectSettings.default()
+    val settings = NightriderColorFillEffectSettings()
 
     fun verifyLightEffectEntity(
         newEntity: LightEffectEntity,

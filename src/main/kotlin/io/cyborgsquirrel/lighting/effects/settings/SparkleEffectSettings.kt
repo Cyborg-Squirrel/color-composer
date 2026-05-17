@@ -4,21 +4,10 @@ import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
 data class SparkleEffectSettings(
-    val numDots: Int,
-    val fadeInMillisMax: Int,
-    val fadeInMillisMin: Int,
-    val fadeOutMillisMax: Int,
-    val fadeOutMillisMin: Int,
-    val updatesPerSecond: Int,
-) : LightEffectSettings() {
-    companion object {
-        fun default() = SparkleEffectSettings(
-            numDots = 10,
-            fadeInMillisMax = 10,
-            fadeInMillisMin = 5,
-            fadeOutMillisMax = 1000,
-            fadeOutMillisMin = 150,
-            updatesPerSecond = 30,
-        )
-    }
-}
+    val numDots: Int = 10,
+    val fadeInMillisMax: Int = 10,
+    val fadeInMillisMin: Int = 5,
+    val fadeOutMillisMax: Int = 1000,
+    val fadeOutMillisMin: Int = 150,
+    val updatesPerSecond: Int = 30,
+) : LightEffectSettings()

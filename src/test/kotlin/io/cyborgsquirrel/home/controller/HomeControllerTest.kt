@@ -92,7 +92,7 @@ class HomeControllerTest(
         val body = response.body() as HomeResponse
         body.activeEffects shouldContainExactly listOf(
             GetStripEffectResponse(
-                uuid = playingEffect.uuid!!,
+                uuid = playingEffect.uuid,
                 status = LightEffectStatus.Playing,
                 stripUuid = strip.uuid!!,
                 name = playingEffect.name,

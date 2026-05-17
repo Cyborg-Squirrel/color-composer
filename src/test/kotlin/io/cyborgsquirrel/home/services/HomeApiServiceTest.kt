@@ -115,7 +115,7 @@ class HomeApiServiceTest(
         response.activeEffects.size shouldBe 2
         response.activeEffects shouldContainExactly listOf(
             GetStripEffectResponse(
-                uuid = playingEffect.uuid!!,
+                uuid = playingEffect.uuid,
                 status = LightEffectStatus.Playing,
                 stripUuid = strip.uuid!!,
                 name = playingEffect.name,
@@ -125,7 +125,7 @@ class HomeApiServiceTest(
                 category = EffectCategory.forEffect(playingEffect.type),
             ),
             GetStripEffectResponse(
-                uuid = pausedEffect.uuid!!,
+                uuid = pausedEffect.uuid,
                 status = LightEffectStatus.Paused,
                 stripUuid = strip.uuid!!,
                 name = pausedEffect.name,
