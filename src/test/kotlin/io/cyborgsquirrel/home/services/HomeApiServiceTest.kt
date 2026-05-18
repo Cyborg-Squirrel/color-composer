@@ -6,6 +6,7 @@ import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
@@ -27,6 +28,7 @@ class HomeApiServiceTest(
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val effectRepository: LightEffectRepository,
+    private val settingsRepository: LightEffectSettingsRepository,
     private val paletteRepository: LightEffectPaletteRepository,
     private val activeLightEffectService: LightEffectRegistry,
     private val objectMapper: ObjectMapper,
@@ -35,6 +37,7 @@ class HomeApiServiceTest(
     afterEach {
         activeLightEffectService.removeAllEffects()
         effectRepository.deleteAll()
+        settingsRepository.deleteAll()
         paletteRepository.deleteAll()
         stripRepository.deleteAll()
         clientRepository.deleteAll()
@@ -53,7 +56,7 @@ class HomeApiServiceTest(
     "Returns correct counts after inserting one of each entity" {
         val client = createLedStripClientEntity(clientRepository, "Client 1", "192.168.1.1", 8000, 8001)
         val strip = saveLedStrip(stripRepository, client, "Strip 1", 60, PiClientPin.D10.pinName, 100)
-        saveLightEffect(effectRepository, objectMapper, strip)
+        saveLightEffect(effectRepository, objectMapper, settingsRepository, strip)
         paletteRepository.save(
             LightEffectPaletteEntity(
                 uuid = UUID.randomUUID().toString(),
@@ -80,8 +83,8 @@ class HomeApiServiceTest(
         val strip1 = saveLedStrip(stripRepository, client, "Strip 1", 60, PiClientPin.D10.pinName, 100)
         val strip2 = saveLedStrip(stripRepository, client, "Strip 2", 30, PiClientPin.D12.pinName, 100)
 
-        saveLightEffect(effectRepository, objectMapper, strip1)
-        saveLightEffect(effectRepository, objectMapper, strip2)
+        saveLightEffect(effectRepository, objectMapper, settingsRepository, strip1)
+        saveLightEffect(effectRepository, objectMapper, settingsRepository, strip2)
 
         paletteRepository.save(
             LightEffectPaletteEntity(uuid = UUID.randomUUID().toString(), settings = mapOf(), name = "Palette 1", type = EffectPaletteConstants.STATIC_COLOR_PALETTE)
@@ -106,9 +109,9 @@ class HomeApiServiceTest(
         val client = createLedStripClientEntity(clientRepository, "Client 1", "192.168.1.1", 8000, 8001)
         val strip = saveLedStrip(stripRepository, client, "Strip 1", 60, PiClientPin.D10.pinName, 100)
 
-        val playingEffect = saveLightEffect(effectRepository, objectMapper, strip, LightEffectStatus.Playing)
-        val pausedEffect = saveLightEffect(effectRepository, objectMapper, strip, LightEffectStatus.Paused)
-        saveLightEffect(effectRepository, objectMapper, strip, LightEffectStatus.Idle)
+        val playingEffect = saveLightEffect(effectRepository, objectMapper, settingsRepository, strip, LightEffectStatus.Playing)
+        val pausedEffect = saveLightEffect(effectRepository, objectMapper, settingsRepository, strip, LightEffectStatus.Paused)
+        saveLightEffect(effectRepository, objectMapper, settingsRepository, strip, LightEffectStatus.Idle)
 
         val response = service.getHome()
 
@@ -119,20 +122,20 @@ class HomeApiServiceTest(
                 status = LightEffectStatus.Playing,
                 stripUuid = strip.uuid!!,
                 name = playingEffect.name,
-                type = playingEffect.type,
-                settings = playingEffect.settings,
+                type = playingEffect.effectSettings!!.type,
                 paletteUuid = null,
-                category = EffectCategory.forEffect(playingEffect.type),
+                settingsUuid = playingEffect.effectSettings?.uuid,
+                category = EffectCategory.forEffect(playingEffect.effectSettings!!.type),
             ),
             GetStripEffectResponse(
                 uuid = pausedEffect.uuid,
                 status = LightEffectStatus.Paused,
                 stripUuid = strip.uuid!!,
                 name = pausedEffect.name,
-                type = pausedEffect.type,
-                settings = pausedEffect.settings,
+                type = pausedEffect.effectSettings?.type ?: "",
                 paletteUuid = null,
-                category = EffectCategory.forEffect(pausedEffect.type),
+                settingsUuid = pausedEffect.effectSettings?.uuid,
+                category = EffectCategory.forEffect(pausedEffect.effectSettings!!.type),
             ),
         )
     }

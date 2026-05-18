@@ -16,7 +16,7 @@ import kotlin.math.max
 @MicronautTest
 class EffectApiServiceTest(val objectMapper: ObjectMapper) : StringSpec({
 
-    val service = EffectApiService(mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk())
+    val service = EffectApiService(mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk())
 
     "getAllSchemas returns one schema per effect" {
         service.getAllSchemas().size shouldBe 8

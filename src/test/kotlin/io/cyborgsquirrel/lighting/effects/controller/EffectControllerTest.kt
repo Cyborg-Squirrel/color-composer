@@ -12,6 +12,8 @@ import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_palette.settings.*
+import io.cyborgsquirrel.lighting.effect_settings.entity.LightEffectSettingsEntity
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
@@ -47,6 +49,7 @@ class EffectControllerTest(
     private val poolRepository: LedStripPoolRepository,
     private val poolMemberRepository: PoolMemberLedStripRepository,
     private val effectRepository: LightEffectRepository,
+    private val settingsRepository: LightEffectSettingsRepository,
     private val paletteRepository: LightEffectPaletteRepository,
     private val objectMapper: ObjectMapper
 ) : StringSpec({
@@ -54,6 +57,7 @@ class EffectControllerTest(
     afterEach {
         paletteRepository.deleteAll()
         effectRepository.deleteAll()
+        settingsRepository.deleteAll()
         poolMemberRepository.deleteAll()
         poolRepository.deleteAll()
         stripRepository.deleteAll()
@@ -83,14 +87,22 @@ class EffectControllerTest(
             )
         )
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+        val nrSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Test NR Settings",
+                settings = defaultNrSettings,
+                isDefault = false,
+            )
+        )
         var effectEntity = LightEffectEntity(
             strip = strip,
             palette = palette,
             name = "Super cool effect",
-            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+            effectSettings = nrSettingsEntity,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Idle,
-            settings = defaultNrSettings
         )
         effectEntity = effectRepository.save(effectEntity)
 
@@ -104,11 +116,7 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings.map {
-            normalizeNumberTypes(
-                it.value
-            )
-        }
+        effectFromApi.settingsUuid shouldBe effectEntity.effectSettings?.uuid
         effectFromApi::class.java shouldBe GetStripEffectResponse::class.java
         (effectFromApi as GetStripEffectResponse).stripUuid shouldBe strip.uuid
         effectFromApi.paletteUuid shouldBe palette.uuid
@@ -153,14 +161,22 @@ class EffectControllerTest(
             )
         )
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+        val nrSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Test NR Settings",
+                settings = defaultNrSettings,
+                isDefault = false,
+            )
+        )
         var effectEntity = LightEffectEntity(
             strip = strips.last(),
             palette = palette,
             name = "Super cool effect",
-            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+            effectSettings = nrSettingsEntity,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Idle,
-            settings = defaultNrSettings
         )
         effectEntity = effectRepository.save(effectEntity)
 
@@ -178,11 +194,7 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settings.map { normalizeNumberTypes(it.value) } shouldBe effectEntity.settings.map {
-            normalizeNumberTypes(
-                it.value
-            )
-        }
+        effectFromApi.settingsUuid shouldBe effectEntity.effectSettings?.uuid
         effectFromApi::class.java shouldBe GetStripEffectResponse::class.java
         (effectFromApi as GetStripEffectResponse).stripUuid shouldBe effectEntity.strip?.uuid
         effectFromApi.paletteUuid shouldBe palette?.uuid
@@ -199,6 +211,7 @@ class EffectControllerTest(
             "Rainbow Nightrider",
             defaultNrSettings,
             paletteUuid = null,
+            settingsUuid = null,
         )
 
         val createEffectHttpResponse = apiClient.createEffect(request)
@@ -212,7 +225,7 @@ class EffectControllerTest(
         effectEntity.strip?.uuid shouldBe request.stripUuid
         effectEntity.name shouldBe request.name
         effectEntity.uuid shouldBe effectUuid
-        effectEntity.settings.map { normalizeNumberTypes(it.value) } shouldBe request.settings.map {
+        (effectEntity.effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) } shouldBe request.settings!!.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -261,22 +274,39 @@ class EffectControllerTest(
             objectMapper,
             NightriderColorFillEffectSettings().copy(wrap = true)
         )
+        val initialSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Initial NR Settings",
+                settings = defaultNrSettings,
+                isDefault = false,
+            )
+        )
+        val updatedSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Updated NR Settings",
+                settings = updatedNrSettings,
+                isDefault = false,
+            )
+        )
         var effectEntity = LightEffectEntity(
             strip = strip,
             palette = palette,
             name = "Super cool light effect",
-            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+            effectSettings = initialSettingsEntity,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Idle,
-            settings = defaultNrSettings
         )
         effectEntity = effectRepository.save(effectEntity)
 
         val updateRequest = UpdateEffectRequest(
-            settings = updatedNrSettings,
-            stripUuid = null,
+            stripUuid = strip.uuid,
             poolUuid = null,
             paletteUuid = null,
+            settingsUuid = updatedSettingsEntity.uuid,
             name = "New effect name",
         )
         val updateRequestHttpResponse = apiClient.updateEffect(effectEntity.uuid, updateRequest)
@@ -288,7 +318,7 @@ class EffectControllerTest(
         effectEntities.first().strip?.uuid shouldBe strip.uuid
         effectEntities.first().name shouldBe updateRequest.name
         effectEntities.first().uuid shouldBe effectEntity.uuid
-        effectEntities.first().settings.map { normalizeNumberTypes(it.value) } shouldBe updateRequest.settings!!.map {
+        (effectEntities.first().effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -335,14 +365,22 @@ class EffectControllerTest(
             )
         )
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+        val nrSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Test NR Settings",
+                settings = defaultNrSettings,
+                isDefault = false,
+            )
+        )
         var effectEntity = LightEffectEntity(
             strip = strip,
             palette = palette,
             name = "Super cool effect",
-            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+            effectSettings = nrSettingsEntity,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Idle,
-            settings = defaultNrSettings
         )
         effectEntity = effectRepository.save(effectEntity)
 
@@ -400,7 +438,8 @@ class EffectControllerTest(
             effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             name = "Pool Nightrider Effect",
             settings = defaultNrSettings,
-            paletteUuid = palette.uuid
+            paletteUuid = palette.uuid,
+            settingsUuid = null,
         )
         val createEffectHttpResponse = apiClient.createEffect(createEffectRequest)
         createEffectHttpResponse.status shouldBe HttpStatus.CREATED
@@ -429,6 +468,7 @@ class EffectControllerTest(
             name = "Get Test Effect",
             settings = defaultNrSettings,
             paletteUuid = null,
+            settingsUuid = null,
         )
         val createEffectHttpResponse = apiClient.createEffect(createEffectRequest)
         createEffectHttpResponse.status shouldBe HttpStatus.CREATED
@@ -450,6 +490,7 @@ class EffectControllerTest(
             name = "Invalid Effect",
             settings = emptyMap(),
             paletteUuid = null,
+            settingsUuid = null,
         )
         val response = apiClient.createEffect(invalidRequest)
         response.status shouldBe HttpStatus.BAD_REQUEST
@@ -465,10 +506,10 @@ class EffectControllerTest(
         val nonExistentUuid = UUID.randomUUID().toString()
         val updateRequest = UpdateEffectRequest(
             name = "Non-existent Update",
-            settings = emptyMap(),
             stripUuid = null,
             poolUuid = null,
-            paletteUuid = null
+            paletteUuid = null,
+            settingsUuid = null,
         )
         val response = apiClient.updateEffect(nonExistentUuid, updateRequest)
         response.status shouldBe HttpStatus.NOT_FOUND
@@ -521,15 +562,23 @@ class EffectControllerTest(
         )
 
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+        val nrSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Test NR Settings",
+                settings = defaultNrSettings,
+                isDefault = false,
+            )
+        )
         val effect1 = effectRepository.save(
             LightEffectEntity(
                 pool = pool,
                 palette = palette,
                 name = "Pool Effect 1",
-                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                effectSettings = nrSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
-                settings = defaultNrSettings
             )
         )
         val effect2 = effectRepository.save(
@@ -537,10 +586,9 @@ class EffectControllerTest(
                 pool = pool,
                 palette = palette,
                 name = "Pool Effect 2",
-                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                effectSettings = nrSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
-                settings = defaultNrSettings
             )
         )
 
@@ -593,15 +641,23 @@ class EffectControllerTest(
         )
 
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+        val nrSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Test NR Settings",
+                settings = defaultNrSettings,
+                isDefault = false,
+            )
+        )
         val poolEffect = effectRepository.save(
             LightEffectEntity(
                 pool = pool,
                 palette = palette,
                 name = "Garage Pool Effect",
-                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                effectSettings = nrSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
-                settings = defaultNrSettings
             )
         )
 
@@ -652,28 +708,45 @@ class EffectControllerTest(
         )
 
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+        val updatedNrSettings = objectToMap(
+            objectMapper,
+            NightriderColorFillEffectSettings().copy(wrap = true)
+        )
+        val initialSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Initial NR Settings",
+                settings = defaultNrSettings,
+                isDefault = false,
+            )
+        )
+        val updatedSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Updated NR Settings",
+                settings = updatedNrSettings,
+                isDefault = false,
+            )
+        )
         var poolEffect = effectRepository.save(
             LightEffectEntity(
                 pool = pool,
                 palette = palette,
                 name = "Original Pool Effect",
-                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                effectSettings = initialSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
-                settings = defaultNrSettings
             )
         )
 
-        val updatedNrSettings = objectToMap(
-            objectMapper,
-            NightriderColorFillEffectSettings().copy(wrap = true)
-        )
         val updateRequest = UpdateEffectRequest(
             name = "Updated Pool Effect Name",
-            settings = updatedNrSettings,
             stripUuid = null,
-            poolUuid = null,
-            paletteUuid = null
+            poolUuid = pool.uuid,
+            paletteUuid = null,
+            settingsUuid = updatedSettingsEntity.uuid,
         )
         val updateResponse = apiClient.updateEffect(poolEffect.uuid, updateRequest)
         updateResponse.status shouldBe HttpStatus.NO_CONTENT
@@ -686,7 +759,7 @@ class EffectControllerTest(
         updatedEffect.uuid shouldBe poolEffect.uuid
         updatedEffect.pool?.uuid shouldBe pool.uuid
         updatedEffect.strip shouldBe null
-        updatedEffect.settings.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
+        (updatedEffect.effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -730,15 +803,23 @@ class EffectControllerTest(
         )
 
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+        val nrSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Test NR Settings",
+                settings = defaultNrSettings,
+                isDefault = false,
+            )
+        )
         val poolEffect = effectRepository.save(
             LightEffectEntity(
                 pool = pool,
                 palette = palette,
                 name = "Patio Pool Effect",
-                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                effectSettings = nrSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Idle,
-                settings = defaultNrSettings
             )
         )
 

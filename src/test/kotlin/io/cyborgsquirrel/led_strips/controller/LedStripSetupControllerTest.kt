@@ -8,6 +8,7 @@ import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.led_strips.responses.GetLedStripResponse
 import io.cyborgsquirrel.led_strips.responses.GetLedStripsResponse
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
@@ -28,11 +29,14 @@ class LedStripSetupControllerTest(
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val effectRepository: LightEffectRepository,
+    private val settingsRepository: LightEffectSettingsRepository,
     private val objectMapper: ObjectMapper,
 ) :
     StringSpec({
 
         afterTest {
+            effectRepository.deleteAll()
+            settingsRepository.deleteAll()
             stripRepository.deleteAll()
             clientRepository.deleteAll()
         }
@@ -174,7 +178,7 @@ class LedStripSetupControllerTest(
 
             // Deleting a strip which has a light effect - bad request
             strip = saveLedStrip(stripRepository, client, "Strip B", 144, PiClientPin.D21.pinName, 80)
-            saveLightEffect(effectRepository, objectMapper, strip)
+            saveLightEffect(effectRepository, objectMapper, settingsRepository, strip)
             response = apiClient.deleteStrip(UUID.randomUUID().toString())
             response.status shouldBe HttpStatus.BAD_REQUEST
 

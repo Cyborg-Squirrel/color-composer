@@ -21,10 +21,7 @@ class EffectResponseSerializationTest(
             uuid = UUID.randomUUID().toString(),
             stripUuid = UUID.randomUUID().toString(),
             paletteUuid = UUID.randomUUID().toString(),
-            settings = mapOf(
-                "speed" to 100,
-                "color" to "red"
-            ),
+            settingsUuid = null,
             status = LightEffectStatus.Playing,
             category = EffectCategory.Motion,
         )
@@ -48,10 +45,7 @@ class EffectResponseSerializationTest(
             uuid = UUID.randomUUID().toString(),
             poolUuid = UUID.randomUUID().toString(),
             paletteUuid = null,
-            settings = mapOf(
-                "brightness" to 50,
-                "duration" to "5000"
-            ),
+            settingsUuid = null,
             status = LightEffectStatus.Paused,
             category = EffectCategory.Ambient,
         )
@@ -74,7 +68,7 @@ class EffectResponseSerializationTest(
             uuid = UUID.randomUUID().toString(),
             stripUuid = UUID.randomUUID().toString(),
             paletteUuid = null,
-            settings = mapOf("param" to "value"),
+            settingsUuid = null,
             status = LightEffectStatus.Idle,
             category = EffectCategory.Static,
         )
@@ -85,7 +79,7 @@ class EffectResponseSerializationTest(
             uuid = UUID.randomUUID().toString(),
             poolUuid = UUID.randomUUID().toString(),
             paletteUuid = null,
-            settings = mapOf("param2" to "value2"),
+            settingsUuid = null,
             status = LightEffectStatus.Playing,
             category = EffectCategory.Motion,
         )
@@ -105,7 +99,7 @@ class EffectResponseSerializationTest(
             uuid = UUID.randomUUID().toString(),
             stripUuid = UUID.randomUUID().toString(),
             paletteUuid = null,
-            settings = mapOf(),
+            settingsUuid = null,
             status = LightEffectStatus.Stopped,
             category = EffectCategory.Static,
         )
@@ -122,7 +116,7 @@ class EffectResponseSerializationTest(
             uuid = UUID.randomUUID().toString(),
             poolUuid = UUID.randomUUID().toString(),
             paletteUuid = UUID.randomUUID().toString(),
-            settings = mapOf(),
+            settingsUuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Playing,
             category = EffectCategory.Ambient,
         )

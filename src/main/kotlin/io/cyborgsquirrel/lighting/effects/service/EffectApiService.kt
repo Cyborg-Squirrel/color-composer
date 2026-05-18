@@ -271,7 +271,7 @@ class EffectApiService(
             if (stripUuid != null && updateEffectRequest.stripUuid != effectEntity.strip?.uuid) {
                 val stripEntityOptional = stripRepository.findByUuid(updateEffectRequest.stripUuid)
                 if (stripEntityOptional.isPresent) {
-                    stripAssignmentChanged = effectEntity.strip!!.uuid != updateEffectRequest.stripUuid
+                    stripAssignmentChanged = true
                     effectEntity = effectEntity.copy(
                         strip = stripEntityOptional.get()
                     )
@@ -281,17 +281,20 @@ class EffectApiService(
             } else if (poolUuid != null && updateEffectRequest.poolUuid != effectEntity.pool?.uuid) {
                 val poolEntityOptional = poolRepository.findByUuid(updateEffectRequest.poolUuid)
                 if (poolEntityOptional.isPresent) {
-                    stripAssignmentChanged = effectEntity.pool!!.uuid != updateEffectRequest.poolUuid
+                    stripAssignmentChanged = true
                     effectEntity = effectEntity.copy(
                         pool = poolEntityOptional.get()
                     )
                 } else {
                     throw ClientRequestException("No strip pool found with uuid ${updateEffectRequest.poolUuid}")
                 }
-            } else {
-                // stripUuid and poolUuid are null, unassigning the effect from the strip or pool.
+            } else if (stripUuid == null && poolUuid == null) {
+                // Both null: explicitly unassign from strip and pool.
                 stripAssignmentChanged = effectEntity.pool != null || effectEntity.strip != null
                 effectEntity = effectEntity.copy(strip = null, pool = null)
+            } else {
+                // stripUuid/poolUuid matches current assignment — no change.
+                stripAssignmentChanged = false
             }
 
             if (updateEffectRequest.paletteUuid != null && updateEffectRequest.paletteUuid != effectEntity.palette?.uuid) {

@@ -19,6 +19,8 @@ import io.cyborgsquirrel.lighting.effect_trigger.repository.LightEffectTriggerRe
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effect_trigger.settings.EffectIterationTriggerSettings
 import io.cyborgsquirrel.lighting.effect_trigger.triggers.EffectIterationTrigger
+import io.cyborgsquirrel.lighting.effect_settings.entity.LightEffectSettingsEntity
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.SpectrumLightEffect
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
@@ -49,6 +51,7 @@ import java.util.*
 class LightEffectInitJobTest(
     private val clientRepository: LedStripClientRepository,
     private val lightEffectRepository: LightEffectRepository,
+    private val settingsRepository: LightEffectSettingsRepository,
     private val ledStripRepository: LedStripRepository,
     private val ledStripPoolRepository: LedStripPoolRepository,
     private val poolMemberLedStripRepository: PoolMemberLedStripRepository,
@@ -84,6 +87,7 @@ class LightEffectInitJobTest(
         triggerRepository.deleteAll()
         filterRepository.deleteAll()
         lightEffectRepository.deleteAll()
+        settingsRepository.deleteAll()
         poolMemberLedStripRepository.deleteAll()
         ledStripPoolRepository.deleteAll()
         ledStripRepository.deleteAll()
@@ -117,10 +121,18 @@ class LightEffectInitJobTest(
             )
         )
         val settingsJson = objectToMap(objectMapper, lightEffectSettings)
+        val settingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.SPECTRUM.displayName,
+                name = "Test Spectrum Settings",
+                settings = settingsJson,
+                isDefault = false,
+            )
+        )
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
-                settings = settingsJson,
-                type = LightEffectType.SPECTRUM.displayName,
+                effectSettings = settingsEntity,
                 name = "Happy path effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
@@ -169,10 +181,18 @@ class LightEffectInitJobTest(
             )
         )
         val lightEffectSettingsJson = objectToMap(objectMapper, lightEffectSettings)
+        val settingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.SPECTRUM.displayName,
+                name = "Test Spectrum Settings",
+                settings = lightEffectSettingsJson,
+                isDefault = false,
+            )
+        )
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
-                settings = lightEffectSettingsJson,
-                type = LightEffectType.SPECTRUM.displayName,
+                effectSettings = settingsEntity,
                 name = "A light effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
@@ -240,10 +260,18 @@ class LightEffectInitJobTest(
             )
         )
         val lightEffectSettingsJson = objectToMap(objectMapper, lightEffectSettings)
+        val settingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.SPECTRUM.displayName,
+                name = "Test Spectrum Settings",
+                settings = lightEffectSettingsJson,
+                isDefault = false,
+            )
+        )
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
-                settings = lightEffectSettingsJson,
-                type = LightEffectType.SPECTRUM.displayName,
+                effectSettings = settingsEntity,
                 name = "Effect A",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
@@ -322,10 +350,18 @@ class LightEffectInitJobTest(
             PoolMemberLedStripEntity(strip = strip, pool = pool, uuid = UUID.randomUUID().toString(), poolIndex = 0, inverted = false)
         )
         val settingsJson = objectToMap(objectMapper, lightEffectSettings)
+        val settingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.SPECTRUM.displayName,
+                name = "Test Spectrum Settings",
+                settings = settingsJson,
+                isDefault = false,
+            )
+        )
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
-                settings = settingsJson,
-                type = LightEffectType.SPECTRUM.displayName,
+                effectSettings = settingsEntity,
                 name = "Effect C",
                 pool = pool,
                 uuid = UUID.randomUUID().toString(),
