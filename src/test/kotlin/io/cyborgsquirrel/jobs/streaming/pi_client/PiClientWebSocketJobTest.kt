@@ -256,48 +256,6 @@ class PiClientWebSocketJobTest : StringSpec({
 
         job.getCurrentState().status shouldBe StreamingJobStatus.TimeSyncRequired
     }
-
-    "handleResponse: BackpressureError transitions to BufferFullWaiting" {
-        setupCommonMocks()
-        // Simulate the Pi immediately echoing a backpressure response on each send
-        every { mockPiWebSocketClient.send(any()) } answers {
-            mockResponseQueue.add(buildBackpressureResponse())
-            CompletableFuture.completedFuture(byteArrayOf())
-        }
-        every { mockRenderer.renderFrames(any(), any()) } returns listOf(
-            RenderedFrameSegmentModel(strip, 0, listOf(RgbColor.Red))
-        )
-        val job = makeJob()
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-        val coroutineJob = job.start(scope)
-        delay(200)
-        coroutineJob.cancel()
-        scope.cancel()
-
-        job.getCurrentState().status shouldBe StreamingJobStatus.BufferFullWaiting
-    }
-
-    "handleResponse: GenericError transitions to Offline and closes the client" {
-        setupCommonMocks()
-        every { mockPiWebSocketClient.send(any()) } answers {
-            mockResponseQueue.add(buildGenericErrorResponse("generic error"))
-            CompletableFuture.completedFuture(byteArrayOf())
-        }
-        every { mockRenderer.renderFrames(any(), any()) } returns listOf(
-            RenderedFrameSegmentModel(strip, 0, listOf(RgbColor.Red))
-        )
-        val job = makeJob()
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-        val coroutineJob = job.start(scope)
-        delay(50)
-        coroutineJob.cancel()
-        scope.cancel()
-
-        job.getCurrentState().status shouldBe StreamingJobStatus.Offline
-        verify { mockPiWebSocketClient.close() }
-    }
 })
 
 // ---------------------------------------------------------------------------

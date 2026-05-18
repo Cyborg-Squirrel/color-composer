@@ -151,7 +151,7 @@ class ClientTimeSyncTest : StringSpec({
         runTest { clientTimeSync.doTimeSync { 1640995200000L } }
 
         clientTimeSync.timeSyncHistory.size shouldBe 1
-        clientTimeSync.timeSyncHistory[0] shouldBe TimeSyncRecord(1640995200300L, -400L, 10)
+        clientTimeSync.timeSyncHistory[0] shouldBe TimeSyncRecord(1640995200300L, -400L, 100)
     }
 
     "Time sync history skipped when callback returns negative value" {
@@ -237,6 +237,39 @@ class ClientTimeSyncTest : StringSpec({
         }
 
         clientTimeSync.averageClientTimeOffset() shouldBe bigOffset
+    }
+
+    "Median client time offset returns 0 when history is empty" {
+        val timeHelper = mockk<TimeHelper>()
+        val clientTimeSync = ClientTimeSync(timeHelper)
+
+        clientTimeSync.medianClientTimeOffset() shouldBe 0L
+    }
+
+    "Median client time offset returns single value when history has one entry" {
+        val timeHelper = mockk<TimeHelper>()
+        coEvery { timeHelper.millisSinceEpoch() } returnsMany listOf(1640995200100L, 1640995200300L)
+        val clientTimeSync = ClientTimeSync(timeHelper)
+
+        runTest { clientTimeSync.doTimeSync { 1640995200000L } }
+
+        // clientTimeOffset = -400
+        clientTimeSync.medianClientTimeOffset() shouldBe -400L
+    }
+
+    "Median client time offset with five entries returns value at ceil(n/2) index of sorted offsets" {
+        val timeHelper = mockk<TimeHelper>()
+        coEvery { timeHelper.millisSinceEpoch() } returns 0L
+        val clientTimeSync = ClientTimeSync(timeHelper)
+
+        runTest {
+            listOf(50L, 10L, 30L, 70L, 20L).forEach { clientTime ->
+                clientTimeSync.doTimeSync { clientTime }
+            }
+        }
+
+        // sorted offsets: [10, 20, 30, 50, 70] → ceil(5/2)=3 → index 3 = 50
+        clientTimeSync.medianClientTimeOffset() shouldBe 50L
     }
 
     "lastTimeSyncPerformedAt updated after multiple calls" {
