@@ -63,6 +63,8 @@ class NightDriverSocketJob(
     private val clientTimeSync = ClientTimeSync(timeHelper)
     private val clientTimeOffset: Long
         get() = clientTimeSync.mostRecentClientTimeOffset
+    private val networkLatency: Long
+        get() = clientTimeSync.mostRecentNetworkLatency
 
     // State/logic — status/lastResponse/lastResponseReceivedAt written from both coroutine and IO thread
     private var exponentialReconnectionBackoffValue = 1
@@ -163,7 +165,7 @@ class NightDriverSocketJob(
                         status = StreamingJobStatus.BufferFullWaiting
                     } else {
                         val now = timeHelper.millisSinceEpoch()
-                        timestampMillis = now + clientTimeOffset + millisPerFrame
+                        timestampMillis = now + clientTimeOffset + networkLatency + millisPerFrame
                         logger.debug("Frame timestamp {}", timeHelper.dateTimeFromMillis(timestampMillis))
 
                         // Assemble RGB data

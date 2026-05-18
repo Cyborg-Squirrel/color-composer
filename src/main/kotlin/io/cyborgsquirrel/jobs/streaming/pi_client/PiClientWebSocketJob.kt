@@ -24,6 +24,7 @@ import kotlinx.coroutines.*
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
+import kotlin.math.abs
 
 /**
  * Background job for streaming light effects to Raspberry Pi clients
@@ -155,7 +156,8 @@ class PiClientWebSocketJob(
                     }
 
                     clientTimeSync.doTimeSync { piConfigClient.getClientTime(clientEntity).millisSinceEpoch }
-                    timestampMillis = timeHelper.millisSinceEpoch() + clientTimeSync.mostRecentClientTimeOffset
+                    timestampMillis =
+                        timeHelper.millisSinceEpoch() + clientTimeSync.mostRecentClientTimeOffset + clientTimeSync.mostRecentNetworkLatency
                     logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
                     // If we disconnect during the time sync don't set the state to rendering

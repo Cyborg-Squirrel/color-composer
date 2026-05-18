@@ -31,6 +31,7 @@ class ClientTimeSync(private val timeHelper: TimeHelper) {
 
     val mostRecentTimeSyncPerformedAt: Long get() = if (_timeSyncHistory.isEmpty()) 0 else _timeSyncHistory.last().performedAt
     val mostRecentClientTimeOffset: Long get() = if (_timeSyncHistory.isEmpty()) 0 else _timeSyncHistory.last().clientTimeOffset
+    val mostRecentNetworkLatency: Long get() = if (_timeSyncHistory.isEmpty()) 0 else _timeSyncHistory.last().networkLatency
     val timeSyncHistory: List<TimeSyncRecord> get() = _timeSyncHistory.toList()
 
     fun millisBetweenNewestAndOldestTimeSync(): Long {
