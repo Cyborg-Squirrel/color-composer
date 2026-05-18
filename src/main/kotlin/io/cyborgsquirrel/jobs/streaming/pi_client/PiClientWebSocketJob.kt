@@ -79,6 +79,7 @@ class PiClientWebSocketJob(
     private val bufferTimeInMilliseconds = 500L
     private var shouldRun = true
     private var settingsSyncRequired = true
+    private var lastResponse: PiClientResponse? = null
 
     /**
      * Starts the job which will run in the background using a Kotlin Coroutine.
@@ -181,7 +182,7 @@ class PiClientWebSocketJob(
                         val frames = renderer.renderFrames(strips, clientEntity.uuid)
                         if (frames.isEmpty()) {
                             sendKeepaliveIfDue()
-                            timestampMillis = timeHelper.millisSinceEpoch() + clientTimeSync.clientTimeOffset
+                            timestampMillis = currentTimeAsMillis + clientTimeSync.clientTimeOffset
                         } else {
                             // Reset so the strip is cleared immediately when effects stop
                             lastKeepaliveFrameSentAt = null
@@ -189,8 +190,20 @@ class PiClientWebSocketJob(
                             val serializedFrames = serializeFrames(frames)
                             sendFrames(serializedFrames)
 
-                            val nowPlusBufferMillis = timeHelper.millisSinceEpoch() + bufferTimeInMilliseconds
-                            if (nowPlusBufferMillis < timestampMillis) {
+                            val nowPlusBufferMillis = currentTimeAsMillis + bufferTimeInMilliseconds
+                            val response = lastResponse
+                            val bufferFull = when {
+                                nowPlusBufferMillis < timestampMillis -> true
+                                response is PiClientResponse.BufferStatus -> {
+                                    val millisPerFrame = ((1.0 / fps) * 1000L).toLong()
+                                    val millisInBuffer = bufferTimeInMilliseconds / millisPerFrame
+                                    response.framesInQueue > millisInBuffer
+                                }
+
+                                else -> false
+                            }
+
+                            if (bufferFull) {
                                 sleepMillis = timestampMillis - nowPlusBufferMillis
                                 status = StreamingJobStatus.BufferFullWaiting
                             }
@@ -346,6 +359,8 @@ class PiClientWebSocketJob(
                     override fun onNext(piClient: PiWebSocketClient?) {
                         status = StreamingJobStatus.ConnectedIdle
                         settingsSyncRequired = true
+                        // New connection, clear response
+                        lastResponse = null
                         piClient?.registerOnDisconnectedCallback {
                             if (status != StreamingJobStatus.SetupIncomplete) {
                                 status = StreamingJobStatus.Offline
@@ -388,6 +403,7 @@ class PiClientWebSocketJob(
     }
 
     private fun handleResponse(response: PiClientResponse?) {
+        lastResponse = response
         when (response) {
             is PiClientResponse.BackpressureError -> {
                 sleepMillis = bufferTimeInMilliseconds / 2
