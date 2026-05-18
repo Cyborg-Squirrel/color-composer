@@ -242,19 +242,19 @@ class PiClientWebSocketJobTest : StringSpec({
         scope.cancel()
     }
 
-    "happy path: transitions from SetupIncomplete all the way to RenderingEffect" {
+    "happy path: transitions from SetupIncomplete all the way to TimeSyncRequired" {
         setupCommonMocks()
         val job = makeJob()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         val coroutineJob = job.start(scope)
         // All mocked calls return instantly; 200 ms is enough for the state machine to
-        // progress through SetupIncomplete → ConnectedIdle → SettingsSync → TimeSyncRequired → RenderingEffect
+        // progress through SetupIncomplete → ConnectedIdle → SettingsSync → TimeSyncRequired
         delay(200)
         coroutineJob.cancel()
         scope.cancel()
 
-        job.getCurrentState().status shouldBe StreamingJobStatus.RenderingEffect
+        job.getCurrentState().status shouldBe StreamingJobStatus.TimeSyncRequired
     }
 
     "handleResponse: BackpressureError transitions to BufferFullWaiting" {

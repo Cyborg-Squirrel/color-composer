@@ -2,6 +2,8 @@ package io.cyborgsquirrel.jobs.streaming.util
 
 import io.cyborgsquirrel.util.time.TimeHelper
 import org.slf4j.LoggerFactory
+import java.math.BigInteger
+import kotlin.math.ceil
 
 /**
  * A utility class for syncing client time with server time.
@@ -14,10 +16,10 @@ import org.slf4j.LoggerFactory
  * 4. Calculating the network latency
  * 5. Calculating the difference between the Color Composer client time to relative to the server time
  *
- * @property lastTimeSyncPerformedAt The server time in milliseconds since epoch when the
+ * @property mostRecentTimeSyncPerformedAt The server time in milliseconds since epoch when the
  *                                   most recent time sync was performed. This represents
  *                                   the time when the synchronization was completed.
- * @property clientTimeOffset The difference between client time and server time in milliseconds.
+ * @property mostRecentClientTimeOffset The difference between client time and server time in milliseconds.
  *                            A positive value means the client's clock is ahead of the server,
  *                            while a negative value means the client's clock is behind the server.
  *
@@ -25,11 +27,50 @@ import org.slf4j.LoggerFactory
  * @param timeHelper The [TimeHelper] used to get server time.
  */
 class ClientTimeSync(private val timeHelper: TimeHelper) {
-    var lastTimeSyncPerformedAt = 0L
-        private set
+    private val _timeSyncHistory = ArrayList<TimeSyncRecord>(5)
 
-    var clientTimeOffset = 0L
-        private set
+    val mostRecentTimeSyncPerformedAt: Long get() = if (_timeSyncHistory.isEmpty()) 0 else _timeSyncHistory.last().performedAt
+    val mostRecentClientTimeOffset: Long get() = if (_timeSyncHistory.isEmpty()) 0 else _timeSyncHistory.last().clientTimeOffset
+    val timeSyncHistory: List<TimeSyncRecord> get() = _timeSyncHistory.toList()
+
+    fun millisBetweenNewestAndOldestTimeSync(): Long {
+        return when {
+            timeSyncHistory.isEmpty() -> 0
+            timeSyncHistory.size == 1 -> 0
+            else -> timeSyncHistory.last().performedAt - timeSyncHistory.first().performedAt
+        }
+    }
+
+    /**
+     * Calculates the average client ping using up to the last 5 time sync records.
+     */
+    fun averageClientTimeOffset(): Long {
+        return when {
+            _timeSyncHistory.isEmpty() -> 0L
+            _timeSyncHistory.size == 1 -> mostRecentClientTimeOffset
+            else -> {
+                // Moving average used to avoid overflowing Long
+                var average = _timeSyncHistory.first().clientTimeOffset
+                for (i in 1..<_timeSyncHistory.size) {
+                    val diff = _timeSyncHistory[i].clientTimeOffset - average
+                    val averageDiff = diff / 2
+                    average += averageDiff
+                }
+                average
+            }
+        }
+    }
+
+    fun medianClientTimeOffset(): Long {
+        return when {
+            _timeSyncHistory.isEmpty() -> 0L
+            _timeSyncHistory.size == 1 -> mostRecentClientTimeOffset
+            else -> {
+                val sortedClientTimeOffsetList = _timeSyncHistory.map { it.clientTimeOffset }.sorted()
+                return sortedClientTimeOffsetList[ceil(sortedClientTimeOffsetList.size.toFloat() / 2).toInt()]
+            }
+        }
+    }
 
     /**
      * Performs time synchronization with the server.
@@ -59,9 +100,10 @@ class ClientTimeSync(private val timeHelper: TimeHelper) {
         // to transmit. Divide by 2 so we only count the transmission time going one way.
         val networkLatency = (responseTimestamp - requestTimestamp) / 2
         val adjustedClientTime = clientTimestamp - networkLatency
-        clientTimeOffset = adjustedClientTime - responseTimestamp
+        val clientTimeOffset = adjustedClientTime - responseTimestamp
 
-        lastTimeSyncPerformedAt = responseTimestamp
+        if (_timeSyncHistory.size == 5) _timeSyncHistory.removeFirst()
+        _timeSyncHistory.add(TimeSyncRecord(responseTimestamp, clientTimeOffset, networkLatency))
         logger.info("Client time sync complete. Total client time offset: $clientTimeOffset. Network latency: $networkLatency.")
     }
 
