@@ -10,6 +10,7 @@ sealed class PiClientResponse {
     data class BufferStatus(val framesInQueue: Int, override val receivedAt: Long) : PiClientResponse()
     data class BackpressureError(val message: String, override val receivedAt: Long) : PiClientResponse()
     data class GenericError(val message: String, override val receivedAt: Long) : PiClientResponse()
+    data class StaleFrameError(val systemTimestamp: Long, override val receivedAt: Long) : PiClientResponse()
     data class NoResponse(val message: String, override val receivedAt: Long) : PiClientResponse()
     data class UnknownType(val type: Int, override val receivedAt: Long) : PiClientResponse()
 }
@@ -23,7 +24,8 @@ fun ByteArray.toPiClientResponse(timeHelper: TimeHelper): PiClientResponse {
         0 -> PiClientResponse.BufferStatus(buf.short.toInt() and 0xFFFF, receivedAt)
         1 -> PiClientResponse.BackpressureError(readString(buf, bodyLength), receivedAt)
         2 -> PiClientResponse.GenericError(readString(buf, bodyLength), receivedAt)
-        3 -> PiClientResponse.NoResponse(readString(buf, bodyLength), receivedAt)
+        3 -> PiClientResponse.StaleFrameError(buf.long, receivedAt)
+        4 -> PiClientResponse.NoResponse(readString(buf, bodyLength), receivedAt)
         else -> PiClientResponse.UnknownType(type, receivedAt)
     }
 }

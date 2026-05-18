@@ -62,9 +62,7 @@ class PiClientWebSocketJob(
 
     // Time tracking
     private val clientTimeSync = ClientTimeSync(timeHelper)
-    private val timeDesyncToleranceMillis = 5
-    private val timeSinceLastSync: Long
-        get() = timeHelper.millisSinceEpoch() - clientTimeSync.lastTimeSyncPerformedAt
+    private val timeDesyncToleranceMillis = 50
     private var lastKeepaliveFrameSentAt: Long? = null
     private var timestampMillis = 0L
     private var sleepMillis = 0L
@@ -112,7 +110,7 @@ class PiClientWebSocketJob(
                         if (clientEntity.strips.isNotEmpty()) {
                             strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid).map { it.strip }
                             timestampMillis =
-                                timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeSync.clientTimeOffset
+                                timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeSync.mostRecentClientTimeOffset
                             status = StreamingJobStatus.WaitingForConnection
                             setupSocket()
                         } else {
@@ -133,7 +131,7 @@ class PiClientWebSocketJob(
                     exponentialReconnectionBackoffValue = 1
                     status = when {
                         settingsSyncRequired -> StreamingJobStatus.SettingsSync
-                        clientTimeSync.lastTimeSyncPerformedAt == 0L -> StreamingJobStatus.TimeSyncRequired
+                        clientTimeSync.mostRecentTimeSyncPerformedAt == 0L -> StreamingJobStatus.TimeSyncRequired
                         else -> StreamingJobStatus.RenderingEffect
                     }
                 }
@@ -151,12 +149,13 @@ class PiClientWebSocketJob(
                 }
 
                 StreamingJobStatus.TimeSyncRequired -> {
-                    // Don't sync more often than every 3 seconds if we end up looping on time sync for some reason
-                    if (timeSinceLastSync > 1000 * 3) {
-                        clientTimeSync.doTimeSync { piConfigClient.getClientTime(clientEntity).millisSinceEpoch }
+                    // Check if we're doing time syncs too frequently and back off if needed
+                    if (clientTimeSync.millisBetweenNewestAndOldestTimeSync() < 3000) {
+                        delay(1000)
                     }
 
-                    timestampMillis = timeHelper.millisSinceEpoch() + clientTimeSync.clientTimeOffset
+                    clientTimeSync.doTimeSync { piConfigClient.getClientTime(clientEntity).millisSinceEpoch }
+                    timestampMillis = timeHelper.millisSinceEpoch() + clientTimeSync.mostRecentClientTimeOffset
                     logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
                     // If we disconnect during the time sync don't set the state to rendering
@@ -168,11 +167,11 @@ class PiClientWebSocketJob(
                 StreamingJobStatus.RenderingEffect -> {
                     val currentTimeAsMillis = timeHelper.millisSinceEpoch()
                     val timeDesynced =
-                        timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeSync.clientTimeOffset
+                        timestampMillis + timeDesyncToleranceMillis < currentTimeAsMillis + clientTimeSync.mostRecentClientTimeOffset
                     updateLastSeenAt(currentTimeAsMillis)
                     if (timeDesynced) {
                         logger.info(
-                            "Re-syncing time with client $client - (client time offset ${clientTimeSync.clientTimeOffset}ms frame timestamp: ${
+                            "Re-syncing time with client $client - (client time offset ${clientTimeSync.mostRecentClientTimeOffset}ms frame timestamp: ${
                                 timeHelper.dateTimeFromMillis(timestampMillis)
                             })"
                         )
@@ -182,7 +181,7 @@ class PiClientWebSocketJob(
                         val frames = renderer.renderFrames(strips, clientEntity.uuid)
                         if (frames.isEmpty()) {
                             sendKeepaliveIfDue()
-                            timestampMillis = currentTimeAsMillis + clientTimeSync.clientTimeOffset
+                            timestampMillis = currentTimeAsMillis + clientTimeSync.mostRecentClientTimeOffset
                         } else {
                             // Reset so the strip is cleared immediately when effects stop
                             lastKeepaliveFrameSentAt = null
@@ -408,6 +407,11 @@ class PiClientWebSocketJob(
             is PiClientResponse.BackpressureError -> {
                 sleepMillis = bufferTimeInMilliseconds / 2
                 status = StreamingJobStatus.BufferFullWaiting
+            }
+
+            is PiClientResponse.StaleFrameError -> {
+                logger.warn("Stale frame rejected by $clientEntity (client time: ${response.systemTimestamp}) - re-syncing time")
+                status = StreamingJobStatus.TimeSyncRequired
             }
 
             is PiClientResponse.NoResponse,

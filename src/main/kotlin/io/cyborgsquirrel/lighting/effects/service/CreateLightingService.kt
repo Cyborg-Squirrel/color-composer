@@ -235,7 +235,7 @@ class CreateLightingService(
                                 JsonNode.from(trigger.settings), EffectIterationTriggerSettings::class.java
                             ),
                             uuid = trigger.uuid!!,
-                            effectUuid = effectEntity.uuid!!,
+                            effectUuid = effectEntity.uuid,
                         )
                     }
 
@@ -246,7 +246,7 @@ class CreateLightingService(
                                 JsonNode.from(trigger.settings), TimeTriggerSettings::class.java
                             ),
                             uuid = trigger.uuid!!,
-                            effectUuid = effectEntity.uuid!!,
+                            effectUuid = effectEntity.uuid,
                         )
                     }
 
@@ -261,7 +261,7 @@ class CreateLightingService(
                                 JsonNode.from(trigger.settings), TimeOfDayTriggerSettings::class.java
                             ),
                             uuid = trigger.uuid!!,
-                            effectUuid = effectEntity.uuid!!
+                            effectUuid = effectEntity.uuid
                         )
                     }
 

@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 class StreamJobManagerImpl(
     private val streamingJobFactory: StreamingJobFactory
 ) : StreamJobManager {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val jobMap = ConcurrentHashMap<String, Pair<ClientStreamingJob, Job>>()
 
     override fun startStreamingJob(client: LedStripClientEntity) {

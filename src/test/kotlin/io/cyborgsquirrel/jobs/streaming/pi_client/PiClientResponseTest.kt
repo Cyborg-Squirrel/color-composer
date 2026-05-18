@@ -31,6 +31,9 @@ class PiClientResponseTest : StringSpec({
     fun queueDepthBody(depth: Int): ByteArray =
         ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(depth.toShort()).array()
 
+    fun timestampBody(timestamp: Long): ByteArray =
+        ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(timestamp).array()
+
     "Type 0 - BufferStatus parses queue depth" {
         buildMessage(0, queueDepthBody(5)).toPiClientResponse(timeHelper).shouldBeInstanceOf<PiClientResponse.BufferStatus> {
             it.framesInQueue shouldBe 5
@@ -65,8 +68,17 @@ class PiClientResponseTest : StringSpec({
             }
     }
 
-    "Type 3 - NoResponse parses message" {
-        buildMessage(3, "No response from renderer".toByteArray(Charsets.UTF_8)).toPiClientResponse(timeHelper)
+    "Type 3 - StaleFrameError parses system timestamp" {
+        val timestamp = 1747612800000L
+        buildMessage(3, timestampBody(timestamp)).toPiClientResponse(timeHelper)
+            .shouldBeInstanceOf<PiClientResponse.StaleFrameError> {
+                it.systemTimestamp shouldBe timestamp
+                it.receivedAt shouldBe fixedTimestamp
+            }
+    }
+
+    "Type 4 - NoResponse parses message" {
+        buildMessage(4, "No response from renderer".toByteArray(Charsets.UTF_8)).toPiClientResponse(timeHelper)
             .shouldBeInstanceOf<PiClientResponse.NoResponse> {
                 it.message shouldBe "No response from renderer"
             }

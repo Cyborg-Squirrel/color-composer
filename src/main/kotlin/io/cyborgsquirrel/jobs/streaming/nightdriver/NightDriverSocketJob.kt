@@ -62,7 +62,7 @@ class NightDriverSocketJob(
     private var lastTimeSyncPerformedAt = 0L
     private val clientTimeSync = ClientTimeSync(timeHelper)
     private val clientTimeOffset: Long
-        get() = clientTimeSync.clientTimeOffset
+        get() = clientTimeSync.mostRecentClientTimeOffset
 
     // State/logic — status/lastResponse/lastResponseReceivedAt written from both coroutine and IO thread
     private var exponentialReconnectionBackoffValue = 1
