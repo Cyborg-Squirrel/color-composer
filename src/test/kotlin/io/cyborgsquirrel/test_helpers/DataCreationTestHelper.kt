@@ -6,6 +6,8 @@ import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.lighting.effect_settings.entity.LightEffectSettingsEntity
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
@@ -63,16 +65,26 @@ fun saveLedStrip(
 fun saveLightEffect(
     effectRepository: LightEffectRepository,
     objectMapper: ObjectMapper,
+    settingsRepository: LightEffectSettingsRepository,
     strip: LedStripEntity,
     status: LightEffectStatus = LightEffectStatus.Idle,
-): LightEffectEntity =
-    effectRepository.save(
+): LightEffectEntity {
+    val settingsEntity = settingsRepository.save(
+        LightEffectSettingsEntity(
+            uuid = UUID.randomUUID().toString(),
+            type = LightEffectType.SPECTRUM.displayName,
+            name = "Test Spectrum Settings",
+            settings = objectToMap(objectMapper, SpectrumEffectSettings()),
+            isDefault = false,
+        )
+    )
+    return effectRepository.save(
         LightEffectEntity(
             strip = strip,
             uuid = UUID.randomUUID().toString(),
-            settings = objectToMap(objectMapper, SpectrumEffectSettings(strip.length!!, animated = false, updatesPerSecond = 30)),
-            type = LightEffectType.SPECTRUM.displayName,
             name = "My light effect",
-            status = status
+            status = status,
+            effectSettings = settingsEntity,
         )
     )
+}

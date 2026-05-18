@@ -7,6 +7,6 @@ data class UpdateEffectRequest(
     val stripUuid: String?,
     val poolUuid: String?,
     val paletteUuid: String?,
+    val settingsUuid: String?,
     val name: String?,
-    val settings: Map<String, Any>?
 )

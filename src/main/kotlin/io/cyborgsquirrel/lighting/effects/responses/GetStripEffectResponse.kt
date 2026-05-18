@@ -11,9 +11,9 @@ data class GetStripEffectResponse(
     override val uuid: String,
     val stripUuid: String,
     override val paletteUuid: String?,
-    override val settings: Map<String, Any>,
+    override val settingsUuid: String?,
     override val status: LightEffectStatus,
     override val category: EffectCategory,
 ) : GetEffectResponse(
-    name, type, uuid, paletteUuid, settings, status, category
+    name, type, uuid, paletteUuid, settingsUuid, status, category
 )

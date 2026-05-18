@@ -13,10 +13,12 @@ import io.cyborgsquirrel.lighting.effect_trigger.LightEffectTriggerConstants
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.effect_trigger.enums.TriggerType
 import io.cyborgsquirrel.lighting.effect_trigger.settings.TimeTriggerSettings
+import io.cyborgsquirrel.lighting.effect_settings.entity.LightEffectSettingsEntity
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
-import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.test_helpers.objectToMap
@@ -32,6 +34,7 @@ import java.util.*
 class LightEffectTriggerRepositoryTest(
     private val objectMapper: ObjectMapper,
     private val lightEffectRepository: LightEffectRepository,
+    private val settingsRepository: LightEffectSettingsRepository,
     private val clientRepository: LedStripClientRepository,
     private val ledStripRepository: LedStripRepository,
     private val ledStripPoolRepository: LedStripPoolRepository,
@@ -39,7 +42,7 @@ class LightEffectTriggerRepositoryTest(
     private val lightEffectTriggerRepository: LightEffectTriggerRepository,
 ) : StringSpec({
 
-    val nightriderLightEffectSettings = NightriderEffectSettings.default()
+    val nightriderLightEffectSettings = NightriderColorFillEffectSettings()
     val timeTriggerSettings =
         TimeTriggerSettings(
             LocalTime.of(19, 0), null, Duration.ofHours(4), maxActivations = null, triggerType = TriggerType.StartEffect
@@ -59,6 +62,7 @@ class LightEffectTriggerRepositoryTest(
         lightEffectTriggerRepository.deleteAll()
         poolMemberLedStripRepository.deleteAll()
         lightEffectRepository.deleteAll()
+        settingsRepository.deleteAll()
         ledStripPoolRepository.deleteAll()
         ledStripRepository.deleteAll()
         clientRepository.deleteAll()
@@ -91,10 +95,18 @@ class LightEffectTriggerRepositoryTest(
             )
         )
         val lightEffectSettingsJson = objectToMap(objectMapper, nightriderLightEffectSettings)
+        val settingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Test NR Settings",
+                settings = lightEffectSettingsJson,
+                isDefault = false,
+            )
+        )
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
-                settings = lightEffectSettingsJson,
-                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                effectSettings = settingsEntity,
                 name = "My nightrider effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),

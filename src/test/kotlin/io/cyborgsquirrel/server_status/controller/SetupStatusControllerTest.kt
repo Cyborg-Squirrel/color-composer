@@ -3,6 +3,7 @@ package io.cyborgsquirrel.server_status.controller
 import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.server_status.api.ServerStatusApi
 import io.cyborgsquirrel.server_status.responses.SetupStatus
@@ -23,14 +24,16 @@ class SetupStatusControllerTest(
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val effectRepository: LightEffectRepository,
+    private val settingsRepository: LightEffectSettingsRepository,
     private val objectMapper: ObjectMapper
 ) :
     StringSpec({
 
         afterTest {
+            effectRepository.deleteAll()
+            settingsRepository.deleteAll()
             stripRepository.deleteAll()
             clientRepository.deleteAll()
-            effectRepository.deleteAll()
         }
 
         "Setup status - nothing setup" {
@@ -59,7 +62,7 @@ class SetupStatusControllerTest(
         "Setup status - everything configured" {
             val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.1.12", 1111, 2222)
             val strip = saveLedStrip(stripRepository, client, "Hallway lights", 240, PiClientPin.D10.pinName, 50)
-            saveLightEffect(effectRepository, objectMapper, strip)
+            saveLightEffect(effectRepository, objectMapper, settingsRepository, strip)
             val statusResponse = apiClient.setupStatus()
             val response = statusResponse.body() as SetupStatusResponse
             response.status shouldBe SetupStatus.SetupComplete

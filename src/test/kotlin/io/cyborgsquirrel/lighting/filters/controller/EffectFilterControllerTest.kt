@@ -3,13 +3,15 @@ package io.cyborgsquirrel.lighting.filters.controller
 import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.lighting.effect_settings.entity.LightEffectSettingsEntity
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
-import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.filters.LightEffectFilterConstants
@@ -46,6 +48,7 @@ class EffectFilterControllerTest(
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val effectRepository: LightEffectRepository,
+    private val settingsRepository: LightEffectSettingsRepository,
     private val filterRepository: LightEffectFilterRepository,
     private val effectRegistry: LightEffectRegistry,
     private val junctionRepository: LightEffectFilterJunctionRepository,
@@ -55,6 +58,7 @@ class EffectFilterControllerTest(
     afterEach {
         filterRepository.deleteAll()
         effectRepository.deleteAll()
+        settingsRepository.deleteAll()
         stripRepository.deleteAll()
         clientRepository.deleteAll()
     }
@@ -85,14 +89,22 @@ class EffectFilterControllerTest(
         val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName, 50)
         val stripB = saveLedStrip(stripRepository, client, "Strip B", 100, PiClientPin.D21.pinName, 50)
         val strips = listOf(stripA, stripB)
-        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+        val nrSettingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Test NR Settings",
+                settings = defaultNrSettings,
+                isDefault = false,
+            )
+        )
         var effectEntity = LightEffectEntity(
             strip = strips.last(),
             name = "Super cool effect",
-            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+            effectSettings = nrSettingsEntity,
             uuid = UUID.randomUUID().toString(),
             status = LightEffectStatus.Idle,
-            settings = defaultNrSettings
         )
         effectEntity = effectRepository.save(effectEntity)
         var filterEntity = LightEffectFilterEntity(
@@ -122,7 +134,7 @@ class EffectFilterControllerTest(
     "Create a filter" {
         val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.50.50", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 50)
-        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
                 strip.uuid!!,
@@ -130,6 +142,7 @@ class EffectFilterControllerTest(
                 LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 "Super cool effect",
                 defaultNrSettings,
+                null,
                 null
             )
         )
@@ -165,7 +178,7 @@ class EffectFilterControllerTest(
     "Updating a filter" {
         val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.50.50", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 50)
-        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
                 strip.uuid!!,
@@ -173,6 +186,7 @@ class EffectFilterControllerTest(
                 LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 "Super cool effect",
                 defaultNrSettings,
+                null,
                 null
             )
         )
@@ -225,7 +239,7 @@ class EffectFilterControllerTest(
     "Delete a filter" {
         val client = createLedStripClientEntity(clientRepository, "Hallway lights", "192.168.50.50", 50, 51)
         val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 50)
-        val defaultNrSettings = objectToMap(objectMapper, NightriderEffectSettings.default())
+        val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
                 strip.uuid!!,
@@ -233,6 +247,7 @@ class EffectFilterControllerTest(
                 LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 "Super cool effect",
                 defaultNrSettings,
+                null,
                 null
             )
         )

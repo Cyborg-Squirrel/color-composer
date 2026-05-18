@@ -8,7 +8,7 @@ sealed class GetEffectResponse(
     open val type: String,
     open val uuid: String,
     open val paletteUuid: String?,
-    open val settings: Map<String, Any>,
+    open val settingsUuid: String?,
     open val status: LightEffectStatus,
     open val category: EffectCategory,
 )

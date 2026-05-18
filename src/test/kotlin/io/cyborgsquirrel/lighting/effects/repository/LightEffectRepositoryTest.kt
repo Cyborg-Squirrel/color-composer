@@ -12,9 +12,11 @@ import io.cyborgsquirrel.led_strips.enums.PoolType
 import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.led_strips.repository.PoolMemberLedStripRepository
+import io.cyborgsquirrel.lighting.effect_settings.entity.LightEffectSettingsEntity
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
-import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
+import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.test_helpers.normalizeNumberTypes
@@ -29,13 +31,14 @@ import java.util.*
 class LightEffectRepositoryTest(
     private val objectMapper: ObjectMapper,
     private val lightEffectRepository: LightEffectRepository,
+    private val settingsRepository: LightEffectSettingsRepository,
     private val clientRepository: LedStripClientRepository,
     private val ledStripRepository: LedStripRepository,
     private val ledStripPoolRepository: LedStripPoolRepository,
     private val poolMemberLedStripRepository: PoolMemberLedStripRepository,
 ) : StringSpec({
 
-    val settings = NightriderEffectSettings.default()
+    val settings = NightriderColorFillEffectSettings()
 
     fun verifyLightEffectEntity(
         newEntity: LightEffectEntity,
@@ -45,16 +48,14 @@ class LightEffectRepositoryTest(
         newEntity.pool?.id shouldBe expectedEntity.pool?.id
         newEntity.uuid shouldBe expectedEntity.uuid
         newEntity.name shouldBe expectedEntity.name
-        newEntity.settings.map { normalizeNumberTypes(it.value) } shouldBe expectedEntity.settings.map {
-            normalizeNumberTypes(
-                it.value
-            )
-        }
+        (newEntity.effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) } shouldBe
+            (expectedEntity.effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) }
     }
 
     afterTest {
         poolMemberLedStripRepository.deleteAll()
         lightEffectRepository.deleteAll()
+        settingsRepository.deleteAll()
         ledStripPoolRepository.deleteAll()
         ledStripRepository.deleteAll()
         clientRepository.deleteAll()
@@ -87,10 +88,18 @@ class LightEffectRepositoryTest(
             )
         )
         val settingsJson = objectToMap(objectMapper, settings)
+        val settingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Test NR Settings",
+                settings = settingsJson,
+                isDefault = false,
+            )
+        )
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
-                settings = settingsJson,
-                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                effectSettings = settingsEntity,
                 name = "Super cool effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
@@ -148,10 +157,18 @@ class LightEffectRepositoryTest(
         )
 
         val settingsJson = objectToMap(objectMapper, settings)
+        val settingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Test NR Settings",
+                settings = settingsJson,
+                isDefault = false,
+            )
+        )
         val lightEffect = lightEffectRepository.save(
             LightEffectEntity(
-                settings = settingsJson,
-                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                effectSettings = settingsEntity,
                 name = "My effect",
                 pool = pool,
                 uuid = UUID.randomUUID().toString(),

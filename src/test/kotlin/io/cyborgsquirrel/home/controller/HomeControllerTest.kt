@@ -8,6 +8,7 @@ import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
 import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
+import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.responses.GetStripEffectResponse
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
@@ -31,6 +32,7 @@ class HomeControllerTest(
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val effectRepository: LightEffectRepository,
+    private val settingsRepository: LightEffectSettingsRepository,
     private val paletteRepository: LightEffectPaletteRepository,
     private val activeLightEffectService: LightEffectRegistry,
     private val objectMapper: ObjectMapper,
@@ -39,6 +41,7 @@ class HomeControllerTest(
     afterEach {
         activeLightEffectService.removeAllEffects()
         effectRepository.deleteAll()
+        settingsRepository.deleteAll()
         paletteRepository.deleteAll()
         stripRepository.deleteAll()
         clientRepository.deleteAll()
@@ -59,7 +62,7 @@ class HomeControllerTest(
     "GET /home returns correct counts after inserting data" {
         val client = createLedStripClientEntity(clientRepository, "Client 1", "192.168.1.1", 8000, 8001)
         val strip = saveLedStrip(stripRepository, client, "Strip 1", 60, PiClientPin.D10.pinName, 100)
-        saveLightEffect(effectRepository, objectMapper, strip)
+        saveLightEffect(effectRepository, objectMapper, settingsRepository, strip)
         paletteRepository.save(
             LightEffectPaletteEntity(
                 uuid = UUID.randomUUID().toString(),
@@ -84,7 +87,7 @@ class HomeControllerTest(
         val client = createLedStripClientEntity(clientRepository, "Client 1", "192.168.1.1", 8000, 8001)
         val strip = saveLedStrip(stripRepository, client, "Strip 1", 60, PiClientPin.D10.pinName, 100)
 
-        val playingEffect = saveLightEffect(effectRepository, objectMapper, strip, LightEffectStatus.Playing)
+        val playingEffect = saveLightEffect(effectRepository, objectMapper, settingsRepository, strip, LightEffectStatus.Playing)
 
         val response = apiClient.getHome()
 
@@ -92,14 +95,14 @@ class HomeControllerTest(
         val body = response.body() as HomeResponse
         body.activeEffects shouldContainExactly listOf(
             GetStripEffectResponse(
-                uuid = playingEffect.uuid!!,
+                uuid = playingEffect.uuid,
                 status = LightEffectStatus.Playing,
                 stripUuid = strip.uuid!!,
                 name = playingEffect.name,
-                type = playingEffect.type,
-                settings = playingEffect.settings,
+                type = playingEffect.effectSettings!!.type,
                 paletteUuid = null,
-                category = EffectCategory.forEffect(playingEffect.type),
+                settingsUuid = playingEffect.effectSettings?.uuid,
+                category = EffectCategory.forEffect(playingEffect.effectSettings!!.type),
             ),
         )
     }
