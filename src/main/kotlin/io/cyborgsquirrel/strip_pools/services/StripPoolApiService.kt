@@ -25,9 +25,12 @@ class StripPoolApiService(
     private val sseEventEmitter: SseEventEmitter,
 ) {
 
-    private fun mapPoolEntityToModel(poolEntity: LedStripPoolEntity, memberEntities: List<PoolMemberLedStripEntity>): GetStripPoolResponse {
-        val memberResponseModels = memberEntities.map {
-            StripPoolMemberResponseModel(it.uuid!!, it.strip!!.uuid!!, it.inverted!!, it.poolIndex!!)
+    private fun mapPoolEntityToModel(
+        poolEntity: LedStripPoolEntity,
+        memberEntities: List<PoolMemberLedStripEntity>
+    ): GetStripPoolResponse {
+        val memberResponseModels = memberEntities.map { me ->
+            StripPoolMemberResponseModel(me.uuid!!, me.strip!!.uuid!!, me.inverted!!, me.poolIndex!!)
         }
         return GetStripPoolResponse(
             poolEntity.name!!,
