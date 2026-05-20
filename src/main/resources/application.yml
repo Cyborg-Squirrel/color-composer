@@ -9,6 +9,9 @@ micronaut:
   server:
     cors:
       enabled: true
+      configurations:
+        web:
+          allowed-origins-regex: ".*"
 
 datasources:
   default:

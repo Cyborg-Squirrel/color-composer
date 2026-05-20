@@ -7,12 +7,6 @@ import io.micronaut.data.repository.CrudRepository
 import java.util.*
 
 interface LedStripRepository : CrudRepository<LedStripEntity, Long> {
-    // TODO rename so this can be findByPoolMembers?
-    @Join(value = "client", type = Join.Type.LEFT_FETCH)
-    @Join(value = "effects", type = Join.Type.LEFT_FETCH)
-    @Join(value = "members", type = Join.Type.LEFT_FETCH)
-    fun findByMembers(member: PoolMemberLedStripEntity): List<LedStripEntity>
-
     @Join(value = "client", type = Join.Type.LEFT_FETCH)
     @Join(value = "effects", type = Join.Type.LEFT_FETCH)
     @Join(value = "members", type = Join.Type.LEFT_FETCH)

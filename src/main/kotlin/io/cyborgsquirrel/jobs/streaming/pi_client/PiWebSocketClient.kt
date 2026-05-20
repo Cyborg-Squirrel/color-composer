@@ -5,14 +5,13 @@ import io.micronaut.websocket.WebSocketSession
 import io.micronaut.websocket.annotation.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentLinkedQueue
 
 @ClientWebSocket
 abstract class PiWebSocketClient : AutoCloseable {
 
     private var session: WebSocketSession? = null
     private var onDisconnectedCallback: () -> Unit = {}
-    val responseQueue = ConcurrentLinkedQueue<ByteArray>()
+    private var onMessageCallback: (ByteArray) -> Unit = {}
 
     fun registerOnDisconnectedCallback(callback: () -> Unit) {
         onDisconnectedCallback = callback
@@ -22,10 +21,22 @@ abstract class PiWebSocketClient : AutoCloseable {
         onDisconnectedCallback = {}
     }
 
+    fun registerOnMessageCallback(callback: (ByteArray) -> Unit) {
+        onMessageCallback = callback
+    }
+
+    fun unregisterOnMessageCallback() {
+        onMessageCallback = {}
+    }
+
     @OnMessage
     fun onMessage(message: ByteArray) {
         logger.debug("Message - {}", message)
-        responseQueue.add(message)
+        try {
+            onMessageCallback(message)
+        } catch (ex: Exception) {
+            logger.error("Error in onMessage callback", ex)
+        }
     }
 
     @OnOpen

@@ -7,6 +7,7 @@ import java.util.*
 
 interface LedStripPoolRepository : CrudRepository<LedStripPoolEntity, Long> {
     @Join(value = "members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "members.strip", type = Join.Type.LEFT_FETCH)
     @Join(value = "effects", type = Join.Type.LEFT_FETCH)
     fun queryAll(): List<LedStripPoolEntity>
 
@@ -15,6 +16,7 @@ interface LedStripPoolRepository : CrudRepository<LedStripPoolEntity, Long> {
     fun queryById(id: Long): Optional<LedStripPoolEntity>
 
     @Join(value = "members", type = Join.Type.LEFT_FETCH)
+    @Join(value = "members.strip", type = Join.Type.LEFT_FETCH)
     @Join(value = "effects", type = Join.Type.LEFT_FETCH)
     fun findByUuid(uuid: String): Optional<LedStripPoolEntity>
 }

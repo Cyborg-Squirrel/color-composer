@@ -20,10 +20,8 @@ import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
-import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
-import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameSegmentModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -36,7 +34,6 @@ import org.reactivestreams.Subscription
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentLinkedQueue
 
 private const val CLIENT_UUID = "test-client-uuid"
 private const val STRIP_UUID = "test-strip-uuid"
@@ -113,10 +110,7 @@ class PiClientWebSocketJobTest : StringSpec({
         activeLightEffectService = mockLightEffectRegistry,
     )
 
-    var mockResponseQueue = ConcurrentLinkedQueue<ByteArray>()
-
     fun setupCommonMocks() {
-        mockResponseQueue = ConcurrentLinkedQueue()
         every { mockLightEffectRegistry.updates } returns Flux.never()
         every { mockTimeHelper.millisSinceEpoch() } returns NOW_MILLIS
         every { mockTimeHelper.dateTimeFromMillis(any()) } returns LocalDateTime.of(2024, 1, 1, 0, 0)
@@ -128,8 +122,9 @@ class PiClientWebSocketJobTest : StringSpec({
         every { mockRenderer.renderFrames(any(), any()) } returns emptyList()
         every { mockPiWebSocketClient.registerOnDisconnectedCallback(any()) } answers {}
         every { mockPiWebSocketClient.unregisterOnDisconnectedCallback() } answers {}
+        every { mockPiWebSocketClient.registerOnMessageCallback(any()) } answers {}
+        every { mockPiWebSocketClient.unregisterOnMessageCallback() } answers {}
         every { mockPiWebSocketClient.close() } answers {}
-        every { mockPiWebSocketClient.responseQueue } returns mockResponseQueue
         every { mockPiWebSocketClient.send(any()) } returns CompletableFuture.completedFuture(byteArrayOf())
         // Use answers {} and explicit types to resolve the generic connect() overloads
         every { mockWebSocketClient.connect(any<Class<PiWebSocketClient>>(), any<java.net.URI>()) } answers {
@@ -156,14 +151,13 @@ class PiClientWebSocketJobTest : StringSpec({
         job.getCurrentState().status shouldBe StreamingJobStatus.SetupIncomplete
     }
 
-    "onUpdate with a matching SingleLedStripModel sets SettingsSync" {
+    "filterMatchingStrips returns the SingleLedStripModel whose clientUuid matches" {
         setupCommonMocks()
         val job = makeJob()
-        job.onEffectsUpdate(listOf(activeEffect))
-        job.getCurrentState().status shouldBe StreamingJobStatus.SettingsSync
+        job.filterMatchingStrips(listOf(activeEffect)) shouldBe listOf(strip)
     }
 
-    "onUpdate with a matching LedStripPoolModel sets SettingsSync" {
+    "filterMatchingStrips returns LedStripPoolModel that contains the client" {
         setupCommonMocks()
         val job = makeJob()
         val poolStrip = LedStripPoolModel(
@@ -173,24 +167,30 @@ class PiClientWebSocketJobTest : StringSpec({
             poolType = PoolType.Sync,
             strips = listOf(strip),
         )
-        job.onEffectsUpdate(listOf(activeEffect.copy(strip = poolStrip)))
-        job.getCurrentState().status shouldBe StreamingJobStatus.SettingsSync
+        job.filterMatchingStrips(listOf(activeEffect.copy(strip = poolStrip))) shouldBe listOf(poolStrip)
     }
 
-    "onUpdate called twice with the same strips does not change status a second time" {
+    "filterMatchingStrips drops effects belonging to a different client" {
+        setupCommonMocks()
+        val job = makeJob()
+        val otherEffect = activeEffect.copy(strip = strip.copy(clientUuid = "other-client"))
+        job.filterMatchingStrips(listOf(otherEffect)) shouldBe emptyList()
+    }
+
+    "onEffectsUpdate while in SetupIncomplete leaves status unchanged (sync happens after connect)" {
         setupCommonMocks()
         val job = makeJob()
         job.onEffectsUpdate(listOf(activeEffect))
-        val statusAfterFirst = job.getCurrentState().status
-        job.onEffectsUpdate(listOf(activeEffect))
-        job.getCurrentState().status shouldBe statusAfterFirst
+        job.drainEvents()
+        job.getCurrentState().status shouldBe StreamingJobStatus.SetupIncomplete
     }
 
-    "onUpdate with effects belonging to a different client is a no-op" {
+    "onEffectsUpdate with effects for a different client is a no-op" {
         setupCommonMocks()
         val job = makeJob()
         val otherEffect = activeEffect.copy(strip = strip.copy(clientUuid = "other-client"))
         job.onEffectsUpdate(listOf(otherEffect))
+        job.drainEvents()
         job.getCurrentState().status shouldBe StreamingJobStatus.SetupIncomplete
     }
 
@@ -211,6 +211,7 @@ class PiClientWebSocketJobTest : StringSpec({
         verify { mockLightEffectRegistry.updates }
 
         job.dispose()
+        coroutineJob.cancel()
         coroutineJob.join()
         scope.cancel()
     }
@@ -238,7 +239,7 @@ class PiClientWebSocketJobTest : StringSpec({
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         val coroutineJob = job.start(scope)
-        coroutineJob.join() // dispose() sets shouldRun=false so the loop exits naturally
+        coroutineJob.join() // dispose() sets disposed=true so the loop exits naturally
         scope.cancel()
     }
 
