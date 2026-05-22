@@ -110,7 +110,7 @@ class LightEffectTriggerRepositoryTest(
                 name = "My nightrider effect",
                 strip = strip,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Idle,
+                status = LightEffectStatus.Inactive,
             )
         )
         val triggerSettingsJson = objectToMap(objectMapper, timeTriggerSettings)

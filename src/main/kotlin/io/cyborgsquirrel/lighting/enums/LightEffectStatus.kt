@@ -1,8 +1,8 @@
 package io.cyborgsquirrel.lighting.enums
 
 enum class LightEffectStatus {
-    // New effects, or effects which are not stopped or paused but are inactive
-    Idle,
+    // Inactive effect
+    Inactive,
 
     // Currently being rendered
     Playing,
@@ -14,13 +14,13 @@ enum class LightEffectStatus {
     Stopped;
 
     companion object {
-        fun activeStatuses(): List<LightEffectStatus> {
+        fun inUseStatuses(): List<LightEffectStatus> {
             return listOf(Playing, Paused)
         }
     }
 }
 
-fun LightEffectStatus.isActive(): Boolean {
-    return LightEffectStatus.activeStatuses().contains(this)
+fun LightEffectStatus.isInUse(): Boolean {
+    return LightEffectStatus.inUseStatuses().contains(this)
 }
 

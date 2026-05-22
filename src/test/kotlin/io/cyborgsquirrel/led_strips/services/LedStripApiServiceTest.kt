@@ -85,7 +85,7 @@ class LedStripApiServiceTest(
         result.pin shouldBe strip.pin
         result.blendMode shouldBe strip.blendMode
         result.brightness shouldBe strip.brightness
-        result.activeEffects shouldBe 1
+        result.inUse shouldBe true
     }
 
     "getStrips should return empty list when no strips exist" {

@@ -104,7 +104,7 @@ class EffectFilterControllerTest(
             name = "Super cool effect",
             effectSettings = nrSettingsEntity,
             uuid = UUID.randomUUID().toString(),
-            status = LightEffectStatus.Idle,
+            status = LightEffectStatus.Inactive,
         )
         effectEntity = effectRepository.save(effectEntity)
         var filterEntity = LightEffectFilterEntity(

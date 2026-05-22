@@ -45,7 +45,7 @@ class TimeTriggerTest(
             UUID.randomUUID().toString(),
             1,
             true,
-            LightEffectStatus.Idle,
+            LightEffectStatus.Inactive,
             effect,
             listOf(),
             mockStrip,

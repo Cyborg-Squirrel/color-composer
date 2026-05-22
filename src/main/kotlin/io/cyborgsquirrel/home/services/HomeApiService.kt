@@ -30,7 +30,7 @@ class HomeApiService(
         val stripResponses = stripEntities.map {
             stripsApiService.mapStripEntityToResponse(it)
         }
-        val activeEffectEntities = effectRepository.findByStatusIn(LightEffectStatus.activeStatuses())
+        val activeEffectEntities = effectRepository.findByStatusIn(LightEffectStatus.inUseStatuses())
         val activeEffectResponses = activeEffectEntities.mapNotNull { e -> effectApiService.getEffectResponseForEffect(e) }
 
         return HomeResponse(

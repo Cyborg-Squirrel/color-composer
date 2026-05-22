@@ -69,7 +69,7 @@ class EffectResponseSerializationTest(
             stripUuid = UUID.randomUUID().toString(),
             paletteUuid = null,
             settingsUuid = null,
-            status = LightEffectStatus.Idle,
+            status = LightEffectStatus.Inactive,
             category = EffectCategory.Static,
         )
 

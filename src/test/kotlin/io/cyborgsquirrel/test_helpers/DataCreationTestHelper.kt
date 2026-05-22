@@ -67,7 +67,7 @@ fun saveLightEffect(
     objectMapper: ObjectMapper,
     settingsRepository: LightEffectSettingsRepository,
     strip: LedStripEntity,
-    status: LightEffectStatus = LightEffectStatus.Idle,
+    status: LightEffectStatus = LightEffectStatus.Inactive,
 ): LightEffectEntity {
     val settingsEntity = settingsRepository.save(
         LightEffectSettingsEntity(

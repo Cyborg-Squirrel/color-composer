@@ -16,7 +16,7 @@ import io.cyborgsquirrel.led_strips.responses.GetLedStripsResponse
 import io.cyborgsquirrel.lighting.effects.*
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
-import io.cyborgsquirrel.lighting.enums.isActive
+import io.cyborgsquirrel.lighting.enums.isInUse
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
@@ -241,9 +241,10 @@ class LedStripApiService(
     }
 
     fun mapStripEntityToResponse(entity: LedStripEntity): GetLedStripResponse {
-        val activeEffects = activeLightEffectService.getAllEffects().filter { it.status.isActive() }
+        /// ClientStatus.Active means the client has 1 or more effects in use
         val clientStatus = if (entity.client == null) null else clientStatusService.getStatusForClient(entity.client!!)
             .getOrNull()?.status
+        val inUse = clientStatus == ClientStatus.Active
         return GetLedStripResponse(
             clientUuid = entity.client!!.uuid,
             name = entity.name!!,
@@ -253,19 +254,8 @@ class LedStripApiService(
             height = entity.height,
             brightness = entity.brightness!!,
             blendMode = entity.blendMode!!,
-            activeEffects = getActiveEffectsForStrip(clientStatus, activeEffects, entity.uuid),
+            inUse = inUse,
         )
-    }
-
-    // The effect could be configured as Playing but the client is offline. If the client is offline
-    // we should report 0 active effects.
-    fun getActiveEffectsForStrip(
-        clientStatus: ClientStatus?, activeEffects: List<ActiveLightEffect>, stripUuid: String?
-    ): Int {
-        return if (clientStatus == ClientStatus.Active) activeEffects.filter {
-            it.strip.uuid == stripUuid || (it.strip is LedStripPoolModel && it.strip.strips.map { it.uuid }
-                .contains(stripUuid))
-        }.size else 0
     }
 
     private fun recreateEffect(lightEffect: LightEffect, numberOfLeds: Int): LightEffect {
