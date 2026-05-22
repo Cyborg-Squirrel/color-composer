@@ -5,7 +5,7 @@ import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.jobs.streaming.model.StreamingJobStatus
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
-import io.cyborgsquirrel.lighting.enums.isActive
+import io.cyborgsquirrel.lighting.enums.isInUse
 import jakarta.inject.Singleton
 import java.util.*
 
@@ -25,7 +25,7 @@ class ClientStatusServiceImpl(
                 StreamingJobStatus.ConnectedIdle -> Optional.of(ClientStatusInfo.inactive(ClientStatus.Idle))
                 else -> {
                     val activeEffects = activeLightEffectService.getEffectsForClient(clientEntity.uuid)
-                        .filter { it.status.isActive() }.size
+                        .filter { it.status.isInUse() }.size
                     if (activeEffects > 0) {
                         Optional.of(ClientStatusInfo(ClientStatus.Active, activeEffects))
                     } else {

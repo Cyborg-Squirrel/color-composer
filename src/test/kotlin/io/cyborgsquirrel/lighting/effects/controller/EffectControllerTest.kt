@@ -102,7 +102,7 @@ class EffectControllerTest(
             name = "Super cool effect",
             effectSettings = nrSettingsEntity,
             uuid = UUID.randomUUID().toString(),
-            status = LightEffectStatus.Idle,
+            status = LightEffectStatus.Inactive,
         )
         effectEntity = effectRepository.save(effectEntity)
 
@@ -176,7 +176,7 @@ class EffectControllerTest(
             name = "Super cool effect",
             effectSettings = nrSettingsEntity,
             uuid = UUID.randomUUID().toString(),
-            status = LightEffectStatus.Idle,
+            status = LightEffectStatus.Inactive,
         )
         effectEntity = effectRepository.save(effectEntity)
 
@@ -298,7 +298,7 @@ class EffectControllerTest(
             name = "Super cool light effect",
             effectSettings = initialSettingsEntity,
             uuid = UUID.randomUUID().toString(),
-            status = LightEffectStatus.Idle,
+            status = LightEffectStatus.Inactive,
         )
         effectEntity = effectRepository.save(effectEntity)
 
@@ -325,7 +325,7 @@ class EffectControllerTest(
         }
         effectEntities.first().palette shouldBe palette
         // Update effect API doesn't support this - need to use updateEffectStatuses (/status) instead
-        effectEntities.first().status shouldBe LightEffectStatus.Idle
+        effectEntities.first().status shouldBe LightEffectStatus.Inactive
     }
 
     "Deleting an effect" {
@@ -380,7 +380,7 @@ class EffectControllerTest(
             name = "Super cool effect",
             effectSettings = nrSettingsEntity,
             uuid = UUID.randomUUID().toString(),
-            status = LightEffectStatus.Idle,
+            status = LightEffectStatus.Inactive,
         )
         effectEntity = effectRepository.save(effectEntity)
 
@@ -453,7 +453,7 @@ class EffectControllerTest(
         createdEffect.name shouldBe createEffectRequest.name
         createdEffect.pool?.uuid shouldBe pool.uuid
         createdEffect.strip shouldBe null
-        createdEffect.status shouldBe LightEffectStatus.Idle
+        createdEffect.status shouldBe LightEffectStatus.Inactive
         createdEffect.palette shouldBe palette
     }
 
@@ -578,7 +578,7 @@ class EffectControllerTest(
                 name = "Pool Effect 1",
                 effectSettings = nrSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Idle,
+                status = LightEffectStatus.Inactive,
             )
         )
         val effect2 = effectRepository.save(
@@ -588,7 +588,7 @@ class EffectControllerTest(
                 name = "Pool Effect 2",
                 effectSettings = nrSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Idle,
+                status = LightEffectStatus.Inactive,
             )
         )
 
@@ -657,7 +657,7 @@ class EffectControllerTest(
                 name = "Garage Pool Effect",
                 effectSettings = nrSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Idle,
+                status = LightEffectStatus.Inactive,
             )
         )
 
@@ -737,7 +737,7 @@ class EffectControllerTest(
                 name = "Original Pool Effect",
                 effectSettings = initialSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Idle,
+                status = LightEffectStatus.Inactive,
             )
         )
 
@@ -819,7 +819,7 @@ class EffectControllerTest(
                 name = "Patio Pool Effect",
                 effectSettings = nrSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
-                status = LightEffectStatus.Idle,
+                status = LightEffectStatus.Inactive,
             )
         )
 

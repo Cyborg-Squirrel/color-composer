@@ -3,7 +3,7 @@ package io.cyborgsquirrel.lighting.rendering
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
-import io.cyborgsquirrel.lighting.enums.isActive
+import io.cyborgsquirrel.lighting.enums.isInUse
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.RgbColor
@@ -97,7 +97,7 @@ class LightEffectRendererImpl(
 
     private fun renderFrame(strip: LedStripModel): RenderedFrameModel? {
         val activeEffects =
-            effectRepository.getAllEffectsForStrip(strip.uuid).filter { it.status.isActive() }.sortedBy { it.priority }
+            effectRepository.getAllEffectsForStrip(strip.uuid).filter { it.status.isInUse() }.sortedBy { it.priority }
         return if (activeEffects.isEmpty()) {
             null
         } else {

@@ -92,7 +92,7 @@ class EffectApiService(
                             strip = stripEntityOptional.get(),
                             uuid = UUID.randomUUID().toString(),
                             name = request.name,
-                            status = LightEffectStatus.Idle,
+                            status = LightEffectStatus.Inactive,
                             effectSettings = settingsEntity,
                             palette = paletteEntity,
                         )
@@ -110,7 +110,7 @@ class EffectApiService(
                             pool = poolEntityOptional.get(),
                             uuid = UUID.randomUUID().toString(),
                             name = request.name,
-                            status = LightEffectStatus.Idle,
+                            status = LightEffectStatus.Inactive,
                             palette = paletteEntity,
                             effectSettings = settingsEntity,
                         )

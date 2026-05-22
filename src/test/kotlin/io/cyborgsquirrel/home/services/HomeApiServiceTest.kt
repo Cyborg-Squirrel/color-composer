@@ -111,7 +111,7 @@ class HomeApiServiceTest(
 
         val playingEffect = saveLightEffect(effectRepository, objectMapper, settingsRepository, strip, LightEffectStatus.Playing)
         val pausedEffect = saveLightEffect(effectRepository, objectMapper, settingsRepository, strip, LightEffectStatus.Paused)
-        saveLightEffect(effectRepository, objectMapper, settingsRepository, strip, LightEffectStatus.Idle)
+        saveLightEffect(effectRepository, objectMapper, settingsRepository, strip, LightEffectStatus.Inactive)
 
         val response = service.getHome()
 
