@@ -1,5 +1,7 @@
 package io.cyborgsquirrel.strip_pools.services
 
+import io.cyborgsquirrel.clients.enums.ClientStatus
+import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.event_source.model.StripPoolEvent
 import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
@@ -16,6 +18,7 @@ import io.cyborgsquirrel.strip_pools.responses.StripPoolMemberResponseModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import jakarta.inject.Singleton
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 @Singleton
 class StripPoolApiService(
@@ -23,21 +26,40 @@ class StripPoolApiService(
     private val poolMemberRepository: PoolMemberLedStripRepository,
     private val stripRepository: LedStripRepository,
     private val sseEventEmitter: SseEventEmitter,
+    private val clientStatusService: ClientStatusService,
 ) {
 
     private fun mapPoolEntityToModel(
         poolEntity: LedStripPoolEntity,
         memberEntities: List<PoolMemberLedStripEntity>
     ): GetStripPoolResponse {
-        val memberResponseModels = memberEntities.map { me ->
-            StripPoolMemberResponseModel(me.uuid!!, me.strip!!.uuid!!, me.inverted!!, me.poolIndex!!)
+        val stripEntities = stripRepository.findByUuidIn(memberEntities.map { it.strip!!.uuid!! })
+        val memberResponseModels = mutableListOf<StripPoolMemberResponseModel>()
+        var atLeastOnePoolMemberInUse = false
+        memberEntities.forEach { me ->
+            val clientEntity = stripEntities.first { se -> se.uuid == me.strip!!.uuid }.client
+            val clientStatus = if (clientEntity == null) null else clientStatusService.getStatusForClient(clientEntity)
+                .getOrNull()?.status
+            val inUse = clientStatus == ClientStatus.Active
+            atLeastOnePoolMemberInUse = atLeastOnePoolMemberInUse || inUse
+            memberResponseModels.add(
+                StripPoolMemberResponseModel(
+                    me.uuid!!,
+                    me.strip!!.uuid!!,
+                    me.inverted!!,
+                    me.poolIndex!!,
+                    inUse
+                )
+            )
         }
+
         return GetStripPoolResponse(
             poolEntity.name!!,
             poolEntity.uuid!!,
             poolEntity.poolType!!,
             poolEntity.blendMode!!,
-            memberResponseModels
+            memberResponseModels,
+            atLeastOnePoolMemberInUse
         )
     }
 

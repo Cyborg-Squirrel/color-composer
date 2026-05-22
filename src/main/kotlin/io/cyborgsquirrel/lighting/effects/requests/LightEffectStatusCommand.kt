@@ -4,6 +4,7 @@ import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
 enum class LightEffectStatusCommand {
+    Deactivate,
     Play,
     Pause,
     Stop

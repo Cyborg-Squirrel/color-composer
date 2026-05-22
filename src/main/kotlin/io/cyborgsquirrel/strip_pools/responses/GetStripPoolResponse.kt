@@ -10,5 +10,6 @@ data class GetStripPoolResponse(
     val uuid: String,
     val poolType: PoolType,
     val blendMode: BlendMode,
-    val members: List<StripPoolMemberResponseModel>
+    val members: List<StripPoolMemberResponseModel>,
+    val inUse: Boolean
 )

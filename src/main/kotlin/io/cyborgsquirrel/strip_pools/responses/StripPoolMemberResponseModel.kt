@@ -7,5 +7,6 @@ data class StripPoolMemberResponseModel(
     val uuid: String,
     val stripUuid: String,
     val inverted: Boolean,
-    val poolIndex: Int
+    val poolIndex: Int,
+    val inUse: Boolean
 )
