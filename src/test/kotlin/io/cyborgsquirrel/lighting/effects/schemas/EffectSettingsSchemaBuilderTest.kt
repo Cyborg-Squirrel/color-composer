@@ -1,5 +1,7 @@
 package io.cyborgsquirrel.lighting.effects.schemas
 
+import io.cyborgsquirrel.lighting.effects.LightEffectType
+import io.cyborgsquirrel.lighting.enums.EffectCategory
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldContainExactly
@@ -110,6 +112,13 @@ class EffectSettingsSchemaBuilderTest : StringSpec({
         }
         shouldThrow<IllegalArgumentException> {
             EffectSettingsSchemaBuilder("e").boolean("key") { options(listOf("a")) }.build()
+        }
+    }
+
+    "correct category is corrected" {
+        LightEffectType.entries.forEach { e ->
+            val schema = EffectSettingsSchemaBuilder(e.displayName).build()
+            schema.category shouldBe EffectCategory.forEffect(e.displayName)
         }
     }
 })

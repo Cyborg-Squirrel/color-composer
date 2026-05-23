@@ -1,5 +1,7 @@
 package io.cyborgsquirrel.lighting.effects.schemas
 
+import io.cyborgsquirrel.lighting.enums.EffectCategory
+
 class EffectSettingsSchemaBuilder(private val effectName: String) {
     private val fields = mutableListOf<EffectSettingsSchemaField>()
     private var built = false
@@ -39,6 +41,7 @@ class EffectSettingsSchemaBuilder(private val effectName: String) {
         check(!built) { "build() has already been called" }
         built = true
         fields.forEach { it.validate() }
-        return EffectSettingsSchema(effectName, fields)
+        val category = EffectCategory.forEffect(effectName)
+        return EffectSettingsSchema(effectName, category, fields)
     }
 }
