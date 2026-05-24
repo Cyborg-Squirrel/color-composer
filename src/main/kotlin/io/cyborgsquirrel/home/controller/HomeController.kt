@@ -12,7 +12,7 @@ class HomeController(private val service: HomeApiService) : HomeApi {
         return try {
             HttpResponse.ok(service.getHome())
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 }

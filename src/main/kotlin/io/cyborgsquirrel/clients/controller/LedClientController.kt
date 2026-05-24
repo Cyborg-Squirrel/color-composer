@@ -17,9 +17,9 @@ class LedClientController(private val service: LedClientApiService) : LedClientA
             val client = service.getClientWithUuid(uuid)
             HttpResponse.ok(client)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -28,9 +28,9 @@ class LedClientController(private val service: LedClientApiService) : LedClientA
             val client = service.getAllClients()
             HttpResponse.ok(client)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -39,9 +39,9 @@ class LedClientController(private val service: LedClientApiService) : LedClientA
             val client = service.createClient(request)
             HttpResponse.created(client)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -50,9 +50,9 @@ class LedClientController(private val service: LedClientApiService) : LedClientA
             service.updateClient(uuid, request)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -61,9 +61,9 @@ class LedClientController(private val service: LedClientApiService) : LedClientA
             service.deleteClient(uuid)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 }

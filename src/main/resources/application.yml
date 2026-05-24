@@ -1,6 +1,8 @@
 micronaut:
   application:
     name: color-composer
+  data:
+    save-as-insert: true
   http:
     client:
       ws:

@@ -23,7 +23,7 @@ class SunriseSunsetTriggerSettingsTest(private val objectMapper: ObjectMapper) :
 
     "Serialize from json" {
         val settings =
-            objectMapper.readValue(sunriseSunsetTriggerSettingsJson, TimeOfDayTriggerSettings::class.java)
+            objectMapper.readValue(sunriseSunsetTriggerSettingsJson, TimeOfDayTriggerSettings::class.java)!!
         settings.timeOfDay shouldBe timeOfDayTriggerSettings.timeOfDay
         settings.maxActivations shouldBe timeOfDayTriggerSettings.maxActivations
         settings.triggerType shouldBe timeOfDayTriggerSettings.triggerType

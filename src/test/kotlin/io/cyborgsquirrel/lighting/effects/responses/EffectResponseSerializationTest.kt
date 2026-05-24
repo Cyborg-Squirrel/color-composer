@@ -27,7 +27,7 @@ class EffectResponseSerializationTest(
         )
 
         val json = objectMapper.writeValueAsString(originalResponse)
-        val deserializedResponse = objectMapper.readValue(json, GetStripEffectResponse::class.java)
+        val deserializedResponse = objectMapper.readValue(json, GetStripEffectResponse::class.java)!!
         deserializedResponse shouldNotBe null
         deserializedResponse.name shouldBe originalResponse.name
         deserializedResponse.type shouldBe originalResponse.type
@@ -51,7 +51,7 @@ class EffectResponseSerializationTest(
         )
 
         val json = objectMapper.writeValueAsString(originalResponse)
-        val deserializedResponse = objectMapper.readValue(json, GetPoolEffectResponse::class.java)
+        val deserializedResponse = objectMapper.readValue(json, GetPoolEffectResponse::class.java)!!
         deserializedResponse shouldNotBe null
         deserializedResponse.name shouldBe originalResponse.name
         deserializedResponse.type shouldBe originalResponse.type
@@ -105,7 +105,7 @@ class EffectResponseSerializationTest(
         )
 
         val json = objectMapper.writeValueAsString(responseWithoutPalette)
-        val deserialized = objectMapper.readValue(json, GetStripEffectResponse::class.java)
+        val deserialized = objectMapper.readValue(json, GetStripEffectResponse::class.java)!!
         deserialized.paletteUuid shouldBe null
     }
 
@@ -122,7 +122,7 @@ class EffectResponseSerializationTest(
         )
 
         val json = objectMapper.writeValueAsString(responseWithoutStrip)
-        val deserialized = objectMapper.readValue(json, GetPoolEffectResponse::class.java)
+        val deserialized = objectMapper.readValue(json, GetPoolEffectResponse::class.java)!!
         deserialized.poolUuid shouldBe responseWithoutStrip.poolUuid
     }
 })

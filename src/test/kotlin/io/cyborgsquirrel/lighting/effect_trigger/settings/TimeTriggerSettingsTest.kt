@@ -23,7 +23,7 @@ class TimeTriggerSettingsTest(private val objectMapper: ObjectMapper) : StringSp
 
     "Serialize from json" {
         val settings =
-            objectMapper.readValue(timeTriggerSettingsJson, TimeTriggerSettings::class.java)
+            objectMapper.readValue(timeTriggerSettingsJson, TimeTriggerSettings::class.java)!!
         settings.triggerTime shouldBe timeTriggerSettings.triggerTime
         settings.maxActivations shouldBe timeTriggerSettings.maxActivations
         settings.triggerType shouldBe timeTriggerSettings.triggerType

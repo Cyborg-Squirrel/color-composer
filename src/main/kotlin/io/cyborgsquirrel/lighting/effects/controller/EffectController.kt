@@ -32,9 +32,9 @@ class EffectController(
                 HttpResponse.ok(response)
             }
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -43,9 +43,9 @@ class EffectController(
             val schemas = effectApiService.getAllSchemas()
             HttpResponse.ok(schemas)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -56,9 +56,9 @@ class EffectController(
         } catch (rnfe: ResourceNotFoundException) {
             HttpResponse.notFound()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -69,9 +69,9 @@ class EffectController(
             val uuid = effectApiService.createEffect(request)
             HttpResponse.created(uuid)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -82,9 +82,9 @@ class EffectController(
         } catch (rnfe: ResourceNotFoundException) {
             HttpResponse.notFound()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -93,9 +93,9 @@ class EffectController(
             effectApiService.updateEffectStatus(request)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -106,9 +106,9 @@ class EffectController(
         } catch (rnfe: ResourceNotFoundException) {
             HttpResponse.notFound()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -116,7 +116,7 @@ class EffectController(
         return try {
             HttpResponse.ok(effectApiService.getAllEffectSettings())
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -126,7 +126,7 @@ class EffectController(
         } catch (rnfe: ResourceNotFoundException) {
             HttpResponse.notFound()
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -135,9 +135,9 @@ class EffectController(
             val uuid = effectApiService.createEffectSettings(request)
             HttpResponse.created(uuid)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -148,7 +148,7 @@ class EffectController(
         } catch (rnfe: ResourceNotFoundException) {
             HttpResponse.notFound()
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -159,7 +159,7 @@ class EffectController(
         } catch (rnfe: ResourceNotFoundException) {
             HttpResponse.notFound()
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 }

@@ -56,8 +56,9 @@ class EffectFilterControllerTest(
 ) : StringSpec({
 
     afterEach {
-        filterRepository.deleteAll()
+        junctionRepository.deleteAll()
         effectRepository.deleteAll()
+        filterRepository.deleteAll()
         settingsRepository.deleteAll()
         stripRepository.deleteAll()
         clientRepository.deleteAll()

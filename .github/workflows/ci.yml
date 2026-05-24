@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-java@v4.7.1
         with:
           distribution: 'corretto'
-          java-version: '21'
+          java-version: '25'
 
       - name: Give gradlew execution permissions
         run: chmod +x gradlew

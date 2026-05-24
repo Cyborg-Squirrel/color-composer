@@ -19,9 +19,9 @@ class EffectFilterController(private val filterApiService: EffectFilterApiServic
             val filters = filterApiService.getFiltersForEffect(effectUuid)
             HttpResponse.ok(filters)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -30,9 +30,9 @@ class EffectFilterController(private val filterApiService: EffectFilterApiServic
             val filter = filterApiService.getFilter(uuid)
             HttpResponse.ok(filter)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -41,9 +41,9 @@ class EffectFilterController(private val filterApiService: EffectFilterApiServic
             val uuid = filterApiService.createFilter(request)
             HttpResponse.created(uuid)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -52,9 +52,9 @@ class EffectFilterController(private val filterApiService: EffectFilterApiServic
             filterApiService.updateFilter(uuid, request)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -63,9 +63,9 @@ class EffectFilterController(private val filterApiService: EffectFilterApiServic
             filterApiService.deleteFilter(uuid)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 }
