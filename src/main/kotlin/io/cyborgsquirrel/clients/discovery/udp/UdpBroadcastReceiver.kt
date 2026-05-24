@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.clients.discovery.udp
 
 import io.cyborgsquirrel.clients.discovery.model.ClientDiscoveryResponse
+import io.micronaut.core.serialize.exceptions.SerializationException
 import io.micronaut.serde.ObjectMapper
 import org.slf4j.LoggerFactory
 import java.net.DatagramPacket
@@ -44,7 +45,8 @@ class UdpBroadcastReceiver(private val objectMapper: ObjectMapper) {
 
                             logger.info("Received response from $senderAddress:$senderPort - $receivedMessage")
 
-                            val response = objectMapper.readValue(receivedMessage, ClientDiscoveryResponse::class.java)!!
+                            val response = objectMapper.readValue(receivedMessage, ClientDiscoveryResponse::class.java)
+                                ?: throw SerializationException("Got null deserializing ClientDiscoveryResponse")
                             response.address = packet.address.hostAddress
                             discoveryResponses.add(response)
                         }

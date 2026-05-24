@@ -28,6 +28,7 @@ import io.cyborgsquirrel.sunrise_sunset.repository.LocationConfigRepository
 import io.cyborgsquirrel.sunrise_sunset.repository.SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.cyborgsquirrel.util.time.TimeOfDayService
+import io.micronaut.core.serialize.exceptions.SerializationException
 import io.micronaut.json.tree.JsonNode
 import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
@@ -99,7 +100,7 @@ class CreateLightingService(
                 StaticColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), StaticPaletteSettings::class.java
-                    )!!,
+                    ) ?: throw SerializationException("Got null deserializing StaticPaletteSettings"),
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
                 )
@@ -109,7 +110,7 @@ class CreateLightingService(
                 GradientColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), GradientPaletteSettings::class.java
-                    )!!,
+                    ) ?: throw SerializationException("Got null deserializing GradientPaletteSettings"),
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
                 )
@@ -119,7 +120,7 @@ class CreateLightingService(
                 ChangingColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), ChangingGradientPaletteSettings::class.java
-                    )!!,
+                    ) ?: throw SerializationException("Got null deserializing ChangingGradientPaletteSettings"),
                     timeHelper = timeHelper,
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
@@ -130,7 +131,7 @@ class CreateLightingService(
                 ChangingColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), ChangingStaticPaletteSettings::class.java
-                    )!!,
+                    ) ?: throw SerializationException("Got null deserializing ChangingStaticPaletteSettings"),
                     timeHelper = timeHelper,
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
@@ -141,7 +142,7 @@ class CreateLightingService(
                 TimeOfDayColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), TimeOfDayPaletteSettings::class.java
-                    )!!,
+                    ) ?: throw SerializationException("Got null deserializing TimeOfDayPaletteSettings"),
                     timeHelper = timeHelper,
                     timeOfDayService = timeOfDayService,
                     locationConfigRepository = locationConfigRepository,
@@ -156,7 +157,7 @@ class CreateLightingService(
                 LocalTimeColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), LocalTimePaletteSettings::class.java
-                    )!!,
+                    ) ?: throw SerializationException("Got null deserializing LocalTimePaletteSettings"),
                     timeHelper = timeHelper,
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
@@ -174,49 +175,49 @@ class CreateLightingService(
             LightEffectType.BOUNCING_BALL -> BouncingBallLightEffect(
                 numberOfLeds = numberOfLeds, timeHelper = timeHelper, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), BouncingBallEffectSettings::class.java
-                )!!, palette
+                ) ?: throw SerializationException("Got null deserializing BouncingBallEffectSettings"), palette
             )
 
             LightEffectType.FLAME -> FlameLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), FlameEffectSettings::class.java
-                )!!, palette, timeHelper
+                ) ?: throw SerializationException("Got null deserializing FlameEffectSettings"), palette, timeHelper
             )
 
             LightEffectType.NIGHTRIDER_COLOR_FILL -> NightriderLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), NightriderColorFillEffectSettings::class.java
-                )!!, palette, timeHelper
+                ) ?: throw SerializationException("Got null deserializing NightriderColorFillEffectSettings"), palette, timeHelper
             )
 
             LightEffectType.NIGHTRIDER_COMET -> NightriderLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), NightriderCometEffectSettings::class.java
-                )!!, palette, timeHelper
+                ) ?: throw SerializationException("Got null deserializing NightriderCometEffectSettings"), palette, timeHelper
             )
 
             LightEffectType.SPECTRUM -> SpectrumLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), SpectrumEffectSettings::class.java
-                )!!, palette, timeHelper
+                ) ?: throw SerializationException("Got null deserializing SpectrumEffectSettings"), palette, timeHelper
             )
 
             LightEffectType.WAVE -> WaveLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), WaveEffectSettings::class.java
-                )!!, palette, timeHelper
+                ) ?: throw SerializationException("Got null deserializing WaveEffectSettings"), palette, timeHelper
             )
 
             LightEffectType.MARQUEE -> MarqueeEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), MarqueeEffectSettings::class.java
-                )!!, palette, timeHelper
+                ) ?: throw SerializationException("Got null deserializing MarqueeEffectSettings"), palette, timeHelper
             )
 
             LightEffectType.SPARKLE -> SparkleLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), SparkleEffectSettings::class.java
-                )!!, palette, timeHelper
+                ) ?: throw SerializationException("Got null deserializing SparkleEffectSettings"), palette, timeHelper
             )
         }
     }
@@ -232,8 +233,11 @@ class CreateLightingService(
                             timeHelper = timeHelper,
                             effectRegistry = activeLightEffectService,
                             settings = objectMapper.readValueFromTree(
-                                JsonNode.from(trigger.settings!!), EffectIterationTriggerSettings::class.java
-                            )!!,
+                                JsonNode.from(
+                                    trigger.settings
+                                        ?: throw SerializationException("Got null deserializing EffectIterationTriggerSettings")
+                                ), EffectIterationTriggerSettings::class.java
+                            ) ?: throw SerializationException("Got null deserializing EffectIterationTriggerSettings"),
                             uuid = trigger.uuid!!,
                             effectUuid = effectEntity.uuid,
                         )
@@ -243,8 +247,11 @@ class CreateLightingService(
                         TimeTrigger(
                             timeHelper = timeHelper,
                             settings = objectMapper.readValueFromTree(
-                                JsonNode.from(trigger.settings!!), TimeTriggerSettings::class.java
-                            )!!,
+                                JsonNode.from(
+                                    trigger.settings
+                                        ?: throw SerializationException("Got null deserializing TimeTriggerSettings")
+                                ), TimeTriggerSettings::class.java
+                            ) ?: throw SerializationException("Got null deserializing TimeTriggerSettings"),
                             uuid = trigger.uuid!!,
                             effectUuid = effectEntity.uuid,
                         )
@@ -258,8 +265,11 @@ class CreateLightingService(
                             timeHelper = timeHelper,
                             timeOfDayService = timeOfDayService,
                             settings = objectMapper.readValueFromTree(
-                                JsonNode.from(trigger.settings!!), TimeOfDayTriggerSettings::class.java
-                            )!!,
+                                JsonNode.from(
+                                    trigger.settings
+                                        ?: throw SerializationException("Got null deserializing TimeOfDayTriggerSettings")
+                                ), TimeOfDayTriggerSettings::class.java
+                            ) ?: throw SerializationException("Got null deserializing TimeOfDayTriggerSettings"),
                             uuid = trigger.uuid!!,
                             effectUuid = effectEntity.uuid
                         )
@@ -290,7 +300,7 @@ class CreateLightingService(
                 IntensityFadeFilter(
                     timeHelper = timeHelper, settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), IntensityFadeFilterSettings::class.java
-                    )!!, uuid = uuid
+                    ) ?: throw SerializationException("Got null deserializing IntensityFadeFilterSettings"), uuid = uuid
                 )
             }
 
@@ -298,7 +308,7 @@ class CreateLightingService(
                 IntensityFilter(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), IntensityFilterSettings::class.java
-                    )!!, uuid = uuid
+                    ) ?: throw SerializationException("Got null deserializing IntensityFilterSettings"), uuid = uuid
                 )
             }
 
@@ -306,7 +316,7 @@ class CreateLightingService(
                 ReflectionFilter(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), ReflectionFilterSettings::class.java
-                    )!!, uuid = uuid
+                    ) ?: throw SerializationException("Got null deserializing ReflectionFilterSettings"), uuid = uuid
                 )
             }
 

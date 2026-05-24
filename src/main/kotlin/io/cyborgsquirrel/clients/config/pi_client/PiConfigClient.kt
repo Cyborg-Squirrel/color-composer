@@ -6,6 +6,7 @@ import io.cyborgsquirrel.clients.model.ClientVersion
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.uri.UriBuilder
+import io.micronaut.core.serialize.exceptions.SerializationException
 import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,8 @@ class PiConfigClient(
         val response = withContext(Dispatchers.IO) {
             httpClient.toBlocking().retrieve(uri.toString())
         }
-        val configList = objectMapper.readValue(response, PiClientStripsConfigList::class.java)!!
+        val configList = objectMapper.readValue(response, PiClientStripsConfigList::class.java)
+            ?: throw SerializationException("Got null deserializing PiClientStripsConfigList")
         return configList
     }
 
@@ -64,7 +66,8 @@ class PiConfigClient(
         val response = withContext(Dispatchers.IO) {
             httpClient.toBlocking().retrieve(uri.toString())
         }
-        return objectMapper.readValue(response, ClientVersion::class.java)!!
+        return objectMapper.readValue(response, ClientVersion::class.java)
+            ?: throw SerializationException("Got null deserializing ClientVersion")
     }
 
     suspend fun getClientTime(client: LedStripClientEntity): ClientTime {
@@ -76,7 +79,8 @@ class PiConfigClient(
         val response = withContext(Dispatchers.IO) {
             httpClient.toBlocking().retrieve(uri.toString())
         }
-        val timeObj = objectMapper.readValue(response, ClientTime::class.java)!!
+        val timeObj = objectMapper.readValue(response, ClientTime::class.java)
+            ?: throw SerializationException("Got null deserializing ClientTime")
         return timeObj
     }
 
@@ -85,7 +89,8 @@ class PiConfigClient(
         val response = withContext(Dispatchers.IO) {
             httpClient.toBlocking().retrieve(uri.toString())
         }
-        val configList = objectMapper.readValue(response, PiClientSettings::class.java)!!
+        val configList = objectMapper.readValue(response, PiClientSettings::class.java)
+            ?: throw SerializationException("Got null deserializing PiClientSettings")
         return configList
     }
 

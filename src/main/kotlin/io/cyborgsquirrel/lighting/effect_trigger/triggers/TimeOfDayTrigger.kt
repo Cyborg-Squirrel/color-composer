@@ -11,6 +11,7 @@ import io.cyborgsquirrel.sunrise_sunset.repository.SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.cyborgsquirrel.util.time.TimeOfDayService
 import io.cyborgsquirrel.util.time.ymd
+import io.micronaut.core.serialize.exceptions.SerializationException
 import io.micronaut.serde.ObjectMapper
 import java.time.LocalDateTime
 import java.util.*
@@ -36,7 +37,10 @@ class TimeOfDayTrigger(
         refresh()
 
         if (todayEntity != null) {
-            val todaySunriseSunsetData = objectMapper.readValue(todayEntity!!.json!!, SunriseSunsetModel::class.java)!!
+            val todaySunriseSunsetData = objectMapper.readValue(
+                todayEntity!!.json ?: throw SerializationException("Got null deserializing SunriseSunsetModel"),
+                SunriseSunsetModel::class.java
+            ) ?: throw SerializationException("Got null deserializing SunriseSunsetModel")
             val triggerTime =
                 timeOfDayService.timeOfDayToLocalDateTime(todaySunriseSunsetData, getSunriseSunsetOption())
             val now = timeHelper.now()
