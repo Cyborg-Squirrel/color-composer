@@ -1,11 +1,13 @@
 package io.cyborgsquirrel.lighting.effects.schemas
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
 data class EffectSettingsSchemaField(
     val key: String,
     val type: EffectSettingsType,
+    @get:JsonInclude(JsonInclude.Include.ALWAYS)
     val validators: List<EffectSettingsValidator>,
     val description: String,
 ) {
