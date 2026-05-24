@@ -99,7 +99,7 @@ class CreateLightingService(
                 StaticColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), StaticPaletteSettings::class.java
-                    ),
+                    )!!,
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
                 )
@@ -109,7 +109,7 @@ class CreateLightingService(
                 GradientColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), GradientPaletteSettings::class.java
-                    ),
+                    )!!,
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
                 )
@@ -119,7 +119,7 @@ class CreateLightingService(
                 ChangingColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), ChangingGradientPaletteSettings::class.java
-                    ),
+                    )!!,
                     timeHelper = timeHelper,
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
@@ -130,7 +130,7 @@ class CreateLightingService(
                 ChangingColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), ChangingStaticPaletteSettings::class.java
-                    ),
+                    )!!,
                     timeHelper = timeHelper,
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
@@ -141,7 +141,7 @@ class CreateLightingService(
                 TimeOfDayColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), TimeOfDayPaletteSettings::class.java
-                    ),
+                    )!!,
                     timeHelper = timeHelper,
                     timeOfDayService = timeOfDayService,
                     locationConfigRepository = locationConfigRepository,
@@ -156,7 +156,7 @@ class CreateLightingService(
                 LocalTimeColorPalette(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), LocalTimePaletteSettings::class.java
-                    ),
+                    )!!,
                     timeHelper = timeHelper,
                     uuid = uuid,
                     numberOfLeds = numberOfLeds,
@@ -174,49 +174,49 @@ class CreateLightingService(
             LightEffectType.BOUNCING_BALL -> BouncingBallLightEffect(
                 numberOfLeds = numberOfLeds, timeHelper = timeHelper, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), BouncingBallEffectSettings::class.java
-                ), palette
+                )!!, palette
             )
 
             LightEffectType.FLAME -> FlameLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), FlameEffectSettings::class.java
-                ), palette, timeHelper
+                )!!, palette, timeHelper
             )
 
             LightEffectType.NIGHTRIDER_COLOR_FILL -> NightriderLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), NightriderColorFillEffectSettings::class.java
-                ), palette, timeHelper
+                )!!, palette, timeHelper
             )
 
             LightEffectType.NIGHTRIDER_COMET -> NightriderLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), NightriderCometEffectSettings::class.java
-                ), palette, timeHelper
+                )!!, palette, timeHelper
             )
 
             LightEffectType.SPECTRUM -> SpectrumLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), SpectrumEffectSettings::class.java
-                ), palette, timeHelper
+                )!!, palette, timeHelper
             )
 
             LightEffectType.WAVE -> WaveLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), WaveEffectSettings::class.java
-                ), palette, timeHelper
+                )!!, palette, timeHelper
             )
 
             LightEffectType.MARQUEE -> MarqueeEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), MarqueeEffectSettings::class.java
-                ), palette, timeHelper
+                )!!, palette, timeHelper
             )
 
             LightEffectType.SPARKLE -> SparkleLightEffect(
                 numberOfLeds = numberOfLeds, settings = objectMapper.readValueFromTree(
                     JsonNode.from(settings), SparkleEffectSettings::class.java
-                ), palette, timeHelper
+                )!!, palette, timeHelper
             )
         }
     }
@@ -232,8 +232,8 @@ class CreateLightingService(
                             timeHelper = timeHelper,
                             effectRegistry = activeLightEffectService,
                             settings = objectMapper.readValueFromTree(
-                                JsonNode.from(trigger.settings), EffectIterationTriggerSettings::class.java
-                            ),
+                                JsonNode.from(trigger.settings!!), EffectIterationTriggerSettings::class.java
+                            )!!,
                             uuid = trigger.uuid!!,
                             effectUuid = effectEntity.uuid,
                         )
@@ -243,8 +243,8 @@ class CreateLightingService(
                         TimeTrigger(
                             timeHelper = timeHelper,
                             settings = objectMapper.readValueFromTree(
-                                JsonNode.from(trigger.settings), TimeTriggerSettings::class.java
-                            ),
+                                JsonNode.from(trigger.settings!!), TimeTriggerSettings::class.java
+                            )!!,
                             uuid = trigger.uuid!!,
                             effectUuid = effectEntity.uuid,
                         )
@@ -258,8 +258,8 @@ class CreateLightingService(
                             timeHelper = timeHelper,
                             timeOfDayService = timeOfDayService,
                             settings = objectMapper.readValueFromTree(
-                                JsonNode.from(trigger.settings), TimeOfDayTriggerSettings::class.java
-                            ),
+                                JsonNode.from(trigger.settings!!), TimeOfDayTriggerSettings::class.java
+                            )!!,
                             uuid = trigger.uuid!!,
                             effectUuid = effectEntity.uuid
                         )
@@ -290,7 +290,7 @@ class CreateLightingService(
                 IntensityFadeFilter(
                     timeHelper = timeHelper, settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), IntensityFadeFilterSettings::class.java
-                    ), uuid = uuid
+                    )!!, uuid = uuid
                 )
             }
 
@@ -298,7 +298,7 @@ class CreateLightingService(
                 IntensityFilter(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), IntensityFilterSettings::class.java
-                    ), uuid = uuid
+                    )!!, uuid = uuid
                 )
             }
 
@@ -306,7 +306,7 @@ class CreateLightingService(
                 ReflectionFilter(
                     settings = objectMapper.readValueFromTree(
                         JsonNode.from(settings), ReflectionFilterSettings::class.java
-                    ), uuid = uuid
+                    )!!, uuid = uuid
                 )
             }
 

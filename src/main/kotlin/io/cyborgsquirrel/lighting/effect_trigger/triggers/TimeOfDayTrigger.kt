@@ -36,7 +36,7 @@ class TimeOfDayTrigger(
         refresh()
 
         if (todayEntity != null) {
-            val todaySunriseSunsetData = objectMapper.readValue(todayEntity!!.json, SunriseSunsetModel::class.java)
+            val todaySunriseSunsetData = objectMapper.readValue(todayEntity!!.json!!, SunriseSunsetModel::class.java)!!
             val triggerTime =
                 timeOfDayService.timeOfDayToLocalDateTime(todaySunriseSunsetData, getSunriseSunsetOption())
             val now = timeHelper.now()

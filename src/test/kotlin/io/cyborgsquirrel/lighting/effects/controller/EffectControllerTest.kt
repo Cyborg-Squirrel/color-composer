@@ -55,8 +55,8 @@ class EffectControllerTest(
 ) : StringSpec({
 
     afterEach {
-        paletteRepository.deleteAll()
         effectRepository.deleteAll()
+        paletteRepository.deleteAll()
         settingsRepository.deleteAll()
         poolMemberRepository.deleteAll()
         poolRepository.deleteAll()

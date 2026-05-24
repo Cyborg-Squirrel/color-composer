@@ -22,7 +22,7 @@ class PiConfigClient(
         val response = withContext(Dispatchers.IO) {
             httpClient.toBlocking().retrieve(uri.toString())
         }
-        val configList = objectMapper.readValue(response, PiClientStripsConfigList::class.java)
+        val configList = objectMapper.readValue(response, PiClientStripsConfigList::class.java)!!
         return configList
     }
 
@@ -64,7 +64,7 @@ class PiConfigClient(
         val response = withContext(Dispatchers.IO) {
             httpClient.toBlocking().retrieve(uri.toString())
         }
-        return objectMapper.readValue(response, ClientVersion::class.java)
+        return objectMapper.readValue(response, ClientVersion::class.java)!!
     }
 
     suspend fun getClientTime(client: LedStripClientEntity): ClientTime {
@@ -76,7 +76,7 @@ class PiConfigClient(
         val response = withContext(Dispatchers.IO) {
             httpClient.toBlocking().retrieve(uri.toString())
         }
-        val timeObj = objectMapper.readValue(response, ClientTime::class.java)
+        val timeObj = objectMapper.readValue(response, ClientTime::class.java)!!
         return timeObj
     }
 
@@ -85,7 +85,7 @@ class PiConfigClient(
         val response = withContext(Dispatchers.IO) {
             httpClient.toBlocking().retrieve(uri.toString())
         }
-        val configList = objectMapper.readValue(response, PiClientSettings::class.java)
+        val configList = objectMapper.readValue(response, PiClientSettings::class.java)!!
         return configList
     }
 

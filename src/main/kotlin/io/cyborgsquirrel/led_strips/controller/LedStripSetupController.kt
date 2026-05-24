@@ -20,9 +20,9 @@ class LedStripSetupController(
             val strips = stripSetupService.getStrips(clientUuid)
             HttpResponse.ok(strips)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -31,9 +31,9 @@ class LedStripSetupController(
             val strip = stripSetupService.getStrip(uuid)
             HttpResponse.ok(strip)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -42,9 +42,9 @@ class LedStripSetupController(
             val stripUuid = stripSetupService.createStrip(request)
             return HttpResponse.created(stripUuid)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -53,9 +53,9 @@ class LedStripSetupController(
             stripSetupService.updateStrip(uuid, updatedStrip)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -64,9 +64,9 @@ class LedStripSetupController(
             stripSetupService.onStripDeleted(uuid)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 }

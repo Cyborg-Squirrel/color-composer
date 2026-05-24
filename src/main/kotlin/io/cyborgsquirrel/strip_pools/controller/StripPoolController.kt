@@ -20,9 +20,9 @@ class StripPoolController(
             val strips = stripPoolApiService.getStripPools()
             HttpResponse.ok(strips)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -31,9 +31,9 @@ class StripPoolController(
             val strip = stripPoolApiService.getStripPool(uuid)
             HttpResponse.ok(strip)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -42,9 +42,9 @@ class StripPoolController(
             val stripUuid = stripPoolApiService.createStripPool(request)
             return HttpResponse.created(stripUuid)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -53,9 +53,9 @@ class StripPoolController(
             stripPoolApiService.updateStripPool(uuid, request)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -64,9 +64,9 @@ class StripPoolController(
             stripPoolApiService.updatePoolMembers(uuid, request)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -75,9 +75,9 @@ class StripPoolController(
             stripPoolApiService.deletePool(uuid)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 }

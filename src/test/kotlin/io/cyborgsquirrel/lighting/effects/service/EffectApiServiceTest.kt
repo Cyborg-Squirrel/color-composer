@@ -169,7 +169,7 @@ class EffectApiServiceTest(val objectMapper: ObjectMapper) : StringSpec({
             val schema = schemas.first { it.effectName == effectType.displayName }
             val json = schema.fields.joinToString(",", "{", "}") { "\"${it.key}\":${jsonValueFor(it)}" }
             @Suppress("UNCHECKED_CAST")
-            val result = objectMapper.readValue(json, settingsClass as Class<Any>)
+            val result = objectMapper.readValue(json, settingsClass as Class<Any>)!!
             result::class.java shouldBe settingsClass
         }
     }

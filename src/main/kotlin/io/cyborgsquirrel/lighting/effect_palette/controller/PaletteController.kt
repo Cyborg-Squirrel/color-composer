@@ -15,9 +15,9 @@ class PaletteController(private val apiService: PaletteApiService) : PaletteApi 
             val palettes = apiService.getAllPalettes()
             HttpResponse.ok(palettes)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -26,9 +26,9 @@ class PaletteController(private val apiService: PaletteApiService) : PaletteApi 
             val palette = apiService.getPalette(uuid)
             HttpResponse.ok(palette)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -37,9 +37,9 @@ class PaletteController(private val apiService: PaletteApiService) : PaletteApi 
             val uuid = apiService.createPalette(request)
             return HttpResponse.created(uuid)
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -48,9 +48,9 @@ class PaletteController(private val apiService: PaletteApiService) : PaletteApi 
             apiService.updatePalette(request, uuid)
             HttpResponse.noContent()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 
@@ -59,9 +59,9 @@ class PaletteController(private val apiService: PaletteApiService) : PaletteApi 
             apiService.deletePalette(uuid)
             HttpResponse.ok()
         } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message)
+            HttpResponse.badRequest(cre.message ?: "")
         } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message)
+            HttpResponse.serverError(ex.message ?: "")
         }
     }
 }

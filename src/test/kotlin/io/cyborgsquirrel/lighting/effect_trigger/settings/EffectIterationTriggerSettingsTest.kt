@@ -19,7 +19,7 @@ class EffectIterationTriggerSettingsTest(private val objectMapper: ObjectMapper)
 
     "Serialize from json" {
         val settings =
-            objectMapper.readValue(effectIterationTriggerSettingsJson, EffectIterationTriggerSettings::class.java)
+            objectMapper.readValue(effectIterationTriggerSettingsJson, EffectIterationTriggerSettings::class.java)!!
         settings.maxActivations shouldBe effectIterationTriggerSettings.maxActivations
         settings.triggerType shouldBe effectIterationTriggerSettings.triggerType
         settings.activationDuration shouldBe effectIterationTriggerSettings.activationDuration

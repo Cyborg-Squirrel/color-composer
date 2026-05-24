@@ -44,7 +44,7 @@ class UdpBroadcastReceiver(private val objectMapper: ObjectMapper) {
 
                             logger.info("Received response from $senderAddress:$senderPort - $receivedMessage")
 
-                            val response = objectMapper.readValue(receivedMessage, ClientDiscoveryResponse::class.java)
+                            val response = objectMapper.readValue(receivedMessage, ClientDiscoveryResponse::class.java)!!
                             response.address = packet.address.hostAddress
                             discoveryResponses.add(response)
                         }

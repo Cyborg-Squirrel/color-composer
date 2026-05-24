@@ -1,31 +1,25 @@
-import java.io.ByteArrayOutputStream
-
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.25"
-    id("org.jetbrains.kotlin.plugin.allopen") version "1.9.25"
-    id("com.google.devtools.ksp") version "1.9.25-1.0.20"
-    id("com.gradleup.shadow") version "8.3.9"
-    id("io.micronaut.application") version "4.5.4"
-    id("io.micronaut.test-resources") version "4.5.4"
-    id("io.micronaut.aot") version "4.5.4"
+    id("org.jetbrains.kotlin.jvm") version "2.3.21"
+    id("org.jetbrains.kotlin.plugin.allopen") version "2.3.21"
+    id("com.google.devtools.ksp") version "2.3.7"
+    id("com.gradleup.shadow") version "9.4.1"
+    id("io.micronaut.application") version "5.0.0"
+    id("io.micronaut.test-resources") version "5.0.0"
+    id("io.micronaut.aot") version "5.0.0"
 }
 
-fun getBuildNumber(): String {
+fun Project.getBuildNumber(): String {
     val buildVersion = System.getProperty("BUILD_NUMBER")
     if (!buildVersion.isNullOrEmpty()) return buildVersion
 
-    try {
-        val stdout = ByteArrayOutputStream()
-        exec {
+    return try {
+        val execOutput = providers.exec {
             commandLine("git", "rev-parse", "--short", "HEAD")
-            standardOutput = stdout
-            errorOutput = ByteArrayOutputStream()
             isIgnoreExitValue = true
         }
-        val hash = stdout.toString().trim()
-        return hash
+        execOutput.standardOutput.asText.get().trim().ifEmpty { "0" }
     } catch (ex: Exception) {
-        return "0"
+        "0"
     }
 }
 
@@ -64,6 +58,7 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("org.yaml:snakeyaml")
     testImplementation("io.mockk:mockk")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
     // https://dev.to/sineaggi/fix-dynamic-agent-loading-warning-in-gradle-5748
     testAgent("net.bytebuddy:byte-buddy-agent:1.15.10")
 }
@@ -81,7 +76,7 @@ application {
     mainClass = "io.cyborgsquirrel.ApplicationKt"
 }
 java {
-    sourceCompatibility = JavaVersion.toVersion("21")
+    sourceCompatibility = JavaVersion.toVersion("25")
 }
 
 
@@ -111,5 +106,5 @@ micronaut {
 
 
 tasks.named<io.micronaut.gradle.docker.NativeImageDockerfile>("dockerfileNative") {
-    jdkVersion = "21"
+    jdkVersion = "25"
 }

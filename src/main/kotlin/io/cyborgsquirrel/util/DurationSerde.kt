@@ -9,22 +9,18 @@ import java.time.Duration
 class DurationSerde : Serde<Duration> {
     override fun serialize(
         encoder: Encoder,
-        context: Serializer.EncoderContext?,
-        type: Argument<out Duration>?,
-        value: Duration?
+        context: Serializer.EncoderContext,
+        type: Argument<out Duration>,
+        value: Duration
     ) {
-        if (value == null) {
-            encoder.encodeNull()
-        } else {
-            encoder.encodeLong(value.toMillis())
-        }
+        encoder.encodeLong(value.toMillis())
     }
 
     override fun deserialize(
         decoder: Decoder,
-        context: Deserializer.DecoderContext?,
-        type: Argument<in Duration>?
-    ): Duration? {
+        context: Deserializer.DecoderContext,
+        type: Argument<in Duration>
+    ): Duration {
         val durationMillis = decoder.decodeLong()
         return Duration.ofMillis(durationMillis)
     }

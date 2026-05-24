@@ -84,7 +84,7 @@ class TimeOfDayColorPalette(
                 if (now.toLocalDate().minusDays(30).isBefore(latestSunriseSunsetTimeDate)) {
                     val latestSunriseSunsetTimeEntity = sunriseSunsetTimes.last()
                     latestSunriseSunsetModel =
-                        objectMapper.readValue(latestSunriseSunsetTimeEntity.json, SunriseSunsetModel::class.java)
+                        objectMapper.readValue(latestSunriseSunsetTimeEntity.json!!, SunriseSunsetModel::class.java)
                     latestSunriseSunsetDate = latestSunriseSunsetTimeDate
                 }
             }
