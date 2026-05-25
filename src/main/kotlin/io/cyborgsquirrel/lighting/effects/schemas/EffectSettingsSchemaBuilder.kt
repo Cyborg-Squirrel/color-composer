@@ -3,14 +3,16 @@ package io.cyborgsquirrel.lighting.effects.schemas
 import io.cyborgsquirrel.lighting.enums.EffectCategory
 
 class EffectSettingsSchemaBuilder(private val effectName: String) {
-    private val fields = mutableListOf<EffectSettingsSchemaField>()
+    private val fields = mutableListOf<EffectSettingsSchemaField<*>>()
     private var built = false
 
     class FieldBuilder {
         internal val validators = mutableListOf<EffectSettingsValidator>()
+        internal var default: Any? = null
 
         fun min(value: Double) { validators.add(EffectSettingsValidator.Min(value)) }
         fun max(value: Double) { validators.add(EffectSettingsValidator.Max(value)) }
+        fun default(default: Any) { this.default = default }
         fun options(values: List<String>) { validators.add(EffectSettingsValidator.Options(values)) }
     }
 
@@ -33,7 +35,7 @@ class EffectSettingsSchemaBuilder(private val effectName: String) {
         block: FieldBuilder.() -> Unit,
     ): EffectSettingsSchemaBuilder {
         val fb = FieldBuilder().apply(block)
-        fields.add(EffectSettingsSchemaField(key, type, fb.validators.toList(), description))
+        fields.add(EffectSettingsSchemaField(key, type, fb.validators.toList(), description, fb.default))
         return this
     }
 

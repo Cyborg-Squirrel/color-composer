@@ -7,7 +7,7 @@ import io.micronaut.serde.annotation.Serdeable
 data class EffectSettingsSchema(
     val effectName: String,
     val category: EffectCategory,
-    val fields: List<EffectSettingsSchemaField>
+    val fields: List<EffectSettingsSchemaField<*>>
 ) {
 
     fun validate() {
