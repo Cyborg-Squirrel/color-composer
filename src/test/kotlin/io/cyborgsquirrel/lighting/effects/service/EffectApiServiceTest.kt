@@ -37,7 +37,7 @@ class EffectApiServiceTest(val objectMapper: ObjectMapper) : StringSpec({
         listOf(
             Case(
                 LightEffectType.SPECTRUM.displayName, listOf(
-                    "colorPixelWidth" to EffectSettingsType.Integer,
+                    "colorBandPercentage" to EffectSettingsType.Integer,
                     "animated" to EffectSettingsType.Boolean,
                     "updatesPerSecond" to EffectSettingsType.Integer,
                 )
@@ -77,7 +77,7 @@ class EffectApiServiceTest(val objectMapper: ObjectMapper) : StringSpec({
             ),
             Case(
                 LightEffectType.WAVE.displayName, listOf(
-                    "startPoint" to EffectSettingsType.Integer,
+                    "startPointPercentage" to EffectSettingsType.Integer,
                     "waveLength" to EffectSettingsType.Integer,
                     "repeat" to EffectSettingsType.Boolean,
                     "updatesPerSecond" to EffectSettingsType.Integer,
@@ -130,7 +130,7 @@ class EffectApiServiceTest(val objectMapper: ObjectMapper) : StringSpec({
         options.values shouldBe listOf("Linear", "Logarithmic")
     }
 
-    fun jsonValueFor(field: EffectSettingsSchemaField): String {
+    fun jsonValueFor(field: EffectSettingsSchemaField<*>): String {
         val min = field.validators.filterIsInstance<EffectSettingsValidator.Min>().firstOrNull()?.value
         val max = field.validators.filterIsInstance<EffectSettingsValidator.Max>().firstOrNull()?.value
         val options = field.validators.filterIsInstance<EffectSettingsValidator.Options>().firstOrNull()

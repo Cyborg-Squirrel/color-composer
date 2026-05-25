@@ -14,7 +14,7 @@ class EffectSettingsSchemaBuilderTest : StringSpec({
     }
 
     "correct field type and key are produced for each field type" {
-        data class Case(val expectedType: EffectSettingsType, val build: () -> EffectSettingsSchemaField)
+        data class Case(val expectedType: EffectSettingsType, val build: () -> EffectSettingsSchemaField<*>)
 
         listOf(
             Case(EffectSettingsType.Integer) { EffectSettingsSchemaBuilder("e").integer("key").build().fields.first() },
@@ -30,7 +30,7 @@ class EffectSettingsSchemaBuilderTest : StringSpec({
     }
 
     "validators are attached to their field" {
-        data class Case(val expectedValidators: List<EffectSettingsValidator>, val build: () -> EffectSettingsSchemaField)
+        data class Case(val expectedValidators: List<EffectSettingsValidator>, val build: () -> EffectSettingsSchemaField<*>)
 
         listOf(
             Case(listOf(EffectSettingsValidator.Min(1.0))) {

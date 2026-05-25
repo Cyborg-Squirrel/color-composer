@@ -4,12 +4,13 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
-data class EffectSettingsSchemaField(
+data class EffectSettingsSchemaField<T>(
     val key: String,
     val type: EffectSettingsType,
     @get:JsonInclude(JsonInclude.Include.ALWAYS)
     val validators: List<EffectSettingsValidator>,
     val description: String,
+    val default: T?,
 ) {
     fun validate() {
         val validatorTypes = validators.map { it::class }
@@ -27,19 +28,5 @@ data class EffectSettingsSchemaField(
         val options = validators.filterIsInstance<EffectSettingsValidator.Options>().firstOrNull()
         if (options != null && type != EffectSettingsType.String)
             throw IllegalArgumentException("$key: options validator is only valid for String fields")
-    }
-
-    companion object {
-        fun integer(key: String, validators: List<EffectSettingsValidator>, description: String) =
-            EffectSettingsSchemaField(key, EffectSettingsType.Integer, validators, description)
-
-        fun number(key: String, validators: List<EffectSettingsValidator>, description: String) =
-            EffectSettingsSchemaField(key, EffectSettingsType.Number, validators, description)
-
-        fun string(key: String, validators: List<EffectSettingsValidator>, description: String) =
-            EffectSettingsSchemaField(key, EffectSettingsType.String, validators, description)
-
-        fun boolean(key: String, validators: List<EffectSettingsValidator>, description: String) =
-            EffectSettingsSchemaField(key, EffectSettingsType.Boolean, validators, description)
     }
 }
