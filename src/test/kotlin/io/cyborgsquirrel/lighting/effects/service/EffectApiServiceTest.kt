@@ -1,10 +1,12 @@
 package io.cyborgsquirrel.lighting.effects.service
 
+import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.schemas.EffectSettingsSchemaField
 import io.cyborgsquirrel.lighting.effects.schemas.EffectSettingsType
 import io.cyborgsquirrel.lighting.effects.schemas.EffectSettingsValidator
 import io.cyborgsquirrel.lighting.effects.settings.*
+import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.kotest.core.spec.style.AnnotationSpec
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -30,79 +32,80 @@ class EffectApiServiceTest(val objectMapper: ObjectMapper) : StringSpec({
     }
 
     "each effect schema has the correct fields" {
-        data class Case(val effectName: String, val expectedFields: List<Pair<String, EffectSettingsType>>)
+        data class Field(val key: String, val type: EffectSettingsType, val default: Any?)
+        data class Case(val effectName: String, val expectedFields: List<Field>)
 
         val schemas = service.getAllSchemas()
 
         listOf(
             Case(
                 LightEffectType.SPECTRUM.displayName, listOf(
-                    "colorBandPercentage" to EffectSettingsType.Integer,
-                    "animated" to EffectSettingsType.Boolean,
-                    "updatesPerSecond" to EffectSettingsType.Integer,
+                    Field("colorBandPercentage", EffectSettingsType.Integer, 10),
+                    Field("animated", EffectSettingsType.Boolean, true),
+                    Field("updatesPerSecond", EffectSettingsType.Integer, 30),
                 )
             ),
             Case(
                 LightEffectType.NIGHTRIDER_COLOR_FILL.displayName, listOf(
-                    "wrap" to EffectSettingsType.Boolean,
-                    "updatesPerSecond" to EffectSettingsType.Integer,
-                    "brightnessScaling" to EffectSettingsType.Number,
+                    Field("wrap", EffectSettingsType.Boolean, false),
+                    Field("updatesPerSecond", EffectSettingsType.Integer, 35),
+                    Field("brightnessScaling", EffectSettingsType.Number, 0.2f),
                 )
             ),
             Case(
                 LightEffectType.NIGHTRIDER_COMET.displayName, listOf(
-                    "trailLength" to EffectSettingsType.Integer,
-                    "trailFadeCurve" to EffectSettingsType.String,
-                    "wrap" to EffectSettingsType.Boolean,
-                    "updatesPerSecond" to EffectSettingsType.Integer,
+                    Field("trailLength", EffectSettingsType.Integer, 5),
+                    Field("trailFadeCurve", EffectSettingsType.String, FadeCurve.Linear.name),
+                    Field("wrap", EffectSettingsType.Boolean, false),
+                    Field("updatesPerSecond", EffectSettingsType.Integer, 35),
                 )
             ),
             Case(
                 LightEffectType.FLAME.displayName, listOf(
-                    "cooling" to EffectSettingsType.Integer,
-                    "sparking" to EffectSettingsType.Integer,
-                    "sparks" to EffectSettingsType.Integer,
-                    "sparkHeight" to EffectSettingsType.Integer,
-                    "updatesPerSecond" to EffectSettingsType.Integer,
+                    Field("cooling", EffectSettingsType.Integer, 11),
+                    Field("sparking", EffectSettingsType.Integer, 140),
+                    Field("sparks", EffectSettingsType.Integer, 1),
+                    Field("sparkHeight", EffectSettingsType.Integer, 3),
+                    Field("updatesPerSecond", EffectSettingsType.Integer, 30),
                 )
             ),
             Case(
                 LightEffectType.BOUNCING_BALL.displayName, listOf(
-                    "startingHeightPercent" to EffectSettingsType.Integer,
-                    "maxHeightPercent" to EffectSettingsType.Integer,
-                    "speed" to EffectSettingsType.Number,
-                    "gravity" to EffectSettingsType.Number,
-                    "minimumSpeed" to EffectSettingsType.Number,
+                    Field("startingHeightPercent", EffectSettingsType.Integer, 1),
+                    Field("maxHeightPercent", EffectSettingsType.Integer, 100),
+                    Field("speed", EffectSettingsType.Number, 4.0),
+                    Field("gravity", EffectSettingsType.Number, LightEffectConstants.EARTH_GRAVITY),
+                    Field("minimumSpeed", EffectSettingsType.Number, 0.05),
                 )
             ),
             Case(
                 LightEffectType.WAVE.displayName, listOf(
-                    "startPointPercentage" to EffectSettingsType.Integer,
-                    "waveLength" to EffectSettingsType.Integer,
-                    "repeat" to EffectSettingsType.Boolean,
-                    "updatesPerSecond" to EffectSettingsType.Integer,
+                    Field("startPointPercentage", EffectSettingsType.Integer, 50),
+                    Field("waveLength", EffectSettingsType.Integer, 10),
+                    Field("repeat", EffectSettingsType.Boolean, false),
+                    Field("updatesPerSecond", EffectSettingsType.Integer, 30),
                 )
             ),
             Case(
                 LightEffectType.MARQUEE.displayName, listOf(
-                    "dotLength" to EffectSettingsType.Integer,
-                    "spaceBetweenDots" to EffectSettingsType.Integer,
-                    "updatesPerSecond" to EffectSettingsType.Integer,
+                    Field("dotLength", EffectSettingsType.Integer, 2),
+                    Field("spaceBetweenDots", EffectSettingsType.Integer, 2),
+                    Field("updatesPerSecond", EffectSettingsType.Integer, 8),
                 )
             ),
             Case(
                 LightEffectType.SPARKLE.displayName, listOf(
-                    "numDots" to EffectSettingsType.Integer,
-                    "fadeInMillisMax" to EffectSettingsType.Integer,
-                    "fadeInMillisMin" to EffectSettingsType.Integer,
-                    "fadeOutMillisMax" to EffectSettingsType.Integer,
-                    "fadeOutMillisMin" to EffectSettingsType.Integer,
-                    "updatesPerSecond" to EffectSettingsType.Integer,
+                    Field("numDots", EffectSettingsType.Integer, 10),
+                    Field("fadeInMillisMax", EffectSettingsType.Integer, 10),
+                    Field("fadeInMillisMin", EffectSettingsType.Integer, 5),
+                    Field("fadeOutMillisMax", EffectSettingsType.Integer, 1000),
+                    Field("fadeOutMillisMin", EffectSettingsType.Integer, 150),
+                    Field("updatesPerSecond", EffectSettingsType.Integer, 30),
                 )
             ),
         ).forEach { (effectName, expectedFields) ->
             val schema = schemas.first { it.effectName == effectName }
-            schema.fields.map { it.key to it.type } shouldBe expectedFields
+            schema.fields.map { Field(it.key, it.type, it.default) } shouldBe expectedFields
         }
     }
 
