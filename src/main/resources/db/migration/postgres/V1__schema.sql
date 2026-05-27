@@ -143,4 +143,4 @@ CREATE TABLE sunrise_sunset_times
     FOREIGN KEY (location_id) REFERENCES location_configs
 );
 
-INSERT INTO location_configs VALUES(1, '44.5855', '-93.160900', TRUE)
+--INSERT INTO location_configs VALUES(1, '44.5855', '-93.160900', TRUE)
