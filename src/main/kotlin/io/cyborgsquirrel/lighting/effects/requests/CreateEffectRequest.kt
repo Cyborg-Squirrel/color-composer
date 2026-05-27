@@ -11,4 +11,5 @@ data class CreateEffectRequest(
     val settings: Map<String, Any>?,
     val paletteUuid: String?,
     val settingsUuid: String?,
+    val layer: Int? = null,
 )

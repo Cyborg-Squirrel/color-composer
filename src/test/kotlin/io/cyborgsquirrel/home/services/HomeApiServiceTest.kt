@@ -126,6 +126,7 @@ class HomeApiServiceTest(
                 paletteUuid = null,
                 settingsUuid = playingEffect.effectSettings?.uuid,
                 category = EffectCategory.forEffect(playingEffect.effectSettings!!.type),
+                layer = playingEffect.layer,
             ),
             GetStripEffectResponse(
                 uuid = pausedEffect.uuid,
@@ -136,6 +137,7 @@ class HomeApiServiceTest(
                 paletteUuid = null,
                 settingsUuid = pausedEffect.effectSettings?.uuid,
                 category = EffectCategory.forEffect(pausedEffect.effectSettings!!.type),
+                layer = pausedEffect.layer,
             ),
         )
     }

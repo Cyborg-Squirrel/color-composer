@@ -103,6 +103,7 @@ class HomeControllerTest(
                 paletteUuid = null,
                 settingsUuid = playingEffect.effectSettings?.uuid,
                 category = EffectCategory.forEffect(playingEffect.effectSettings!!.type),
+                layer = playingEffect.layer,
             ),
         )
     }

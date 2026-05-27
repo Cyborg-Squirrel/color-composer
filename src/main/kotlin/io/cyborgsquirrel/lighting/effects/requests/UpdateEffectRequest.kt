@@ -9,4 +9,5 @@ data class UpdateEffectRequest(
     val paletteUuid: String?,
     val settingsUuid: String?,
     val name: String?,
+    val layer: Int? = null,
 )

@@ -40,6 +40,8 @@ data class LightEffectEntity(
 
     var name: String,
 
+    var layer: Int = 0,
+
     @Enumerated(EnumType.STRING)
     var status: LightEffectStatus,
 ) {
@@ -53,6 +55,7 @@ data class LightEffectEntity(
         if (palette?.id != other.palette?.id) return false
         if (effectSettings?.id != other.effectSettings?.id) return false
         if (uuid != other.uuid) return false
+        if (layer != other.layer) return false
         if (status != other.status) return false
 
         return true
@@ -65,11 +68,12 @@ data class LightEffectEntity(
         result = 31 * result + (pool?.id ?: 0).hashCode()
         result = 31 * result + (palette?.id ?: 0).hashCode()
         result = 31 * result + (effectSettings?.id ?: 0).hashCode()
+        result = 31 * result + layer.hashCode()
         result = 31 * result + status.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "LightEffectEntity(strip=${strip?.id}, pool=${pool?.id}, palette=${palette?.id}, effectSettings=${effectSettings?.id}, id=$id, uuid=$uuid, name=$name, status=$status)"
+        return "LightEffectEntity(strip=${strip?.id}, pool=${pool?.id}, palette=${palette?.id}, effectSettings=${effectSettings?.id}, id=$id, uuid=$uuid, name=$name, layer=$layer, status=$status)"
     }
 }

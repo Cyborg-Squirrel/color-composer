@@ -17,6 +17,7 @@ data class LightEffectSettingsEntity(
     var type: String,
     var name: String,
     var isDefault: Boolean = false,
+    var skipFramesIfBlank: Boolean = true,
 
     @param:TypeDef(type = DataType.JSON)
     var settings: Map<String, Any>,
@@ -29,6 +30,7 @@ data class LightEffectSettingsEntity(
         if (type != other.type) return false
         if (name != other.name) return false
         if (isDefault != other.isDefault) return false
+        if (skipFramesIfBlank != other.skipFramesIfBlank) return false
         if (settings != other.settings) return false
         return true
     }
@@ -39,10 +41,11 @@ data class LightEffectSettingsEntity(
         result = 31 * result + type.hashCode()
         result = 31 * result + name.hashCode()
         result = 31 * result + isDefault.hashCode()
+        result = 31 * result + skipFramesIfBlank.hashCode()
         result = 31 * result + settings.hashCode()
         return result
     }
 
     override fun toString(): String =
-        "LightEffectSettingsEntity(id=$id, uuid=$uuid, type=$type, name=$name, isDefault=$isDefault)"
+        "LightEffectSettingsEntity(id=$id, uuid=$uuid, type=$type, name=$name, isDefault=$isDefault, skipFramesIfBlank=$skipFramesIfBlank)"
 }

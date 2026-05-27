@@ -56,9 +56,8 @@ class LightEffectInitJob(
                         val filters = createLightingService.createEffectFilterFromEntity(effectEntity)
                         val activeEffect = ActiveLightEffect(
                             effectUuid = effectEntity.uuid,
-                            // TODO add priority and skipFramesIfBlank to persistence layer
-                            priority = 0,
-                            skipFramesIfBlank = true,
+                            layer = effectEntity.layer,
+                            skipFramesIfBlank = effectSettings.skipFramesIfBlank,
                             status = effectEntity.status,
                             strip = strip,
                             effect = lightEffect,

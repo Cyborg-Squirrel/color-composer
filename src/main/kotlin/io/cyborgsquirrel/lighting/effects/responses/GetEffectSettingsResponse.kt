@@ -9,4 +9,5 @@ data class GetEffectSettingsResponse(
     val name: String,
     val settings: Map<String, Any>,
     val isDefault: Boolean,
+    val skipFramesIfBlank: Boolean,
 )
