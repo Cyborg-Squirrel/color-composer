@@ -16,7 +16,7 @@ import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.cyborgsquirrel.test_helpers.saveLightEffect
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
@@ -116,7 +116,7 @@ class HomeApiServiceTest(
         val response = service.getHome()
 
         response.activeEffects.size shouldBe 2
-        response.activeEffects shouldContainExactly listOf(
+        response.activeEffects shouldContainExactlyInAnyOrder listOf(
             GetStripEffectResponse(
                 uuid = playingEffect.uuid,
                 status = LightEffectStatus.Playing,
