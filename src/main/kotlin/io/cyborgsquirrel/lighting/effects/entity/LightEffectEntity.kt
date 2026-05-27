@@ -41,7 +41,7 @@ data class LightEffectEntity(
     var name: String,
 
     @Enumerated(EnumType.STRING)
-    var status: LightEffectStatus?,
+    var status: LightEffectStatus,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

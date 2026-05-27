@@ -32,11 +32,11 @@ class EffectFilterApiService(
             val filterEntities = filterRepository.findByIdIn(junctionEntities.map { it.filter!!.id })
             val filterResponses = filterEntities.map { filter ->
                 GetFilterResponse(
-                    filter.name!!,
-                    filter.type!!,
-                    filter.uuid!!,
+                    filter.name,
+                    filter.type,
+                    filter.uuid,
                     listOf(effectEntity.uuid),
-                    filter.settings!!
+                    filter.settings
                 )
             }
             return GetFiltersResponse(filterResponses)
@@ -52,11 +52,11 @@ class EffectFilterApiService(
             val effectIds = filter.effectJunctions.map { it.effect!!.id }
             val effectEntities = effectRepository.findByIdIn(effectIds)
             return GetFilterResponse(
-                filter.name!!,
-                filter.type!!,
-                filter.uuid!!,
+                filter.name,
+                filter.type,
+                filter.uuid,
                 effectEntities.map { it.uuid },
-                filter.settings!!
+                filter.settings
             )
         } else {
             throw ClientRequestException("Filter with uuid $uuid does not exist")
@@ -74,7 +74,7 @@ class EffectFilterApiService(
         )
 
         filterEntity = filterRepository.save(filterEntity)
-        return filterEntity.uuid!!
+        return filterEntity.uuid
     }
 
     fun updateFilter(uuid: String, request: UpdateEffectFilterRequest) {
@@ -90,15 +90,15 @@ class EffectFilterApiService(
             val activeFilter = if (request.settings != null) {
                 filterEntity = filterEntity.copy(settings = request.settings)
                 effectLightingHelper.createEffectFilter(
-                    filterEntity.type!!,
-                    filterEntity.uuid!!,
+                    filterEntity.type,
+                    filterEntity.uuid,
                     settings = request.settings
                 )
             } else {
                 effectLightingHelper.createEffectFilter(
-                    filterEntity.type!!,
-                    filterEntity.uuid!!,
-                    settings = filterEntity.settings!!
+                    filterEntity.type,
+                    filterEntity.uuid,
+                    settings = filterEntity.settings
                 )
             }
 

@@ -13,12 +13,12 @@ data class LightEffectPaletteEntity(
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "palette")
     var effects: Set<LightEffectEntity> = setOf(),
 
-    var uuid: String? = null,
+    var uuid: String,
 
     @TypeDef(type = DataType.JSON)
-    var settings: Map<String, Any>?,
+    var settings: Map<String, Any>,
 
-    var type: String? = null,
+    var type: String,
 
-    var name: String? = null,
+    var name: String,
 )

@@ -38,7 +38,7 @@ class TimeOfDayTrigger(
 
         if (todayEntity != null) {
             val todaySunriseSunsetData = objectMapper.readValue(
-                todayEntity!!.json ?: throw SerializationException("Got null deserializing SunriseSunsetModel"),
+                todayEntity!!.json,
                 SunriseSunsetModel::class.java
             ) ?: throw SerializationException("Got null deserializing SunriseSunsetModel")
             val triggerTime =

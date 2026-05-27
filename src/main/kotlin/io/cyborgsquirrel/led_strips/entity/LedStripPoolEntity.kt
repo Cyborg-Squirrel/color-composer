@@ -22,15 +22,15 @@ data class LedStripPoolEntity(
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "pool")
     var effects: Set<LightEffectEntity> = setOf(),
 
-    var uuid: String? = null,
+    var uuid: String,
 
-    var name: String? = null,
+    var name: String,
 
     @MappedEntity("pool_type")
     @Enumerated(EnumType.STRING)
-    var poolType: PoolType?,
+    var poolType: PoolType,
 
     @MappedEntity("blend_mode")
     @Enumerated(EnumType.STRING)
-    var blendMode: BlendMode? = null,
+    var blendMode: BlendMode,
 )

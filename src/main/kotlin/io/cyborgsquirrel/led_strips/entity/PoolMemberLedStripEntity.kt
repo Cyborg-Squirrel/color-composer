@@ -17,11 +17,11 @@ data class PoolMemberLedStripEntity(
     @Relation(value = Relation.Kind.MANY_TO_ONE)
     var strip: LedStripEntity?,
 
-    var uuid: String? = null,
+    var uuid: String,
 
-    var inverted: Boolean?,
+    var inverted: Boolean,
 
-    var poolIndex: Int?
+    var poolIndex: Int
 ) {
     // Overrides to prevent infinite looping
 
@@ -44,8 +44,8 @@ data class PoolMemberLedStripEntity(
         result = 31 * result + id.hashCode()
         result = 31 * result + (strip?.id ?: 0).hashCode()
         result = 31 * result + (pool?.id ?: 0).hashCode()
-        result = 31 * result + (inverted ?: 0).hashCode()
-        result = 31 * result + (uuid ?: 0).hashCode()
+        result = 31 * result + inverted.hashCode()
+        result = 31 * result + uuid.hashCode()
         return result
     }
 

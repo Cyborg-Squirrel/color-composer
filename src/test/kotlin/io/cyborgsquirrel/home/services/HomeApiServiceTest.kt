@@ -120,7 +120,7 @@ class HomeApiServiceTest(
             GetStripEffectResponse(
                 uuid = playingEffect.uuid,
                 status = LightEffectStatus.Playing,
-                stripUuid = strip.uuid!!,
+                stripUuid = strip.uuid,
                 name = playingEffect.name,
                 type = playingEffect.effectSettings!!.type,
                 paletteUuid = null,
@@ -130,7 +130,7 @@ class HomeApiServiceTest(
             GetStripEffectResponse(
                 uuid = pausedEffect.uuid,
                 status = LightEffectStatus.Paused,
-                stripUuid = strip.uuid!!,
+                stripUuid = strip.uuid,
                 name = pausedEffect.name,
                 type = pausedEffect.effectSettings?.type ?: "",
                 paletteUuid = null,

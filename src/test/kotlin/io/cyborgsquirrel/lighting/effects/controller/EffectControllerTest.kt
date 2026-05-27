@@ -197,7 +197,7 @@ class EffectControllerTest(
         effectFromApi.settingsUuid shouldBe effectEntity.effectSettings?.uuid
         effectFromApi::class.java shouldBe GetStripEffectResponse::class.java
         (effectFromApi as GetStripEffectResponse).stripUuid shouldBe effectEntity.strip?.uuid
-        effectFromApi.paletteUuid shouldBe palette?.uuid
+        effectFromApi.paletteUuid shouldBe palette.uuid
     }
 
     "Create an effect" {
@@ -205,7 +205,7 @@ class EffectControllerTest(
         val strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 80)
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
         val request = CreateEffectRequest(
-            strip.uuid!!,
+            strip.uuid,
             null,
             LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
             "Rainbow Nightrider",

@@ -74,7 +74,7 @@ class EffectFilterControllerTest(
         )
         filterRepository.save(filterEntity)
 
-        val getAllFilterHttpResponse = apiClient.getEffectFilter(filterEntity.uuid!!)
+        val getAllFilterHttpResponse = apiClient.getEffectFilter(filterEntity.uuid)
         getAllFilterHttpResponse.status shouldBe HttpStatus.OK
 
         val getAllFilterResponse = getAllFilterHttpResponse.body() as GetFilterResponse
@@ -138,7 +138,7 @@ class EffectFilterControllerTest(
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
-                strip.uuid!!,
+                strip.uuid,
                 null,
                 LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 "Super cool effect",
@@ -182,7 +182,7 @@ class EffectFilterControllerTest(
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
-                strip.uuid!!,
+                strip.uuid,
                 null,
                 LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 "Super cool effect",
@@ -243,7 +243,7 @@ class EffectFilterControllerTest(
         val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
         val createEffectHttpResponse = effectApiClient.createEffect(
             CreateEffectRequest(
-                strip.uuid!!,
+                strip.uuid,
                 null,
                 LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
                 "Super cool effect",

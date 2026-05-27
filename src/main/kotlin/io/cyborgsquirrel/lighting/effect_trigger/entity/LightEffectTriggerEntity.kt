@@ -15,12 +15,12 @@ data class LightEffectTriggerEntity(
     @Relation(value = Relation.Kind.MANY_TO_ONE)
     var effect: LightEffectEntity? = null,
 
-    var uuid: String? = null,
+    var uuid: String,
 
     @TypeDef(type = DataType.JSON)
-    var settings: Map<String, Any>?,
+    var settings: Map<String, Any>,
 
-    var type: String? = null,
+    var type: String,
 
-    var name: String? = null,
+    var name: String,
 )

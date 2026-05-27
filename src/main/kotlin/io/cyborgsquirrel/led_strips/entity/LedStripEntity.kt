@@ -18,7 +18,7 @@ data class LedStripEntity(
     var id: Long = -1,
 
     @Relation(value = Relation.Kind.MANY_TO_ONE)
-    var client: LedStripClientEntity? = null,
+    var client: LedStripClientEntity?,
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "strip")
     var members: Set<PoolMemberLedStripEntity> = setOf(),
@@ -26,21 +26,21 @@ data class LedStripEntity(
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "strip")
     var effects: Set<LightEffectEntity> = setOf(),
 
-    var uuid: String? = null,
+    var uuid: String,
 
-    var name: String? = null,
+    var name: String,
 
     // Raspberry Pi pin or NightDriver channel
-    var pin: String? = null,
+    var pin: String,
 
-    var length: Int? = null,
+    var length: Int,
 
     // Always 1 for strips, can be greater than 1 for matrices
     var height: Int = 1,
 
-    var brightness: Int? = null,
+    var brightness: Int,
 
     @MappedEntity("blend_mode")
     @Enumerated(EnumType.STRING)
-    var blendMode: BlendMode? = null,
+    var blendMode: BlendMode,
 )

@@ -59,7 +59,7 @@ class LedStripSetupControllerTest(
 
             // Request a single strip
             val strip = saveLedStrip(stripRepository, client, "Strip A", 50, PiClientPin.D21.pinName, 100)
-            response = apiClient.getStrip(strip.uuid!!)
+            response = apiClient.getStrip(strip.uuid)
             response.status shouldBe HttpStatus.OK
             val getStripResponse = response.body() as GetLedStripResponse
             getStripResponse.name shouldBe strip.name
@@ -148,10 +148,10 @@ class LedStripSetupControllerTest(
                 clientUuid = client.uuid
             )
 
-            val response = apiClient.updateStrip(strip.uuid!!, request)
+            val response = apiClient.updateStrip(strip.uuid, request)
             response.status shouldBe HttpStatus.NO_CONTENT
 
-            val updatedStripOptional = stripRepository.findByUuid(strip.uuid!!)
+            val updatedStripOptional = stripRepository.findByUuid(strip.uuid)
             updatedStripOptional.isPresent shouldBe true
             updatedStripOptional.get().name shouldBe request.name
             updatedStripOptional.get().pin shouldBe request.pin
@@ -171,9 +171,9 @@ class LedStripSetupControllerTest(
             var strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 100)
 
             // Deleting a strip which does exist and has no effects
-            response = apiClient.deleteStrip(strip.uuid!!)
+            response = apiClient.deleteStrip(strip.uuid)
             response.status shouldBe HttpStatus.NO_CONTENT
-            var stripOptional = stripRepository.findByUuid(strip.uuid!!)
+            var stripOptional = stripRepository.findByUuid(strip.uuid)
             stripOptional.isPresent shouldBe false
 
             // Deleting a strip which has a light effect - bad request
@@ -185,9 +185,9 @@ class LedStripSetupControllerTest(
             effectRepository.deleteAll()
 
             // Deleting the strip after deleting the light effect
-            response = apiClient.deleteStrip(strip.uuid!!)
+            response = apiClient.deleteStrip(strip.uuid)
             response.status shouldBe HttpStatus.NO_CONTENT
-            stripOptional = stripRepository.findByUuid(strip.uuid!!)
+            stripOptional = stripRepository.findByUuid(strip.uuid)
             stripOptional.isPresent shouldBe false
         }
 

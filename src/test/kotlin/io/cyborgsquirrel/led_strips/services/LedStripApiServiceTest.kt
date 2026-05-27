@@ -71,14 +71,14 @@ class LedStripApiServiceTest(
         val mockEffectA = mockk<ActiveLightEffect>()
         val mockEffectB = mockk<ActiveLightEffect>()
         val mockStrip = mockk<LedStripModel>()
-        every { mockStrip.uuid } returns strip.uuid!!
+        every { mockStrip.uuid } returns strip.uuid
         every { mockEffectA.status } returns LightEffectStatus.Playing
         every { mockEffectA.strip } returns mockStrip
         every { mockEffectB.status } returns LightEffectStatus.Stopped
         every { mockEffectB.strip } returns mockStrip
         every { mockLightEffectRegistry.getAllEffects() } returns listOf(mockEffectA, mockEffectB)
 
-        val result = service.getStrip(strip.uuid!!)
+        val result = service.getStrip(strip.uuid)
         result.uuid shouldBe strip.uuid
         result.name shouldBe strip.name
         result.length shouldBe strip.length
@@ -183,9 +183,9 @@ class LedStripApiServiceTest(
             clientUuid = client.uuid
         )
 
-        ledStripApiService.updateStrip(strip.uuid!!, request)
+        ledStripApiService.updateStrip(strip.uuid, request)
 
-        val updatedStrip = stripRepository.findByUuid(strip.uuid!!)
+        val updatedStrip = stripRepository.findByUuid(strip.uuid)
         updatedStrip.get().name shouldBe request.name
         updatedStrip.get().length shouldBe request.length
         updatedStrip.get().pin shouldBe request.pin
@@ -209,7 +209,7 @@ class LedStripApiServiceTest(
         )
 
         shouldThrow<ClientRequestException> {
-            ledStripApiService.updateStrip(stripA.uuid!!, request)
+            ledStripApiService.updateStrip(stripA.uuid, request)
         }
     }
 
@@ -228,9 +228,9 @@ class LedStripApiServiceTest(
             brightness = strip.brightness,
         )
 
-        ledStripApiService.updateStrip(strip.uuid!!, request)
+        ledStripApiService.updateStrip(strip.uuid, request)
 
-        val updatedStrip = stripRepository.findByUuid(strip.uuid!!)
+        val updatedStrip = stripRepository.findByUuid(strip.uuid)
         val s = updatedStrip.get()
         s.client!!.uuid shouldBe client.uuid
         s.pin shouldBe request.pin
@@ -249,11 +249,11 @@ class LedStripApiServiceTest(
         val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
 
         val mockEffect = mockk<ActiveLightEffect>()
-        every { mockLightEffectRegistry.getAllEffectsForStrip(strip.uuid!!) } returns listOf(mockEffect)
+        every { mockLightEffectRegistry.getAllEffectsForStrip(strip.uuid) } returns listOf(mockEffect)
 
-        service.onStripDeleted(strip.uuid!!)
+        service.onStripDeleted(strip.uuid)
 
-        val deletedStrip = stripRepository.findByUuid(strip.uuid!!)
+        val deletedStrip = stripRepository.findByUuid(strip.uuid)
         deletedStrip.isEmpty shouldBe true
 
         verify(exactly = 1) {

@@ -86,8 +86,8 @@ class LedStripApiService(
                 blendMode = request.blendMode ?: BlendMode.Additive
             )
             stripRepository.save(stripEntity)
-            sseEventEmitter.emit(LedStripEvent.LedStripCreated(stripEntity.uuid!!))
-            return stripEntity.uuid!!
+            sseEventEmitter.emit(LedStripEvent.LedStripCreated(stripEntity.uuid))
+            return stripEntity.uuid
         } else {
             throw ClientRequestException("No client exists with uuid ${request.clientUuid}!")
         }
@@ -158,19 +158,19 @@ class LedStripApiService(
                 activeEffects.forEach {
                     val newEffect = it.copy(
                         strip = SingleLedStripModel(
-                            newStripEntity.name!!,
-                            newStripEntity.uuid!!,
-                            newStripEntity.pin!!,
-                            newStripEntity.length!!,
+                            newStripEntity.name,
+                            newStripEntity.uuid,
+                            newStripEntity.pin,
+                            newStripEntity.length,
                             newStripEntity.height,
-                            newStripEntity.blendMode!!,
-                            newStripEntity.brightness!!,
+                            newStripEntity.blendMode,
+                            newStripEntity.brightness,
                             newStripEntity.client!!.uuid,
                             false
                         ),
                         effect = if (stripEntity.length != newStripEntity.length) recreateEffect(
                             it.effect,
-                            newStripEntity.length!!
+                            newStripEntity.length
                         ) else it.effect
                     )
                     if (it != newEffect) {
@@ -247,13 +247,13 @@ class LedStripApiService(
         val inUse = clientStatus == ClientStatus.Active
         return GetLedStripResponse(
             clientUuid = entity.client!!.uuid,
-            name = entity.name!!,
-            uuid = entity.uuid!!,
-            pin = entity.pin!!,
-            length = entity.length!!,
+            name = entity.name,
+            uuid = entity.uuid,
+            pin = entity.pin,
+            length = entity.length,
             height = entity.height,
-            brightness = entity.brightness!!,
-            blendMode = entity.blendMode!!,
+            brightness = entity.brightness,
+            blendMode = entity.blendMode,
             inUse = inUse,
         )
     }

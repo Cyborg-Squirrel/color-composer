@@ -13,9 +13,9 @@ data class SunriseSunsetTimeEntity(
     @GeneratedValue
     var id: Long = -1,
 
-    var ymd: String? = null,
+    var ymd: String,
 
-    var json: String? = null,
+    var json: String,
 
     @Relation(value = Relation.Kind.MANY_TO_ONE)
     var location: LocationConfigEntity? = null,
@@ -40,7 +40,7 @@ data class SunriseSunsetTimeEntity(
     }
 
     override fun toString(): String {
-        return "SunriseSunsetTimeEntity(ymd='$ymd', json=${json?.substring(0, 15)}, location=${location?.id}, id=$id)"
+        return "SunriseSunsetTimeEntity(ymd='$ymd', json=${json.substring(0, 15)}, location=${location?.id}, id=$id)"
     }
 
 }

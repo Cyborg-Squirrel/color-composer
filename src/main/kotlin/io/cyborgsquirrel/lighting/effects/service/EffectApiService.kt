@@ -128,9 +128,9 @@ class EffectApiService(
 
         val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
         val palette = if (effectEntity.palette != null) createLightingService.createPalette(
-            effectEntity.palette!!.settings!!,
-            effectEntity.palette!!.type!!,
-            effectEntity.palette!!.uuid!!,
+            effectEntity.palette!!.settings,
+            effectEntity.palette!!.type,
+            effectEntity.palette!!.uuid,
             strip.length()
         ) else null
         val lightEffect = createLightingService.createEffect(
@@ -142,7 +142,7 @@ class EffectApiService(
             // TODO add priority to persistence layer
             priority = 0,
             skipFramesIfBlank = true,
-            status = effectEntity.status!!,
+            status = effectEntity.status,
             strip = strip,
             effect = lightEffect,
             filters = listOf()
@@ -163,10 +163,10 @@ class EffectApiService(
                 GetStripEffectResponse(
                     name = it.name,
                     uuid = it.uuid,
-                    stripUuid = stripEntity.uuid!!,
+                    stripUuid = stripEntity.uuid,
                     paletteUuid = it.palette?.uuid,
                     settingsUuid = settingsEntity.uuid,
-                    status = it.status!!,
+                    status = it.status,
                     type = settingsEntity.type,
                     category = EffectCategory.forEffect(settingsEntity.type),
                 )
@@ -188,10 +188,10 @@ class EffectApiService(
                 GetPoolEffectResponse(
                     name = it.name,
                     uuid = it.uuid,
-                    poolUuid = poolEntity.uuid!!,
+                    poolUuid = poolEntity.uuid,
                     paletteUuid = it.palette?.uuid,
                     settingsUuid = settingsEntity.uuid,
-                    status = it.status!!,
+                    status = it.status,
                     type = settingsEntity.type,
                     category = EffectCategory.forEffect(settingsEntity.type),
                 )
@@ -324,9 +324,9 @@ class EffectApiService(
             if (effectModel != null) {
                 val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
                 val palette = if (effectEntity.palette != null) createLightingService.createPalette(
-                    effectEntity.palette!!.settings!!,
-                    effectEntity.palette!!.type!!,
-                    effectEntity.palette!!.uuid!!,
+                    effectEntity.palette!!.settings,
+                    effectEntity.palette!!.type,
+                    effectEntity.palette!!.uuid,
                     strip.length()
                 ) else null
                 val runtimeSettings = effectEntity.effectSettings?.settings ?: emptyMap()
@@ -347,7 +347,7 @@ class EffectApiService(
                         // TODO add priority to persistence layer
                         priority = 0,
                         skipFramesIfBlank = true,
-                        status = effectEntity.status!!,
+                        status = effectEntity.status,
                         strip = strip,
                         effect = lightEffect,
                     )
@@ -399,10 +399,10 @@ class EffectApiService(
             GetStripEffectResponse(
                 name = lightEffectEntity.name,
                 uuid = lightEffectEntity.uuid,
-                stripUuid = lightEffectEntity.strip!!.uuid!!,
+                stripUuid = lightEffectEntity.strip!!.uuid,
                 paletteUuid = lightEffectEntity.palette?.uuid,
                 settingsUuid = lightEffectEntity.effectSettings?.uuid,
-                status = lightEffectEntity.status!!,
+                status = lightEffectEntity.status,
                 type = settingsEntity.type,
                 category = EffectCategory.forEffect(settingsEntity.type),
             )
@@ -410,10 +410,10 @@ class EffectApiService(
             GetPoolEffectResponse(
                 name = lightEffectEntity.name,
                 uuid = lightEffectEntity.uuid,
-                poolUuid = lightEffectEntity.pool!!.uuid!!,
+                poolUuid = lightEffectEntity.pool!!.uuid,
                 paletteUuid = lightEffectEntity.palette?.uuid,
                 settingsUuid = lightEffectEntity.effectSettings?.uuid,
-                status = lightEffectEntity.status!!,
+                status = lightEffectEntity.status,
                 type = settingsEntity.type,
                 category = EffectCategory.forEffect(settingsEntity.type),
             )
@@ -423,7 +423,7 @@ class EffectApiService(
                 uuid = lightEffectEntity.uuid,
                 paletteUuid = lightEffectEntity.palette?.uuid,
                 settingsUuid = lightEffectEntity.effectSettings?.uuid,
-                status = lightEffectEntity.status!!,
+                status = lightEffectEntity.status,
                 type = settingsEntity.type,
                 category = EffectCategory.forEffect(settingsEntity.type),
             )

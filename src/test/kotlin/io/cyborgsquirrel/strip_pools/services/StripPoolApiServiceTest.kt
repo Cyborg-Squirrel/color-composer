@@ -170,9 +170,9 @@ class StripPoolApiServiceTest(
             blendMode = BlendMode.UseHighest
         )
 
-        stripPoolApiService.updateStripPool(pool.uuid!!, request)
+        stripPoolApiService.updateStripPool(pool.uuid, request)
 
-        val updatedPool = poolRepository.findByUuid(pool.uuid!!)
+        val updatedPool = poolRepository.findByUuid(pool.uuid)
         updatedPool.get().name shouldBe request.name
         updatedPool.get().poolType shouldBe request.poolType
         updatedPool.get().blendMode shouldBe request.blendMode
@@ -187,9 +187,9 @@ class StripPoolApiServiceTest(
         )
         poolRepository.save(pool)
 
-        stripPoolApiService.deletePool(pool.uuid!!)
+        stripPoolApiService.deletePool(pool.uuid)
 
-        val deletedPool = poolRepository.findByUuid(pool.uuid!!)
+        val deletedPool = poolRepository.findByUuid(pool.uuid)
         deletedPool.isEmpty shouldBe true
     }
 
