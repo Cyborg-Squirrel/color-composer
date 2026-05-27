@@ -68,6 +68,7 @@ fun saveLightEffect(
     settingsRepository: LightEffectSettingsRepository,
     strip: LedStripEntity,
     status: LightEffectStatus = LightEffectStatus.Inactive,
+    layer: Int = nextLayerForStrip(effectRepository, strip),
 ): LightEffectEntity {
     val settingsEntity = settingsRepository.save(
         LightEffectSettingsEntity(
@@ -85,6 +86,12 @@ fun saveLightEffect(
             name = "My light effect",
             status = status,
             effectSettings = settingsEntity,
+            layer = layer,
         )
     )
 }
+
+private fun nextLayerForStrip(
+    effectRepository: LightEffectRepository,
+    strip: LedStripEntity,
+): Int = (effectRepository.findByStrip(strip).maxOfOrNull { it.layer }?.plus(1)) ?: 0

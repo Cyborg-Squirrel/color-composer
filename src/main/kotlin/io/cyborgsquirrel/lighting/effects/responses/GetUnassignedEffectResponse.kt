@@ -16,6 +16,7 @@ data class GetUnassignedEffectResponse(
     override val settingsUuid: String?,
     override val status: LightEffectStatus,
     override val category: EffectCategory,
+    override val layer: Int = 0,
 ) : GetEffectResponse(
-    name, type, uuid, paletteUuid, settingsUuid, status, category
+    name, type, uuid, paletteUuid, settingsUuid, status, category, layer
 )

@@ -20,10 +20,8 @@ import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.LedStripPoolModel
-import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
-import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameSegmentModel
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -85,7 +83,7 @@ class PiClientWebSocketJobTest : StringSpec({
     )
     val activeEffect = ActiveLightEffect(
         effectUuid = "effect-uuid",
-        priority = 0,
+        layer = 0,
         skipFramesIfBlank = false,
         status = LightEffectStatus.Playing,
         effect = mockk<LightEffect>(),

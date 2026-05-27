@@ -21,8 +21,10 @@ import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.test_helpers.normalizeNumberTypes
 import io.cyborgsquirrel.test_helpers.objectToMap
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.micronaut.data.exceptions.DataAccessException
 import io.micronaut.serde.ObjectMapper
 import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 import java.util.*
@@ -180,5 +182,187 @@ class LightEffectRepositoryTest(
         newEntities.size shouldBe 1
         verifyLightEffectEntity(newEntities.first(), lightEffect)
         newEntities.first().pool?.members?.first()?.id shouldBe poolMember.id
+    }
+
+    "layer and skipFramesIfBlank round-trip through persistence" {
+        val client = clientRepository.save(
+            LedStripClientEntity(
+                name = "Roundtrip client",
+                address = "192.168.1.2",
+                clientType = ClientType.Pi,
+                colorOrder = ColorOrder.RGB,
+                uuid = UUID.randomUUID().toString(),
+                apiPort = 1111,
+                wsPort = 2222,
+                firmwareVersion = "--",
+                fps = 35,
+                fadeTimeoutMillis = 0,
+            )
+        )
+        val strip = ledStripRepository.save(
+            LedStripEntity(
+                client = client,
+                uuid = UUID.randomUUID().toString(),
+                name = "Roundtrip strip",
+                pin = PiClientPin.D18.pinName,
+                length = 60,
+                blendMode = BlendMode.Average,
+                brightness = 25,
+            )
+        )
+        val settingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Skip-blank-off settings",
+                settings = objectToMap(objectMapper, settings),
+                isDefault = false,
+                skipFramesIfBlank = false,
+            )
+        )
+        lightEffectRepository.save(
+            LightEffectEntity(
+                effectSettings = settingsEntity,
+                name = "Layer 7 effect",
+                strip = strip,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Inactive,
+                layer = 7,
+            )
+        )
+
+        val fetched = lightEffectRepository.queryAll().single()
+        fetched.layer shouldBe 7
+        fetched.effectSettings?.skipFramesIfBlank shouldBe false
+    }
+
+    "Duplicate layer on the same strip is rejected by the unique constraint" {
+        val client = clientRepository.save(
+            LedStripClientEntity(
+                name = "Dup-layer client",
+                address = "192.168.1.3",
+                clientType = ClientType.Pi,
+                colorOrder = ColorOrder.RGB,
+                uuid = UUID.randomUUID().toString(),
+                apiPort = 1111,
+                wsPort = 2222,
+                firmwareVersion = "--",
+                fps = 35,
+                fadeTimeoutMillis = 0,
+            )
+        )
+        val strip = ledStripRepository.save(
+            LedStripEntity(
+                client = client,
+                uuid = UUID.randomUUID().toString(),
+                name = "Dup-layer strip",
+                pin = PiClientPin.D18.pinName,
+                length = 60,
+                blendMode = BlendMode.Average,
+                brightness = 25,
+            )
+        )
+        val settingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Settings",
+                settings = objectToMap(objectMapper, settings),
+                isDefault = false,
+            )
+        )
+        lightEffectRepository.save(
+            LightEffectEntity(
+                effectSettings = settingsEntity,
+                name = "First on layer 0",
+                strip = strip,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Inactive,
+                layer = 0,
+            )
+        )
+
+        shouldThrow<DataAccessException> {
+            lightEffectRepository.save(
+                LightEffectEntity(
+                    effectSettings = settingsEntity,
+                    name = "Second on layer 0",
+                    strip = strip,
+                    uuid = UUID.randomUUID().toString(),
+                    status = LightEffectStatus.Inactive,
+                    layer = 0,
+                )
+            )
+        }
+    }
+
+    "Same layer is allowed on different strips" {
+        val client = clientRepository.save(
+            LedStripClientEntity(
+                name = "Cross-strip client",
+                address = "192.168.1.4",
+                clientType = ClientType.Pi,
+                colorOrder = ColorOrder.RGB,
+                uuid = UUID.randomUUID().toString(),
+                apiPort = 1111,
+                wsPort = 2222,
+                firmwareVersion = "--",
+                fps = 35,
+                fadeTimeoutMillis = 0,
+            )
+        )
+        val stripA = ledStripRepository.save(
+            LedStripEntity(
+                client = client,
+                uuid = UUID.randomUUID().toString(),
+                name = "Strip A",
+                pin = PiClientPin.D18.pinName,
+                length = 60,
+                blendMode = BlendMode.Average,
+                brightness = 25,
+            )
+        )
+        val stripB = ledStripRepository.save(
+            LedStripEntity(
+                client = client,
+                uuid = UUID.randomUUID().toString(),
+                name = "Strip B",
+                pin = PiClientPin.D10.pinName,
+                length = 60,
+                blendMode = BlendMode.Average,
+                brightness = 25,
+            )
+        )
+        val settingsEntity = settingsRepository.save(
+            LightEffectSettingsEntity(
+                uuid = UUID.randomUUID().toString(),
+                type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Settings",
+                settings = objectToMap(objectMapper, settings),
+                isDefault = false,
+            )
+        )
+        lightEffectRepository.save(
+            LightEffectEntity(
+                effectSettings = settingsEntity,
+                name = "A layer 0",
+                strip = stripA,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Inactive,
+                layer = 0,
+            )
+        )
+        lightEffectRepository.save(
+            LightEffectEntity(
+                effectSettings = settingsEntity,
+                name = "B layer 0",
+                strip = stripB,
+                uuid = UUID.randomUUID().toString(),
+                status = LightEffectStatus.Inactive,
+                layer = 0,
+            )
+        )
+
+        lightEffectRepository.queryAll().size shouldBe 2
     }
 })

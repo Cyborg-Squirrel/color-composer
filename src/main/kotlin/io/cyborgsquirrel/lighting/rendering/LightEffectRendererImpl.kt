@@ -97,7 +97,7 @@ class LightEffectRendererImpl(
 
     private fun renderFrame(strip: LedStripModel): RenderedFrameModel? {
         val activeEffects =
-            effectRepository.getAllEffectsForStrip(strip.uuid).filter { it.status.isInUse() }.sortedBy { it.priority }
+            effectRepository.getAllEffectsForStrip(strip.uuid).filter { it.status.isInUse() }.sortedBy { it.layer }
         return if (activeEffects.isEmpty()) {
             null
         } else {
@@ -110,8 +110,8 @@ class LightEffectRendererImpl(
         activeEffects: List<ActiveLightEffect>
     ): RenderedFrameModel {
         val allEffectsRgbData = mutableListOf<List<RgbColor>>()
-        val activeEffectsByPriority = activeEffects.sortedBy { it.priority }
-        for (activeEffect in activeEffectsByPriority) {
+        val activeEffectsByLayer = activeEffects.sortedBy { it.layer }
+        for (activeEffect in activeEffectsByLayer) {
             logger.debug("Rendering effect {}", activeEffect)
             var rgbData = if (activeEffect.status == LightEffectStatus.Playing) {
                 activeEffect.effect.getNextStep()

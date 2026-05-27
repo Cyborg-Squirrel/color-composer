@@ -11,4 +11,5 @@ sealed class GetEffectResponse(
     open val settingsUuid: String?,
     open val status: LightEffectStatus,
     open val category: EffectCategory,
+    open val layer: Int,
 )

@@ -8,4 +8,5 @@ data class CreateEffectSettingsRequest(
     val name: String,
     val settings: Map<String, Any>,
     val isDefault: Boolean = false,
+    val skipFramesIfBlank: Boolean = true,
 )

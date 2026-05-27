@@ -16,7 +16,6 @@ import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.*
 import kotlinx.coroutines.*
@@ -69,7 +68,7 @@ class NightDriverSocketJobTest : StringSpec({
     )
     val activeEffect = ActiveLightEffect(
         effectUuid = "nd-effect-uuid",
-        priority = 0,
+        layer = 0,
         skipFramesIfBlank = false,
         status = LightEffectStatus.Playing,
         effect = mockk<LightEffect>(),

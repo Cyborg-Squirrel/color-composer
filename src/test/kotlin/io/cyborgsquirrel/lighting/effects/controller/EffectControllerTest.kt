@@ -589,6 +589,7 @@ class EffectControllerTest(
                 effectSettings = nrSettingsEntity,
                 uuid = UUID.randomUUID().toString(),
                 status = LightEffectStatus.Inactive,
+                layer = 1,
             )
         )
 
@@ -854,5 +855,204 @@ class EffectControllerTest(
         val body = response.body() as List<*>
         // EffectApiServiceTest verifies details
         body.size shouldBe 8
+    }
+
+    "Create an effect with an explicit layer persists it and is reflected in the response" {
+        val client = createLedStripClientEntity(clientRepository, "Office lights", "192.168.50.60", 60, 61)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 60, PiClientPin.D21.pinName, 80)
+        val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+
+        val createResponse = apiClient.createEffect(
+            CreateEffectRequest(
+                stripUuid = strip.uuid,
+                poolUuid = null,
+                effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Layer 3 effect",
+                settings = defaultNrSettings,
+                paletteUuid = null,
+                settingsUuid = null,
+                layer = 3,
+            )
+        )
+        createResponse.status shouldBe HttpStatus.CREATED
+        val createdUuid = createResponse.body() as String
+
+        effectRepository.findByUuid(createdUuid).get().layer shouldBe 3
+
+        val getResponse = apiClient.getEffect(createdUuid)
+        getResponse.status shouldBe HttpStatus.OK
+        (getResponse.body() as GetStripEffectResponse).layer shouldBe 3
+    }
+
+    "Create an effect on the same strip with a duplicate layer is rejected" {
+        val client = createLedStripClientEntity(clientRepository, "Garage lights", "192.168.50.70", 70, 71)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 60, PiClientPin.D21.pinName, 80)
+        val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+
+        apiClient.createEffect(
+            CreateEffectRequest(
+                stripUuid = strip.uuid,
+                poolUuid = null,
+                effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "First",
+                settings = defaultNrSettings,
+                paletteUuid = null,
+                settingsUuid = null,
+                layer = 0,
+            )
+        ).status shouldBe HttpStatus.CREATED
+
+        val secondResponse = apiClient.createEffect(
+            CreateEffectRequest(
+                stripUuid = strip.uuid,
+                poolUuid = null,
+                effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Second",
+                settings = defaultNrSettings,
+                paletteUuid = null,
+                settingsUuid = null,
+                layer = 0,
+            )
+        )
+
+        secondResponse.status shouldBe HttpStatus.BAD_REQUEST
+        effectRepository.queryAll().size shouldBe 1
+    }
+
+    "Create an effect without a layer auto-assigns the next free layer on the strip" {
+        val client = createLedStripClientEntity(clientRepository, "Kitchen lights", "192.168.50.80", 80, 81)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 60, PiClientPin.D21.pinName, 80)
+        val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+
+        fun create() = apiClient.createEffect(
+            CreateEffectRequest(
+                stripUuid = strip.uuid,
+                poolUuid = null,
+                effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Auto layer",
+                settings = defaultNrSettings,
+                paletteUuid = null,
+                settingsUuid = null,
+                layer = null,
+            )
+        )
+
+        val firstUuid = create().body() as String
+        val secondUuid = create().body() as String
+        val thirdUuid = create().body() as String
+
+        effectRepository.findByUuid(firstUuid).get().layer shouldBe 0
+        effectRepository.findByUuid(secondUuid).get().layer shouldBe 1
+        effectRepository.findByUuid(thirdUuid).get().layer shouldBe 2
+    }
+
+    "Create auto-layer slots above an explicitly assigned high layer" {
+        val client = createLedStripClientEntity(clientRepository, "Studio lights", "192.168.50.90", 90, 91)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 60, PiClientPin.D21.pinName, 80)
+        val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+
+        apiClient.createEffect(
+            CreateEffectRequest(
+                stripUuid = strip.uuid,
+                poolUuid = null,
+                effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Explicit layer 5",
+                settings = defaultNrSettings,
+                paletteUuid = null,
+                settingsUuid = null,
+                layer = 5,
+            )
+        ).status shouldBe HttpStatus.CREATED
+
+        val autoUuid = apiClient.createEffect(
+            CreateEffectRequest(
+                stripUuid = strip.uuid,
+                poolUuid = null,
+                effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Auto after 5",
+                settings = defaultNrSettings,
+                paletteUuid = null,
+                settingsUuid = null,
+                layer = null,
+            )
+        ).body() as String
+
+        effectRepository.findByUuid(autoUuid).get().layer shouldBe 6
+    }
+
+    "Patching an effect without a layer recomputes to max-of-other-effects + 1 on its strip" {
+        val client = createLedStripClientEntity(clientRepository, "Lab lights", "192.168.50.100", 100, 101)
+        val strip = saveLedStrip(stripRepository, client, "Strip A", 60, PiClientPin.D21.pinName, 80)
+        val defaultNrSettings = objectToMap(objectMapper, NightriderColorFillEffectSettings())
+
+        val anchorUuid = apiClient.createEffect(
+            CreateEffectRequest(
+                stripUuid = strip.uuid,
+                poolUuid = null,
+                effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Anchor on layer 4",
+                settings = defaultNrSettings,
+                paletteUuid = null,
+                settingsUuid = null,
+                layer = 4,
+            )
+        ).body() as String
+
+        val targetUuid = apiClient.createEffect(
+            CreateEffectRequest(
+                stripUuid = strip.uuid,
+                poolUuid = null,
+                effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+                name = "Target on layer 1",
+                settings = defaultNrSettings,
+                paletteUuid = null,
+                settingsUuid = null,
+                layer = 1,
+            )
+        ).body() as String
+
+        apiClient.updateEffect(
+            targetUuid,
+            UpdateEffectRequest(
+                stripUuid = strip.uuid,
+                poolUuid = null,
+                paletteUuid = null,
+                settingsUuid = null,
+                name = null,
+                layer = null,
+            ),
+        ).status shouldBe HttpStatus.NO_CONTENT
+
+        effectRepository.findByUuid(anchorUuid).get().layer shouldBe 4
+        effectRepository.findByUuid(targetUuid).get().layer shouldBe 5
+    }
+
+    "Effect settings preserve skipFramesIfBlank through create and patch" {
+        val createBody = io.cyborgsquirrel.lighting.effects.requests.CreateEffectSettingsRequest(
+            type = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+            name = "Skip blank off",
+            settings = objectToMap(objectMapper, NightriderColorFillEffectSettings()),
+            isDefault = false,
+            skipFramesIfBlank = false,
+        )
+        val createResponse = apiClient.createEffectSettings(createBody)
+        createResponse.status shouldBe HttpStatus.CREATED
+        val settingsUuid = createResponse.body() as String
+
+        val initial = apiClient.getEffectSettings(settingsUuid).body()
+                as io.cyborgsquirrel.lighting.effects.responses.GetEffectSettingsResponse
+        initial.skipFramesIfBlank shouldBe false
+
+        val patchBody = io.cyborgsquirrel.lighting.effects.requests.UpdateEffectSettingsRequest(
+            name = null,
+            settings = null,
+            isDefault = null,
+            skipFramesIfBlank = true,
+        )
+        apiClient.updateEffectSettings(settingsUuid, patchBody).status shouldBe HttpStatus.NO_CONTENT
+
+        val patched = apiClient.getEffectSettings(settingsUuid).body()
+                as io.cyborgsquirrel.lighting.effects.responses.GetEffectSettingsResponse
+        patched.skipFramesIfBlank shouldBe true
     }
 })
