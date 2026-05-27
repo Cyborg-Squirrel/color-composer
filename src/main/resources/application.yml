@@ -17,12 +17,9 @@ micronaut:
 
 datasources:
   default:
-    url: ${JDBC_URL:`jdbc:postgresql://localhost:5432/colorcomposer`}
     driver-class-name: org.postgresql.Driver
     db-type: postgres
     dialect: POSTGRES
-    username: postgres
-    password: test123
 
 flyway:
   datasources:
