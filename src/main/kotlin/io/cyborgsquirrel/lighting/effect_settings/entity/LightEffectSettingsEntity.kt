@@ -6,7 +6,7 @@ import io.micronaut.data.model.DataType
 
 @MappedEntity("light_effect_settings")
 data class LightEffectSettingsEntity(
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 
@@ -18,7 +18,7 @@ data class LightEffectSettingsEntity(
     var name: String,
     var isDefault: Boolean = false,
 
-    @TypeDef(type = DataType.JSON)
+    @param:TypeDef(type = DataType.JSON)
     var settings: Map<String, Any>,
 ) {
     override fun equals(other: Any?): Boolean {

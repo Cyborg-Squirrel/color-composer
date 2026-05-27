@@ -43,8 +43,8 @@ import java.util.*
 
 @MicronautTest
 class EffectFilterControllerTest(
-    @Client private val apiClient: EffectFilterApi,
-    @Client private val effectApiClient: EffectApi,
+    @param:Client private val apiClient: EffectFilterApi,
+    @param:Client private val effectApiClient: EffectApi,
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val effectRepository: LightEffectRepository,

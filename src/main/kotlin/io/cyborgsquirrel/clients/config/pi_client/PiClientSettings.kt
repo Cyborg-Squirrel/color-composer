@@ -5,9 +5,9 @@ import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
 class PiClientSettings (
-    @JsonProperty("power_limit")
+    @param:JsonProperty("power_limit")
     val powerLimit: Int,
 
-    @JsonProperty("fade_timeout_millis")
+    @param:JsonProperty("fade_timeout_millis")
     val fadeTimeoutMillis: Int
 )

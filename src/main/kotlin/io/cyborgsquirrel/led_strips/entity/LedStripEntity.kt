@@ -13,7 +13,7 @@ import jakarta.persistence.Enumerated
 @MappedEntity("led_strips")
 data class LedStripEntity(
 
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 

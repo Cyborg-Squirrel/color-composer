@@ -14,7 +14,7 @@ import jakarta.persistence.Enumerated
 
 @MappedEntity("light_effects")
 data class LightEffectEntity(
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 

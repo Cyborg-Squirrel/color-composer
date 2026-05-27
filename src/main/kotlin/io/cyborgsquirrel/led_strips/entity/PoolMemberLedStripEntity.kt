@@ -7,7 +7,7 @@ import io.micronaut.data.annotation.Relation
 
 @MappedEntity("pool_member_led_strips")
 data class PoolMemberLedStripEntity(
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 

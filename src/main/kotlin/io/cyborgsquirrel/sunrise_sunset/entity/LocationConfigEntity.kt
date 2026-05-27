@@ -6,7 +6,7 @@ import io.micronaut.serde.annotation.Serdeable
 @Serdeable
 @MappedEntity("location_configs")
 data class LocationConfigEntity (
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 

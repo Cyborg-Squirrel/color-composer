@@ -9,7 +9,7 @@ import io.micronaut.serde.annotation.Serdeable
 @Serdeable
 @MappedEntity("sunrise_sunset_times")
 data class SunriseSunsetTimeEntity(
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 

@@ -8,7 +8,7 @@ import io.micronaut.data.annotation.Relation
 
 @MappedEntity("light_effect_filter_junctions")
 data class LightEffectFilterJunctionEntity(
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 

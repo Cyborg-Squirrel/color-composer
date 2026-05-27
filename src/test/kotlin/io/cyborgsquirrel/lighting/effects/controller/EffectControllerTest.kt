@@ -43,7 +43,7 @@ import java.util.*
 
 @MicronautTest
 class EffectControllerTest(
-    @Client private val apiClient: EffectApi,
+    @param:Client private val apiClient: EffectApi,
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val poolRepository: LedStripPoolRepository,

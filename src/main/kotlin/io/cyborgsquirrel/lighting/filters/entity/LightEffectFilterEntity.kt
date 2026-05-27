@@ -5,7 +5,7 @@ import io.micronaut.data.model.DataType
 
 @MappedEntity("light_effect_filters")
 data class LightEffectFilterEntity(
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 
@@ -14,7 +14,7 @@ data class LightEffectFilterEntity(
 
     var uuid: String,
 
-    @TypeDef(type = DataType.JSON)
+    @param:TypeDef(type = DataType.JSON)
     var settings: Map<String, Any>,
 
     var type: String,
