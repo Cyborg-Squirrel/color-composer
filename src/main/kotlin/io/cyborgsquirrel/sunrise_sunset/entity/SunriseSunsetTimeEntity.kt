@@ -5,17 +5,18 @@ import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity
 import io.micronaut.data.annotation.Relation
 import io.micronaut.serde.annotation.Serdeable
+import kotlin.math.min
 
 @Serdeable
 @MappedEntity("sunrise_sunset_times")
 data class SunriseSunsetTimeEntity(
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 
-    var ymd: String? = null,
+    var ymd: String,
 
-    var json: String? = null,
+    var json: String,
 
     @Relation(value = Relation.Kind.MANY_TO_ONE)
     var location: LocationConfigEntity? = null,
@@ -40,7 +41,7 @@ data class SunriseSunsetTimeEntity(
     }
 
     override fun toString(): String {
-        return "SunriseSunsetTimeEntity(ymd='$ymd', json=${json?.substring(0, 15)}, location=${location?.id}, id=$id)"
+        return "SunriseSunsetTimeEntity(ymd='$ymd', json=${json.substring(0, min(json.length, 15))}, location=${location?.id}, id=$id)"
     }
 
 }

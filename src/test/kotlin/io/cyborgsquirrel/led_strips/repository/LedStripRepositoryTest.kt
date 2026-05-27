@@ -120,7 +120,7 @@ class LedStripRepositoryTest(
             name shouldBe ledStripEntity.name
             blendMode shouldBe BlendMode.Average
             client!!.id shouldBe clientEntity!!.id
-            client!!.name shouldBe clientEntity!!.name
+            client!!.name shouldBe clientEntity.name
             members.size shouldBe 1
             members.first().apply {
                 id shouldBe savedPoolMembers.first().id

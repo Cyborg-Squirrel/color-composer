@@ -52,40 +52,40 @@ class CreateLightingService(
 
         if (stripEntity != null) {
             // Query to do JOIN of strip and client tables
-            val joinedStripEntity = stripRepository.findByUuid(stripEntity.uuid!!).get()
+            val joinedStripEntity = stripRepository.findByUuid(stripEntity.uuid).get()
             return SingleLedStripModel(
-                stripEntity.name!!,
-                stripEntity.uuid!!,
-                stripEntity.pin!!,
-                stripEntity.length!!,
+                stripEntity.name,
+                stripEntity.uuid,
+                stripEntity.pin,
+                stripEntity.length,
                 stripEntity.height,
-                stripEntity.blendMode!!,
-                stripEntity.brightness!!,
+                stripEntity.blendMode,
+                stripEntity.brightness,
                 joinedStripEntity.client!!.uuid,
                 false
             )
         } else if (poolEntity != null) {
             // Query to do JOIN (effect entity JOIN doesn't capture led strips if it points to a pool)
             val stripMemberEntities = poolMemberLedStripRepository.findByPool(poolEntity)
-            val memberStripEntities = stripMemberEntities.map { stripRepository.findByUuid(it.strip!!.uuid!!).get() }
+            val memberStripEntities = stripMemberEntities.map { stripRepository.findByUuid(it.strip!!.uuid).get() }
             stripMemberEntities.forEach { sm ->
                 sm.strip = memberStripEntities.first { it.id == sm.strip?.id }
             }
             val stripModels = stripMemberEntities.map {
                 SingleLedStripModel(
-                    it.strip!!.name!!,
-                    it.strip!!.uuid!!,
-                    it.strip!!.pin!!,
-                    it.strip!!.length!!,
+                    it.strip!!.name,
+                    it.strip!!.uuid,
+                    it.strip!!.pin,
+                    it.strip!!.length,
                     it.strip!!.height,
-                    it.strip!!.blendMode!!,
-                    it.strip!!.brightness!!,
+                    it.strip!!.blendMode,
+                    it.strip!!.brightness,
                     it.strip!!.client!!.uuid,
-                    it.inverted!!
+                    it.inverted
                 )
             }
             return LedStripPoolModel(
-                poolEntity.name!!, poolEntity.uuid!!, poolEntity.blendMode!!, poolEntity.poolType!!, stripModels
+                poolEntity.name, poolEntity.uuid, poolEntity.blendMode, poolEntity.poolType, stripModels
             )
         }
 
@@ -235,10 +235,9 @@ class CreateLightingService(
                             settings = objectMapper.readValueFromTree(
                                 JsonNode.from(
                                     trigger.settings
-                                        ?: throw SerializationException("Got null deserializing EffectIterationTriggerSettings")
                                 ), EffectIterationTriggerSettings::class.java
                             ) ?: throw SerializationException("Got null deserializing EffectIterationTriggerSettings"),
-                            uuid = trigger.uuid!!,
+                            uuid = trigger.uuid,
                             effectUuid = effectEntity.uuid,
                         )
                     }
@@ -249,10 +248,9 @@ class CreateLightingService(
                             settings = objectMapper.readValueFromTree(
                                 JsonNode.from(
                                     trigger.settings
-                                        ?: throw SerializationException("Got null deserializing TimeTriggerSettings")
                                 ), TimeTriggerSettings::class.java
                             ) ?: throw SerializationException("Got null deserializing TimeTriggerSettings"),
-                            uuid = trigger.uuid!!,
+                            uuid = trigger.uuid,
                             effectUuid = effectEntity.uuid,
                         )
                     }
@@ -267,10 +265,9 @@ class CreateLightingService(
                             settings = objectMapper.readValueFromTree(
                                 JsonNode.from(
                                     trigger.settings
-                                        ?: throw SerializationException("Got null deserializing TimeOfDayTriggerSettings")
                                 ), TimeOfDayTriggerSettings::class.java
                             ) ?: throw SerializationException("Got null deserializing TimeOfDayTriggerSettings"),
-                            uuid = trigger.uuid!!,
+                            uuid = trigger.uuid,
                             effectUuid = effectEntity.uuid
                         )
                     }
@@ -289,7 +286,7 @@ class CreateLightingService(
             val junctionEntities = junctionRepository.findByEffect(effectEntity)
             val filterEntities = junctionEntities.map { it.filter!! }
             filterEntities.map { filter ->
-                createEffectFilter(filter.type!!, filter.uuid!!, filter.settings!!)
+                createEffectFilter(filter.type, filter.uuid, filter.settings)
             }
         }
     }

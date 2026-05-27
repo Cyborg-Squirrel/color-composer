@@ -29,7 +29,7 @@ import java.util.*
 
 @MicronautTest
 class LedClientSetupControllerTest(
-    @Client private val apiClient: LedClientApi,
+    @param:Client private val apiClient: LedClientApi,
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val clientStatusService: ClientStatusService

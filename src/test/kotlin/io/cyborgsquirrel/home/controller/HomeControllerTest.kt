@@ -28,7 +28,7 @@ import java.util.*
 
 @MicronautTest
 class HomeControllerTest(
-    @Client private val apiClient: HomeApi,
+    @param:Client private val apiClient: HomeApi,
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val effectRepository: LightEffectRepository,
@@ -97,7 +97,7 @@ class HomeControllerTest(
             GetStripEffectResponse(
                 uuid = playingEffect.uuid,
                 status = LightEffectStatus.Playing,
-                stripUuid = strip.uuid!!,
+                stripUuid = strip.uuid,
                 name = playingEffect.name,
                 type = playingEffect.effectSettings!!.type,
                 paletteUuid = null,

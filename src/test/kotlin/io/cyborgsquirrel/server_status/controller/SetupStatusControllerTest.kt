@@ -20,7 +20,7 @@ import io.micronaut.test.extensions.kotest5.annotation.MicronautTest
 
 @MicronautTest
 class SetupStatusControllerTest(
-    @Client private val apiClient: ServerStatusApi,
+    @param:Client private val apiClient: ServerStatusApi,
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val effectRepository: LightEffectRepository,

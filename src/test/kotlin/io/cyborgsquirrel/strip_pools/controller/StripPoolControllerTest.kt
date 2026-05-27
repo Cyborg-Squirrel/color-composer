@@ -20,7 +20,7 @@ import java.util.*
 
 @MicronautTest
 class StripPoolControllerTest(
-    @Client private val apiClient: StripPoolApi,
+    @param:Client private val apiClient: StripPoolApi,
     private val poolRepository: LedStripPoolRepository,
     private val poolMemberRepository: PoolMemberLedStripRepository
 ) : StringSpec({

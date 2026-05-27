@@ -8,19 +8,19 @@ import io.micronaut.serde.annotation.Serdeable
 @Serdeable
 @MappedEntity("light_effect_triggers")
 data class LightEffectTriggerEntity(
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 
     @Relation(value = Relation.Kind.MANY_TO_ONE)
     var effect: LightEffectEntity? = null,
 
-    var uuid: String? = null,
+    var uuid: String,
 
-    @TypeDef(type = DataType.JSON)
-    var settings: Map<String, Any>?,
+    @param:TypeDef(type = DataType.JSON)
+    var settings: Map<String, Any>,
 
-    var type: String? = null,
+    var type: String,
 
-    var name: String? = null,
+    var name: String,
 )

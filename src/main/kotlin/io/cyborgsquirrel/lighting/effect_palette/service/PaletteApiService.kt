@@ -34,10 +34,10 @@ class PaletteApiService(
         if (paletteEntityOptional.isPresent) {
             val paletteEntity = paletteEntityOptional.get()
             return GetPaletteResponse(
-                paletteEntity.name!!,
-                paletteEntity.uuid!!,
-                paletteEntity.type!!,
-                paletteEntity.settings!!
+                paletteEntity.name,
+                paletteEntity.uuid,
+                paletteEntity.type,
+                paletteEntity.settings
             )
         } else {
             throw ClientRequestException("Palette with uuid $uuid doesn't exist!")
@@ -47,7 +47,7 @@ class PaletteApiService(
     fun getAllPalettes(): GetAllPalettesResponse {
         val paletteEntities = paletteRepository.queryAll()
         val responsePaletteList = paletteEntities.map {
-            GetPaletteResponse(it.name!!, it.uuid!!, it.type!!, it.settings!!)
+            GetPaletteResponse(it.name, it.uuid, it.type, it.settings)
         }
 
         return GetAllPalettesResponse(responsePaletteList)
@@ -64,8 +64,8 @@ class PaletteApiService(
             )
 
             paletteEntity = paletteRepository.save(paletteEntity)
-            sseEventEmitter.emit(PaletteEvent.PaletteCreated(paletteEntity.uuid!!))
-            return paletteEntity.uuid!!
+            sseEventEmitter.emit(PaletteEvent.PaletteCreated(paletteEntity.uuid))
+            return paletteEntity.uuid
         } else {
             throw ClientRequestException("Palette settings are invalid")
         }
@@ -76,7 +76,7 @@ class PaletteApiService(
         if (paletteEntityOptional.isPresent) {
             var paletteEntity = paletteEntityOptional.get()
             if (request.settings != null) {
-                val paletteSettingsValid = validatePalette(request.settings, paletteEntity.type!!)
+                val paletteSettingsValid = validatePalette(request.settings, paletteEntity.type)
                 if (paletteSettingsValid) {
                     paletteEntity = paletteEntity.copy(settings = request.settings)
                 } else {
@@ -96,9 +96,9 @@ class PaletteApiService(
                 if (activeEffect != null) {
                     val strip = lightingService.ledStripFromEffectEntity(effectEntity)
                     val palette = lightingService.createPalette(
-                        paletteEntity.settings!!,
-                        paletteEntity.type!!,
-                        paletteEntity.uuid!!,
+                        paletteEntity.settings,
+                        paletteEntity.type,
+                        paletteEntity.uuid,
                         strip.length()
                     )
                     activeEffect.effect.updatePalette(palette)

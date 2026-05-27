@@ -6,17 +6,17 @@ import io.micronaut.serde.annotation.Serdeable
 @Serdeable
 @MappedEntity("location_configs")
 data class LocationConfigEntity (
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 
     @MappedProperty("lat")
-    var latitude: String? = null,
+    var latitude: String,
 
     @MappedProperty("lng")
-    var longitude: String? = null,
+    var longitude: String,
 
-    var active: Boolean? = null,
+    var active: Boolean,
 
     @Relation(value = Relation.Kind.ONE_TO_MANY, mappedBy = "location")
     var sunriseSunsetTimes: Set<SunriseSunsetTimeEntity> = setOf(),

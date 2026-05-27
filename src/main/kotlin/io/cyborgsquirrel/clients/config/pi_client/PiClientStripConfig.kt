@@ -10,6 +10,6 @@ data class PiClientStripConfig(
     val pin: String,
     val leds: Int,
     val brightness: Int,
-    @JsonProperty("color_order")
+    @param:JsonProperty("color_order")
     val colorOrder: ColorOrder
 )

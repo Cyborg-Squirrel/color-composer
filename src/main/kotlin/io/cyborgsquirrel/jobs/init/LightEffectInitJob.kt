@@ -40,9 +40,9 @@ class LightEffectInitJob(
                 for (effectEntity in effectEntities) {
                     val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
                     val palette = if (effectEntity.palette != null) createLightingService.createPalette(
-                        effectEntity.palette!!.settings!!,
-                        effectEntity.palette!!.type!!,
-                        effectEntity.palette!!.uuid!!,
+                        effectEntity.palette!!.settings,
+                        effectEntity.palette!!.type,
+                        effectEntity.palette!!.uuid,
                         strip.length()
                     ) else null
                     val effectSettings = effectEntity.effectSettings
@@ -59,7 +59,7 @@ class LightEffectInitJob(
                             // TODO add priority and skipFramesIfBlank to persistence layer
                             priority = 0,
                             skipFramesIfBlank = true,
-                            status = effectEntity.status!!,
+                            status = effectEntity.status,
                             strip = strip,
                             effect = lightEffect,
                             filters = filters,

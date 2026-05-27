@@ -60,7 +60,7 @@ dependencies {
     testImplementation("io.mockk:mockk")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
     // https://dev.to/sineaggi/fix-dynamic-agent-loading-warning-in-gradle-5748
-    testAgent("net.bytebuddy:byte-buddy-agent:1.15.10")
+    testAgent("net.bytebuddy:byte-buddy-agent:1.18.8")
 }
 
 // Add Java agent

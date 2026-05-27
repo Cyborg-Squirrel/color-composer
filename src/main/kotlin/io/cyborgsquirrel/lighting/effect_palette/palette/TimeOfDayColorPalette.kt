@@ -79,15 +79,14 @@ class TimeOfDayColorPalette(
             if (sunriseSunsetTimes.isNotEmpty()) {
                 val now = timeHelper.now()
                 val latestSunriseSunsetTime = sunriseSunsetTimes.last()
-                val latestSunriseSunsetTimeDate = localDateFromYmd(latestSunriseSunsetTime.ymd!!)
+                val latestSunriseSunsetTimeDate = localDateFromYmd(latestSunriseSunsetTime.ymd)
 
                 // Use the sunrise/sunset entity if it's less than 30 days old
                 if (now.toLocalDate().minusDays(30).isBefore(latestSunriseSunsetTimeDate)) {
                     val latestSunriseSunsetTimeEntity = sunriseSunsetTimes.last()
                     latestSunriseSunsetModel =
                         objectMapper.readValue(
-                            latestSunriseSunsetTimeEntity.json
-                                ?: throw SerializationException("Got null deserializing SunriseSunsetModel"),
+                            latestSunriseSunsetTimeEntity.json,
                             SunriseSunsetModel::class.java
                         )
                     latestSunriseSunsetDate = latestSunriseSunsetTimeDate

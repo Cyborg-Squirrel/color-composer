@@ -33,7 +33,7 @@ class StripPoolApiService(
         poolEntity: LedStripPoolEntity,
         memberEntities: List<PoolMemberLedStripEntity>
     ): GetStripPoolResponse {
-        val stripEntities = stripRepository.findByUuidIn(memberEntities.map { it.strip!!.uuid!! })
+        val stripEntities = stripRepository.findByUuidIn(memberEntities.map { it.strip!!.uuid })
         val memberResponseModels = mutableListOf<StripPoolMemberResponseModel>()
         var atLeastOnePoolMemberInUse = false
         memberEntities.forEach { me ->
@@ -44,20 +44,20 @@ class StripPoolApiService(
             atLeastOnePoolMemberInUse = atLeastOnePoolMemberInUse || inUse
             memberResponseModels.add(
                 StripPoolMemberResponseModel(
-                    me.uuid!!,
-                    me.strip!!.uuid!!,
-                    me.inverted!!,
-                    me.poolIndex!!,
+                    me.uuid,
+                    me.strip!!.uuid,
+                    me.inverted,
+                    me.poolIndex,
                     inUse
                 )
             )
         }
 
         return GetStripPoolResponse(
-            poolEntity.name!!,
-            poolEntity.uuid!!,
-            poolEntity.poolType!!,
-            poolEntity.blendMode!!,
+            poolEntity.name,
+            poolEntity.uuid,
+            poolEntity.poolType,
+            poolEntity.blendMode,
             memberResponseModels,
             atLeastOnePoolMemberInUse
         )

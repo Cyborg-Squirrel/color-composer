@@ -14,7 +14,7 @@ import jakarta.persistence.Enumerated
 
 @MappedEntity("light_effects")
 data class LightEffectEntity(
-    @Id
+    @param:Id
     @GeneratedValue
     var id: Long = -1,
 
@@ -41,7 +41,7 @@ data class LightEffectEntity(
     var name: String,
 
     @Enumerated(EnumType.STRING)
-    var status: LightEffectStatus?,
+    var status: LightEffectStatus,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
