@@ -285,7 +285,8 @@ class EffectApiService(
                 if (stripEntityOptional.isPresent) {
                     stripAssignmentChanged = true
                     effectEntity = effectEntity.copy(
-                        strip = stripEntityOptional.get()
+                        strip = stripEntityOptional.get(),
+                        pool = null,
                     )
                 } else {
                     throw ClientRequestException("No LED strip with uuid ${updateEffectRequest.stripUuid}")
@@ -295,7 +296,8 @@ class EffectApiService(
                 if (poolEntityOptional.isPresent) {
                     stripAssignmentChanged = true
                     effectEntity = effectEntity.copy(
-                        pool = poolEntityOptional.get()
+                        pool = poolEntityOptional.get(),
+                        strip = null,
                     )
                 } else {
                     throw ClientRequestException("No strip pool found with uuid ${updateEffectRequest.poolUuid}")

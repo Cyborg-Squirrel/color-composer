@@ -33,6 +33,7 @@ import io.cyborgsquirrel.test_helpers.normalizeNumberTypes
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.annotation.Client
@@ -116,7 +117,8 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settingsUuid shouldBe effectEntity.effectSettings!!.uuid
+        val entitySettings = effectEntity.effectSettings.shouldNotBeNull()
+        effectFromApi.settingsUuid shouldBe entitySettings.uuid
         effectFromApi::class.java shouldBe GetStripEffectResponse::class.java
         (effectFromApi as GetStripEffectResponse).stripUuid shouldBe strip.uuid
         effectFromApi.paletteUuid shouldBe palette.uuid
@@ -194,7 +196,8 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settingsUuid shouldBe effectEntity.effectSettings!!.uuid
+        val entitySettings = effectEntity.effectSettings.shouldNotBeNull()
+        effectFromApi.settingsUuid shouldBe entitySettings.uuid
         effectFromApi::class.java shouldBe GetStripEffectResponse::class.java
         (effectFromApi as GetStripEffectResponse).stripUuid shouldBe effectEntity.strip?.uuid
         effectFromApi.paletteUuid shouldBe palette.uuid
@@ -225,7 +228,9 @@ class EffectControllerTest(
         effectEntity.strip?.uuid shouldBe request.stripUuid
         effectEntity.name shouldBe request.name
         effectEntity.uuid shouldBe effectUuid
-        effectEntity.effectSettings!!.settings.map { normalizeNumberTypes(it.value) } shouldBe request.settings!!.map {
+        val entitySettings = effectEntity.effectSettings.shouldNotBeNull()
+        val expectedSettings = request.settings.shouldNotBeNull()
+        entitySettings.settings.map { normalizeNumberTypes(it.value) } shouldBe expectedSettings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -318,7 +323,8 @@ class EffectControllerTest(
         effectEntities.first().strip?.uuid shouldBe strip.uuid
         effectEntities.first().name shouldBe updateRequest.name
         effectEntities.first().uuid shouldBe effectEntity.uuid
-        effectEntities.first().effectSettings!!.settings.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
+        val updatedEntitySettings = effectEntities.first().effectSettings.shouldNotBeNull()
+        updatedEntitySettings.settings.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -760,7 +766,8 @@ class EffectControllerTest(
         updatedEffect.uuid shouldBe poolEffect.uuid
         updatedEffect.pool?.uuid shouldBe pool.uuid
         updatedEffect.strip shouldBe null
-        updatedEffect.effectSettings!!.settings.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
+        val updatedPoolEffectSettings = updatedEffect.effectSettings.shouldNotBeNull()
+        updatedPoolEffectSettings.settings.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
             normalizeNumberTypes(
                 it.value
             )
