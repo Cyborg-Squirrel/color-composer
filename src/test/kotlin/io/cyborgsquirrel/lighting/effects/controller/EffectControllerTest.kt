@@ -116,7 +116,7 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settingsUuid shouldBe effectEntity.effectSettings?.uuid
+        effectFromApi.settingsUuid shouldBe effectEntity.effectSettings!!.uuid
         effectFromApi::class.java shouldBe GetStripEffectResponse::class.java
         (effectFromApi as GetStripEffectResponse).stripUuid shouldBe strip.uuid
         effectFromApi.paletteUuid shouldBe palette.uuid
@@ -194,7 +194,7 @@ class EffectControllerTest(
         effectFromApi.name shouldBe effectEntity.name
         effectFromApi.uuid shouldBe effectEntity.uuid
         effectFromApi.status shouldBe effectEntity.status
-        effectFromApi.settingsUuid shouldBe effectEntity.effectSettings?.uuid
+        effectFromApi.settingsUuid shouldBe effectEntity.effectSettings!!.uuid
         effectFromApi::class.java shouldBe GetStripEffectResponse::class.java
         (effectFromApi as GetStripEffectResponse).stripUuid shouldBe effectEntity.strip?.uuid
         effectFromApi.paletteUuid shouldBe palette.uuid
@@ -225,7 +225,7 @@ class EffectControllerTest(
         effectEntity.strip?.uuid shouldBe request.stripUuid
         effectEntity.name shouldBe request.name
         effectEntity.uuid shouldBe effectUuid
-        (effectEntity.effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) } shouldBe request.settings!!.map {
+        effectEntity.effectSettings!!.settings.map { normalizeNumberTypes(it.value) } shouldBe request.settings!!.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -318,7 +318,7 @@ class EffectControllerTest(
         effectEntities.first().strip?.uuid shouldBe strip.uuid
         effectEntities.first().name shouldBe updateRequest.name
         effectEntities.first().uuid shouldBe effectEntity.uuid
-        (effectEntities.first().effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
+        effectEntities.first().effectSettings!!.settings.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
             normalizeNumberTypes(
                 it.value
             )
@@ -760,7 +760,7 @@ class EffectControllerTest(
         updatedEffect.uuid shouldBe poolEffect.uuid
         updatedEffect.pool?.uuid shouldBe pool.uuid
         updatedEffect.strip shouldBe null
-        (updatedEffect.effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
+        updatedEffect.effectSettings!!.settings.map { normalizeNumberTypes(it.value) } shouldBe updatedNrSettings.map {
             normalizeNumberTypes(
                 it.value
             )

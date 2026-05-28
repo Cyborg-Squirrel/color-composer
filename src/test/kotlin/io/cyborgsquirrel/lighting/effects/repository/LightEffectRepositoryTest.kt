@@ -50,8 +50,8 @@ class LightEffectRepositoryTest(
         newEntity.pool?.id shouldBe expectedEntity.pool?.id
         newEntity.uuid shouldBe expectedEntity.uuid
         newEntity.name shouldBe expectedEntity.name
-        (newEntity.effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) } shouldBe
-            (expectedEntity.effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) }
+        newEntity.effectSettings!!.settings.map { normalizeNumberTypes(it.value) } shouldBe
+            expectedEntity.effectSettings!!.settings.map { normalizeNumberTypes(it.value) }
     }
 
     afterTest {
@@ -233,7 +233,7 @@ class LightEffectRepositoryTest(
 
         val fetched = lightEffectRepository.queryAll().single()
         fetched.layer shouldBe 7
-        fetched.effectSettings?.skipFramesIfBlank shouldBe false
+        fetched.effectSettings!!.skipFramesIfBlank shouldBe false
     }
 
     "Duplicate layer on the same strip is rejected by the unique constraint" {

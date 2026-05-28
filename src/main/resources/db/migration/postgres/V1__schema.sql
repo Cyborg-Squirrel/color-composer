@@ -87,14 +87,15 @@ CREATE TABLE light_effects
     strip_id           INT,
     pool_id            INT,
     palette_id         INT,
-    effect_settings_id INT,
+    effect_settings_id INT NOT NULL,
     uuid               VARCHAR(50) NOT NULL UNIQUE,
     name               VARCHAR(255) NOT NULL,
     status             VARCHAR(50) NOT NULL,
     FOREIGN KEY (pool_id) REFERENCES led_strip_pools,
     FOREIGN KEY (strip_id) REFERENCES led_strips,
     FOREIGN KEY (palette_id) REFERENCES light_effect_palettes,
-    FOREIGN KEY (effect_settings_id) REFERENCES light_effect_settings
+    FOREIGN KEY (effect_settings_id) REFERENCES light_effect_settings,
+    CONSTRAINT light_effects_strip_or_pool_or_none CHECK (strip_id IS NULL OR pool_id IS NULL)
 );
 
 CREATE TABLE light_effect_triggers
