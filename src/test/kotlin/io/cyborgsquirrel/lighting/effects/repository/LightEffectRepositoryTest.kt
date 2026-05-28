@@ -23,6 +23,7 @@ import io.cyborgsquirrel.test_helpers.normalizeNumberTypes
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.micronaut.data.exceptions.DataAccessException
 import io.micronaut.serde.ObjectMapper
@@ -50,8 +51,10 @@ class LightEffectRepositoryTest(
         newEntity.pool?.id shouldBe expectedEntity.pool?.id
         newEntity.uuid shouldBe expectedEntity.uuid
         newEntity.name shouldBe expectedEntity.name
-        (newEntity.effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) } shouldBe
-            (expectedEntity.effectSettings?.settings ?: emptyMap()).map { normalizeNumberTypes(it.value) }
+        val actualSettings = newEntity.effectSettings.shouldNotBeNull()
+        val expectedSettings = expectedEntity.effectSettings.shouldNotBeNull()
+        actualSettings.settings.map { normalizeNumberTypes(it.value) } shouldBe
+            expectedSettings.settings.map { normalizeNumberTypes(it.value) }
     }
 
     afterTest {
@@ -233,7 +236,8 @@ class LightEffectRepositoryTest(
 
         val fetched = lightEffectRepository.queryAll().single()
         fetched.layer shouldBe 7
-        fetched.effectSettings?.skipFramesIfBlank shouldBe false
+        val fetchedSettings = fetched.effectSettings.shouldNotBeNull()
+        fetchedSettings.skipFramesIfBlank shouldBe false
     }
 
     "Duplicate layer on the same strip is rejected by the unique constraint" {
