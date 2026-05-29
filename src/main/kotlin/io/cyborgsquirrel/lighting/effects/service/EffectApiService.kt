@@ -470,7 +470,7 @@ open class EffectApiService(
             effectEntity.copy(strip = newStrip, pool = newPool, layer = targetLayer)
         )
         val changedEffects = shiftLayersDown(strip = oldStrip, pool = oldPool, lowerBound = oldLayer, upperBound = null)
-        changedEffects.distinctBy { it.uuid }.forEach {
+        changedEffects.forEach {
             sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(it.uuid, EffectDelta(layer = it.layer)))
         }
 
