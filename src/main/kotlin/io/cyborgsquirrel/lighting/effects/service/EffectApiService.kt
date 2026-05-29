@@ -7,11 +7,13 @@ import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
+import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effect_palette.repository.LightEffectPaletteRepository
 import io.cyborgsquirrel.lighting.effect_settings.entity.LightEffectSettingsEntity
 import io.cyborgsquirrel.lighting.effect_settings.repository.LightEffectSettingsRepository
 import io.cyborgsquirrel.lighting.effect_trigger.repository.LightEffectTriggerRepository
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
+import io.cyborgsquirrel.lighting.effects.LightEffect
 import io.cyborgsquirrel.lighting.effects.LightEffectConstants
 import io.cyborgsquirrel.lighting.effects.LightEffectType
 import io.cyborgsquirrel.lighting.effects.entity.LightEffectEntity
@@ -19,6 +21,7 @@ import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectSettingsRequest
 import io.cyborgsquirrel.lighting.effects.requests.LightEffectStatusCommand
+import io.cyborgsquirrel.lighting.effects.requests.ReassignEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectSettingsRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
@@ -43,14 +46,16 @@ import io.cyborgsquirrel.lighting.enums.EffectCategory
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.repository.LightEffectFilterRepository
+import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
+import jakarta.transaction.Transactional
 import java.util.*
 
 @Singleton
-class EffectApiService(
+open class EffectApiService(
     private val stripRepository: LedStripRepository,
     private val poolRepository: LedStripPoolRepository,
     private val effectRepository: LightEffectRepository,
@@ -64,7 +69,8 @@ class EffectApiService(
     private val objectMapper: ObjectMapper,
 ) {
 
-    fun createEffect(request: CreateEffectRequest): String {
+    @Transactional
+    open fun createEffect(request: CreateEffectRequest): String {
         val stripUuid = request.stripUuid
         val poolUuid = request.poolUuid
 
@@ -88,47 +94,51 @@ class EffectApiService(
 
         val effectEntity = when {
             stripUuid != null -> {
-                val stripEntityOptional = stripRepository.findByUuid(stripUuid)
-                if (stripEntityOptional.isPresent) {
-                    val stripEntity = stripEntityOptional.get()
-                    val layer = request.layer ?: nextAvailableLayer(stripEntity = stripEntity, poolEntity = null, excludeUuid = null)
-                    validateLayerAvailable(stripEntity = stripEntity, poolEntity = null, layer = layer, excludeUuid = null)
-                    effectRepository.save(
-                        LightEffectEntity(
-                            strip = stripEntity,
-                            uuid = UUID.randomUUID().toString(),
-                            name = request.name,
-                            status = LightEffectStatus.Inactive,
-                            effectSettings = settingsEntity,
-                            palette = paletteEntity,
-                            layer = layer,
-                        )
-                    )
-                } else {
-                    throw ClientRequestException("No strip found with uuid ${request.stripUuid}!")
+                val stripEntity = stripRepository.findByUuid(stripUuid)
+                    .orElseThrow { ClientRequestException("No strip found with uuid $stripUuid!") }
+                val count = effectRepository.findByStrip(stripEntity).size
+                val targetLayer = request.layer ?: count
+                validateLayerForInsert(targetLayer, count, "strip ${stripEntity.uuid}")
+                if (targetLayer < count) {
+                    shiftLayersUp(strip = stripEntity, pool = null, fromLayer = targetLayer)
                 }
+                val saved = effectRepository.save(
+                    LightEffectEntity(
+                        strip = stripEntity,
+                        uuid = UUID.randomUUID().toString(),
+                        name = request.name,
+                        status = LightEffectStatus.Inactive,
+                        effectSettings = settingsEntity,
+                        palette = paletteEntity,
+                        layer = targetLayer,
+                    )
+                )
+                refreshRegistryLayers(strip = stripEntity, pool = null)
+                saved
             }
 
             poolUuid != null -> {
-                val poolEntityOptional = poolRepository.findByUuid(poolUuid)
-                if (poolEntityOptional.isPresent) {
-                    val poolEntity = poolEntityOptional.get()
-                    val layer = request.layer ?: nextAvailableLayer(stripEntity = null, poolEntity = poolEntity, excludeUuid = null)
-                    validateLayerAvailable(stripEntity = null, poolEntity = poolEntity, layer = layer, excludeUuid = null)
-                    effectRepository.save(
-                        LightEffectEntity(
-                            pool = poolEntity,
-                            uuid = UUID.randomUUID().toString(),
-                            name = request.name,
-                            status = LightEffectStatus.Inactive,
-                            palette = paletteEntity,
-                            effectSettings = settingsEntity,
-                            layer = layer,
-                        )
-                    )
-                } else {
-                    throw ClientRequestException("No pool found with uuid ${request.stripUuid}!")
+                val poolEntity = poolRepository.findByUuid(poolUuid)
+                    .orElseThrow { ClientRequestException("No pool found with uuid $poolUuid!") }
+                val count = effectRepository.findByPool(poolEntity).size
+                val targetLayer = request.layer ?: count
+                validateLayerForInsert(targetLayer, count, "pool ${poolEntity.uuid}")
+                if (targetLayer < count) {
+                    shiftLayersUp(strip = null, pool = poolEntity, fromLayer = targetLayer)
                 }
+                val saved = effectRepository.save(
+                    LightEffectEntity(
+                        pool = poolEntity,
+                        uuid = UUID.randomUUID().toString(),
+                        name = request.name,
+                        status = LightEffectStatus.Inactive,
+                        palette = paletteEntity,
+                        effectSettings = settingsEntity,
+                        layer = targetLayer,
+                    )
+                )
+                refreshRegistryLayers(strip = null, pool = poolEntity)
+                saved
             }
 
             else -> {
@@ -239,10 +249,14 @@ class EffectApiService(
 
     }
 
-    fun deleteEffect(effectUuid: String) {
+    @Transactional
+    open fun deleteEffect(effectUuid: String) {
         val effectEntityOptional = effectRepository.findByUuid(effectUuid)
         if (effectEntityOptional.isPresent) {
             val effectEntity = effectEntityOptional.get()
+            val owningStrip = effectEntity.strip
+            val owningPool = effectEntity.pool
+            val deletedLayer = effectEntity.layer
             val filterIds = effectEntity.filterJunctions.map { it.filter!!.id }
             val filterEntities = filterRepository.findByIdIn(filterIds)
             val triggerEntities = triggerRepository.findByEffect(effectEntity)
@@ -251,143 +265,234 @@ class EffectApiService(
             triggerEntities.forEach { triggerRepository.delete(it) }
             effectRepository.delete(effectEntity)
 
+            shiftLayersDown(strip = owningStrip, pool = owningPool, fromLayer = deletedLayer)
+
             val activeEffect = effectRegistry.getEffectWithUuid(effectUuid)
             if (activeEffect != null) {
                 effectRegistry.removeEffect(activeEffect)
             }
+            refreshRegistryLayers(strip = owningStrip, pool = owningPool)
             sseEventEmitter.emit(LightEffectEvent.LightEffectDeleted(effectUuid))
         } else {
             throw ResourceNotFoundException("Effect with uuid $effectUuid doesn't exist!")
         }
     }
 
-    fun updateEffect(uuid: String, updateEffectRequest: UpdateEffectRequest) {
+    @Transactional
+    open fun updateEffect(uuid: String, updateEffectRequest: UpdateEffectRequest) {
         val effectEntityOptional = effectRepository.findByUuid(uuid)
-        if (effectEntityOptional.isPresent) {
-            var effectEntity = effectEntityOptional.get()
-            val settingsEntity = getSettings(effectEntity)
-            if (!updateEffectRequest.name.isNullOrBlank()) {
-                effectEntity = effectEntity.copy(
-                    name = updateEffectRequest.name
-                )
-            }
-
-            val stripUuid = updateEffectRequest.stripUuid
-            val poolUuid = updateEffectRequest.poolUuid
-
-            if (stripUuid != null && poolUuid != null) {
-                throw ClientRequestException("Cannot assign effect to both a strip and a strip pool. Specify either 'stripUuid' or 'poolUuid'.")
-            }
-
-            var stripAssignmentChanged: Boolean
-            if (stripUuid != null && updateEffectRequest.stripUuid != effectEntity.strip?.uuid) {
-                val stripEntityOptional = stripRepository.findByUuid(updateEffectRequest.stripUuid)
-                if (stripEntityOptional.isPresent) {
-                    stripAssignmentChanged = true
-                    effectEntity = effectEntity.copy(
-                        strip = stripEntityOptional.get(),
-                        pool = null,
-                    )
-                } else {
-                    throw ClientRequestException("No LED strip with uuid ${updateEffectRequest.stripUuid}")
-                }
-            } else if (poolUuid != null && updateEffectRequest.poolUuid != effectEntity.pool?.uuid) {
-                val poolEntityOptional = poolRepository.findByUuid(updateEffectRequest.poolUuid)
-                if (poolEntityOptional.isPresent) {
-                    stripAssignmentChanged = true
-                    effectEntity = effectEntity.copy(
-                        pool = poolEntityOptional.get(),
-                        strip = null,
-                    )
-                } else {
-                    throw ClientRequestException("No strip pool found with uuid ${updateEffectRequest.poolUuid}")
-                }
-            } else if (stripUuid == null && poolUuid == null) {
-                // Both null: explicitly unassign from strip and pool.
-                stripAssignmentChanged = effectEntity.pool != null || effectEntity.strip != null
-                effectEntity = effectEntity.copy(strip = null, pool = null)
-            } else {
-                // stripUuid/poolUuid matches current assignment — no change.
-                stripAssignmentChanged = false
-            }
-
-            if (updateEffectRequest.paletteUuid != null && updateEffectRequest.paletteUuid != effectEntity.palette?.uuid) {
-                val paletteEntityOptional = paletteRepository.findByUuid(updateEffectRequest.paletteUuid)
-                if (paletteEntityOptional.isPresent) {
-                    effectEntity = effectEntity.copy(
-                        palette = paletteEntityOptional.get()
-                    )
-                } else {
-                    throw ClientRequestException("No palette with uuid ${updateEffectRequest.paletteUuid}")
-                }
-            }
-
-            if (updateEffectRequest.settingsUuid != null && updateEffectRequest.settingsUuid != settingsEntity.uuid) {
-                val settingsOptional = settingsRepository.findByUuid(updateEffectRequest.settingsUuid)
-                if (settingsOptional.isPresent) {
-                    effectEntity = effectEntity.copy(effectSettings = settingsOptional.get())
-                } else {
-                    throw ClientRequestException("No effect settings with uuid ${updateEffectRequest.settingsUuid}")
-                }
-            }
-
-            val targetLayer = updateEffectRequest.layer ?: nextAvailableLayer(
-                stripEntity = effectEntity.strip,
-                poolEntity = effectEntity.pool,
-                excludeUuid = effectEntity.uuid,
-            )
-            if (targetLayer != effectEntity.layer) {
-                effectEntity = effectEntity.copy(layer = targetLayer)
-            }
-
-            validateLayerAvailable(
-                stripEntity = effectEntity.strip,
-                poolEntity = effectEntity.pool,
-                layer = effectEntity.layer,
-                excludeUuid = effectEntity.uuid,
-            )
-
-            effectEntity = effectRepository.update(effectEntity)
-
-            var effectModel = effectRegistry.getEffectWithUuid(uuid)
-            if (effectModel != null) {
-                val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
-                val palette = if (effectEntity.palette != null) createLightingService.createPalette(
-                    effectEntity.palette!!.settings,
-                    effectEntity.palette!!.type,
-                    effectEntity.palette!!.uuid,
-                    strip.length()
-                ) else null
-                val runtimeSettings = effectEntity.effectSettings?.settings ?: emptyMap()
-                val runtimeType = effectEntity.effectSettings?.type ?: ""
-                val lightEffect = createLightingService.createEffect(
-                    runtimeSettings, runtimeType, palette, strip.length()
-                )
-
-                val onlyPaletteChange =
-                    stripAssignmentChanged && updateEffectRequest.paletteUuid != null && updateEffectRequest.name == null && updateEffectRequest.settingsUuid == null
-                if (onlyPaletteChange && palette != null) {
-                    // If the palette is the only update, don't create a new ActiveEffect with copy()
-                    // This retains the state of the effect and just swaps the palette.
-                    effectModel.effect.updatePalette(palette)
-                } else {
-                    val updatedSettings = effectEntity.effectSettings
-                    effectModel = effectModel.copy(
-                        effectUuid = effectEntity.uuid,
-                        layer = effectEntity.layer,
-                        skipFramesIfBlank = updatedSettings?.skipFramesIfBlank ?: effectModel.skipFramesIfBlank,
-                        status = effectEntity.status,
-                        strip = strip,
-                        effect = lightEffect,
-                    )
-
-                    effectRegistry.addOrUpdateEffect(effectModel)
-                }
-            }
-            sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(uuid))
-        } else {
+        if (effectEntityOptional.isEmpty) {
             throw ResourceNotFoundException("Effect with uuid $uuid doesn't exist!")
         }
+        var effectEntity = effectEntityOptional.get()
+        val settingsEntity = getSettings(effectEntity)
+
+        val requestIsEmpty = updateEffectRequest.name == null
+                && updateEffectRequest.paletteUuid == null
+                && updateEffectRequest.settingsUuid == null
+                && updateEffectRequest.layer == null
+                && !updateEffectRequest.unassignPalette
+        if (requestIsEmpty) {
+            throw ClientRequestException("Update request is empty; specify at least one field to change.")
+        }
+
+        if (updateEffectRequest.unassignPalette
+            && updateEffectRequest.paletteUuid != null
+            && updateEffectRequest.paletteUuid != effectEntity.palette?.uuid
+        ) {
+            throw ClientRequestException("Cannot unassign palette and assign a new palette in the same request.")
+        }
+
+        val owningStrip = effectEntity.strip
+        val owningPool = effectEntity.pool
+        val oldLayer = effectEntity.layer
+
+        if (!updateEffectRequest.name.isNullOrBlank()) {
+            effectEntity = effectEntity.copy(name = updateEffectRequest.name)
+        }
+
+        if (updateEffectRequest.unassignPalette) {
+            effectEntity = effectEntity.copy(palette = null)
+        } else if (updateEffectRequest.paletteUuid != null && updateEffectRequest.paletteUuid != effectEntity.palette?.uuid) {
+            val paletteEntity = paletteRepository.findByUuid(updateEffectRequest.paletteUuid)
+                .orElseThrow { ClientRequestException("No palette with uuid ${updateEffectRequest.paletteUuid}") }
+            effectEntity = effectEntity.copy(palette = paletteEntity)
+        }
+
+        if (updateEffectRequest.settingsUuid != null && updateEffectRequest.settingsUuid != settingsEntity.uuid) {
+            val settings = settingsRepository.findByUuid(updateEffectRequest.settingsUuid)
+                .orElseThrow { ClientRequestException("No effect settings with uuid ${updateEffectRequest.settingsUuid}") }
+            effectEntity = effectEntity.copy(effectSettings = settings)
+        }
+
+        val targetLayer = updateEffectRequest.layer ?: oldLayer
+        val assigned = owningStrip != null || owningPool != null
+        if (updateEffectRequest.layer != null && assigned) {
+            val count = when {
+                owningStrip != null -> effectRepository.findByStrip(owningStrip).size
+                owningPool != null -> effectRepository.findByPool(owningPool).size
+                else -> 0
+            }
+            val maxValid = count - 1
+            if (targetLayer !in 0..maxValid) {
+                val ownerDesc = owningStrip?.let { "strip ${it.uuid}" } ?: "pool ${owningPool!!.uuid}"
+                throw ClientRequestException("Layer $targetLayer is out of range for $ownerDesc. Valid range is [0, $maxValid].")
+            }
+        }
+
+        val needsShift = assigned && targetLayer != oldLayer
+
+        if (needsShift) {
+            // Park at sentinel -1, close the old gap, make room at the new layer, then write the final value.
+            effectEntity = effectRepository.update(effectEntity.copy(layer = -1))
+            shiftLayersDown(strip = owningStrip, pool = owningPool, fromLayer = oldLayer)
+            shiftLayersUp(strip = owningStrip, pool = owningPool, fromLayer = targetLayer)
+        }
+
+        effectEntity = effectRepository.update(effectEntity.copy(layer = targetLayer))
+
+        var effectModel = effectRegistry.getEffectWithUuid(uuid)
+        if (effectModel != null && (owningStrip != null || owningPool != null)) {
+            val (strip, palette, lightEffect) = buildEffectRuntime(effectEntity)
+
+            val onlyPaletteChange = updateEffectRequest.paletteUuid != null
+                    && !updateEffectRequest.unassignPalette
+                    && updateEffectRequest.name == null
+                    && updateEffectRequest.settingsUuid == null
+                    && updateEffectRequest.layer == null
+            if (onlyPaletteChange && palette != null) {
+                // Palette swap only — keep the running effect state, just point it at the new palette.
+                effectModel.effect.updatePalette(palette)
+            } else {
+                val updatedSettings = effectEntity.effectSettings
+                effectModel = effectModel.copy(
+                    effectUuid = effectEntity.uuid,
+                    layer = effectEntity.layer,
+                    skipFramesIfBlank = updatedSettings?.skipFramesIfBlank ?: effectModel.skipFramesIfBlank,
+                    status = effectEntity.status,
+                    strip = strip,
+                    effect = lightEffect,
+                )
+
+                effectRegistry.addOrUpdateEffect(effectModel)
+            }
+        }
+
+        refreshRegistryLayers(strip = owningStrip, pool = owningPool)
+
+        sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(uuid))
+    }
+
+    @Transactional
+    open fun reassignEffect(uuid: String, request: ReassignEffectRequest) {
+        val effectEntityOptional = effectRepository.findByUuid(uuid)
+        if (effectEntityOptional.isEmpty) {
+            throw ResourceNotFoundException("Effect with uuid $uuid doesn't exist!")
+        }
+
+        val requestIsEmpty = !request.unassign && request.targetStripUuid == null && request.targetPoolUuid == null
+        if (requestIsEmpty) {
+            throw ClientRequestException("Reassign request is empty; specify 'targetStripUuid', 'targetPoolUuid', or set 'unassign' to true.")
+        }
+
+        if (request.targetStripUuid != null && request.targetPoolUuid != null) {
+            throw ClientRequestException("Cannot assign effect to both a strip and a strip pool. Specify either 'targetStripUuid' or 'targetPoolUuid'.")
+        }
+
+        var effectEntity = effectEntityOptional.get()
+        val oldStrip = effectEntity.strip
+        val oldPool = effectEntity.pool
+        val oldLayer = effectEntity.layer
+
+        if (request.unassign) {
+            if (request.targetStripUuid != null && request.targetStripUuid != oldStrip?.uuid) {
+                throw ClientRequestException("Cannot unassign and reassign to a different strip in the same request.")
+            }
+            if (request.targetPoolUuid != null && request.targetPoolUuid != oldPool?.uuid) {
+                throw ClientRequestException("Cannot unassign and reassign to a different pool in the same request.")
+            }
+        }
+
+        val newStrip: LedStripEntity?
+        val newPool: LedStripPoolEntity?
+        when {
+            request.unassign -> {
+                newStrip = null
+                newPool = null
+            }
+            request.targetStripUuid != null -> {
+                newStrip = stripRepository.findByUuid(request.targetStripUuid)
+                    .orElseThrow { ClientRequestException("No LED strip with uuid ${request.targetStripUuid}") }
+                newPool = null
+            }
+            request.targetPoolUuid != null -> {
+                newPool = poolRepository.findByUuid(request.targetPoolUuid)
+                    .orElseThrow { ClientRequestException("No strip pool found with uuid ${request.targetPoolUuid}") }
+                newStrip = null
+            }
+            else -> throw ClientRequestException("Reassign request is empty.")
+        }
+
+        val sameOwner = newStrip?.id == oldStrip?.id && newPool?.id == oldPool?.id
+        if (sameOwner) {
+            // Request specified the current owner with no other changes — nothing to do.
+            sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(uuid))
+            return
+        }
+
+        val unassigned = newStrip == null && newPool == null
+        val targetLayer = if (unassigned) {
+            0
+        } else when {
+            newStrip != null -> effectRepository.findByStrip(newStrip).size
+            newPool != null -> effectRepository.findByPool(newPool).size
+            else -> 0
+        }
+
+        // Park at sentinel -1 on the old owner so subsequent shifts don't collide.
+        effectEntity = effectRepository.update(
+            effectEntity.copy(strip = oldStrip, pool = oldPool, layer = -1)
+        )
+        shiftLayersDown(strip = oldStrip, pool = oldPool, fromLayer = oldLayer)
+        shiftLayersUp(strip = newStrip, pool = newPool, fromLayer = targetLayer)
+
+        effectEntity = effectRepository.update(
+            effectEntity.copy(strip = newStrip, pool = newPool, layer = targetLayer)
+        )
+
+        val activeEffect = effectRegistry.getEffectWithUuid(uuid)
+        if (unassigned) {
+            // Unassigned effects cannot be rendered — drop from the registry.
+            if (activeEffect != null) {
+                effectRegistry.removeEffect(activeEffect)
+            }
+        } else {
+            val (strip, _, lightEffect) = buildEffectRuntime(effectEntity)
+
+            val updated = activeEffect?.copy(
+                effectUuid = effectEntity.uuid,
+                layer = effectEntity.layer,
+                skipFramesIfBlank = effectEntity.effectSettings?.skipFramesIfBlank ?: activeEffect.skipFramesIfBlank,
+                status = effectEntity.status,
+                strip = strip,
+                effect = lightEffect,
+            ) ?: ActiveLightEffect(
+                effectUuid = effectEntity.uuid,
+                layer = effectEntity.layer,
+                skipFramesIfBlank = effectEntity.effectSettings?.skipFramesIfBlank ?: true,
+                status = effectEntity.status,
+                strip = strip,
+                effect = lightEffect,
+                filters = listOf(),
+            )
+            effectRegistry.addOrUpdateEffect(updated)
+        }
+
+        if (oldStrip != null && oldStrip.id != newStrip?.id) refreshRegistryLayers(strip = oldStrip, pool = null)
+        if (oldPool != null && oldPool.id != newPool?.id) refreshRegistryLayers(strip = null, pool = oldPool)
+        refreshRegistryLayers(strip = newStrip, pool = newPool)
+
+        sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(uuid))
     }
 
     fun updateEffectStatus(request: UpdateEffectStatusRequest) {
@@ -579,37 +684,71 @@ class EffectApiService(
         }
     }
 
-    private fun nextAvailableLayer(
-        stripEntity: LedStripEntity?,
-        poolEntity: LedStripPoolEntity?,
-        excludeUuid: String?,
-    ): Int {
-        val existing = when {
-            stripEntity != null -> effectRepository.findByStrip(stripEntity)
-            poolEntity != null -> effectRepository.findByPool(poolEntity)
-            else -> return 0
+    private fun validateLayerForInsert(targetLayer: Int, count: Int, ownerDesc: String) {
+        if (targetLayer !in 0..count) {
+            throw ClientRequestException(
+                "Layer $targetLayer is out of range for $ownerDesc. Valid range is [0, $count]."
+            )
         }
-        val maxLayer = existing.filter { it.uuid != excludeUuid }.maxOfOrNull { it.layer }
-        return maxLayer?.plus(1) ?: 0
     }
 
-    private fun validateLayerAvailable(
-        stripEntity: LedStripEntity?,
-        poolEntity: LedStripPoolEntity?,
-        layer: Int,
-        excludeUuid: String?,
-    ) {
-        val conflicts = when {
-            stripEntity != null -> effectRepository.findByStrip(stripEntity)
-            poolEntity != null -> effectRepository.findByPool(poolEntity)
+    /**
+     * Increments the layer of every effect on [strip]/[pool] with layer >= [fromLayer] by 1.
+     * Iterates in descending order of layer so each individual UPDATE writes into a free slot, avoiding
+     * the unique-per-(owner, layer) constraint collisions that a single bulk UPDATE would trigger.
+     */
+    private fun shiftLayersUp(strip: LedStripEntity?, pool: LedStripPoolEntity?, fromLayer: Int) {
+        val effects = when {
+            strip != null -> effectRepository.findByStrip(strip)
+            pool != null -> effectRepository.findByPool(pool)
             else -> return
         }
-        val conflict = conflicts.firstOrNull { it.layer == layer && it.uuid != excludeUuid }
-        if (conflict != null) {
-            val ownerDesc = stripEntity?.let { "strip ${it.uuid}" } ?: "pool ${poolEntity?.uuid}"
-            throw ClientRequestException(
-                "Layer $layer is already used by effect ${conflict.uuid} on $ownerDesc. Layers must be unique per strip/pool."
-            )
+        effects.filter { it.layer >= fromLayer }.sortedByDescending { it.layer }.forEach {
+            effectRepository.update(it.copy(layer = it.layer + 1))
+        }
+    }
+
+    /** Decrements the layer of every effect on [strip]/[pool] with layer > [fromLayer] by 1, in ascending order. */
+    private fun shiftLayersDown(strip: LedStripEntity?, pool: LedStripPoolEntity?, fromLayer: Int) {
+        val effects = when {
+            strip != null -> effectRepository.findByStrip(strip)
+            pool != null -> effectRepository.findByPool(pool)
+            else -> return
+        }
+        effects.filter { it.layer > fromLayer }.sortedBy { it.layer }.forEach {
+            effectRepository.update(it.copy(layer = it.layer - 1))
+        }
+    }
+
+    private data class EffectRuntime(
+        val strip: LedStripModel,
+        val palette: ColorPalette?,
+        val lightEffect: LightEffect,
+    )
+
+    /** Rebuilds the renderable strip/palette/effect trio from a persisted effect entity. */
+    private fun buildEffectRuntime(effectEntity: LightEffectEntity): EffectRuntime {
+        val strip = createLightingService.ledStripFromEffectEntity(effectEntity)
+        val palette = effectEntity.palette?.let {
+            createLightingService.createPalette(it.settings, it.type, it.uuid, strip.length())
+        }
+        val settings = effectEntity.effectSettings?.settings ?: emptyMap()
+        val type = effectEntity.effectSettings?.type ?: ""
+        val lightEffect = createLightingService.createEffect(settings, type, palette, strip.length())
+        return EffectRuntime(strip, palette, lightEffect)
+    }
+
+    private fun refreshRegistryLayers(strip: LedStripEntity?, pool: LedStripPoolEntity?) {
+        val effects = when {
+            strip != null -> effectRepository.findByStrip(strip)
+            pool != null -> effectRepository.findByPool(pool)
+            else -> return
+        }
+        for (effect in effects) {
+            val active = effectRegistry.getEffectWithUuid(effect.uuid)
+            if (active != null && active.layer != effect.layer) {
+                effectRegistry.addOrUpdateEffect(active.copy(layer = effect.layer))
+            }
         }
     }
 

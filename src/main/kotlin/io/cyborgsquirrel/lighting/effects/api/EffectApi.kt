@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.effects.api
 
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectSettingsRequest
+import io.cyborgsquirrel.lighting.effects.requests.ReassignEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectSettingsRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
@@ -22,11 +23,14 @@ interface EffectApi {
     @Post
     fun createEffect(@Body request: CreateEffectRequest): HttpResponse<Any>
 
-    @Patch("/{uuid}")
+    @Patch("/update/{uuid}")
     fun updateEffect(uuid: String, @Body request: UpdateEffectRequest): HttpResponse<Any>
 
-    @Post("/status")
-    fun updateEffectStatuses(@Body request: UpdateEffectStatusRequest) : HttpResponse<Any>
+    @Patch("/reassign/{uuid}")
+    fun reassignEffect(uuid: String, @Body request: ReassignEffectRequest): HttpResponse<Any>
+
+    @Post("/command")
+    fun mediaCommand(@Body request: UpdateEffectStatusRequest) : HttpResponse<Any>
 
     @Delete("/{uuid}")
     fun deleteEffect(uuid: String): HttpResponse<Any>

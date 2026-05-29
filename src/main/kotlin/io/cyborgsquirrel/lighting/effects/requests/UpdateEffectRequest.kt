@@ -4,8 +4,7 @@ import io.micronaut.serde.annotation.Serdeable
 
 @Serdeable
 data class UpdateEffectRequest(
-    val stripUuid: String?,
-    val poolUuid: String?,
+    val unassignPalette: Boolean = false,
     val paletteUuid: String?,
     val settingsUuid: String?,
     val name: String?,
