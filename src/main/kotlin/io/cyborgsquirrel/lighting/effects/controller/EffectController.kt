@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.effects.controller
 import io.cyborgsquirrel.lighting.effects.api.EffectApi
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.CreateEffectSettingsRequest
+import io.cyborgsquirrel.lighting.effects.requests.ReassignEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectSettingsRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
@@ -88,7 +89,23 @@ class EffectController(
         }
     }
 
-    override fun updateEffectStatuses(request: UpdateEffectStatusRequest): HttpResponse<Any> {
+    override fun reassignEffect(
+        uuid: String,
+        request: ReassignEffectRequest
+    ): HttpResponse<Any> {
+        return try {
+            effectApiService.reassignEffect(uuid, request)
+            HttpResponse.noContent()
+        } catch (rnfe: ResourceNotFoundException) {
+            HttpResponse.notFound()
+        } catch (cre: ClientRequestException) {
+            HttpResponse.badRequest(cre.message ?: "")
+        } catch (ex: Exception) {
+            HttpResponse.serverError(ex.message ?: "")
+        }
+    }
+
+    override fun mediaCommand(request: UpdateEffectStatusRequest): HttpResponse<Any> {
         return try {
             effectApiService.updateEffectStatus(request)
             HttpResponse.noContent()
