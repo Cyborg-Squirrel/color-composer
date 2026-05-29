@@ -1213,8 +1213,11 @@ class EffectApiServiceTest(
         val y = effectApiService.createEffect(makeCreate(strip, "Y", defaultNrSettings))
         val z = effectApiService.createEffect(makeCreate(strip, "Z", defaultNrSettings))
 
-        effectApiService.deleteEffect(y)
+        effectRepository.findByUuid(x).get().layer shouldBe 0
+        effectRepository.findByUuid(y).get().layer shouldBe 1
+        effectRepository.findByUuid(z).get().layer shouldBe 2
 
+        effectApiService.deleteEffect(y)
         effectRepository.findByUuid(x).get().layer shouldBe 0
         effectRepository.findByUuid(z).get().layer shouldBe 1
     }
@@ -1227,8 +1230,11 @@ class EffectApiServiceTest(
         val y = effectApiService.createEffect(makeCreateForPool(pool, "Y", defaultNrSettings))
         val z = effectApiService.createEffect(makeCreateForPool(pool, "Z", defaultNrSettings))
 
-        effectApiService.deleteEffect(y)
+        effectRepository.findByUuid(x).get().layer shouldBe 0
+        effectRepository.findByUuid(y).get().layer shouldBe 1
+        effectRepository.findByUuid(z).get().layer shouldBe 2
 
+        effectApiService.deleteEffect(y)
         effectRepository.findByUuid(x).get().layer shouldBe 0
         effectRepository.findByUuid(z).get().layer shouldBe 1
     }

@@ -100,7 +100,7 @@ open class EffectApiService(
                 val targetLayer = request.layer ?: count
                 validateLayerForInsert(targetLayer, count, "strip ${stripEntity.uuid}")
                 if (targetLayer < count) {
-                    shiftLayersUp(strip = stripEntity, pool = null, fromLayer = targetLayer)
+                    shiftLayersUp(strip = stripEntity, pool = null, lowerBound = targetLayer, upperBound = null)
                 }
                 val saved = effectRepository.save(
                     LightEffectEntity(
@@ -124,7 +124,7 @@ open class EffectApiService(
                 val targetLayer = request.layer ?: count
                 validateLayerForInsert(targetLayer, count, "pool ${poolEntity.uuid}")
                 if (targetLayer < count) {
-                    shiftLayersUp(strip = null, pool = poolEntity, fromLayer = targetLayer)
+                    shiftLayersUp(strip = null, pool = poolEntity, lowerBound = targetLayer, upperBound = null)
                 }
                 val saved = effectRepository.save(
                     LightEffectEntity(
@@ -265,7 +265,8 @@ open class EffectApiService(
             triggerEntities.forEach { triggerRepository.delete(it) }
             effectRepository.delete(effectEntity)
 
-            shiftLayersDown(strip = owningStrip, pool = owningPool, fromLayer = deletedLayer)
+            val changedEffects = shiftLayersDown(strip = owningStrip, pool = owningPool, lowerBound = deletedLayer, upperBound = null)
+            changedEffects.forEach { sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(it.uuid)) }
 
             val activeEffect = effectRegistry.getEffectWithUuid(effectUuid)
             if (activeEffect != null) {
@@ -345,8 +346,14 @@ open class EffectApiService(
         if (needsShift) {
             // Park at sentinel -1, close the old gap, make room at the new layer, then write the final value.
             effectEntity = effectRepository.update(effectEntity.copy(layer = -1))
-            shiftLayersDown(strip = owningStrip, pool = owningPool, fromLayer = oldLayer)
-            shiftLayersUp(strip = owningStrip, pool = owningPool, fromLayer = targetLayer)
+            val changedEffects = if (oldLayer < targetLayer) {
+                shiftLayersDown(strip = owningStrip, pool = owningPool, lowerBound = oldLayer, upperBound = targetLayer)
+            } else {
+                shiftLayersUp(strip = owningStrip, pool = owningPool, lowerBound = targetLayer, upperBound = oldLayer)
+            }
+            changedEffects.forEach {
+                sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(it.uuid))
+            }
         }
 
         effectEntity = effectRepository.update(effectEntity.copy(layer = targetLayer))
@@ -436,7 +443,6 @@ open class EffectApiService(
         val sameOwner = newStrip?.id == oldStrip?.id && newPool?.id == oldPool?.id
         if (sameOwner) {
             // Request specified the current owner with no other changes — nothing to do.
-            sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(uuid))
             return
         }
 
@@ -449,16 +455,13 @@ open class EffectApiService(
             else -> 0
         }
 
-        // Park at sentinel -1 on the old owner so subsequent shifts don't collide.
-        effectEntity = effectRepository.update(
-            effectEntity.copy(strip = oldStrip, pool = oldPool, layer = -1)
-        )
-        shiftLayersDown(strip = oldStrip, pool = oldPool, fromLayer = oldLayer)
-        shiftLayersUp(strip = newStrip, pool = newPool, fromLayer = targetLayer)
-
         effectEntity = effectRepository.update(
             effectEntity.copy(strip = newStrip, pool = newPool, layer = targetLayer)
         )
+        val changedEffects = shiftLayersDown(strip = oldStrip, pool = oldPool, lowerBound = oldLayer, upperBound = null)
+        changedEffects.map { it.uuid }.toSet().forEach {
+            sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(it))
+        }
 
         val activeEffect = effectRegistry.getEffectWithUuid(uuid)
         if (unassigned) {
@@ -693,31 +696,47 @@ open class EffectApiService(
     }
 
     /**
-     * Increments the layer of every effect on [strip]/[pool] with layer >= [fromLayer] by 1.
+     * Increments the layer of every effect on [strip]/[pool] with [upperBound] > layer and layer >= [lowerBound] by 1.
+     * The [upperBound] defaults to the length of the strip if it's left null
      * Iterates in descending order of layer so each individual UPDATE writes into a free slot, avoiding
      * the unique-per-(owner, layer) constraint collisions that a single bulk UPDATE would trigger.
+     * @return a list of effects which were shifted
      */
-    private fun shiftLayersUp(strip: LedStripEntity?, pool: LedStripPoolEntity?, fromLayer: Int) {
+    private fun shiftLayersUp(strip: LedStripEntity?, pool: LedStripPoolEntity?, lowerBound: Int, upperBound: Int?): List<LightEffectEntity> {
+        val changedEffects = mutableListOf<LightEffectEntity>()
         val effects = when {
             strip != null -> effectRepository.findByStrip(strip)
             pool != null -> effectRepository.findByPool(pool)
-            else -> return
+            else -> return listOf()
         }
-        effects.filter { it.layer >= fromLayer }.sortedByDescending { it.layer }.forEach {
+        val resolvedUpperBound = if (upperBound == null) effects.size else upperBound
+        effects.filter { it.layer >= lowerBound && it.layer < resolvedUpperBound }.sortedByDescending { it.layer }.forEach {
             effectRepository.update(it.copy(layer = it.layer + 1))
+            changedEffects.add(it)
         }
+
+        return changedEffects
     }
 
-    /** Decrements the layer of every effect on [strip]/[pool] with layer > [fromLayer] by 1, in ascending order. */
-    private fun shiftLayersDown(strip: LedStripEntity?, pool: LedStripPoolEntity?, fromLayer: Int) {
+    /**
+     * Decrements the layer of every effect on [strip]/[pool] with [upperBound] >= layer and layer > [lowerBound] by 1, in ascending order.
+     * The [upperBound] defaults to the length of the strip if it's left null
+     * @return a list of effects which were shifted
+     */
+    private fun shiftLayersDown(strip: LedStripEntity?, pool: LedStripPoolEntity?, lowerBound: Int, upperBound: Int?): List<LightEffectEntity> {
+        val changedEffects = mutableListOf<LightEffectEntity>()
         val effects = when {
             strip != null -> effectRepository.findByStrip(strip)
             pool != null -> effectRepository.findByPool(pool)
-            else -> return
+            else -> return listOf()
         }
-        effects.filter { it.layer > fromLayer }.sortedBy { it.layer }.forEach {
+        val resolvedUpperBound = if (upperBound == null) effects.size else upperBound
+        effects.filter { it.layer > lowerBound && it.layer <= resolvedUpperBound }.sortedBy { it.layer }.forEach {
             effectRepository.update(it.copy(layer = it.layer - 1))
+            changedEffects.add(it)
         }
+
+        return changedEffects
     }
 
     private data class EffectRuntime(
