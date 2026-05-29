@@ -1,7 +1,10 @@
 package io.cyborgsquirrel.event_source.model
 
-sealed class LightEffectEvent(uuid: String) : SseEvent(uuid) {
-    class LightEffectCreated(uuid: String) : LightEffectEvent(uuid)
-    class LightEffectUpdated(uuid: String) : LightEffectEvent(uuid)
-    class LightEffectDeleted(uuid: String) : LightEffectEvent(uuid)
+import io.cyborgsquirrel.event_source.model.delta.EffectDelta
+import io.cyborgsquirrel.lighting.effects.responses.GetEffectResponse
+
+sealed class LightEffectEvent(uuid: String, data: Any?) : SseEvent(uuid, data) {
+    class LightEffectCreated(uuid: String, effect: GetEffectResponse) : LightEffectEvent(uuid, effect)
+    class LightEffectUpdated(uuid: String, delta: EffectDelta) : LightEffectEvent(uuid, delta)
+    class LightEffectDeleted(uuid: String) : LightEffectEvent(uuid, null)
 }

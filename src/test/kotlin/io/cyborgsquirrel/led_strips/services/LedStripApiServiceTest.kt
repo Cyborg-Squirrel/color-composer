@@ -126,6 +126,9 @@ class LedStripApiServiceTest(
 
     "createStrip should create new strip with valid request" {
         val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+        // createStrip builds the GET-shaped strip object for the LedStripCreated event, which reads client status.
+        val statusService = getMock(clientStatusService)
+        every { statusService.getStatusForClient(any()) } returns Optional.of(ClientStatusInfo.inactive(ClientStatus.Idle))
 
         val request = CreateLedStripRequest(
             client.uuid, "New Strip", "D10", 200, blendMode = BlendMode.Additive

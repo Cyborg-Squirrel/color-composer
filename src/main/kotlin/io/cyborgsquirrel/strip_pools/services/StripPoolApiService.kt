@@ -3,6 +3,7 @@ package io.cyborgsquirrel.strip_pools.services
 import io.cyborgsquirrel.clients.enums.ClientStatus
 import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.event_source.model.StripPoolEvent
+import io.cyborgsquirrel.event_source.model.delta.PoolDelta
 import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
@@ -91,7 +92,7 @@ class StripPoolApiService(
                 uuid = uuid
             )
         poolRepository.save(poolEntity)
-        sseEventEmitter.emit(StripPoolEvent.StripPoolCreated(uuid))
+        sseEventEmitter.emit(StripPoolEvent.StripPoolCreated(uuid, mapPoolEntityToModel(poolEntity, listOf())))
         return uuid
     }
 
@@ -102,6 +103,9 @@ class StripPoolApiService(
         }
 
         val poolEntity = poolEntityOptional.get()
+        val oldName = poolEntity.name
+        val oldPoolType = poolEntity.poolType
+        val oldBlendMode = poolEntity.blendMode
         if (request.name != null) {
             poolEntity.name = request.name
         }
@@ -113,7 +117,12 @@ class StripPoolApiService(
         }
 
         poolRepository.update(poolEntity)
-        sseEventEmitter.emit(StripPoolEvent.StripPoolUpdated(uuid))
+        val delta = PoolDelta(
+            name = poolEntity.name.takeIf { it != oldName },
+            poolType = poolEntity.poolType.takeIf { it != oldPoolType },
+            blendMode = poolEntity.blendMode.takeIf { it != oldBlendMode },
+        )
+        sseEventEmitter.emit(StripPoolEvent.StripPoolUpdated(uuid, delta))
     }
 
     fun updatePoolMembers(uuid: String, request: UpdateStripPoolMembersRequest) {
@@ -159,7 +168,8 @@ class StripPoolApiService(
                 poolMemberRepository.save(newMember)
             }
         }
-        sseEventEmitter.emit(StripPoolEvent.StripPoolUpdated(uuid))
+        val updatedMembers = mapPoolEntityToModel(poolEntity, poolMemberRepository.findByPool(poolEntity)).members
+        sseEventEmitter.emit(StripPoolEvent.StripPoolUpdated(uuid, PoolDelta(members = updatedMembers)))
     }
 
     fun deletePool(uuid: String) {
