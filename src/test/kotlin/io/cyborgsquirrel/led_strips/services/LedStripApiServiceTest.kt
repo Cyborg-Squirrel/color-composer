@@ -243,6 +243,78 @@ class LedStripApiServiceTest(
         s.brightness shouldBe strip.brightness
     }
 
+    "updateStrip should unassign strip from its client when unassign flag is set" {
+        val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
+
+        val request = UpdateLedStripRequest(
+            name = null,
+            pin = null,
+            length = null,
+            height = null,
+            brightness = null,
+            blendMode = null,
+            clientUuid = null,
+            unassign = true,
+        )
+
+        ledStripApiService.updateStrip(strip.uuid, request)
+
+        val updatedStrip = stripRepository.findByUuid(strip.uuid)
+        updatedStrip.isPresent shouldBe true
+        updatedStrip.get().client shouldBe null
+    }
+
+    "updateStrip should fail when unassign is set together with a clientUuid" {
+        val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
+
+        val request = UpdateLedStripRequest(
+            name = null,
+            pin = null,
+            length = null,
+            height = null,
+            brightness = null,
+            blendMode = null,
+            clientUuid = client.uuid,
+            unassign = true,
+        )
+
+        shouldThrow<ClientRequestException> {
+            ledStripApiService.updateStrip(strip.uuid, request)
+        }
+
+        // Strip should remain assigned to its client
+        val unchangedStrip = stripRepository.findByUuid(strip.uuid)
+        unchangedStrip.get().client!!.uuid shouldBe client.uuid
+    }
+
+    "updateStrip should update only brightness without unassigning the strip" {
+        val client = createLedStripClientEntity(clientRepository, "Test Client", "192.168.1.100", 50, 51)
+        val strip = saveLedStrip(stripRepository, client, "Test Strip", 100, "D10", 100)
+
+        val request = UpdateLedStripRequest(
+            name = null,
+            pin = null,
+            length = null,
+            height = null,
+            brightness = 75,
+            blendMode = null,
+            clientUuid = null,
+        )
+
+        ledStripApiService.updateStrip(strip.uuid, request)
+
+        val updatedStrip = stripRepository.findByUuid(strip.uuid).get()
+        updatedStrip.brightness shouldBe 75
+        updatedStrip.client!!.uuid shouldBe client.uuid
+        updatedStrip.name shouldBe strip.name
+        updatedStrip.pin shouldBe strip.pin
+        updatedStrip.length shouldBe strip.length
+        updatedStrip.height shouldBe strip.height
+        updatedStrip.blendMode shouldBe strip.blendMode
+    }
+
     "delete an existing strip" {
         val mockLightEffectRegistry = getMock(activeLightEffectService)
         val service = LedStripApiService(

@@ -99,42 +99,44 @@ class LedStripApiService(
         if (stripEntityOptional.isPresent) {
             val stripEntity = stripEntityOptional.get()
             val clientEntity = stripEntity.client
-            val newStripEntity = if (clientEntity?.uuid != request.clientUuid) {
-                if (request.clientUuid == null) {
-                    stripEntity.copy(
-                        client = null,
-                        name = request.name ?: stripEntity.name,
-                        pin = request.pin ?: stripEntity.pin,
-                        length = request.length ?: stripEntity.length,
-                        height = request.height ?: stripEntity.height,
-                        blendMode = request.blendMode ?: stripEntity.blendMode,
-                        brightness = request.brightness ?: stripEntity.brightness,
-                    )
-                } else {
-                    val newClientOptional = clientRepository.findByUuid(request.clientUuid)
-                    if (newClientOptional.isEmpty) {
-                        throw ClientRequestException("Client with uuid ${request.clientUuid} does not exist!")
-                    }
-                    val newClient = newClientOptional.get()
+            if (request.unassign && request.clientUuid != null) {
+                throw ClientRequestException("Cannot unassign a strip and assign it to a client in the same request.")
+            }
 
-                    // Pi clients can only have one LED strip
-                    if (newClient.clientType == ClientType.Pi) {
-                        val newClientStrips = newClient.strips
-                        if (newClientStrips.isNotEmpty() && !newClientStrips.map { it.uuid }.contains(uuid)) {
-                            throw ClientRequestException("Pi clients can only have one LED strip connected.")
-                        }
-                    }
-
-                    stripEntity.copy(
-                        client = newClient,
-                        name = request.name ?: stripEntity.name,
-                        pin = request.pin ?: stripEntity.pin,
-                        length = request.length ?: stripEntity.length,
-                        height = request.height ?: stripEntity.height,
-                        blendMode = request.blendMode ?: stripEntity.blendMode,
-                        brightness = request.brightness ?: stripEntity.brightness,
-                    )
+            val newStripEntity = if (request.unassign) {
+                stripEntity.copy(
+                    client = null,
+                    name = request.name ?: stripEntity.name,
+                    pin = request.pin ?: stripEntity.pin,
+                    length = request.length ?: stripEntity.length,
+                    height = request.height ?: stripEntity.height,
+                    blendMode = request.blendMode ?: stripEntity.blendMode,
+                    brightness = request.brightness ?: stripEntity.brightness,
+                )
+            } else if (request.clientUuid != null && clientEntity?.uuid != request.clientUuid) {
+                val newClientOptional = clientRepository.findByUuid(request.clientUuid)
+                if (newClientOptional.isEmpty) {
+                    throw ClientRequestException("Client with uuid ${request.clientUuid} does not exist!")
                 }
+                val newClient = newClientOptional.get()
+
+                // Pi clients can only have one LED strip
+                if (newClient.clientType == ClientType.Pi) {
+                    val newClientStrips = newClient.strips
+                    if (newClientStrips.isNotEmpty() && !newClientStrips.map { it.uuid }.contains(uuid)) {
+                        throw ClientRequestException("Pi clients can only have one LED strip connected.")
+                    }
+                }
+
+                stripEntity.copy(
+                    client = newClient,
+                    name = request.name ?: stripEntity.name,
+                    pin = request.pin ?: stripEntity.pin,
+                    length = request.length ?: stripEntity.length,
+                    height = request.height ?: stripEntity.height,
+                    blendMode = request.blendMode ?: stripEntity.blendMode,
+                    brightness = request.brightness ?: stripEntity.brightness,
+                )
             } else {
                 // Strip client assignment is remaining the same
                 stripEntity.copy(
