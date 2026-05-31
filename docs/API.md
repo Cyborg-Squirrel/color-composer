@@ -1,10 +1,5 @@
 # Color Composer REST API
 
-**Framework:** Micronaut (Kotlin)
-**Default base URL:** `http://localhost:8080`
-**Content-Type:** `application/json`
-**CORS:** Enabled globally
-
 ---
 
 ## Error Responses

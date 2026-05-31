@@ -35,6 +35,10 @@ Triggers can be configured to start a light effect at a set time, or run one for
 2. Build a Jar. This project uses the shadow plugin which packages all dependencies into a single Jar for ease of use. [Docker](https://guides.micronaut.io/latest/micronaut-docker-image-gradle-kotlin.html) images can also be built.
 3. Run the Jar.
 
+## API Documentation
+
+The REST API endpoints are documented in [docs/API.md](docs/API.md).
+
 ## Contributing
 
 * Create a pull request
