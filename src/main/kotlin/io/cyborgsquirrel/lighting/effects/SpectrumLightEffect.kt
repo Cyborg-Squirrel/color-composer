@@ -19,7 +19,7 @@ class SpectrumLightEffect(
     private var iterations = 0
     private var referenceFrame = mutableListOf<RgbColor>()
     private val colorWidth = getColorWidth()
-    private var buffer = listOf<RgbColor>()
+    private var buffer = List(numberOfLeds) { RgbColor.Blank }
 
     override fun getNextStep(): List<RgbColor> {
         if (referenceFrame.isNotEmpty() && !isUpdateDue(settings.updatesPerSecond)) return buffer

@@ -16,7 +16,7 @@ class MarqueeEffect(
     private var frame = 0
     private var iterations = 0
     private var shiftAmount = 0
-    private var buffer = listOf<RgbColor>()
+    private var buffer = List(numberOfLeds) { RgbColor.Blank }
 
     override fun getNextStep(): List<RgbColor> {
         if (buffer.isNotEmpty() && !isUpdateDue(settings.updatesPerSecond)) return buffer

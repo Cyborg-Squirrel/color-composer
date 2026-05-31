@@ -395,7 +395,7 @@ class PiClientWebSocketJob(
                 is SingleLedStripModel -> strip.clientUuid == clientUuid
                 is LedStripPoolModel -> strip.clientUuids().contains(clientUuid)
             }
-        }.map { it.strip }
+        }.map { it.strip }.distinctBy { it.uuid }
 
         if (strips != matchingStrips) {
             strips = matchingStrips

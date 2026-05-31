@@ -27,7 +27,7 @@ class WaveLightEffect(
     private lateinit var waveB: Comet
     private val waveLength = settings.waveLength
     private val startPoint = (settings.startPointPercentage / 100.0 * numberOfLeds).toInt()
-    private var buffer = listOf<RgbColor>()
+    private var buffer = List(numberOfLeds) { RgbColor.Blank }
 
     override fun getNextStep(): List<RgbColor> {
         if (frame != 0 && !isUpdateDue(settings.updatesPerSecond)) return buffer
