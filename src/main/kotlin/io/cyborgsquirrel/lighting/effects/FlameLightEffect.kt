@@ -14,7 +14,7 @@ import kotlin.random.Random
  * https://github.com/davepl/DavesGarageLEDSeries/blob/master/LED%20Episode%2011/include/fire.h
  */
 class FlameLightEffect(
-    private val numberOfLeds: Int,
+    numberOfLeds: Int,
     override val settings: FlameEffectSettings,
     override var palette: ColorPalette?,
     timeHelper: TimeHelper,
@@ -23,7 +23,7 @@ class FlameLightEffect(
     // TODO how do we count iterations? Do we count iterations for this effect?
     private var iterations = 0
     private val heat = IntArray(numberOfLeds)
-    private var buffer = listOf<RgbColor>()
+    private var buffer = List(numberOfLeds) { RgbColor.Blank }
 
     override fun getNextStep(): List<RgbColor> {
         if (!isUpdateDue(settings.updatesPerSecond)) return buffer

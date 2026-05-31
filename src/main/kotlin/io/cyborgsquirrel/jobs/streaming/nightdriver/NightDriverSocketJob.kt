@@ -323,7 +323,7 @@ class NightDriverSocketJob(
                 is SingleLedStripModel -> strip.clientUuid == clientUuid
                 is LedStripPoolModel -> strip.clientUuids().contains(clientUuid)
             }
-        }.map { it.strip }
+        }.map { it.strip }.distinctBy { it.uuid }
 
         if (strips != matchingStrips) {
             // NightDriver has no settings-sync step, so the new strip list takes effect on the next rendered frame.

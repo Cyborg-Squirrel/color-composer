@@ -27,7 +27,7 @@ class BouncingBallLightEffect(
     private val dampening = 0.90
     private var iterations = 0
     private lateinit var backupColor: RgbColor
-    private var buffer = listOf<RgbColor>()
+    private var buffer = List(numberOfLeds) { RgbColor.Blank }
 
     override fun getNextStep(): List<RgbColor> {
         val ballLocation = getBallPosition()
