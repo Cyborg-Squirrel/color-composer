@@ -6,6 +6,7 @@ import io.cyborgsquirrel.clients.enums.ClientType
 import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.event_source.model.LedStripEvent
+import io.cyborgsquirrel.event_source.model.delta.StripDelta
 import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
@@ -86,7 +87,7 @@ class LedStripApiService(
                 blendMode = request.blendMode ?: BlendMode.Additive
             )
             stripRepository.save(stripEntity)
-            sseEventEmitter.emit(LedStripEvent.LedStripCreated(stripEntity.uuid))
+            sseEventEmitter.emit(LedStripEvent.LedStripCreated(stripEntity.uuid, mapStripEntityToResponse(stripEntity)))
             return stripEntity.uuid
         } else {
             throw ClientRequestException("No client exists with uuid ${request.clientUuid}!")
@@ -154,6 +155,15 @@ class LedStripApiService(
 
             if (newStripEntity != stripEntity) {
                 val newStripEntity = stripRepository.update(newStripEntity)
+                val delta = StripDelta(
+                    name = newStripEntity.name.takeIf { it != stripEntity.name },
+                    pin = newStripEntity.pin.takeIf { it != stripEntity.pin },
+                    length = newStripEntity.length.takeIf { it != stripEntity.length },
+                    height = newStripEntity.height.takeIf { it != stripEntity.height },
+                    brightness = newStripEntity.brightness.takeIf { it != stripEntity.brightness },
+                    blendMode = newStripEntity.blendMode.takeIf { it != stripEntity.blendMode },
+                    clientUuid = newStripEntity.client?.uuid.takeIf { it != stripEntity.client?.uuid },
+                )
                 val activeEffects = activeLightEffectService.getAllEffectsForStrip(uuid)
                 activeEffects.forEach {
                     val newEffect = it.copy(
@@ -177,7 +187,7 @@ class LedStripApiService(
                         activeLightEffectService.addOrUpdateEffect(newEffect)
                     }
                 }
-                sseEventEmitter.emit(LedStripEvent.LedStripUpdated(uuid))
+                sseEventEmitter.emit(LedStripEvent.LedStripUpdated(uuid, delta))
             }
         } else {
             throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")

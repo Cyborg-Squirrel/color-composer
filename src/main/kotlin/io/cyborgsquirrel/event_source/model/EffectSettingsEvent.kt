@@ -1,7 +1,10 @@
 package io.cyborgsquirrel.event_source.model
 
-sealed class EffectSettingsEvent(uuid: String) : SseEvent(uuid) {
-    class EffectSettingsCreated(uuid: String) : EffectSettingsEvent(uuid)
-    class EffectSettingsUpdated(uuid: String) : EffectSettingsEvent(uuid)
-    class EffectSettingsDeleted(uuid: String) : EffectSettingsEvent(uuid)
+import io.cyborgsquirrel.event_source.model.delta.EffectSettingsDelta
+import io.cyborgsquirrel.lighting.effects.responses.GetEffectSettingsResponse
+
+sealed class EffectSettingsEvent(uuid: String, data: Any?) : SseEvent(uuid, data) {
+    class EffectSettingsCreated(uuid: String, settings: GetEffectSettingsResponse) : EffectSettingsEvent(uuid, settings)
+    class EffectSettingsUpdated(uuid: String, delta: EffectSettingsDelta) : EffectSettingsEvent(uuid, delta)
+    class EffectSettingsDeleted(uuid: String) : EffectSettingsEvent(uuid, null)
 }

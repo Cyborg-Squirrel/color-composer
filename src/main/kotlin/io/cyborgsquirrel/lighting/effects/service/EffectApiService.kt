@@ -2,6 +2,8 @@ package io.cyborgsquirrel.lighting.effects.service
 
 import io.cyborgsquirrel.event_source.model.EffectSettingsEvent
 import io.cyborgsquirrel.event_source.model.LightEffectEvent
+import io.cyborgsquirrel.event_source.model.delta.EffectDelta
+import io.cyborgsquirrel.event_source.model.delta.EffectSettingsDelta
 import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
@@ -168,7 +170,7 @@ open class EffectApiService(
         )
 
         effectRegistry.addOrUpdateEffect(activeEffect)
-        sseEventEmitter.emit(LightEffectEvent.LightEffectCreated(effectEntity.uuid))
+        sseEventEmitter.emit(LightEffectEvent.LightEffectCreated(effectEntity.uuid, getEffectResponseForEffect(effectEntity)!!))
         return effectEntity.uuid
     }
 
@@ -266,7 +268,7 @@ open class EffectApiService(
             effectRepository.delete(effectEntity)
 
             val changedEffects = shiftLayersDown(strip = owningStrip, pool = owningPool, lowerBound = deletedLayer, upperBound = null)
-            changedEffects.forEach { sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(it.uuid)) }
+            changedEffects.forEach { sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(it.uuid, EffectDelta(layer = it.layer))) }
 
             val activeEffect = effectRegistry.getEffectWithUuid(effectUuid)
             if (activeEffect != null) {
@@ -307,6 +309,9 @@ open class EffectApiService(
         val owningStrip = effectEntity.strip
         val owningPool = effectEntity.pool
         val oldLayer = effectEntity.layer
+        val oldName = effectEntity.name
+        val oldPaletteUuid = effectEntity.palette?.uuid
+        val oldSettingsUuid = settingsEntity.uuid
 
         if (!updateEffectRequest.name.isNullOrBlank()) {
             effectEntity = effectEntity.copy(name = updateEffectRequest.name)
@@ -352,7 +357,7 @@ open class EffectApiService(
                 shiftLayersUp(strip = owningStrip, pool = owningPool, lowerBound = targetLayer, upperBound = oldLayer)
             }
             changedEffects.forEach {
-                sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(it.uuid))
+                sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(it.uuid, EffectDelta(layer = it.layer)))
             }
         }
 
@@ -387,7 +392,13 @@ open class EffectApiService(
 
         refreshRegistryLayers(strip = owningStrip, pool = owningPool)
 
-        sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(uuid))
+        val delta = EffectDelta(
+            name = effectEntity.name.takeIf { it != oldName },
+            paletteUuid = effectEntity.palette?.uuid.takeIf { it != oldPaletteUuid },
+            settingsUuid = effectEntity.effectSettings?.uuid.takeIf { it != oldSettingsUuid },
+            layer = effectEntity.layer.takeIf { it != oldLayer },
+        )
+        sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(uuid, delta))
     }
 
     @Transactional
@@ -459,8 +470,8 @@ open class EffectApiService(
             effectEntity.copy(strip = newStrip, pool = newPool, layer = targetLayer)
         )
         val changedEffects = shiftLayersDown(strip = oldStrip, pool = oldPool, lowerBound = oldLayer, upperBound = null)
-        changedEffects.map { it.uuid }.toSet().forEach {
-            sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(it))
+        changedEffects.forEach {
+            sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(it.uuid, EffectDelta(layer = it.layer)))
         }
 
         val activeEffect = effectRegistry.getEffectWithUuid(uuid)
@@ -495,7 +506,12 @@ open class EffectApiService(
         if (oldPool != null && oldPool.id != newPool?.id) refreshRegistryLayers(strip = null, pool = oldPool)
         refreshRegistryLayers(strip = newStrip, pool = newPool)
 
-        sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(uuid))
+        val delta = EffectDelta(
+            stripUuid = newStrip?.uuid,
+            poolUuid = newPool?.uuid,
+            layer = effectEntity.layer.takeIf { it != oldLayer },
+        )
+        sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(uuid, delta))
     }
 
     fun updateEffectStatus(request: UpdateEffectStatusRequest) {
@@ -517,7 +533,7 @@ open class EffectApiService(
             val newStatus = effectStatusFromCommand(request.command)
             effectRegistry.addOrUpdateEffect(activeEffect.copy(status = newStatus))
             effectRepository.update(entity.copy(status = newStatus))
-            sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(entity.uuid))
+            sseEventEmitter.emit(LightEffectEvent.LightEffectUpdated(entity.uuid, EffectDelta(status = newStatus)))
         }
     }
 
@@ -651,7 +667,7 @@ open class EffectApiService(
                 skipFramesIfBlank = request.skipFramesIfBlank,
             )
         )
-        sseEventEmitter.emit(EffectSettingsEvent.EffectSettingsCreated(entity.uuid))
+        sseEventEmitter.emit(EffectSettingsEvent.EffectSettingsCreated(entity.uuid, entity.toResponse()))
         return entity.uuid
     }
 
@@ -663,6 +679,11 @@ open class EffectApiService(
             clearExistingDefault(entity.type)
         }
 
+        val oldName = entity.name
+        val oldSettings = entity.settings
+        val oldIsDefault = entity.isDefault
+        val oldSkipFramesIfBlank = entity.skipFramesIfBlank
+
         entity = entity.copy(
             name = request.name ?: entity.name,
             settings = request.settings ?: entity.settings,
@@ -670,7 +691,13 @@ open class EffectApiService(
             skipFramesIfBlank = request.skipFramesIfBlank ?: entity.skipFramesIfBlank,
         )
         settingsRepository.update(entity)
-        sseEventEmitter.emit(EffectSettingsEvent.EffectSettingsUpdated(uuid))
+        val delta = EffectSettingsDelta(
+            name = entity.name.takeIf { it != oldName },
+            settings = entity.settings.takeIf { it != oldSettings },
+            isDefault = entity.isDefault.takeIf { it != oldIsDefault },
+            skipFramesIfBlank = entity.skipFramesIfBlank.takeIf { it != oldSkipFramesIfBlank },
+        )
+        sseEventEmitter.emit(EffectSettingsEvent.EffectSettingsUpdated(uuid, delta))
     }
 
     fun deleteEffectSettings(uuid: String) {
@@ -711,8 +738,9 @@ open class EffectApiService(
         }
         val resolvedUpperBound = if (upperBound == null) effects.size else upperBound
         effects.filter { it.layer >= lowerBound && it.layer < resolvedUpperBound }.sortedByDescending { it.layer }.forEach {
-            effectRepository.update(it.copy(layer = it.layer + 1))
-            changedEffects.add(it)
+            val updated = it.copy(layer = it.layer + 1)
+            effectRepository.update(updated)
+            changedEffects.add(updated)
         }
 
         return changedEffects
@@ -732,8 +760,9 @@ open class EffectApiService(
         }
         val resolvedUpperBound = if (upperBound == null) effects.size else upperBound
         effects.filter { it.layer > lowerBound && it.layer <= resolvedUpperBound }.sortedBy { it.layer }.forEach {
-            effectRepository.update(it.copy(layer = it.layer - 1))
-            changedEffects.add(it)
+            val updated = it.copy(layer = it.layer - 1)
+            effectRepository.update(updated)
+            changedEffects.add(updated)
         }
 
         return changedEffects

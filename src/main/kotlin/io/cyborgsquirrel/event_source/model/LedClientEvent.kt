@@ -1,7 +1,10 @@
 package io.cyborgsquirrel.event_source.model
 
-sealed class LedClientEvent(uuid: String) : SseEvent(uuid) {
-    class LedClientCreated(uuid: String) : LedClientEvent(uuid)
-    class LedClientUpdated(uuid: String) : LedClientEvent(uuid)
-    class LedClientDeleted(uuid: String) : LedClientEvent(uuid)
+import io.cyborgsquirrel.clients.responses.GetClientResponse
+import io.cyborgsquirrel.event_source.model.delta.ClientDelta
+
+sealed class LedClientEvent(uuid: String, data: Any?) : SseEvent(uuid, data) {
+    class LedClientCreated(uuid: String, client: GetClientResponse) : LedClientEvent(uuid, client)
+    class LedClientUpdated(uuid: String, delta: ClientDelta) : LedClientEvent(uuid, delta)
+    class LedClientDeleted(uuid: String) : LedClientEvent(uuid, null)
 }

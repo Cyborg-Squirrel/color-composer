@@ -83,6 +83,12 @@ class LedClientSetupControllerTest(
         }
 
         "Creating clients" {
+            // createClient builds the GET-shaped client object for the LedClientCreated event, which reads client status.
+            val mockClientStatusService = getMock(clientStatusService)
+            every {
+                mockClientStatusService.getStatusForClient(any())
+            } returns Optional.of(ClientStatusInfo.inactive(ClientStatus.SetupIncomplete))
+
             val createClientRequest =
                 CreateClientRequest("Window lights", "192.168.5.5", ClientType.Pi, ColorOrder.GRB, 80, 82, 500)
             val createResponse = apiClient.create(createClientRequest)

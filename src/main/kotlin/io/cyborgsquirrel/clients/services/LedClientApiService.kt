@@ -10,6 +10,7 @@ import io.cyborgsquirrel.clients.responses.GetClientsResponse
 import io.cyborgsquirrel.clients.status.ClientStatusInfo
 import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.event_source.model.LedClientEvent
+import io.cyborgsquirrel.event_source.model.delta.ClientDelta
 import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.util.exception.ClientRequestException
@@ -67,7 +68,7 @@ class LedClientApiService(
             )
 
             streamJobManager.startStreamingJob(clientEntity)
-            sseEventEmitter.emit(LedClientEvent.LedClientCreated(clientEntity.uuid))
+            sseEventEmitter.emit(LedClientEvent.LedClientCreated(clientEntity.uuid, mapClientEntityToResponse(clientEntity)))
             clientEntity.uuid
         }
     }
@@ -95,7 +96,20 @@ class LedClientApiService(
             } else {
                 clientRepository.update(newEntity)
             }
-            sseEventEmitter.emit(LedClientEvent.LedClientUpdated(uuid))
+            val delta = LedClientEvent.LedClientUpdated(
+                uuid,
+                ClientDelta(
+                    name = newEntity.name.takeIf { it != entity.name },
+                    address = newEntity.address.takeIf { it != entity.address },
+                    colorOrder = newEntity.colorOrder.takeIf { it != entity.colorOrder },
+                    apiPort = newEntity.apiPort.takeIf { it != entity.apiPort },
+                    wsPort = newEntity.wsPort.takeIf { it != entity.wsPort },
+                    powerLimit = newEntity.powerLimit.takeIf { it != entity.powerLimit },
+                    fps = newEntity.fps.takeIf { it != entity.fps },
+                    fadeTimeoutMillis = newEntity.fadeTimeoutMillis.takeIf { it != entity.fadeTimeoutMillis },
+                )
+            )
+            sseEventEmitter.emit(delta)
         } else {
             throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")
         }

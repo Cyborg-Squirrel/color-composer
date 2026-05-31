@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.lighting.effect_palette.service
 
 import io.cyborgsquirrel.event_source.model.PaletteEvent
+import io.cyborgsquirrel.event_source.model.delta.PaletteDelta
 import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.lighting.effect_palette.EffectPaletteConstants
 import io.cyborgsquirrel.lighting.effect_palette.entity.LightEffectPaletteEntity
@@ -64,7 +65,12 @@ class PaletteApiService(
             )
 
             paletteEntity = paletteRepository.save(paletteEntity)
-            sseEventEmitter.emit(PaletteEvent.PaletteCreated(paletteEntity.uuid))
+            sseEventEmitter.emit(
+                PaletteEvent.PaletteCreated(
+                    paletteEntity.uuid,
+                    GetPaletteResponse(paletteEntity.name, paletteEntity.uuid, paletteEntity.type, paletteEntity.settings)
+                )
+            )
             return paletteEntity.uuid
         } else {
             throw ClientRequestException("Palette settings are invalid")
@@ -75,6 +81,8 @@ class PaletteApiService(
         val paletteEntityOptional = paletteRepository.findByUuid(uuid)
         if (paletteEntityOptional.isPresent) {
             var paletteEntity = paletteEntityOptional.get()
+            val oldName = paletteEntity.name
+            val oldSettings = paletteEntity.settings
             if (request.settings != null) {
                 val paletteSettingsValid = validatePalette(request.settings, paletteEntity.type)
                 if (paletteSettingsValid) {
@@ -104,7 +112,11 @@ class PaletteApiService(
                     activeEffect.effect.updatePalette(palette)
                 }
             }
-            sseEventEmitter.emit(PaletteEvent.PaletteUpdated(uuid))
+            val delta = PaletteDelta(
+                name = paletteEntity.name.takeIf { it != oldName },
+                settings = paletteEntity.settings.takeIf { it != oldSettings },
+            )
+            sseEventEmitter.emit(PaletteEvent.PaletteUpdated(uuid, delta))
         } else {
             throw ClientRequestException("Palette with uuid $uuid doesn't exist!")
         }
