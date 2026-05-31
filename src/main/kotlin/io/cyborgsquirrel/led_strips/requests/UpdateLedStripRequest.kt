@@ -12,4 +12,5 @@ data class UpdateLedStripRequest(
     val brightness: Int?,
     val blendMode: BlendMode?,
     val clientUuid: String?,
+    val unassign: Boolean = false,
 )
