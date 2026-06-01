@@ -11,17 +11,6 @@ sealed class LightEffect(
     protected val timeHelper: TimeHelper,
 ) {
 
-    protected var lastUpdatedMillis = 0L
-
-    protected fun isUpdateDue(updatesPerSecond: Int): Boolean {
-        val nowMillis = timeHelper.millisSinceEpoch()
-        if ((nowMillis - lastUpdatedMillis) > 1000L / updatesPerSecond) {
-            lastUpdatedMillis = nowMillis
-            return true
-        }
-        return false
-    }
-
     abstract fun getNextStep(): List<RgbColor>
 
     abstract fun getBuffer(): List<RgbColor>

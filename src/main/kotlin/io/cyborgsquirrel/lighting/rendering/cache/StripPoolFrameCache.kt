@@ -1,27 +1,26 @@
 package io.cyborgsquirrel.lighting.rendering.cache
 
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
+import java.util.concurrent.ConcurrentHashMap
 
 class StripPoolFrameCache {
 
     /**
-     * Frame buffer. Used to avoid re-rendering effects for LED strip pools.
+     * Frame buffer keyed by strip uuid. Used to avoid re-rendering effects for LED strip pools. Keying by strip
+     * avoids rescanning a flat list for every cache operation. Per-strip lists are only touched while holding the
+     * caller's per-pool lock, so they don't need to be individually synchronized.
      */
-    private val stripPoolFrames = mutableListOf<RenderedFrameModel>()
+    private val framesByStrip = ConcurrentHashMap<String, MutableList<RenderedFrameModel>>()
 
     fun getFrameFromCache(stripUuid: String, sequenceNumber: Short): RenderedFrameModel? {
-        val matchingFramesForStrip = stripPoolFrames.filter { it.strip.uuid == stripUuid }
+        val matchingFramesForStrip = framesByStrip[stripUuid] ?: return null
 
         // sequenceNumber 0 means the caller is making its first call. Return the latest frame.
-        val frame = if (sequenceNumber <= 0) {
+        return if (sequenceNumber <= 0) {
             matchingFramesForStrip.maxByOrNull { it.sequenceNumber }
-        } else if (matchingFramesForStrip.map { it.sequenceNumber }.contains(sequenceNumber)) {
-            matchingFramesForStrip.first { it.sequenceNumber == sequenceNumber }
         } else {
-            null
+            matchingFramesForStrip.firstOrNull { it.sequenceNumber == sequenceNumber }
         }
-
-        return frame
     }
 
     fun addFrameToCache(frame: RenderedFrameModel) {
@@ -29,12 +28,12 @@ class StripPoolFrameCache {
             throw Exception("Invalid frame sequence number ${frame.sequenceNumber}")
         }
 
-        stripPoolFrames.add(frame)
+        framesByStrip.getOrPut(frame.strip.uuid) { mutableListOf() }.add(frame)
         pruneFrames(frame.strip.uuid)
     }
 
     fun getSequenceNumber(stripUuid: String): Short {
-        val frames = stripPoolFrames.filter { it.strip.uuid == stripUuid }.sortedBy { it.sequenceNumber }
+        val frames = (framesByStrip[stripUuid] ?: emptyList()).sortedBy { it.sequenceNumber }
         if (frames.isEmpty()) {
             return MIN_SEQUENCE_NUMBER
         } else {
@@ -58,7 +57,7 @@ class StripPoolFrameCache {
     }
 
     private fun pruneFrames(stripUuid: String) {
-        val matchingFramesForStrip = stripPoolFrames.filter { it.strip.uuid == stripUuid }
+        val matchingFramesForStrip = framesByStrip[stripUuid] ?: return
         if (matchingFramesForStrip.size > MAX_CACHE_SIZE_PER_STRIP) {
             val sequenceNumbersSorted = matchingFramesForStrip.map { it.sequenceNumber }.sorted()
             val sequenceNumbersToPrune = mutableSetOf<Short>()
@@ -91,7 +90,7 @@ class StripPoolFrameCache {
                 )
             }
 
-            stripPoolFrames.removeIf { it.strip.uuid == stripUuid && sequenceNumbersToPrune.contains(it.sequenceNumber) }
+            matchingFramesForStrip.removeIf { sequenceNumbersToPrune.contains(it.sequenceNumber) }
         }
     }
 

@@ -4,6 +4,7 @@ import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.NightriderColorFillEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderCometEffectSettings
 import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
+import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -30,9 +31,11 @@ class NightriderLightEffect(
     private var location = 0
     private var iterations = 0
     private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
-        if (!isUpdateDue(settings.updatesPerSecond)) return buffer
+        val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
+        if (!updateDue) return buffer
         onNextStep()
 
         buffer = when (settings) {
@@ -42,6 +45,7 @@ class NightriderLightEffect(
 
         previousLocation = location
         frame++
+        checker.onUpdate(timeHelper.millisSinceEpoch())
         return buffer
     }
 
@@ -49,7 +53,7 @@ class NightriderLightEffect(
 
     private fun renderNightriderComet(): List<RgbColor> {
         return if (settings is NightriderCometEffectSettings) {
-            val rgbList = mutableListOf<RgbColor>()
+            val rgbList = ArrayList<RgbColor>(numberOfLeds)
 
             if (location > 0) {
                 // Before comet
@@ -62,7 +66,7 @@ class NightriderLightEffect(
             val dotScaleFactor = 1.5f
             val dotColor = getColor(location, iterations).scale(dotScaleFactor)
 
-            val cometBuffer = mutableListOf<RgbColor>()
+            val cometBuffer = ArrayList<RgbColor>(settings.trailLength + 2)
             // Brightest spot is at the beginning for the reflect scenario
             if (reflect) {
                 cometBuffer.add(dotColor)
@@ -104,7 +108,7 @@ class NightriderLightEffect(
     }
 
     private fun renderNightriderColorFill(): List<RgbColor> {
-        val rgbList = mutableListOf<RgbColor>()
+        val rgbList = ArrayList<RgbColor>(numberOfLeds)
         val brightnessScaling = if (settings is NightriderColorFillEffectSettings) settings.brightnessScaling else 1f
         for (i in 0..<previousLocation) {
             if (reflect) {

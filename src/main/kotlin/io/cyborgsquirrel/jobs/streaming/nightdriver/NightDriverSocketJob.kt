@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.jobs.streaming.nightdriver
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.lighting.enums.EffectLengthMode
 import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
 import io.cyborgsquirrel.jobs.streaming.model.NightDriverStreamingJobState
@@ -59,7 +60,6 @@ class NightDriverSocketJob(
     private val bufferTimeMillis = 500L
     private var lastSeenAt = 0L
     private var sleepMillis = 0L
-    private var lastTimeSyncPerformedAt = 0L
     private val clientTimeSync = ClientTimeSync(timeHelper)
     private val clientTimeOffset: Long
         get() = clientTimeSync.mostRecentClientTimeOffset
@@ -157,7 +157,7 @@ class NightDriverSocketJob(
 
                 StreamingJobStatus.RenderingEffect -> {
                     triggerManager.processTriggers()
-                    val frameList = renderer.renderFrames(strips, clientEntity.uuid)
+                    val frameList = renderer.renderFrames(strips, clientEntity.uuid, EffectLengthMode.Truncate)
 
                     if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
@@ -181,13 +181,12 @@ class NightDriverSocketJob(
 
                         for (encodedFrame in encodedFrames) {
                             // Sync time once every 5 minutes
-                            val isTimeSyncFrame = lastTimeSyncPerformedAt + (1000 * 60 * 5) < now
+                            val isTimeSyncFrame = clientTimeSync.mostRecentTimeSyncPerformedAt + (1000 * 60 * 5) < now
 
                             if (isTimeSyncFrame) {
                                 clientTimeSync.doTimeSync {
                                     sendSocketFrame(encodedFrame)
                                     if (lastResponse != null) {
-                                        lastTimeSyncPerformedAt = now
                                         lastResponse!!.currentClockMillis()
                                     } else {
                                         -1

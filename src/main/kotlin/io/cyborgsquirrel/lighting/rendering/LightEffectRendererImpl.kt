@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.rendering
 
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
+import io.cyborgsquirrel.lighting.enums.EffectLengthMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.isInUse
 import io.cyborgsquirrel.lighting.model.LedStripModel
@@ -16,14 +17,17 @@ import io.cyborgsquirrel.lighting.rendering.post_processing.EffectsBlender
 import io.cyborgsquirrel.lighting.rendering.post_processing.FrameSegmentationHelper
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
-import java.util.concurrent.Semaphore
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 @Singleton
 class LightEffectRendererImpl(
     private val effectRepository: LightEffectRegistry,
 ) : LightEffectRenderer {
 
-    private val lock = Semaphore(1)
+    // Per-pool locks so independent pools render concurrently; only jobs sharing a pool serialize against each other.
+    private val poolLocks = ConcurrentHashMap<String, ReentrantLock>()
     private val cache = StripPoolFrameCache()
     private val tracker = ClientSequenceTracker()
     private val segmentationHelper = FrameSegmentationHelper()
@@ -32,22 +36,26 @@ class LightEffectRendererImpl(
     /**
      * Renders all light effects for the specified LED strips [strips].
      */
-    override fun renderFrames(strips: List<LedStripModel>, clientUuid: String): List<RenderedFrameSegmentModel> {
+    override fun renderFrames(
+        strips: List<LedStripModel>,
+        clientUuid: String,
+        lengthMode: EffectLengthMode,
+    ): List<RenderedFrameSegmentModel> {
         val frameList = mutableListOf<RenderedFrameSegmentModel>()
         for (strip in strips) {
             when (strip) {
                 is LedStripPoolModel -> {
-                    try {
-                        /// Semaphore because strip pools can involve multiple clients and thus multiple job threads
-                        /// jobs should either get the latest frame or the frame cached from the other job's render sequence
-                        lock.acquire()
+                    /// Per-pool lock because strip pools can involve multiple clients and thus multiple job threads
+                    /// jobs should either get the latest frame or the frame cached from the other job's render sequence
+                    val poolLock = poolLocks.getOrPut(strip.uuid) { ReentrantLock() }
+                    poolLock.withLock {
                         val sequenceNumber = tracker.getSequenceNumber(clientUuid, strip.uuid)
                         tracker.setSequenceNumber(clientUuid, strip.uuid, (sequenceNumber + 1).toShort())
                         val cachedFrame = checkCache(strip, sequenceNumber)
                         val renderedFrame = if (cachedFrame != null) {
                             cachedFrame
                         } else {
-                            val renderedFrame = renderFrame(strip)
+                            val renderedFrame = renderFrame(strip, lengthMode)
                             if (renderedFrame != null) {
                                 renderedFrame.sequenceNumber = cache.getSequenceNumber(strip.uuid)
                                 cache.addFrameToCache(renderedFrame)
@@ -60,13 +68,11 @@ class LightEffectRendererImpl(
                             val frameSegments = segmentationHelper.segmentFrame(strips, clientUuid, renderedFrame)
                             frameList.addAll(frameSegments)
                         }
-                    } finally {
-                        lock.release()
                     }
                 }
 
                 is SingleLedStripModel -> {
-                    val renderedFrame = renderFrame(strip)
+                    val renderedFrame = renderFrame(strip, lengthMode)
                     if (renderedFrame != null) {
                         frameList.add(
                             RenderedFrameSegmentModel(
@@ -95,50 +101,70 @@ class LightEffectRendererImpl(
         return null
     }
 
-    private fun renderFrame(strip: LedStripModel): RenderedFrameModel? {
-        val activeEffects =
-            effectRepository.getAllEffectsForStrip(strip.uuid).filter { it.status.isInUse() }.sortedBy { it.layer }
+    private fun renderFrame(strip: LedStripModel, lengthMode: EffectLengthMode): RenderedFrameModel? {
+        val effectsForStrip = effectRepository.getAllEffectsForStrip(strip.uuid)
+        val activeEffects = effectsForStrip.filter { it.status.isInUse() }.sortedBy { it.layer }
         return if (activeEffects.isEmpty()) {
             null
         } else {
-            renderFrame(strip, activeEffects)
+            renderFrame(strip, activeEffects, lengthMode)
         }
     }
 
     private fun renderFrame(
         strip: LedStripModel,
-        activeEffects: List<ActiveLightEffect>
+        activeEffects: List<ActiveLightEffect>,
+        lengthMode: EffectLengthMode,
     ): RenderedFrameModel {
-        val allEffectsRgbData = mutableListOf<List<RgbColor>>()
-        val activeEffectsByLayer = activeEffects.sortedBy { it.layer }
-        for (activeEffect in activeEffectsByLayer) {
+        val stripLength = strip.length()
+        val allEffectsRgbData = ArrayList<List<RgbColor>>(activeEffects.size)
+        for (activeEffect in activeEffects) {
             logger.debug("Rendering effect {}", activeEffect)
-            var rgbData = if (activeEffect.status == LightEffectStatus.Playing) {
-                activeEffect.effect.getNextStep()
-            } else {
-                activeEffect.effect.getBuffer()
-            }
+            val playing = activeEffect.status == LightEffectStatus.Playing
+            var rgbData = if (playing) activeEffect.effect.getNextStep() else activeEffect.effect.getBuffer()
+
             for (filter in activeEffect.filters) {
-                logger.debug("Applying filter ${filter.uuid}")
+                logger.debug("Applying filter {}", filter.uuid)
                 rgbData = filter.apply(rgbData)
             }
 
-            if (activeEffect.skipFramesIfBlank && activeEffect.status == LightEffectStatus.Playing) {
-                var allBlank = true
-                while (allBlank) {
-                    for (data in rgbData) {
-                        allBlank = allBlank && data == RgbColor.Blank
+            if (activeEffect.skipFramesIfBlank && playing) {
+                var skipped = 0
+                while (skipped < MAX_BLANK_FRAME_SKIPS && rgbData.all { it.isBlank() }) {
+                    logger.debug(
+                        "All frames are blank and effect {} is set to skip blank frames", activeEffect.effectUuid
+                    )
+                    rgbData = activeEffect.effect.getNextStep()
+                    for (filter in activeEffect.filters) {
+                        rgbData = filter.apply(rgbData)
                     }
+                    skipped++
+                }
+            }
 
-                    if (allBlank) {
-                        logger.debug(
-                            "All frames are blank and effect {} is set to skip blank frames", activeEffect.effectUuid
+            when (lengthMode) {
+                EffectLengthMode.Truncate -> {
+                    if (rgbData.size > stripLength) {
+                        logger.warn(
+                            "Effect {} output {} LEDs, truncating to strip length {}",
+                            activeEffect.effectUuid, rgbData.size, stripLength
                         )
-                        rgbData = activeEffect.effect.getNextStep()
-                        for (filter in activeEffect.filters) {
-                            rgbData = filter.apply(rgbData)
-                        }
+                        rgbData = rgbData.take(stripLength)
                     }
+                }
+
+                EffectLengthMode.Ignore -> {
+                    if (rgbData.size != stripLength) {
+                        logger.warn(
+                            "Ignoring effect {} - output {} LEDs does not match strip length {}",
+                            activeEffect.effectUuid, rgbData.size, stripLength
+                        )
+                        continue
+                    }
+                }
+
+                EffectLengthMode.Permissive -> {
+                    // Allow output of any length through unchanged.
                 }
             }
 
@@ -151,6 +177,9 @@ class LightEffectRendererImpl(
     }
 
     companion object {
+        // Safety bound so an effect that always renders blank can't spin the render loop forever.
+        // 4 seconds at 30 fps = 120
+        private const val MAX_BLANK_FRAME_SKIPS = 120
         private val logger = LoggerFactory.getLogger(LightEffectRendererImpl::class.java)
     }
 }

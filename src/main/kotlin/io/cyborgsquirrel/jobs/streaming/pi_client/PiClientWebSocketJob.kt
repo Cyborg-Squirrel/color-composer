@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.jobs.streaming.pi_client
 
 import io.cyborgsquirrel.clients.config.pi_client.PiClientSettings
+import io.cyborgsquirrel.lighting.enums.EffectLengthMode
 import io.cyborgsquirrel.clients.config.pi_client.PiClientStripConfig
 import io.cyborgsquirrel.clients.config.pi_client.PiConfigClient
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
@@ -180,7 +181,7 @@ class PiClientWebSocketJob(
                         status = StreamingJobStatus.TimeSyncRequired
                     } else {
                         triggerManager.processTriggers()
-                        val frames = renderer.renderFrames(strips, clientEntity.uuid)
+                        val frames = renderer.renderFrames(strips, clientEntity.uuid, EffectLengthMode.Permissive)
                         if (frames.isEmpty()) {
                             sendKeepaliveIfDue()
                             timestampMillis = currentTimeAsMillis + clientTimeSync.mostRecentClientTimeOffset

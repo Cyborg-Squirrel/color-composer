@@ -40,7 +40,7 @@ class EffectsBlenderTest : StringSpec({
         result.size shouldBe 3
         result[0] shouldBe RgbColor(255u, 0u, 0u)
         result[1] shouldBe RgbColor(255u, 255u, 0u)
-        result[2] shouldBe RgbColor(255u, 254u, 254u) // 255 + 255 wraps around the max value back to 254
+        result[2] shouldBe RgbColor(255u, 255u, 255u) // saturating add clamps each channel at the max value
     }
 
     "average blend mode" {
@@ -152,6 +152,25 @@ class EffectsBlenderTest : StringSpec({
         result.size shouldBe 3
         result[0] shouldBe RgbColor.Blank
         result[1] shouldBe RgbColor(255u, 255u, 100u)
+        result[2] shouldBe RgbColor(0u, 0u, 255u)
+    }
+
+    "single effect is passed through unchanged" {
+        val strip = mockk<LedStripModel>()
+        every { strip.length() } returns 3
+        every { strip.blendMode } returns BlendMode.Layer
+
+        val effect = listOf(
+            RgbColor(255u, 0u, 0u),
+            RgbColor.Blank,
+            RgbColor(0u, 0u, 255u)
+        )
+
+        val result = blender.blendEffects(strip, listOf(effect))
+
+        result.size shouldBe 3
+        result[0] shouldBe RgbColor(255u, 0u, 0u)
+        result[1] shouldBe RgbColor.Blank
         result[2] shouldBe RgbColor(0u, 0u, 255u)
     }
 })

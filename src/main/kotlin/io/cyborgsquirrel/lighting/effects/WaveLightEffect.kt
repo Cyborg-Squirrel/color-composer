@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.WaveEffectSettings
+import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.effects.shared.Comet
 import io.cyborgsquirrel.lighting.enums.Direction
 import io.cyborgsquirrel.lighting.enums.FadeCurve
@@ -28,11 +29,12 @@ class WaveLightEffect(
     private val waveLength = settings.waveLength
     private val startPoint = (settings.startPointPercentage / 100.0 * numberOfLeds).toInt()
     private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
-        if (frame != 0 && !isUpdateDue(settings.updatesPerSecond)) return buffer
-
-        val rgbData = mutableListOf<RgbColor>()
+        val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
+        if (!updateDue) return buffer
+        val rgbData = ArrayList<RgbColor>(numberOfLeds)
         if (waveALocation <= -waveLength && waveBLocation >= numberOfLeds + waveLength) {
             iterations++
             waveALocation = startPoint - 1
@@ -72,6 +74,7 @@ class WaveLightEffect(
 
         frame++
         buffer = rgbData
+        checker.onUpdate(timeHelper.millisSinceEpoch())
         return rgbData
     }
 

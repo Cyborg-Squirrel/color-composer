@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
+import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.effects.settings.FlameEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -24,10 +25,14 @@ class FlameLightEffect(
     private var iterations = 0
     private val heat = IntArray(numberOfLeds)
     private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
-        if (!isUpdateDue(settings.updatesPerSecond)) return buffer
+        // To save on CPU cycles don't update the bouncing ball sim more than 60 times per second
+        val updateDue = checker.isUpdateDue(60)
+        if (!updateDue) return buffer
         buffer = drawFire()
+        checker.onUpdate(timeHelper.millisSinceEpoch())
         return buffer
     }
 
@@ -62,7 +67,7 @@ class FlameLightEffect(
         }
 
         // Convert heat to color
-        val rgbList = mutableListOf<RgbColor>()
+        val rgbList = ArrayList<RgbColor>(heat.size)
         for (i in heat.indices) {
             val color = getColor(heat[heat.size - 1 - i], i)
             rgbList.add(color)

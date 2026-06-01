@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.MarqueeEffectSettings
+import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.shift
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -17,13 +18,15 @@ class MarqueeEffect(
     private var iterations = 0
     private var shiftAmount = 0
     private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
-        if (buffer.isNotEmpty() && !isUpdateDue(settings.updatesPerSecond)) return buffer
+        val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
+        if (!updateDue) return buffer
         shiftAmount = (shiftAmount + 1) % numberOfLeds
 
         val dotList = mutableListOf<Boolean>()
-        val rgbList = mutableListOf<RgbColor>()
+        val rgbList = ArrayList<RgbColor>(numberOfLeds)
         var drawingDot = true
         var dotStart = 0
         var spaceStart = 0
@@ -54,7 +57,7 @@ class MarqueeEffect(
 
         val shiftedDotList = dotList.shift(shiftAmount)
 
-        for (indx in shiftedDotList.indices) {
+        for (indx in 0..<numberOfLeds) {
             if (shiftedDotList[indx]) {
                 rgbList.add(getColor(indx))
             } else {
@@ -64,6 +67,7 @@ class MarqueeEffect(
 
         frame++
         buffer = rgbList
+        checker.onUpdate(timeHelper.millisSinceEpoch())
         return rgbList
     }
 

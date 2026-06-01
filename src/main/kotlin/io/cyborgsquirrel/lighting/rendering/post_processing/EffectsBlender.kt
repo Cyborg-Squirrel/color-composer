@@ -10,30 +10,31 @@ class EffectsBlender {
      * Blends the RGB data from multiple effects into a single [RgbColor] buffer matching the length of the [strip]
      * [effectsRgbData] is must be sorted by priority highest to lowest for [BlendMode.Layer] to function correctly.
      */
-    fun blendEffects(strip: LedStripModel, effectsRgbData: List<List<RgbColor>>): MutableList<RgbColor> {
-        val renderedRgbData = mutableListOf<RgbColor>()
-        for (i in 0..<strip.length()) {
-            when (strip.blendMode) {
-                BlendMode.Additive -> {
-                    var didAdd = false
+    fun blendEffects(strip: LedStripModel, effectsRgbData: List<List<RgbColor>>): List<RgbColor> {
+        // With a single effect every blend mode resolves to that effect's own buffer, so skip the per-pixel work.
+        if (effectsRgbData.size == 1) {
+            return effectsRgbData[0]
+        }
+
+        val length = strip.length()
+        val renderedRgbData = ArrayList<RgbColor>(length)
+        // Resolve the blend mode once rather than branching on every pixel.
+        when (strip.blendMode) {
+            BlendMode.Additive -> {
+                for (i in 0..<length) {
+                    var blended: RgbColor? = null
                     for (j in effectsRgbData.indices) {
                         val rgbColor = effectsRgbData[j][i]
                         if (!rgbColor.isBlank()) {
-                            if (didAdd) {
-                                renderedRgbData[i] += rgbColor
-                            } else {
-                                didAdd = true
-                                renderedRgbData.add(rgbColor)
-                            }
+                            blended = if (blended == null) rgbColor else blended + rgbColor
                         }
                     }
-
-                    if (!didAdd) {
-                        renderedRgbData.add(RgbColor.Blank)
-                    }
+                    renderedRgbData.add(blended ?: RgbColor.Blank)
                 }
+            }
 
-                BlendMode.Average -> {
+            BlendMode.Average -> {
+                for (i in 0..<length) {
                     var red = 0
                     var green = 0
                     var blue = 0
@@ -52,42 +53,34 @@ class EffectsBlender {
                         )
                     )
                 }
+            }
 
-                BlendMode.Layer -> {
+            BlendMode.Layer -> {
+                for (i in 0..<length) {
                     var red = 0.toUByte()
                     var green = 0.toUByte()
                     var blue = 0.toUByte()
                     for (j in effectsRgbData.indices) {
                         val rgbColor = effectsRgbData[j][i]
-                        if (rgbColor.red != 0.toUByte()) {
-                            red = rgbColor.red
-                        }
-                        if (rgbColor.green != 0.toUByte()) {
-                            green = rgbColor.green
-                        }
-                        if (rgbColor.blue != 0.toUByte()) {
-                            blue = rgbColor.blue
-                        }
+                        if (rgbColor.red != 0.toUByte()) red = rgbColor.red
+                        if (rgbColor.green != 0.toUByte()) green = rgbColor.green
+                        if (rgbColor.blue != 0.toUByte()) blue = rgbColor.blue
                     }
 
                     renderedRgbData.add(RgbColor(red, green, blue))
                 }
+            }
 
-                BlendMode.UseHighest -> {
+            BlendMode.UseHighest -> {
+                for (i in 0..<length) {
                     var red = 0.toUByte()
                     var green = 0.toUByte()
                     var blue = 0.toUByte()
                     for (j in effectsRgbData.indices) {
                         val rgbColor = effectsRgbData[j][i]
-                        if (rgbColor.red > red) {
-                            red = rgbColor.red
-                        }
-                        if (rgbColor.green > green) {
-                            green = rgbColor.green
-                        }
-                        if (rgbColor.blue > blue) {
-                            blue = rgbColor.blue
-                        }
+                        if (rgbColor.red > red) red = rgbColor.red
+                        if (rgbColor.green > green) green = rgbColor.green
+                        if (rgbColor.blue > blue) blue = rgbColor.blue
                     }
 
                     renderedRgbData.add(RgbColor(red, green, blue))

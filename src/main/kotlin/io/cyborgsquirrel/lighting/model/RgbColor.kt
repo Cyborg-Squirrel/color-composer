@@ -44,7 +44,13 @@ data class RgbColor(val red: UByte, val green: UByte, val blue: UByte) {
     }
 
     operator fun plus(other: RgbColor): RgbColor {
-        return RgbColor((red + other.red).toUByte(), (green + other.green).toUByte(), (blue + other.blue).toUByte())
+        // Saturating add — channels clamp at the max value instead of wrapping around (e.g. additive blending).
+        val max = UByte.MAX_VALUE.toUInt()
+        return RgbColor(
+            minOf(red + other.red, max).toUByte(),
+            minOf(green + other.green, max).toUByte(),
+            minOf(blue + other.blue, max).toUByte(),
+        )
     }
 
     operator fun div(denominator: UInt): RgbColor {

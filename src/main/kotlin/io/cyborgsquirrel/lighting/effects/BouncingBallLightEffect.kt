@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
+import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.effects.settings.BouncingBallEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -28,10 +29,14 @@ class BouncingBallLightEffect(
     private var iterations = 0
     private lateinit var backupColor: RgbColor
     private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
+        // To save on CPU cycles don't update the bouncing ball sim more than 60 times per second
+        val updateDue = checker.isUpdateDue(60)
+        if (!updateDue) return buffer
         val ballLocation = getBallPosition()
-        val rgbList = mutableListOf<RgbColor>()
+        val rgbList = ArrayList<RgbColor>(numberOfLeds)
         for (i in 0..<ballLocation) {
             rgbList.add(RgbColor.Blank)
         }
@@ -44,6 +49,7 @@ class BouncingBallLightEffect(
             rgbList.add(RgbColor.Blank)
         }
 
+        checker.onUpdate(timeHelper.millisSinceEpoch())
         buffer = rgbList
         return rgbList
     }

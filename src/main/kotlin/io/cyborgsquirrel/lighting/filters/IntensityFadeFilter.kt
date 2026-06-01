@@ -27,32 +27,23 @@ open class IntensityFadeFilter(
      * Scales the list of [RgbColor] from [startingIntensity] to the [endingIntensity] value.
      */
     override fun apply(rgbList: List<RgbColor>): List<RgbColor> {
-        val millisSinceEpoch = timeHelper.millisSinceEpoch()
-        return if (startTimeEpochMillis == 0L) {
-            startTimeEpochMillis = millisSinceEpoch
-            return rgbList.map {
-                it.scale(if (settings.fadeDuration.toMillis() == 0L) endingIntensity else startingIntensity)
-            }
-        } else {
-            if (startTimeEpochMillis + settings.fadeDuration.toMillis() < millisSinceEpoch) {
-                rgbList.map {
-                    it.scale(endingIntensity)
-                }
-            } else {
-                val millisSinceStart = millisSinceEpoch - startTimeEpochMillis
-                val percentComplete = millisSinceStart.toFloat() / fadeDuration.toMillis()
-                val startingIntensityList = rgbList.map {
-                    it.scale(startingIntensity)
-                }
-                val endingIntensityList = rgbList.map {
-                    it.scale(endingIntensity)
-                }
-                val currentIntensityList = startingIntensityList.mapIndexed { index, rgbColor ->
-                    rgbColor.interpolate(endingIntensityList[index], percentComplete)
-                }
+        // Interpolating per channel and then blending the two scaled buffers is equivalent to scaling once by the
+        // interpolated intensity, so compute a single factor and apply it in one pass.
+        val intensity = currentIntensity()
+        return rgbList.map { it.scale(intensity) }
+    }
 
-                currentIntensityList
-            }
+    private fun currentIntensity(): Float {
+        val millisSinceEpoch = timeHelper.millisSinceEpoch()
+        val fadeDurationMillis = fadeDuration.toMillis()
+        if (startTimeEpochMillis == 0L) {
+            startTimeEpochMillis = millisSinceEpoch
+            return if (fadeDurationMillis == 0L) endingIntensity else startingIntensity
         }
+        if (startTimeEpochMillis + fadeDurationMillis < millisSinceEpoch) {
+            return endingIntensity
+        }
+        val percentComplete = (millisSinceEpoch - startTimeEpochMillis).toFloat() / fadeDurationMillis
+        return startingIntensity + (endingIntensity - startingIntensity) * percentComplete
     }
 }

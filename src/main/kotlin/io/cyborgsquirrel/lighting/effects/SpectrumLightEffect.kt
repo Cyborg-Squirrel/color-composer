@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.effects
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effect_palette.palette.GradientColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.SpectrumEffectSettings
+import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.shift
 import io.cyborgsquirrel.util.time.TimeHelper
@@ -20,11 +21,16 @@ class SpectrumLightEffect(
     private var referenceFrame = mutableListOf<RgbColor>()
     private val colorWidth = getColorWidth()
     private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
-        if (referenceFrame.isNotEmpty() && !isUpdateDue(settings.updatesPerSecond)) return buffer
+        val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
+        if (!updateDue) return buffer
+        // getNextStep always advances now (the renderer gates on isUpdateDue), and it has several exit paths, so
+        // record the update once up front.
+        checker.onUpdate(timeHelper.millisSinceEpoch())
 
-        val rgbList = mutableListOf<RgbColor>()
+        val rgbList = ArrayList<RgbColor>(numberOfLeds)
         val repeatOfColorsCount = ceil((numberOfLeds.toFloat() / colorWidth)).toInt()
 
         if (referenceFrame.isEmpty()) {
