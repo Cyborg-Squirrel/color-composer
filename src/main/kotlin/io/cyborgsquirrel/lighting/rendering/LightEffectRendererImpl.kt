@@ -2,7 +2,6 @@ package io.cyborgsquirrel.lighting.rendering
 
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
-import io.cyborgsquirrel.lighting.enums.EffectLengthMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.enums.isInUse
 import io.cyborgsquirrel.lighting.model.LedStripModel
@@ -39,7 +38,6 @@ class LightEffectRendererImpl(
     override fun renderFrames(
         strips: List<LedStripModel>,
         clientUuid: String,
-        lengthMode: EffectLengthMode,
     ): List<RenderedFrameSegmentModel> {
         val frameList = mutableListOf<RenderedFrameSegmentModel>()
         for (strip in strips) {
@@ -55,7 +53,7 @@ class LightEffectRendererImpl(
                         val renderedFrame = if (cachedFrame != null) {
                             cachedFrame
                         } else {
-                            val renderedFrame = renderFrame(strip, lengthMode)
+                            val renderedFrame = renderFrame(strip)
                             if (renderedFrame != null) {
                                 renderedFrame.sequenceNumber = cache.getSequenceNumber(strip.uuid)
                                 cache.addFrameToCache(renderedFrame)
@@ -72,7 +70,7 @@ class LightEffectRendererImpl(
                 }
 
                 is SingleLedStripModel -> {
-                    val renderedFrame = renderFrame(strip, lengthMode)
+                    val renderedFrame = renderFrame(strip)
                     if (renderedFrame != null) {
                         frameList.add(
                             RenderedFrameSegmentModel(
@@ -101,20 +99,19 @@ class LightEffectRendererImpl(
         return null
     }
 
-    private fun renderFrame(strip: LedStripModel, lengthMode: EffectLengthMode): RenderedFrameModel? {
+    private fun renderFrame(strip: LedStripModel): RenderedFrameModel? {
         val effectsForStrip = effectRepository.getAllEffectsForStrip(strip.uuid)
         val activeEffects = effectsForStrip.filter { it.status.isInUse() }.sortedBy { it.layer }
         return if (activeEffects.isEmpty()) {
             null
         } else {
-            renderFrame(strip, activeEffects, lengthMode)
+            renderFrame(strip, activeEffects)
         }
     }
 
     private fun renderFrame(
         strip: LedStripModel,
         activeEffects: List<ActiveLightEffect>,
-        lengthMode: EffectLengthMode,
     ): RenderedFrameModel {
         val stripLength = strip.length()
         val allEffectsRgbData = ArrayList<List<RgbColor>>(activeEffects.size)
@@ -142,30 +139,12 @@ class LightEffectRendererImpl(
                 }
             }
 
-            when (lengthMode) {
-                EffectLengthMode.Truncate -> {
-                    if (rgbData.size > stripLength) {
-                        logger.warn(
-                            "Effect {} output {} LEDs, truncating to strip length {}",
-                            activeEffect.effectUuid, rgbData.size, stripLength
-                        )
-                        rgbData = rgbData.take(stripLength)
-                    }
-                }
-
-                EffectLengthMode.Ignore -> {
-                    if (rgbData.size != stripLength) {
-                        logger.warn(
-                            "Ignoring effect {} - output {} LEDs does not match strip length {}",
-                            activeEffect.effectUuid, rgbData.size, stripLength
-                        )
-                        continue
-                    }
-                }
-
-                EffectLengthMode.Permissive -> {
-                    // Allow output of any length through unchanged.
-                }
+            if (rgbData.size > stripLength) {
+                logger.warn(
+                    "Effect {} output {} LEDs, truncating to strip length {}",
+                    activeEffect.effectUuid, rgbData.size, stripLength
+                )
+                rgbData = rgbData.take(stripLength)
             }
 
             allEffectsRgbData.add(rgbData)
