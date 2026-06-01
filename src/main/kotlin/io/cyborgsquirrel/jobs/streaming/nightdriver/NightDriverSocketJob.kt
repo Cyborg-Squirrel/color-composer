@@ -59,7 +59,6 @@ class NightDriverSocketJob(
     private val bufferTimeMillis = 500L
     private var lastSeenAt = 0L
     private var sleepMillis = 0L
-    private var lastTimeSyncPerformedAt = 0L
     private val clientTimeSync = ClientTimeSync(timeHelper)
     private val clientTimeOffset: Long
         get() = clientTimeSync.mostRecentClientTimeOffset
@@ -181,13 +180,12 @@ class NightDriverSocketJob(
 
                         for (encodedFrame in encodedFrames) {
                             // Sync time once every 5 minutes
-                            val isTimeSyncFrame = lastTimeSyncPerformedAt + (1000 * 60 * 5) < now
+                            val isTimeSyncFrame = clientTimeSync.mostRecentTimeSyncPerformedAt + (1000 * 60 * 5) < now
 
                             if (isTimeSyncFrame) {
                                 clientTimeSync.doTimeSync {
                                     sendSocketFrame(encodedFrame)
                                     if (lastResponse != null) {
-                                        lastTimeSyncPerformedAt = now
                                         lastResponse!!.currentClockMillis()
                                     } else {
                                         -1

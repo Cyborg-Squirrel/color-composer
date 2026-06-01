@@ -57,7 +57,7 @@ class MarqueeEffect(
 
         val shiftedDotList = dotList.shift(shiftAmount)
 
-        for (indx in shiftedDotList.indices) {
+        for (indx in 0..<numberOfLeds) {
             if (shiftedDotList[indx]) {
                 rgbList.add(getColor(indx))
             } else {
