@@ -113,17 +113,15 @@ class LightEffectRendererImpl(
         val allEffectsRgbData = ArrayList<List<RgbColor>>(activeEffects.size)
         for (activeEffect in activeEffects) {
             logger.debug("Rendering effect {}", activeEffect)
-            // Advance the effect only when it is playing and due for an update; otherwise reuse its current buffer.
-            // This is where per-effect throttling (updatesPerSecond) happens.
-            val due = activeEffect.status == LightEffectStatus.Playing
-            var rgbData = if (due) activeEffect.effect.getNextStep() else activeEffect.effect.getBuffer()
+            val playing = activeEffect.status == LightEffectStatus.Playing
+            var rgbData = if (playing) activeEffect.effect.getNextStep() else activeEffect.effect.getBuffer()
 
             for (filter in activeEffect.filters) {
                 logger.debug("Applying filter {}", filter.uuid)
                 rgbData = filter.apply(rgbData)
             }
 
-            if (activeEffect.skipFramesIfBlank && due) {
+            if (activeEffect.skipFramesIfBlank && playing) {
                 var skipped = 0
                 while (skipped < MAX_BLANK_FRAME_SKIPS && rgbData.all { it.isBlank() }) {
                     logger.debug(
