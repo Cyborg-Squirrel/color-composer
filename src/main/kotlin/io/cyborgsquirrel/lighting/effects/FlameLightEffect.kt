@@ -28,14 +28,15 @@ class FlameLightEffect(
     private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
+        // To save on CPU cycles don't update the bouncing ball sim more than 60 times per second
+        val updateDue = checker.isUpdateDue(60)
+        if (!updateDue) return buffer
         buffer = drawFire()
         checker.onUpdate(timeHelper.millisSinceEpoch())
         return buffer
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
-
-    override fun isUpdateDue(): Boolean = checker.isUpdateDue(settings.updatesPerSecond)
 
     override fun getIterations() = iterations
 

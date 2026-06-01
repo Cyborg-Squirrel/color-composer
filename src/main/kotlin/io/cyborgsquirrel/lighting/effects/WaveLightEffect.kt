@@ -32,6 +32,8 @@ class WaveLightEffect(
     private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
+        val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
+        if (!updateDue) return buffer
         val rgbData = ArrayList<RgbColor>(numberOfLeds)
         if (waveALocation <= -waveLength && waveBLocation >= numberOfLeds + waveLength) {
             iterations++
@@ -77,8 +79,6 @@ class WaveLightEffect(
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
-
-    override fun isUpdateDue(): Boolean = checker.isUpdateDue(settings.updatesPerSecond)
 
     override fun getIterations() = iterations
 

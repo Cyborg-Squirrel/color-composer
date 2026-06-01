@@ -24,6 +24,8 @@ class SpectrumLightEffect(
     private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
+        val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
+        if (!updateDue) return buffer
         // getNextStep always advances now (the renderer gates on isUpdateDue), and it has several exit paths, so
         // record the update once up front.
         checker.onUpdate(timeHelper.millisSinceEpoch())
@@ -80,8 +82,6 @@ class SpectrumLightEffect(
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
-
-    override fun isUpdateDue(): Boolean = checker.isUpdateDue(settings.updatesPerSecond)
 
     private fun colorList(index: Int): List<RgbColor> {
         if (palette != null) {

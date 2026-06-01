@@ -21,6 +21,8 @@ class MarqueeEffect(
     private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
+        val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
+        if (!updateDue) return buffer
         shiftAmount = (shiftAmount + 1) % numberOfLeds
 
         val dotList = mutableListOf<Boolean>()
@@ -70,8 +72,6 @@ class MarqueeEffect(
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
-
-    override fun isUpdateDue(): Boolean = checker.isUpdateDue(settings.updatesPerSecond)
 
     override fun getIterations() = iterations
 

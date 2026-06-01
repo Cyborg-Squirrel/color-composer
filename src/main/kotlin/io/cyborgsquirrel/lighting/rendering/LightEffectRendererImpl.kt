@@ -115,7 +115,7 @@ class LightEffectRendererImpl(
             logger.debug("Rendering effect {}", activeEffect)
             // Advance the effect only when it is playing and due for an update; otherwise reuse its current buffer.
             // This is where per-effect throttling (updatesPerSecond) happens.
-            val due = activeEffect.status == LightEffectStatus.Playing && activeEffect.effect.isUpdateDue()
+            val due = activeEffect.status == LightEffectStatus.Playing
             var rgbData = if (due) activeEffect.effect.getNextStep() else activeEffect.effect.getBuffer()
 
             for (filter in activeEffect.filters) {

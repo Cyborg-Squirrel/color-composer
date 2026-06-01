@@ -34,31 +34,6 @@ class LightEffectRendererImplTest : StringSpec({
         status: LightEffectStatus = LightEffectStatus.Playing,
     ) = ActiveLightEffect(uuid, 0, false, status, effect, emptyList(), strip)
 
-    "advances a playing effect only when it is due for an update" {
-        val strip = singleStrip("strip-1", 3)
-        val registry = mockk<LightEffectRegistry>()
-        val effect = mockk<LightEffect>()
-        val nextBuf = listOf(RgbColor(1u, 0u, 0u), RgbColor.Blank, RgbColor.Blank)
-        val currentBuf = listOf(RgbColor.Blank, RgbColor.Blank, RgbColor.Blank)
-        every { effect.getNextStep() } returns nextBuf
-        every { effect.getBuffer() } returns currentBuf
-        every { registry.getAllEffectsForStrip("strip-1") } returns listOf(activeEffect("a", effect, strip))
-
-        val renderer = LightEffectRendererImpl(registry)
-
-        // Due → getNextStep()
-        every { effect.isUpdateDue() } returns true
-        val due = renderer.renderFrames(listOf(strip), "client-1")
-        due[0].frameData shouldBe nextBuf
-        verify(exactly = 1) { effect.getNextStep() }
-
-        // Not due → getBuffer(), and getNextStep() is not called again.
-        every { effect.isUpdateDue() } returns false
-        val notDue = renderer.renderFrames(listOf(strip), "client-1")
-        notDue[0].frameData shouldBe currentBuf
-        verify(exactly = 1) { effect.getNextStep() }
-    }
-
     "never advances a paused effect or asks whether it is due" {
         val strip = singleStrip("strip-2", 3)
         val registry = mockk<LightEffectRegistry>()
@@ -73,6 +48,5 @@ class LightEffectRendererImplTest : StringSpec({
 
         result[0].frameData shouldBe currentBuf
         verify(exactly = 0) { effect.getNextStep() }
-        verify(exactly = 0) { effect.isUpdateDue() }
     }
 })

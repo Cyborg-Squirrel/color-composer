@@ -13,8 +13,6 @@ sealed class LightEffect(
 
     abstract fun getNextStep(): List<RgbColor>
 
-    abstract fun isUpdateDue(): Boolean
-
     abstract fun getBuffer(): List<RgbColor>
 
     abstract fun getIterations(): Int

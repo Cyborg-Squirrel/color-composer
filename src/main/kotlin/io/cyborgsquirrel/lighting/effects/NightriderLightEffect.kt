@@ -34,6 +34,8 @@ class NightriderLightEffect(
     private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
+        val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
+        if (!updateDue) return buffer
         onNextStep()
 
         buffer = when (settings) {
@@ -48,8 +50,6 @@ class NightriderLightEffect(
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
-
-    override fun isUpdateDue(): Boolean = checker.isUpdateDue(settings.updatesPerSecond)
 
     private fun renderNightriderComet(): List<RgbColor> {
         return if (settings is NightriderCometEffectSettings) {

@@ -32,6 +32,9 @@ class BouncingBallLightEffect(
     private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
+        // To save on CPU cycles don't update the bouncing ball sim more than 60 times per second
+        val updateDue = checker.isUpdateDue(60)
+        if (!updateDue) return buffer
         val ballLocation = getBallPosition()
         val rgbList = ArrayList<RgbColor>(numberOfLeds)
         for (i in 0..<ballLocation) {
@@ -50,9 +53,6 @@ class BouncingBallLightEffect(
         buffer = rgbList
         return rgbList
     }
-
-    // To save on CPU cycles don't update the bouncing ball sim more than 60 times per second
-    override fun isUpdateDue() = checker.isUpdateDue(60)
 
     override fun getBuffer(): List<RgbColor> = buffer
 
