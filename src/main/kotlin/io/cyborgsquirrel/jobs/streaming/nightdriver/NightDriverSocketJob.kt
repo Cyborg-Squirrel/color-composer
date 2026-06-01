@@ -1,6 +1,7 @@
 package io.cyborgsquirrel.jobs.streaming.nightdriver
 
 import io.cyborgsquirrel.clients.entity.LedStripClientEntity
+import io.cyborgsquirrel.lighting.enums.EffectLengthMode
 import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.jobs.streaming.ClientStreamingJob
 import io.cyborgsquirrel.jobs.streaming.model.NightDriverStreamingJobState
@@ -156,7 +157,7 @@ class NightDriverSocketJob(
 
                 StreamingJobStatus.RenderingEffect -> {
                     triggerManager.processTriggers()
-                    val frameList = renderer.renderFrames(strips, clientEntity.uuid)
+                    val frameList = renderer.renderFrames(strips, clientEntity.uuid, EffectLengthMode.Truncate)
 
                     if (frameList.isEmpty()) {
                         // Sleep for the equivalent of 2 frames
