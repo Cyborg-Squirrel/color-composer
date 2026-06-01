@@ -18,6 +18,11 @@ import kotlin.concurrent.withLock
 class LightEffectRegistryImpl : LightEffectRegistry {
     private val sink: Sinks.Many<List<ActiveLightEffect>> = Sinks.many().multicast().onBackpressureBuffer()
     private val effectListRef = AtomicReference(listOf<ActiveLightEffect>())
+
+    // Effects grouped by strip uuid, rebuilt only when the effect set changes. This keeps the per-frame render path
+    // off the global effect list, and the per-strip list instance is stable between changes so the renderer can use
+    // its identity to detect that a strip's effects are unchanged.
+    private val effectsByStripRef = AtomicReference(mapOf<String, List<ActiveLightEffect>>())
     private val writeLock = ReentrantLock()
 
     override val updates: Flux<List<ActiveLightEffect>> = sink.asFlux()
@@ -32,7 +37,7 @@ class LightEffectRegistryImpl : LightEffectRegistry {
                 logger.info("Updating light effect $lightEffect")
                 current.map { if (it.effectUuid == lightEffect.effectUuid) lightEffect else it }
             }
-            effectListRef.set(updated)
+            setEffects(updated)
             updated
         }
         sink.tryEmitNext(snapshot)
@@ -42,7 +47,7 @@ class LightEffectRegistryImpl : LightEffectRegistry {
         val snapshot: List<ActiveLightEffect> = writeLock.withLock {
             logger.info("Removing light effect $lightEffect")
             val updated = effectListRef.get() - lightEffect
-            effectListRef.set(updated)
+            setEffects(updated)
             updated
         }
         sink.tryEmitNext(snapshot)
@@ -59,15 +64,21 @@ class LightEffectRegistryImpl : LightEffectRegistry {
         }
 
     override fun getAllEffectsForStrip(stripUuid: String): List<ActiveLightEffect> =
-        effectListRef.get().filter { it.strip.uuid == stripUuid }
+        effectsByStripRef.get()[stripUuid] ?: emptyList()
 
     override fun getAllEffects(): List<ActiveLightEffect> = effectListRef.get()
 
     override fun removeAllEffects() {
         writeLock.withLock {
-            effectListRef.set(emptyList())
+            setEffects(emptyList())
         }
         sink.tryEmitNext(emptyList())
+    }
+
+    /** Must be called while holding [writeLock]. Updates the effect list and the strip index together. */
+    private fun setEffects(effects: List<ActiveLightEffect>) {
+        effectListRef.set(effects)
+        effectsByStripRef.set(effects.groupBy { it.strip.uuid })
     }
 
     companion object {

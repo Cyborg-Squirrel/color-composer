@@ -8,7 +8,7 @@ import kotlin.math.max
 
 class Comet(val color: RgbColor, val length: Int, val fadeCurve: FadeCurve, val direction: Direction) {
 
-    private val cometBuffer = mutableListOf<RgbColor>()
+    private val cometBuffer = ArrayList<RgbColor>(length)
 
     val buffer: MutableList<RgbColor>
         get() = cometBuffer

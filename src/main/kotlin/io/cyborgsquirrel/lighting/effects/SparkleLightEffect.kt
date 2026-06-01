@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.SparkleEffectSettings
+import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlin.random.Random
@@ -29,10 +30,10 @@ class SparkleLightEffect(
     private val dots = mutableListOf<Dot>()
     private var buffer = MutableList(numberOfLeds) { RgbColor.Blank }
     private var iterations = 0
+    private val checker = EffectUpdateTickChecker(timeHelper)
 
     override fun getNextStep(): List<RgbColor> {
-        if (!isUpdateDue(settings.updatesPerSecond)) return buffer
-        val now = lastUpdatedMillis
+        val now = timeHelper.millisSinceEpoch()
 
         val iterator = dots.iterator()
         while (iterator.hasNext()) {
@@ -66,10 +67,13 @@ class SparkleLightEffect(
         }
 
         iterations++
+        checker.onUpdate(now)
         return buffer
     }
 
     override fun getBuffer(): List<RgbColor> = buffer
+
+    override fun isUpdateDue(): Boolean = checker.isUpdateDue(settings.updatesPerSecond)
 
     override fun getIterations(): Int = iterations
 

@@ -22,6 +22,8 @@ class CustomLightEffect(
         TODO("Not yet implemented")
     }
 
+    override fun isUpdateDue(): Boolean = true
+
     override fun getIterations(): Int {
         TODO("Not yet implemented")
     }
