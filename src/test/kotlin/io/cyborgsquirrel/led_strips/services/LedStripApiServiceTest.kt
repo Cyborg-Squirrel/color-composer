@@ -262,7 +262,14 @@ class LedStripApiServiceTest(
 
         val updatedStrip = stripRepository.findByUuid(strip.uuid)
         updatedStrip.isPresent shouldBe true
-        updatedStrip.get().client shouldBe null
+        val updatedStripEntity = updatedStrip.get()
+        updatedStripEntity.client shouldBe null
+        updatedStripEntity.name shouldBe strip.name
+        updatedStripEntity.pin shouldBe strip.pin
+        updatedStripEntity.length shouldBe strip.length
+        updatedStripEntity.blendMode shouldBe strip.blendMode
+        updatedStripEntity.brightness shouldBe strip.brightness
+        updatedStripEntity.height shouldBe strip.height
     }
 
     "updateStrip should fail when unassign is set together with a clientUuid" {
