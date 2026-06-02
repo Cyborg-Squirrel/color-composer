@@ -89,11 +89,11 @@ class NightriderLightEffect(
                 cometBuffer.add(dotColor)
             }
 
-            // Add the comet
-            if (location < 0) {
-                rgbList.addAll(cometBuffer.subList(abs(location), cometBuffer.size))
-            } else {
-                rgbList.addAll(cometBuffer)
+            // Add the comet, clamped so its trailing portion can't extend past the end of the strip.
+            val cometSource = if (location < 0) cometBuffer.subList(abs(location), cometBuffer.size) else cometBuffer
+            val remaining = buffer.size - rgbList.size
+            if (remaining > 0) {
+                rgbList.addAll(if (cometSource.size > remaining) cometSource.subList(0, remaining) else cometSource)
             }
 
             for (i in rgbList.size..<buffer.size) {
@@ -118,9 +118,9 @@ class NightriderLightEffect(
             }
         }
 
-        // The scrolling dot + trail behind it
-        rgbList.add(getColor(location, iterations))
-        rgbList.add(getColor(location + 1, iterations))
+        // The scrolling dot (2px wide), clamped so it can't extend past the end of the strip.
+        if (rgbList.size < buffer.size) rgbList.add(getColor(location, iterations))
+        if (rgbList.size < buffer.size) rgbList.add(getColor(location + 1, iterations))
 
         for (i in rgbList.size..<buffer.size) {
             if (reflect) {

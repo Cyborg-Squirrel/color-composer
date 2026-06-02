@@ -831,7 +831,7 @@ open class EffectApiService(
             ).integer("updatesPerSecond", "Number of position updates per second") { min(1.0); default(35) }
                 .number(
                     "brightnessScaling",
-                    "Brightness multiplier applied to the effect"
+                    "Brightness multiplier for all pixels other than the moving dot"
                 ) { min(0.0); max(1.0); default(0.2f) }
                 .build()
 

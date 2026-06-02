@@ -14,9 +14,12 @@ import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameSegmentModel
 import io.cyborgsquirrel.lighting.rendering.post_processing.EffectsBlender
 import io.cyborgsquirrel.lighting.rendering.post_processing.FrameSegmentationHelper
+import jakarta.annotation.PreDestroy
 import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
+import reactor.core.Disposable
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -31,6 +34,25 @@ class LightEffectRendererImpl(
     private val tracker = ClientSequenceTracker()
     private val segmentationHelper = FrameSegmentationHelper()
     private val blender = EffectsBlender()
+
+    // Active effects grouped by strip uuid, filtered to in-use and sorted by layer. Maintained off the render path:
+    // seeded at construction and rebuilt only when the registry publishes an effect-set change, so per-frame
+    // rendering is just a map lookup. Held in an AtomicReference and swapped wholesale so readers always see a
+    // consistent snapshot.
+    private val activeEffectsByStrip = AtomicReference<Map<String, List<ActiveLightEffect>>>(emptyMap())
+
+    // Subscribe before seeding so a change racing construction is still applied (the seed below then reads the
+    // same-or-newer registry state). The rebuild is guarded so a thrown exception can't terminate the subscription
+    // and leave the cache permanently stale.
+    private val updatesSubscription: Disposable = effectRepository.updates.subscribe(
+        { snapshot -> runCatching { rebuildCache(snapshot) }.onFailure { logger.error("Failed to rebuild effect cache", it) } },
+        { logger.error("Effect updates stream terminated; effect cache will no longer refresh", it) },
+    )
+
+    init {
+        // The multicast updates Flux only delivers future changes, so seed the cache with the current effect set.
+        rebuildCache(effectRepository.getAllEffects())
+    }
 
     /**
      * Renders all light effects for the specified LED strips [strips].
@@ -100,13 +122,30 @@ class LightEffectRendererImpl(
     }
 
     private fun renderFrame(strip: LedStripModel): RenderedFrameModel? {
-        val effectsForStrip = effectRepository.getAllEffectsForStrip(strip.uuid)
-        val activeEffects = effectsForStrip.filter { it.status.isInUse() }.sortedBy { it.layer }
+        val activeEffects = activeEffectsForStrip(strip.uuid)
         return if (activeEffects.isEmpty()) {
             null
         } else {
             renderFrame(strip, activeEffects)
         }
+    }
+
+    private fun activeEffectsForStrip(stripUuid: String): List<ActiveLightEffect> =
+        activeEffectsByStrip.get()[stripUuid] ?: emptyList()
+
+    /** Rebuilds the per-strip active-effect index from a full effect snapshot. Called off the render path. */
+    private fun rebuildCache(allEffects: List<ActiveLightEffect>) {
+        activeEffectsByStrip.set(
+            allEffects
+                .filter { it.status.isInUse() }
+                .groupBy { it.strip.uuid }
+                .mapValues { (_, effects) -> effects.sortedBy { it.layer } }
+        )
+    }
+
+    @PreDestroy
+    fun close() {
+        updatesSubscription.dispose()
     }
 
     private fun renderFrame(
