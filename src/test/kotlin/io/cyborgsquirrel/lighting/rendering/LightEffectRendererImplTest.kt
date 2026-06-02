@@ -12,6 +12,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Sinks
 
 class LightEffectRendererImplTest : StringSpec({
 
@@ -34,14 +36,20 @@ class LightEffectRendererImplTest : StringSpec({
         status: LightEffectStatus = LightEffectStatus.Playing,
     ) = ActiveLightEffect(uuid, 0, false, status, effect, emptyList(), strip)
 
+    // The renderer seeds its cache from getAllEffects() at construction and refreshes from the updates Flux.
+    fun registryWith(effects: List<ActiveLightEffect>): LightEffectRegistry {
+        val registry = mockk<LightEffectRegistry>()
+        every { registry.updates } returns Flux.empty()
+        every { registry.getAllEffects() } returns effects
+        return registry
+    }
+
     "never advances a paused effect or asks whether it is due" {
         val strip = singleStrip("strip-2", 3)
-        val registry = mockk<LightEffectRegistry>()
         val effect = mockk<LightEffect>()
         val currentBuf = listOf(RgbColor(5u, 5u, 5u), RgbColor.Blank, RgbColor.Blank)
         every { effect.getBuffer() } returns currentBuf
-        every { registry.getAllEffectsForStrip("strip-2") } returns
-            listOf(activeEffect("a", effect, strip, LightEffectStatus.Paused))
+        val registry = registryWith(listOf(activeEffect("a", effect, strip, LightEffectStatus.Paused)))
 
         val renderer = LightEffectRendererImpl(registry)
         val result = renderer.renderFrames(listOf(strip), "client-1")
@@ -52,16 +60,37 @@ class LightEffectRendererImplTest : StringSpec({
 
     "Renderer truncates effect output longer than the strip" {
         val strip = singleStrip("strip-trunc-eq", 3)
-        val registry = mockk<LightEffectRegistry>()
         val effect = mockk<LightEffect>()
         val exact = listOf(RgbColor(1u, 0u, 0u), RgbColor(2u, 0u, 0u), RgbColor(3u, 0u, 0u))
         every { effect.getNextStep() } returns exact
-        every { registry.getAllEffectsForStrip("strip-trunc-eq") } returns
-            listOf(activeEffect("a", effect, strip))
+        val registry = registryWith(listOf(activeEffect("a", effect, strip)))
 
         val renderer = LightEffectRendererImpl(registry)
         val result = renderer.renderFrames(listOf(strip), "client-1")
 
         result[0].frameData shouldBe exact
+    }
+
+    "refreshes its cache when the registry publishes an effect update" {
+        val strip = singleStrip("strip-push", 3)
+        val effect = mockk<LightEffect>()
+        val buf = listOf(RgbColor.Red, RgbColor.Green, RgbColor.Blue)
+        every { effect.getNextStep() } returns buf
+
+        val sink = Sinks.many().multicast().onBackpressureBuffer<List<ActiveLightEffect>>()
+        val registry = mockk<LightEffectRegistry>()
+        every { registry.updates } returns sink.asFlux()
+        every { registry.getAllEffects() } returns emptyList()
+
+        val renderer = LightEffectRendererImpl(registry)
+        // Nothing registered at construction, so there is no frame to render yet.
+        renderer.renderFrames(listOf(strip), "client-1").size shouldBe 0
+
+        // Publishing an effect for the strip should refresh the cache so the next render picks it up.
+        sink.tryEmitNext(listOf(activeEffect("a", effect, strip)))
+
+        val result = renderer.renderFrames(listOf(strip), "client-1")
+        result.size shouldBe 1
+        result[0].frameData shouldBe buf
     }
 })
