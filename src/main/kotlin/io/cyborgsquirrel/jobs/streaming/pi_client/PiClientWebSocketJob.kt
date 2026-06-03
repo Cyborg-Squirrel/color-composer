@@ -13,7 +13,6 @@ import io.cyborgsquirrel.jobs.streaming.util.ClientTimeSync
 import io.cyborgsquirrel.lighting.effect_trigger.service.TriggerManager
 import io.cyborgsquirrel.lighting.effects.ActiveLightEffect
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
-import reactor.core.Disposable
 import io.cyborgsquirrel.lighting.model.*
 import io.cyborgsquirrel.lighting.rendering.LightEffectRenderer
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameSegmentModel
@@ -24,7 +23,10 @@ import kotlinx.coroutines.*
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
-import kotlin.math.abs
+import reactor.core.Disposable
+import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Background job for streaming light effects to Raspberry Pi clients
@@ -69,9 +71,10 @@ class PiClientWebSocketJob(
     private var sleepMillis = 0L
     private var lastSeenAt = 0L
 
-    // State/logic — status written from both the coroutine and WebSocket/listener callbacks
-    @Volatile
-    private var status = StreamingJobStatus.SetupIncomplete
+    // State/logic — status written from both the coroutine and WebSocket/listener callbacks.
+    // All writes funnel through stateTransition (gated, statusLock-guarded); reads are lock-free via status.get().
+    private val status = AtomicReference(StreamingJobStatus.SetupIncomplete)
+    private val statusLock = ReentrantLock()
     private var exponentialReconnectionBackoffValue = 1
     private val exponentialReconnectionBackoffValueMax = 8
     private val fps get() = clientEntity.fps
@@ -95,7 +98,7 @@ class PiClientWebSocketJob(
         }
     }
 
-    override fun getCurrentState() = PiStreamingJobState(status)
+    override fun getCurrentState() = PiStreamingJobState(status.get())
 
     private suspend fun processState() {
         try {
@@ -103,7 +106,7 @@ class PiClientWebSocketJob(
             if (responseBytes != null) {
                 handleResponse(responseBytes.toPiClientResponse(timeHelper))
             }
-            when (status) {
+            when (status.get()) {
                 StreamingJobStatus.SetupIncomplete -> {
                     val clientOptional = clientRepository.findByUuid(clientEntity.uuid)
                     if (clientOptional.isPresent) {
@@ -112,7 +115,7 @@ class PiClientWebSocketJob(
                             strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid).map { it.strip }
                             timestampMillis =
                                 timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeSync.mostRecentClientTimeOffset
-                            status = StreamingJobStatus.WaitingForConnection
+                            stateTransition(StreamingJobStatus.WaitingForConnection)
                             setupSocket()
                         } else {
                             delay(5000)
@@ -130,23 +133,23 @@ class PiClientWebSocketJob(
 
                 StreamingJobStatus.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
-                    status = when {
+                    stateTransition(when {
                         settingsSyncRequired -> StreamingJobStatus.SettingsSync
                         clientTimeSync.mostRecentTimeSyncPerformedAt == 0L -> StreamingJobStatus.TimeSyncRequired
                         else -> StreamingJobStatus.RenderingEffect
-                    }
+                    })
                 }
 
                 StreamingJobStatus.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
                     delay(1000)
-                    status = StreamingJobStatus.WaitingForConnection
+                    stateTransition(StreamingJobStatus.WaitingForConnection)
                     setupSocket()
                 }
 
                 StreamingJobStatus.BufferFullWaiting -> {
                     delay(sleepMillis)
-                    status = StreamingJobStatus.RenderingEffect
+                    stateTransition(StreamingJobStatus.RenderingEffect)
                 }
 
                 StreamingJobStatus.TimeSyncRequired -> {
@@ -161,8 +164,8 @@ class PiClientWebSocketJob(
                     logger.info("New timestamp ${timeHelper.dateTimeFromMillis(timestampMillis)} millis $timestampMillis")
 
                     // If we disconnect during the time sync don't set the state to rendering
-                    if (status != StreamingJobStatus.Offline) {
-                        status = StreamingJobStatus.RenderingEffect
+                    if (status.get() != StreamingJobStatus.Offline) {
+                        stateTransition(StreamingJobStatus.RenderingEffect)
                     }
                 }
 
@@ -177,7 +180,7 @@ class PiClientWebSocketJob(
                                 timeHelper.dateTimeFromMillis(timestampMillis)
                             })"
                         )
-                        status = StreamingJobStatus.TimeSyncRequired
+                        stateTransition(StreamingJobStatus.TimeSyncRequired)
                     } else {
                         triggerManager.processTriggers()
                         val frames = renderer.renderFrames(strips, clientEntity.uuid)
@@ -206,7 +209,7 @@ class PiClientWebSocketJob(
 
                             if (bufferFull) {
                                 sleepMillis = timestampMillis - nowPlusBufferMillis
-                                status = StreamingJobStatus.BufferFullWaiting
+                                stateTransition(StreamingJobStatus.BufferFullWaiting)
                             }
                         }
                     }
@@ -215,12 +218,40 @@ class PiClientWebSocketJob(
         } catch (ex: CancellationException) {
             throw ex
         } catch (ex: Exception) {
-            logger.error("Error while processing state $status", ex)
-            if (status == StreamingJobStatus.WaitingForConnection) {
-                status = StreamingJobStatus.Offline
+            logger.error("Error while processing state ${status.get()}", ex)
+            if (status.get() == StreamingJobStatus.WaitingForConnection) {
+                stateTransition(StreamingJobStatus.Offline)
             }
             delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
             if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
+        }
+    }
+
+    /**
+     * Gated, thread-safe state write. Safe to call from the rendering coroutine and from the reactive/WebSocket
+     * callbacks — it never suspends, so a non-coroutine thread can drive a transition without bypassing the gate.
+     * Reads stay lock-free via [status].get(); only the read-modify-write here is serialized by [statusLock].
+     */
+    private fun stateTransition(nextStatus: StreamingJobStatus) {
+        statusLock.withLock {
+            val current = status.get()
+            val allowed = when (nextStatus) {
+                // A buffer pause only makes sense while actively rendering.
+                StreamingJobStatus.BufferFullWaiting ->
+                    current == StreamingJobStatus.RenderingEffect
+                // Enter/resume rendering only from idle, a buffer pause, or after a time re-sync.
+                StreamingJobStatus.RenderingEffect ->
+                    current == StreamingJobStatus.ConnectedIdle ||
+                            current == StreamingJobStatus.BufferFullWaiting ||
+                            current == StreamingJobStatus.TimeSyncRequired
+                StreamingJobStatus.Offline -> current != StreamingJobStatus.SetupIncomplete
+                else -> true
+            }
+            if (allowed) {
+                status.set(nextStatus)
+            } else {
+                logger.debug("Rejected state transition {} -> {}", current, nextStatus)
+            }
         }
     }
 
@@ -255,7 +286,7 @@ class PiClientWebSocketJob(
         val strip = getStrip()
         if (strip == null) {
             logger.warn("No strip found for $clientEntity during settings sync")
-            status = StreamingJobStatus.ConnectedIdle
+            stateTransition(StreamingJobStatus.ConnectedIdle)
             return
         }
         settingsSyncRequired = false
@@ -290,7 +321,7 @@ class PiClientWebSocketJob(
         logger.info("Checking Pi client version...")
         updateClientVersion()
 
-        status = StreamingJobStatus.ConnectedIdle
+        stateTransition(StreamingJobStatus.ConnectedIdle)
     }
 
     private fun updateLastSeenAt(currentTimeAsMillis: Long) {
@@ -309,11 +340,15 @@ class PiClientWebSocketJob(
     private suspend fun updateClientVersion() {
         val version = piConfigClient.getClientVersion(clientEntity).version
         logger.info("Pi client $clientEntity is running version $version")
-        val clientEntityOptional = clientRepository.findById(clientEntity.id)
+        val clientEntityOptional = withContext(Dispatchers.IO) {
+            clientRepository.findById(clientEntity.id)
+        }
         if (clientEntityOptional.isPresent) {
             val ce = clientEntityOptional.get()
             ce.firmwareVersion = version
-            clientEntity = clientRepository.update(ce)
+            clientEntity = withContext(Dispatchers.IO) {
+                clientRepository.update(ce)
+            }
         }
     }
 
@@ -346,26 +381,24 @@ class PiClientWebSocketJob(
                     }
 
                     override fun onError(t: Throwable?) {
-                        status = StreamingJobStatus.Offline
+                        stateTransition(StreamingJobStatus.Offline)
                         cont.resumeWith(Result.failure(t ?: Exception("WebSocket connection failed")))
                     }
 
                     override fun onComplete() {
                         if (cont.isActive) {
-                            status = StreamingJobStatus.Offline
+                            stateTransition(StreamingJobStatus.Offline)
                             cont.resumeWith(Result.failure(Exception("WebSocket connection closed without connecting")))
                         }
                     }
 
                     override fun onNext(piClient: PiWebSocketClient?) {
-                        status = StreamingJobStatus.ConnectedIdle
+                        stateTransition(StreamingJobStatus.ConnectedIdle)
                         settingsSyncRequired = true
                         // New connection, clear response
                         lastResponse = null
                         piClient?.registerOnDisconnectedCallback {
-                            if (status != StreamingJobStatus.SetupIncomplete) {
-                                status = StreamingJobStatus.Offline
-                            }
+                            stateTransition(StreamingJobStatus.Offline)
                         }
                         cont.resumeWith(Result.success(piClient))
                     }
@@ -399,7 +432,7 @@ class PiClientWebSocketJob(
 
         if (strips != matchingStrips) {
             strips = matchingStrips
-            status = StreamingJobStatus.SettingsSync
+            stateTransition(StreamingJobStatus.SettingsSync)
         }
     }
 
@@ -408,19 +441,19 @@ class PiClientWebSocketJob(
         when (response) {
             is PiClientResponse.BackpressureError -> {
                 sleepMillis = bufferTimeInMilliseconds / 2
-                status = StreamingJobStatus.BufferFullWaiting
+                stateTransition(StreamingJobStatus.BufferFullWaiting)
             }
 
             is PiClientResponse.StaleFrameError -> {
                 logger.warn("Stale frame rejected by $clientEntity (client time: ${response.systemTimestamp}) - re-syncing time")
-                status = StreamingJobStatus.TimeSyncRequired
+                stateTransition(StreamingJobStatus.TimeSyncRequired)
             }
 
             is PiClientResponse.NoResponse,
             is PiClientResponse.GenericError,
             is PiClientResponse.UnknownType -> {
                 logger.warn("Unexpected response from $clientEntity: $response - reconnecting")
-                status = StreamingJobStatus.Offline
+                stateTransition(StreamingJobStatus.Offline)
                 client?.close()
             }
 
