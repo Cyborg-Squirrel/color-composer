@@ -65,7 +65,7 @@ class LedStripClientRepositoryTest(
     "should query a client entity by name" {
         ledStripClientRepository.save(demoClientEntity)
         val retrievedEntity =
-            ledStripClientRepository.findByUuid(demoClientEntity.uuid.orEmpty())
+            ledStripClientRepository.findByUuid(demoClientEntity.uuid)
         retrievedEntity.isPresent shouldBe true
         assertClientsAreEqual(demoClientEntity, retrievedEntity.get())
     }
@@ -83,7 +83,7 @@ class LedStripClientRepositoryTest(
     "should query a client entity with associated LED strips and verify data" {
         ledStripClientRepository.save(demoClientEntity)
         ledStripRepository.save(demoLedStripEntity)
-        val retrievedEntity = ledStripClientRepository.findByUuid(demoClientEntity.uuid.orEmpty())
+        val retrievedEntity = ledStripClientRepository.findByUuid(demoClientEntity.uuid)
         retrievedEntity.isPresent shouldBe true
         retrievedEntity.get().apply {
             assertClientsAreEqual(demoClientEntity, this)

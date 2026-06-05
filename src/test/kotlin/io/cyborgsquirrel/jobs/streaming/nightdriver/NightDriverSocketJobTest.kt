@@ -23,6 +23,7 @@ import reactor.core.publisher.Flux
 import java.net.Socket
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val CLIENT_UUID = "nd-client-uuid"
 private const val STRIP_UUID = "nd-strip-uuid"
@@ -162,7 +163,7 @@ class NightDriverSocketJobTest : StringSpec({
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         val coroutineJob = job.start(scope)
-        delay(100)
+        delay(100.milliseconds)
         coroutineJob.cancel()
         scope.cancel()
 
@@ -194,7 +195,7 @@ class NightDriverSocketJobTest : StringSpec({
         val coroutineJob = job.start(scope)
         // The job moves to Offline after SetupIncomplete, then tries to connect (and fails)
         // With backoff it will stay in the error recovery path; just verify it progressed past SetupIncomplete
-        delay(200)
+        delay(200.milliseconds)
         coroutineJob.cancel()
         scope.cancel()
 

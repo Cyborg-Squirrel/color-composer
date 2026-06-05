@@ -7,8 +7,10 @@ import io.cyborgsquirrel.lighting.effect_settings.entity.LightEffectSettingsEnti
 import io.cyborgsquirrel.lighting.effect_trigger.entity.LightEffectTriggerEntity
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.filters.entity.LightEffectFilterJunctionEntity
-import io.micronaut.data.annotation.*
-import io.micronaut.data.model.DataType
+import io.micronaut.data.annotation.GeneratedValue
+import io.micronaut.data.annotation.Id
+import io.micronaut.data.annotation.MappedEntity
+import io.micronaut.data.annotation.Relation
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 

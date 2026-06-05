@@ -23,6 +23,7 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
 import java.net.URI
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Background job for streaming light effects to NightDriver clients
@@ -113,7 +114,7 @@ class NightDriverSocketJob(
                             strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid).map { it.strip }
                             status = StreamingJobStatus.Offline
                         } else {
-                            delay(5000)
+                            delay(5000.milliseconds)
                         }
                     } else {
                         dispose()
@@ -130,7 +131,7 @@ class NightDriverSocketJob(
 
                 StreamingJobStatus.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
-                    delay(1000)
+                    delay(1000.milliseconds)
                     setupSocket()
                 }
 
@@ -140,7 +141,7 @@ class NightDriverSocketJob(
                 }
 
                 StreamingJobStatus.BufferFullWaiting -> {
-                    delay(sleepMillis)
+                    delay(sleepMillis.milliseconds)
                     status = StreamingJobStatus.RenderingEffect
                 }
 
@@ -197,7 +198,7 @@ class NightDriverSocketJob(
                         }
 
                         // Sleep for the duration of half of one frame to avoid overloading the Night Driver client
-                        delay(millisPerFrame / 2)
+                        delay((millisPerFrame / 2).milliseconds)
                         if (socket?.isConnected == false) {
                             resetStateOnError()
                         } else if (lastResponseReceivedAt + 5000 < now) {
@@ -226,7 +227,7 @@ class NightDriverSocketJob(
             throw ex
         } catch (ex: Exception) {
             logger.error("Error while processing state $status", ex)
-            delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
+            delay(((2 shl exponentialReconnectionBackoffValue) * 1000L).milliseconds)
             if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
         }
     }
@@ -258,7 +259,7 @@ class NightDriverSocketJob(
                     }
                 }
             }
-        } catch (sockEx: SocketException) {
+        } catch (_: SocketException) {
             resetStateOnError()
         }
     }
@@ -281,7 +282,7 @@ class NightDriverSocketJob(
     private suspend fun setupSocket() {
         val host = parseHost(clientEntity.address)
 
-        withTimeout(10_000L) {
+        withTimeout(10_000L.milliseconds) {
             withContext(Dispatchers.IO) {
                 try {
                     socket?.close()

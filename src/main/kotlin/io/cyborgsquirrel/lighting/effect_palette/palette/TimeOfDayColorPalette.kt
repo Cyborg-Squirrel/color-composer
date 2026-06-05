@@ -10,7 +10,6 @@ import io.cyborgsquirrel.sunrise_sunset.repository.SunriseSunsetTimeRepository
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.cyborgsquirrel.util.time.TimeOfDayService
 import io.cyborgsquirrel.util.time.localDateFromYmd
-import io.micronaut.core.serialize.exceptions.SerializationException
 import io.micronaut.serde.ObjectMapper
 import java.time.LocalDate
 import java.time.LocalDateTime

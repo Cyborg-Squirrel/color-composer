@@ -29,12 +29,14 @@ import io.micronaut.websocket.WebSocketClient
 import io.mockk.*
 import kotlinx.coroutines.*
 import org.reactivestreams.Publisher
-import reactor.core.publisher.Flux
 import org.reactivestreams.Subscription
+import reactor.core.publisher.Flux
+import java.net.URI
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val CLIENT_UUID = "test-client-uuid"
 private const val STRIP_UUID = "test-strip-uuid"
@@ -111,7 +113,7 @@ class PiClientWebSocketJobTest : StringSpec({
         activeLightEffectService = mockLightEffectRegistry,
     )
 
-    var mockResponseQueue = ConcurrentLinkedQueue<ByteArray>()
+    var mockResponseQueue: ConcurrentLinkedQueue<ByteArray>
 
     fun setupCommonMocks() {
         mockResponseQueue = ConcurrentLinkedQueue()
@@ -130,7 +132,7 @@ class PiClientWebSocketJobTest : StringSpec({
         every { mockPiWebSocketClient.responseQueue } returns mockResponseQueue
         every { mockPiWebSocketClient.send(any()) } returns CompletableFuture.completedFuture(byteArrayOf())
         // Use answers {} and explicit types to resolve the generic connect() overloads
-        every { mockWebSocketClient.connect(any<Class<PiWebSocketClient>>(), any<java.net.URI>()) } answers {
+        every { mockWebSocketClient.connect(any<Class<PiWebSocketClient>>(), any<URI>()) } answers {
             immediatePublisher(mockPiWebSocketClient)
         }
         coEvery { mockPiConfigClient.getStripConfigs(any()) } returns PiClientStripsConfigList(
@@ -222,7 +224,7 @@ class PiClientWebSocketJobTest : StringSpec({
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         val coroutineJob = job.start(scope)
-        delay(50) // well before the 5 s polling delay
+        delay(50.milliseconds)
         coroutineJob.cancel()
         scope.cancel()
 
@@ -248,28 +250,10 @@ class PiClientWebSocketJobTest : StringSpec({
         val coroutineJob = job.start(scope)
         // All mocked calls return instantly; 200 ms is enough for the state machine to
         // progress through SetupIncomplete → ConnectedIdle → SettingsSync → TimeSyncRequired
-        delay(200)
+        delay(200.milliseconds)
         coroutineJob.cancel()
         scope.cancel()
 
         job.getCurrentState().status shouldBe StreamingJobStatus.TimeSyncRequired
     }
 })
-
-// ---------------------------------------------------------------------------
-// Binary response helpers — mirror the format in PiClientResponse.toPiClientResponse()
-// ---------------------------------------------------------------------------
-
-private fun buildMessage(type: Int, body: ByteArray): ByteArray {
-    val buf = java.nio.ByteBuffer.allocate(2 + body.size).order(java.nio.ByteOrder.LITTLE_ENDIAN)
-    buf.put(type.toByte())
-    buf.put(body.size.toByte())
-    buf.put(body)
-    return buf.array()
-}
-
-private fun buildBackpressureResponse() =
-    buildMessage(1, "Backpressure".toByteArray(Charsets.UTF_8))
-
-private fun buildGenericErrorResponse(message: String) =
-    buildMessage(2, message.toByteArray(Charsets.UTF_8))

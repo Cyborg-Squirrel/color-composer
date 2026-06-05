@@ -2,9 +2,9 @@
 
 ## Description
 
-Color Composer is a API server used for making light effects using WS2812/NeoPixel LED strips. It is written in Kotlin and uses the [Micronaut Framework](https://guides.micronaut.io/index.html) and uses Postgres as a database.
+Color Composer is an API server used for making light effects using WS2812/NeoPixel LED strips. It is written in Kotlin and uses the [Micronaut Framework](https://guides.micronaut.io/index.html) and uses Postgres as a database.
 
-Color Composer does not interface with LEDs directly. Instead it sends color data to a [Pi Client](https://github.com/Cyborg-Squirrel/color-composer-client) or [NightDriver client](https://github.com/PlummersSoftwareLLC/NightDriverStrip/).
+Color Composer does not interface with LEDs directly. Instead, it sends color data to a [Pi Client](https://github.com/Cyborg-Squirrel/color-composer-client) or [NightDriver client](https://github.com/PlummersSoftwareLLC/NightDriverStrip/).
 
 [Color Compser Web](https://github.com/Cyborg-Squirrel/color-composer-web) is the frontend for Color Composer.
 

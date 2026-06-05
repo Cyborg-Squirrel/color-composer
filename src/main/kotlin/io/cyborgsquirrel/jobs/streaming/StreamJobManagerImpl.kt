@@ -69,7 +69,7 @@ class StreamJobManagerImpl(
     override fun getLatestNightDriverResponse(client: LedStripClientEntity): NightDriverSocketResponse? {
         val job = jobMap[client.uuid]?.first
         return if (job is NightDriverSocketJob) {
-            return job.getLatestResponse()
+            job.getLatestResponse()
         } else {
             null
         }

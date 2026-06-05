@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 
-class StripPoolFrameCacheTest() : StringSpec({
+class StripPoolFrameCacheTest : StringSpec({
 
     "adding a frame" {
         val cache = StripPoolFrameCache()
