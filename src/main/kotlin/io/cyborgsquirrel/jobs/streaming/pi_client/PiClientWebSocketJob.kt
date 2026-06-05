@@ -27,6 +27,7 @@ import reactor.core.Disposable
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Background job for streaming light effects to Raspberry Pi clients
@@ -118,7 +119,7 @@ class PiClientWebSocketJob(
                             stateTransition(StreamingJobStatus.WaitingForConnection)
                             setupSocket()
                         } else {
-                            delay(5000)
+                            delay(5000.milliseconds)
                         }
                     } else {
                         dispose()
@@ -126,7 +127,7 @@ class PiClientWebSocketJob(
                 }
 
                 StreamingJobStatus.WaitingForConnection -> {
-                    delay(50)
+                    delay(50.milliseconds)
                 }
 
                 StreamingJobStatus.SettingsSync -> doClientSettingsSync()
@@ -142,20 +143,20 @@ class PiClientWebSocketJob(
 
                 StreamingJobStatus.Offline -> {
                     logger.info("Client $clientEntity disconnected. Attempting to reconnect...")
-                    delay(1000)
+                    delay(1000.milliseconds)
                     stateTransition(StreamingJobStatus.WaitingForConnection)
                     setupSocket()
                 }
 
                 StreamingJobStatus.BufferFullWaiting -> {
-                    delay(sleepMillis)
+                    delay(sleepMillis.milliseconds)
                     stateTransition(StreamingJobStatus.RenderingEffect)
                 }
 
                 StreamingJobStatus.TimeSyncRequired -> {
                     // Check if we're doing time syncs too frequently and back off if needed
                     if (clientTimeSync.millisBetweenNewestAndOldestTimeSync() < 3000) {
-                        delay(1000)
+                        delay(1000.milliseconds)
                     }
 
                     clientTimeSync.doTimeSync { piConfigClient.getClientTime(clientEntity).millisSinceEpoch }
@@ -222,7 +223,7 @@ class PiClientWebSocketJob(
             if (status.get() == StreamingJobStatus.WaitingForConnection) {
                 stateTransition(StreamingJobStatus.Offline)
             }
-            delay((2 shl exponentialReconnectionBackoffValue) * 1000L)
+            delay(((2 shl exponentialReconnectionBackoffValue) * 1000L).milliseconds)
             if (exponentialReconnectionBackoffValue < exponentialReconnectionBackoffValueMax) exponentialReconnectionBackoffValue++
         }
     }
@@ -372,7 +373,7 @@ class PiClientWebSocketJob(
         val uri = UriBuilder.of(websocketAddress).port(clientEntity.wsPort).build()
         val clientPublisher = webSocketClient.connect(PiWebSocketClient::class.java, uri)
 
-        client = withTimeout(5000L) {
+        client = withTimeout(5000L.milliseconds) {
             suspendCancellableCoroutine { cont ->
                 clientPublisher.subscribe(object : Subscriber<PiWebSocketClient> {
                     override fun onSubscribe(s: Subscription?) {

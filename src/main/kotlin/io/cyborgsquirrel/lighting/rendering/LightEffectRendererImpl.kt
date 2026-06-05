@@ -25,7 +25,7 @@ import kotlin.concurrent.withLock
 
 @Singleton
 class LightEffectRendererImpl(
-    private val effectRepository: LightEffectRegistry,
+    effectRepository: LightEffectRegistry,
 ) : LightEffectRenderer {
 
     // Per-pool locks so independent pools render concurrently; only jobs sharing a pool serialize against each other.

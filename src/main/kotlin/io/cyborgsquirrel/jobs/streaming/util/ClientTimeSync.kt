@@ -2,7 +2,6 @@ package io.cyborgsquirrel.jobs.streaming.util
 
 import io.cyborgsquirrel.util.time.TimeHelper
 import org.slf4j.LoggerFactory
-import java.math.BigInteger
 import kotlin.math.ceil
 
 /**
@@ -68,7 +67,7 @@ class ClientTimeSync(private val timeHelper: TimeHelper) {
             _timeSyncHistory.size == 1 -> mostRecentClientTimeOffset
             else -> {
                 val sortedClientTimeOffsetList = _timeSyncHistory.map { it.clientTimeOffset }.sorted()
-                return sortedClientTimeOffsetList[ceil(sortedClientTimeOffsetList.size.toFloat() / 2).toInt()]
+                sortedClientTimeOffsetList[ceil(sortedClientTimeOffsetList.size.toFloat() / 2).toInt()]
             }
         }
     }

@@ -6,11 +6,11 @@
 
 All endpoints return consistent error shapes:
 
-| Status | Condition |
-|--------|-----------|
-| `400 Bad Request` | Business logic error (e.g. invalid state) |
-| `404 Not Found` | Resource with given UUID does not exist |
-| `500 Internal Server Error` | Uncaught exception |
+| Status                      | Condition                                 |
+|-----------------------------|-------------------------------------------|
+| `400 Bad Request`           | Business logic error (e.g. invalid state) |
+| `404 Not Found`             | Resource with given UUID does not exist   |
+| `500 Internal Server Error` | Uncaught exception                        |
 
 ---
 
@@ -20,48 +20,48 @@ All endpoints return consistent error shapes:
 `Pi` | `NightDriver`
 
 ### `ClientStatus`
-| Value | Meaning |
-|-------|---------|
-| `SetupIncomplete` | Created but no strips configured |
-| `Idle` | Connected, at least one strip configured, no active effects |
-| `Active` | Connected with one or more effects playing or paused |
-| `Offline` | Disconnected |
-| `Error` | In an error state |
+| Value             | Meaning                                                     |
+|-------------------|-------------------------------------------------------------|
+| `SetupIncomplete` | Created but no strips configured                            |
+| `Idle`            | Connected, at least one strip configured, no active effects |
+| `Active`          | Connected with one or more effects playing or paused        |
+| `Offline`         | Disconnected                                                |
+| `Error`           | In an error state                                           |
 
 ### `ColorOrder`
 `RGB` | `RBG` | `GRB` | `GBR` | `BRG` | `BGR`
 
 ### `BlendMode`
-| Value | Behavior |
-|-------|----------|
-| `Additive` | Adds RGB values together |
-| `Average` | Averages RGB values when effects overlap |
-| `Layer` | Higher-priority effect takes precedence |
+| Value        | Behavior                                          |
+|--------------|---------------------------------------------------|
+| `Additive`   | Adds RGB values together                          |
+| `Average`    | Averages RGB values when effects overlap          |
+| `Layer`      | Higher-priority effect takes precedence           |
 | `UseHighest` | Uses the highest R, G, and B values independently |
 
 ### `PoolType`
-| Value | Behavior |
-|-------|----------|
-| `Sync` | All strips receive the same effect data in sync |
-| `Unified` | Strips are combined and treated as one strip |
+| Value     | Behavior                                        |
+|-----------|-------------------------------------------------|
+| `Sync`    | All strips receive the same effect data in sync |
+| `Unified` | Strips are combined and treated as one strip    |
 
 ### `LightEffectStatus`
-| Value | Meaning |
-|-------|---------|
-| `Inactive` | New or inactive (not stopped/paused) |
-| `Playing` | Currently being rendered |
-| `Paused` | Suspended — resumes from where it left off |
-| `Stopped` | Suspended — restarts from beginning when reactivated |
+| Value      | Meaning                                              |
+|------------|------------------------------------------------------|
+| `Inactive` | New or inactive (not stopped/paused)                 |
+| `Playing`  | Currently being rendered                             |
+| `Paused`   | Suspended — resumes from where it left off           |
+| `Stopped`  | Suspended — restarts from beginning when reactivated |
 
 ### `LightEffectStatusCommand`
 `Play` | `Pause` | `Stop`
 
 ### `EffectCategory`
-| Value | Meaning |
-|-------|---------|
-| `Static` | Effect produces a fixed, non-animated output |
-| `Ambient` | Effect animates without directional movement |
-| `Motion` | Effect features directional or positional movement |
+| Value     | Meaning                                            |
+|-----------|----------------------------------------------------|
+| `Static`  | Effect produces a fixed, non-animated output       |
+| `Ambient` | Effect animates without directional movement       |
+| `Motion`  | Effect features directional or positional movement |
 
 ### `EffectSettingsType`
 `Boolean` | `Integer` | `Number` | `String` | `RgbColor`
@@ -134,15 +134,15 @@ Returns counts of the core entities configured in the application, a list of cur
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `totalClients` | Total number of LED clients |
-| `totalStrips` | Total number of LED strips |
-| `totalEffects` | Total number of lighting effects |
-| `totalPalettes` | Total number of color palettes |
+| Field           | Description                                                                       |
+|-----------------|-----------------------------------------------------------------------------------|
+| `totalClients`  | Total number of LED clients                                                       |
+| `totalStrips`   | Total number of LED strips                                                        |
+| `totalEffects`  | Total number of lighting effects                                                  |
+| `totalPalettes` | Total number of color palettes                                                    |
 | `activeEffects` | Effects with status `Playing` or `Paused`; same shape as items from `GET /effect` |
-| `strips` | All configured strips; same shape as items from `GET /strip` |
-| `clients` | All configured clients; same shape as items from `GET /client` |
+| `strips`        | All configured strips; same shape as items from `GET /strip`                      |
+| `clients`       | All configured clients; same shape as items from `GET /client`                    |
 
 ---
 
@@ -158,11 +158,11 @@ Returns the application's overall setup state.
 }
 ```
 
-| Status value | Meaning |
-|---|---|
-| `NoClients` | No LED clients configured |
-| `NoStrips` | At least one client, but no strips |
-| `NoEffects` | Client and strip exist, but no effects |
+| Status value    | Meaning                                           |
+|-----------------|---------------------------------------------------|
+| `NoClients`     | No LED clients configured                         |
+| `NoStrips`      | At least one client, but no strips                |
+| `NoEffects`     | Client and strip exist, but no effects            |
 | `SetupComplete` | At least one client, strip, and effect configured |
 
 ---
@@ -343,9 +343,9 @@ Returns all LED strips, optionally filtered by client.
 
 **Query params**
 
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| `clientUuid` | string | No | Filter strips belonging to this client |
+| Param        | Type   | Required | Description                            |
+|--------------|--------|----------|----------------------------------------|
+| `clientUuid` | string | No       | Filter strips belonging to this client |
 
 **Response `200`**
 ```json
@@ -550,10 +550,10 @@ Returns all effects, optionally filtered by strip or pool.
 
 **Query params**
 
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| `stripUuid` | string | No | Filter by strip |
-| `poolUuid` | string | No | Filter by pool |
+| Param       | Type   | Required | Description     |
+|-------------|--------|----------|-----------------|
+| `stripUuid` | string | No       | Filter by strip |
+| `poolUuid`  | string | No       | Filter by pool  |
 
 **Response `200`**
 ```json
@@ -612,10 +612,10 @@ Returns the settings schema for every available effect type. Schemas describe th
 
 Each `validators` entry is a polymorphic object with a `type` discriminator:
 
-| `type` | Additional fields | Meaning |
-|--------|-------------------|---------|
-| `min` | `value: number` | Field value must be ≥ `value` |
-| `max` | `value: number` | Field value must be ≤ `value` |
+| `type`    | Additional fields  | Meaning                                       |
+|-----------|--------------------|-----------------------------------------------|
+| `min`     | `value: number`    | Field value must be ≥ `value`                 |
+| `max`     | `value: number`    | Field value must be ≤ `value`                 |
 | `options` | `values: string[]` | Field value must be one of the listed strings |
 
 ---
@@ -811,9 +811,9 @@ Returns filters, optionally scoped to an effect.
 
 **Query params**
 
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| `effectUuid` | string | No | Return only filters for this effect |
+| Param        | Type   | Required | Description                         |
+|--------------|--------|----------|-------------------------------------|
+| `effectUuid` | string | No       | Return only filters for this effect |
 
 > `GET /filter` with no params is not yet implemented.
 
@@ -986,10 +986,10 @@ Every event carries the affected resource's `uuid`, a `type` discriminator, and 
 }
 ```
 
-| Field | Description |
-|-------|-------------|
-| `uuid` | UUID of the affected resource |
-| `type` | Discriminator — see table below |
+| Field  | Description                                                              |
+|--------|--------------------------------------------------------------------------|
+| `uuid` | UUID of the affected resource                                            |
+| `type` | Discriminator — see table below                                          |
 | `data` | Payload describing the change (see below). Omitted on `*Deleted` events. |
 
 The shape of `data` depends on the event:
@@ -1010,89 +1010,89 @@ The shape of `data` depends on the event:
 
 All delta fields are optional and appear only when changed.
 
-| Event | Delta fields |
-|-------|--------------|
-| `LedClientUpdated` | `name`, `address`, `colorOrder`, `apiPort`, `wsPort`, `powerLimit`, `fps`, `fadeTimeoutMillis` |
-| `LedStripUpdated` | `name`, `pin`, `length`, `height`, `brightness`, `blendMode`, `clientUuid` |
-| `StripPoolUpdated` | `name`, `poolType`, `blendMode`, `members` (full replacement member list) |
-| `LightEffectUpdated` | `name`, `paletteUuid`, `settingsUuid`, `status`, `stripUuid`, `poolUuid`, `layer` |
-| `EffectSettingsUpdated` | `name`, `settings`, `isDefault`, `skipFramesIfBlank` |
-| `PaletteUpdated` | `name`, `settings` |
+| Event                   | Delta fields                                                                                   |
+|-------------------------|------------------------------------------------------------------------------------------------|
+| `LedClientUpdated`      | `name`, `address`, `colorOrder`, `apiPort`, `wsPort`, `powerLimit`, `fps`, `fadeTimeoutMillis` |
+| `LedStripUpdated`       | `name`, `pin`, `length`, `height`, `brightness`, `blendMode`, `clientUuid`                     |
+| `StripPoolUpdated`      | `name`, `poolType`, `blendMode`, `members` (full replacement member list)                      |
+| `LightEffectUpdated`    | `name`, `paletteUuid`, `settingsUuid`, `status`, `stripUuid`, `poolUuid`, `layer`              |
+| `EffectSettingsUpdated` | `name`, `settings`, `isDefault`, `skipFramesIfBlank`                                           |
+| `PaletteUpdated`        | `name`, `settings`                                                                             |
 
 #### Event types
 
-| `type` | Trigger |
-|--------|---------|
-| `LedClientCreated` | A new LED client was created |
-| `LedClientUpdated` | An LED client was updated |
-| `LedClientDeleted` | An LED client was deleted |
-| `LedStripCreated` | A new LED strip was created |
-| `LedStripUpdated` | An LED strip was updated |
-| `LedStripDeleted` | An LED strip was deleted |
-| `StripPoolCreated` | A new strip pool was created |
-| `StripPoolUpdated` | A strip pool was updated |
-| `StripPoolDeleted` | A strip pool was deleted |
-| `LightEffectCreated` | A new lighting effect was created |
-| `LightEffectUpdated` | A lighting effect was updated |
-| `LightEffectDeleted` | A lighting effect was deleted |
+| `type`                  | Trigger                                  |
+|-------------------------|------------------------------------------|
+| `LedClientCreated`      | A new LED client was created             |
+| `LedClientUpdated`      | An LED client was updated                |
+| `LedClientDeleted`      | An LED client was deleted                |
+| `LedStripCreated`       | A new LED strip was created              |
+| `LedStripUpdated`       | An LED strip was updated                 |
+| `LedStripDeleted`       | An LED strip was deleted                 |
+| `StripPoolCreated`      | A new strip pool was created             |
+| `StripPoolUpdated`      | A strip pool was updated                 |
+| `StripPoolDeleted`      | A strip pool was deleted                 |
+| `LightEffectCreated`    | A new lighting effect was created        |
+| `LightEffectUpdated`    | A lighting effect was updated            |
+| `LightEffectDeleted`    | A lighting effect was deleted            |
 | `EffectSettingsCreated` | A new effect settings preset was created |
-| `EffectSettingsUpdated` | An effect settings preset was updated |
-| `EffectSettingsDeleted` | An effect settings preset was deleted |
-| `PaletteCreated` | A new color palette was created |
-| `PaletteUpdated` | A color palette was updated |
-| `PaletteDeleted` | A color palette was deleted |
+| `EffectSettingsUpdated` | An effect settings preset was updated    |
+| `EffectSettingsDeleted` | An effect settings preset was deleted    |
+| `PaletteCreated`        | A new color palette was created          |
+| `PaletteUpdated`        | A color palette was updated              |
+| `PaletteDeleted`        | A color palette was deleted              |
 
 ---
 
 ## Endpoint Summary
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/events` | SSE stream — resource create/update/delete events |
-| GET | `/home` | Counts and lists of clients, strips, effects, and palettes; active effects |
-| GET | `/setup-status` | App setup state |
-| GET | `/version` | App version |
-| GET | `/client` | List all clients |
-| GET | `/client/{uuid}` | Get client |
-| POST | `/client` | Create client |
-| PATCH | `/client/{uuid}` | Update client |
-| DELETE | `/client/{uuid}` | Delete client |
-| POST | `/discover-clients` | Start discovery |
-| POST | `/cancel-discovery` | Cancel discovery |
-| GET | `/discovered-clients` | List discovered clients |
-| GET | `/discovery-status` | Discovery job status |
-| POST | `/confirm-client` | Register discovered client |
-| GET | `/strip` | List strips (filter: `?clientUuid=`) |
-| GET | `/strip/{uuid}` | Get strip |
-| POST | `/strip` | Create strip |
-| PATCH | `/strip/{uuid}` | Update strip |
-| DELETE | `/strip/{uuid}` | Delete strip |
-| GET | `/pool` | List pools |
-| GET | `/pool/{uuid}` | Get pool |
-| POST | `/pool` | Create pool |
-| PATCH | `/pool/{uuid}` | Update pool |
-| PATCH | `/pool/{uuid}/members` | Replace pool members |
-| DELETE | `/pool/{uuid}` | Delete pool |
-| GET | `/effect` | List effects (filter: `?stripUuid=` / `?poolUuid=`) |
-| GET | `/effect/schemas` | List settings schemas for all effect types |
-| GET | `/effect/{uuid}` | Get effect |
-| POST | `/effect` | Create effect |
-| PATCH | `/effect/update/{uuid}` | Update effect name/palette/settings/layer |
-| PATCH | `/effect/reassign/{uuid}` | Reassign effect to a strip/pool or unassign |
-| POST | `/effect/command` | Bulk update effect statuses |
-| DELETE | `/effect/{uuid}` | Delete effect |
-| GET | `/effect/settings` | List all effect settings presets |
-| GET | `/effect/settings/{uuid}` | Get effect settings preset |
-| POST | `/effect/settings` | Create effect settings preset |
-| PATCH | `/effect/settings/{uuid}` | Update effect settings preset |
-| DELETE | `/effect/settings/{uuid}` | Delete effect settings preset |
-| GET | `/filter` | List filters (filter: `?effectUuid=`) |
-| GET | `/filter/{uuid}` | Get filter |
-| POST | `/filter` | Create filter |
-| PATCH | `/filter/{uuid}` | Update filter |
-| DELETE | `/filter/{uuid}` | Delete filter |
-| GET | `/palette` | List palettes |
-| GET | `/palette/{uuid}` | Get palette |
-| POST | `/palette` | Create palette |
-| PATCH | `/palette/{uuid}` | Update palette |
-| DELETE | `/palette/{uuid}` | Delete palette |
+| Method | Path                      | Description                                                                |
+|--------|---------------------------|----------------------------------------------------------------------------|
+| GET    | `/events`                 | SSE stream — resource create/update/delete events                          |
+| GET    | `/home`                   | Counts and lists of clients, strips, effects, and palettes; active effects |
+| GET    | `/setup-status`           | App setup state                                                            |
+| GET    | `/version`                | App version                                                                |
+| GET    | `/client`                 | List all clients                                                           |
+| GET    | `/client/{uuid}`          | Get client                                                                 |
+| POST   | `/client`                 | Create client                                                              |
+| PATCH  | `/client/{uuid}`          | Update client                                                              |
+| DELETE | `/client/{uuid}`          | Delete client                                                              |
+| POST   | `/discover-clients`       | Start discovery                                                            |
+| POST   | `/cancel-discovery`       | Cancel discovery                                                           |
+| GET    | `/discovered-clients`     | List discovered clients                                                    |
+| GET    | `/discovery-status`       | Discovery job status                                                       |
+| POST   | `/confirm-client`         | Register discovered client                                                 |
+| GET    | `/strip`                  | List strips (filter: `?clientUuid=`)                                       |
+| GET    | `/strip/{uuid}`           | Get strip                                                                  |
+| POST   | `/strip`                  | Create strip                                                               |
+| PATCH  | `/strip/{uuid}`           | Update strip                                                               |
+| DELETE | `/strip/{uuid}`           | Delete strip                                                               |
+| GET    | `/pool`                   | List pools                                                                 |
+| GET    | `/pool/{uuid}`            | Get pool                                                                   |
+| POST   | `/pool`                   | Create pool                                                                |
+| PATCH  | `/pool/{uuid}`            | Update pool                                                                |
+| PATCH  | `/pool/{uuid}/members`    | Replace pool members                                                       |
+| DELETE | `/pool/{uuid}`            | Delete pool                                                                |
+| GET    | `/effect`                 | List effects (filter: `?stripUuid=` / `?poolUuid=`)                        |
+| GET    | `/effect/schemas`         | List settings schemas for all effect types                                 |
+| GET    | `/effect/{uuid}`          | Get effect                                                                 |
+| POST   | `/effect`                 | Create effect                                                              |
+| PATCH  | `/effect/update/{uuid}`   | Update effect name/palette/settings/layer                                  |
+| PATCH  | `/effect/reassign/{uuid}` | Reassign effect to a strip/pool or unassign                                |
+| POST   | `/effect/command`         | Bulk update effect statuses                                                |
+| DELETE | `/effect/{uuid}`          | Delete effect                                                              |
+| GET    | `/effect/settings`        | List all effect settings presets                                           |
+| GET    | `/effect/settings/{uuid}` | Get effect settings preset                                                 |
+| POST   | `/effect/settings`        | Create effect settings preset                                              |
+| PATCH  | `/effect/settings/{uuid}` | Update effect settings preset                                              |
+| DELETE | `/effect/settings/{uuid}` | Delete effect settings preset                                              |
+| GET    | `/filter`                 | List filters (filter: `?effectUuid=`)                                      |
+| GET    | `/filter/{uuid}`          | Get filter                                                                 |
+| POST   | `/filter`                 | Create filter                                                              |
+| PATCH  | `/filter/{uuid}`          | Update filter                                                              |
+| DELETE | `/filter/{uuid}`          | Delete filter                                                              |
+| GET    | `/palette`                | List palettes                                                              |
+| GET    | `/palette/{uuid}`         | Get palette                                                                |
+| POST   | `/palette`                | Create palette                                                             |
+| PATCH  | `/palette/{uuid}`         | Update palette                                                             |
+| DELETE | `/palette/{uuid}`         | Delete palette                                                             |

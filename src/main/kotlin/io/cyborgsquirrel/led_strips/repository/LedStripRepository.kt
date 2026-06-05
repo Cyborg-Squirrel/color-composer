@@ -1,7 +1,6 @@
 package io.cyborgsquirrel.led_strips.repository
 
 import io.cyborgsquirrel.led_strips.entity.LedStripEntity
-import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.micronaut.data.annotation.Join
 import io.micronaut.data.repository.CrudRepository
 import java.util.*

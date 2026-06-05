@@ -25,7 +25,7 @@ import java.time.ZonedDateTime
  * Phase-0 allocation baseline for the render pipeline (effect -> filters -> blend -> segment).
  *
  * Measures bytes allocated and wall time per rendered frame for a matrix of strip length x effect count x
- * filter count, so we can decide whether the buffer-reuse refactor is worth it and quantify each phase afterwards.
+ * filter count, so we can decide whether the buffer-reuse refactor is worth it and quantify each phase afterward.
  *
  * This is a benchmark, not a correctness test, so it is gated behind an env var to keep `./gradlew test` fast.
  * Run it with:
@@ -35,7 +35,7 @@ import java.time.ZonedDateTime
  * Notes on accuracy:
  *  - Allocation is read via [com.sun.management.ThreadMXBean.getThreadAllocatedBytes] on the thread running the loop,
  *    so only the render path is counted (no test-framework / mock noise).
- *  - The registry and time helper are hand-written fakes; mockk stubs allocate per call and would skew the count.
+ *  - The registry and time helper are handwritten fakes; mockk stubs allocate per call and would skew the count.
  *  - The time helper advances enough per call that every effect is "due" every frame, so we measure the worst case
  *    (a fully rendered frame) rather than the cache-hit fast path that the real wall clock would mostly hit.
  */
@@ -123,7 +123,7 @@ private fun singleStrip(length: Int) = SingleLedStripModel(
 
 /**
  * Registry that returns a fixed set of real effects + filters for the one strip under test.
- * Hand-written so its method calls allocate nothing (unlike mockk stubs).
+ * Handwritten so its method calls allocate nothing (unlike mockk stubs).
  */
 private class StaticRegistry(
     strip: SingleLedStripModel,
@@ -163,7 +163,7 @@ private class StaticRegistry(
     override val updates: Flux<List<ActiveLightEffect>> = Flux.empty()
     override fun addOrUpdateEffect(lightEffect: ActiveLightEffect) = throw NotImplementedError()
     override fun removeEffect(lightEffect: ActiveLightEffect) = throw NotImplementedError()
-    override fun getEffectWithUuid(uuid: String): ActiveLightEffect? = throw NotImplementedError()
+    override fun getEffectWithUuid(uuid: String): ActiveLightEffect = throw NotImplementedError()
     override fun getEffectsForClient(clientUuid: String): List<ActiveLightEffect> = throw NotImplementedError()
     override fun getAllEffects(): List<ActiveLightEffect> = effects
     override fun removeAllEffects() = throw NotImplementedError()

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 class H2WebServer {
     private var h2Server: Server? = null
 
-    @Value("\${datasources.default.dialect}")
+    @Value($$"${datasources.default.dialect}")
     private lateinit var dialect: Dialect
 
     fun start() {

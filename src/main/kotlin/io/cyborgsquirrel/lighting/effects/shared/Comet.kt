@@ -6,7 +6,7 @@ import io.cyborgsquirrel.lighting.model.RgbColor
 import kotlin.math.log
 import kotlin.math.max
 
-class Comet(val color: RgbColor, val length: Int, val fadeCurve: FadeCurve, val direction: Direction) {
+class Comet(val color: RgbColor, val length: Int, fadeCurve: FadeCurve, direction: Direction) {
 
     private val cometBuffer = ArrayList<RgbColor>(length)
 
