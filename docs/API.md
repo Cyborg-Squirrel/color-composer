@@ -69,9 +69,6 @@ All endpoints return consistent error shapes:
 ### `FadeCurve`
 `Linear` | `Logarithmic`
 
-### `DiscoveryJobStatus`
-`idle` | `inProgress` | `complete` | `error`
-
 ---
 
 ## Home
@@ -272,67 +269,6 @@ Deletes a client.
 **Path params:** `uuid`
 
 **Response `204 No Content`**
-
----
-
-## Client Discovery
-
-### `POST /discover-clients`
-Starts the client discovery process.
-
-**Response `200`**
-
----
-
-### `POST /cancel-discovery`
-Cancels an in-progress discovery job.
-
-**Response `200`**
-
----
-
-### `GET /discovered-clients`
-Returns clients found during a discovery run.
-
-**Response `200`**
-```json
-{
-  "clients": [
-    {
-      "name": "string",
-      "address": "string"
-    }
-  ]
-}
-```
-> Response shape varies based on discovery status (`inProgress`, `complete`, `error`).
-
----
-
-### `GET /discovery-status`
-Returns the current status of the discovery job.
-
-**Response `200`**
-```json
-{
-  "status": "idle | inProgress | complete | error"
-}
-```
-
----
-
-### `POST /confirm-client`
-Registers a discovered client as a saved LED client.
-
-**Request body**
-```json
-{
-  "name": "string",
-  "address": "string"
-}
-```
-
-**Response `201`** — created client entity
 
 ---
 
@@ -1057,11 +993,6 @@ All delta fields are optional and appear only when changed.
 | POST   | `/client`                 | Create client                                                              |
 | PATCH  | `/client/{uuid}`          | Update client                                                              |
 | DELETE | `/client/{uuid}`          | Delete client                                                              |
-| POST   | `/discover-clients`       | Start discovery                                                            |
-| POST   | `/cancel-discovery`       | Cancel discovery                                                           |
-| GET    | `/discovered-clients`     | List discovered clients                                                    |
-| GET    | `/discovery-status`       | Discovery job status                                                       |
-| POST   | `/confirm-client`         | Register discovered client                                                 |
 | GET    | `/strip`                  | List strips (filter: `?clientUuid=`)                                       |
 | GET    | `/strip/{uuid}`           | Get strip                                                                  |
 | POST   | `/strip`                  | Create strip                                                               |
