@@ -85,6 +85,30 @@ class EffectFilterControllerTest(
         getAllFilterResponse.settings shouldBe filterEntity.settings
     }
 
+    "Getting all filters" {
+        val firstFilter = LightEffectFilterEntity(
+            name = "Half brightness filter",
+            uuid = UUID.randomUUID().toString(),
+            settings = objectToMap(objectMapper, IntensityFilterSettings(0.5f)),
+            type = LightEffectFilterConstants.INTENSITY_FILTER_NAME
+        )
+        val secondFilter = LightEffectFilterEntity(
+            name = "Reverse filter",
+            uuid = UUID.randomUUID().toString(),
+            settings = mapOf(),
+            type = LightEffectFilterConstants.REVERSE_FILTER_NAME
+        )
+        filterRepository.save(firstFilter)
+        filterRepository.save(secondFilter)
+
+        val getAllFiltersHttpResponse = apiClient.getAllEffectFilters()
+        getAllFiltersHttpResponse.status shouldBe HttpStatus.OK
+
+        val getAllFiltersResponse = getAllFiltersHttpResponse.body() as GetFiltersResponse
+        getAllFiltersResponse.filters.size shouldBe 2
+        getAllFiltersResponse.filters.map { it.uuid }.toSet() shouldBe setOf(firstFilter.uuid, secondFilter.uuid)
+    }
+
     "Getting filters for an effect" {
         val client = createLedStripClientEntity(clientRepository, "Living Room lights", "192.168.50.50", 50, 51)
         val stripA = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D10.pinName, 50)

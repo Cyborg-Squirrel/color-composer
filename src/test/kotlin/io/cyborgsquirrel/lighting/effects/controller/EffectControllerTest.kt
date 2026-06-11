@@ -27,6 +27,9 @@ import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.objectToMap
 import io.cyborgsquirrel.test_helpers.saveLedStrip
+import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
@@ -229,25 +232,27 @@ class EffectControllerTest(
     }
 
     // -----------------------------------------------------------------
-    // Exception → HTTP status mapping
+    // Service exception propagation
     // -----------------------------------------------------------------
 
-    "Service ResourceNotFoundException maps to 404 (GET /effect/{uuid})" {
-        apiClient.getEffect(UUID.randomUUID().toString()).status shouldBe HttpStatus.NOT_FOUND
+    "getEffect throws ResourceNotFoundException for a non-existent effect" {
+        shouldThrow<ResourceNotFoundException> {
+            apiClient.getEffect(UUID.randomUUID().toString())
+        }
     }
 
-    "Service ClientRequestException maps to 400 (POST /effect with no owner)" {
-        val response = apiClient.createEffect(
-            CreateEffectRequest(
-                stripUuid = null,
-                poolUuid = null,
-                effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
-                name = "Invalid",
-                settings = emptyMap(),
-                paletteUuid = null,
-                settingsUuid = null,
-            )
+    "createEffect throws ClientRequestException when no owner is specified" {
+        val request = CreateEffectRequest(
+            stripUuid = null,
+            poolUuid = null,
+            effectType = LightEffectType.NIGHTRIDER_COLOR_FILL.displayName,
+            name = "Invalid",
+            settings = emptyMap(),
+            paletteUuid = null,
+            settingsUuid = null,
         )
-        response.status shouldBe HttpStatus.BAD_REQUEST
+        shouldThrow<ClientRequestException> {
+            apiClient.createEffect(request)
+        }
     }
 })

@@ -8,8 +8,6 @@ import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectSettingsRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
 import io.cyborgsquirrel.lighting.effects.service.EffectApiService
-import io.cyborgsquirrel.util.exception.ClientRequestException
-import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 
@@ -19,164 +17,73 @@ class EffectController(
 ) : EffectApi {
 
     override fun getEffects(stripUuid: String?, poolUuid: String?): HttpResponse<Any> {
-        return try {
-            if (!stripUuid.isNullOrBlank() && !poolUuid.isNullOrBlank()) {
-                HttpResponse.badRequest("stripUuid and poolUuid provided, request must be one or the other.")
-            } else if (!stripUuid.isNullOrBlank()) {
-                val response = effectApiService.getEffectsForStrip(stripUuid)
-                HttpResponse.ok(response)
-            } else if (!poolUuid.isNullOrBlank()) {
-                val response = effectApiService.getEffectsForPool(poolUuid)
-                HttpResponse.ok(response)
-            } else {
-                val response = effectApiService.getAllEffects()
-                HttpResponse.ok(response)
-            }
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
+        return if (!stripUuid.isNullOrBlank() && !poolUuid.isNullOrBlank()) {
+            HttpResponse.badRequest("stripUuid and poolUuid provided, request must be one or the other.")
+        } else if (!stripUuid.isNullOrBlank()) {
+            HttpResponse.ok(effectApiService.getEffectsForStrip(stripUuid))
+        } else if (!poolUuid.isNullOrBlank()) {
+            HttpResponse.ok(effectApiService.getEffectsForPool(poolUuid))
+        } else {
+            HttpResponse.ok(effectApiService.getAllEffects())
         }
     }
 
     override fun getSchemas(): HttpResponse<Any> {
-        return try {
-            val schemas = effectApiService.getAllSchemas()
-            HttpResponse.ok(schemas)
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.ok(effectApiService.getAllSchemas())
     }
 
     override fun getEffect(uuid: String): HttpResponse<Any> {
-        return try {
-            val response = effectApiService.getEffectWithUuid(uuid)
-            HttpResponse.ok(response)
-        } catch (rnfe: ResourceNotFoundException) {
-            HttpResponse.notFound()
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.ok(effectApiService.getEffectWithUuid(uuid))
     }
 
     override fun createEffect(
         request: CreateEffectRequest
     ): HttpResponse<Any> {
-        return try {
-            val uuid = effectApiService.createEffect(request)
-            HttpResponse.created(uuid)
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.created(effectApiService.createEffect(request))
     }
 
     override fun updateEffect(uuid: String, request: UpdateEffectRequest): HttpResponse<Any> {
-        return try {
-            effectApiService.updateEffect(uuid, request)
-            HttpResponse.noContent()
-        } catch (rnfe: ResourceNotFoundException) {
-            HttpResponse.notFound()
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        effectApiService.updateEffect(uuid, request)
+        return HttpResponse.noContent()
     }
 
     override fun reassignEffect(
         uuid: String,
         request: ReassignEffectRequest
     ): HttpResponse<Any> {
-        return try {
-            effectApiService.reassignEffect(uuid, request)
-            HttpResponse.noContent()
-        } catch (rnfe: ResourceNotFoundException) {
-            HttpResponse.notFound()
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        effectApiService.reassignEffect(uuid, request)
+        return HttpResponse.noContent()
     }
 
     override fun mediaCommand(request: UpdateEffectStatusRequest): HttpResponse<Any> {
-        return try {
-            effectApiService.updateEffectStatus(request)
-            HttpResponse.noContent()
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        effectApiService.updateEffectStatus(request)
+        return HttpResponse.noContent()
     }
 
     override fun deleteEffect(uuid: String): HttpResponse<Any> {
-        return try {
-            effectApiService.deleteEffect(uuid)
-            HttpResponse.noContent()
-        } catch (rnfe: ResourceNotFoundException) {
-            HttpResponse.notFound()
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        effectApiService.deleteEffect(uuid)
+        return HttpResponse.noContent()
     }
 
     override fun getAllEffectSettings(): HttpResponse<Any> {
-        return try {
-            HttpResponse.ok(effectApiService.getAllEffectSettings())
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.ok(effectApiService.getAllEffectSettings())
     }
 
     override fun getEffectSettings(uuid: String): HttpResponse<Any> {
-        return try {
-            HttpResponse.ok(effectApiService.getEffectSettings(uuid))
-        } catch (rnfe: ResourceNotFoundException) {
-            HttpResponse.notFound()
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.ok(effectApiService.getEffectSettings(uuid))
     }
 
     override fun createEffectSettings(request: CreateEffectSettingsRequest): HttpResponse<Any> {
-        return try {
-            val uuid = effectApiService.createEffectSettings(request)
-            HttpResponse.created(uuid)
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.created(effectApiService.createEffectSettings(request))
     }
 
     override fun updateEffectSettings(uuid: String, request: UpdateEffectSettingsRequest): HttpResponse<Any> {
-        return try {
-            effectApiService.updateEffectSettings(uuid, request)
-            HttpResponse.noContent()
-        } catch (rnfe: ResourceNotFoundException) {
-            HttpResponse.notFound()
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        effectApiService.updateEffectSettings(uuid, request)
+        return HttpResponse.noContent()
     }
 
     override fun deleteEffectSettings(uuid: String): HttpResponse<Any> {
-        return try {
-            effectApiService.deleteEffectSettings(uuid)
-            HttpResponse.noContent()
-        } catch (rnfe: ResourceNotFoundException) {
-            HttpResponse.notFound()
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        effectApiService.deleteEffectSettings(uuid)
+        return HttpResponse.noContent()
     }
 }

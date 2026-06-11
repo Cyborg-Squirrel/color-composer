@@ -14,6 +14,9 @@ import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.cyborgsquirrel.test_helpers.saveLightEffect
+import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -42,17 +45,19 @@ class LedStripSetupControllerTest(
         }
 
         "Requesting LED strips" {
-            // Request strip which doesn't exist - bad request
-            var response = apiClient.getStrip(UUID.randomUUID().toString())
-            response.status shouldBe HttpStatus.BAD_REQUEST
+            // Request strip which doesn't exist - not found
+            shouldThrow<ResourceNotFoundException> {
+                apiClient.getStrip(UUID.randomUUID().toString())
+            }
 
             // Request strips for a client which doesn't exist - bad request
-            response = apiClient.getStrips(UUID.randomUUID().toString())
-            response.status shouldBe HttpStatus.BAD_REQUEST
+            shouldThrow<ClientRequestException> {
+                apiClient.getStrips(UUID.randomUUID().toString())
+            }
 
             // Request strips for a client which has no strips
             val client = createLedStripClientEntity(clientRepository, "Lamp lights", "192.168.1.23", 90, 91)
-            response = apiClient.getStrips(client.uuid)
+            var response = apiClient.getStrips(client.uuid)
             response.status shouldBe HttpStatus.OK
             var getStripsResponse = response.body() as GetLedStripsResponse
             getStripsResponse.strips.isEmpty() shouldBe true
@@ -163,15 +168,16 @@ class LedStripSetupControllerTest(
         }
 
         "Deleting strips" {
-            // Deleting a strip which doesn't exist - bad request
-            var response = apiClient.deleteStrip(UUID.randomUUID().toString())
-            response.status shouldBe HttpStatus.BAD_REQUEST
+            // Deleting a strip which doesn't exist - not found
+            shouldThrow<ResourceNotFoundException> {
+                apiClient.deleteStrip(UUID.randomUUID().toString())
+            }
 
             val client = createLedStripClientEntity(clientRepository, "Porch lights", "192.168.50.50", 50, 51)
             var strip = saveLedStrip(stripRepository, client, "Strip A", 200, PiClientPin.D21.pinName, 100)
 
             // Deleting a strip which does exist and has no effects
-            response = apiClient.deleteStrip(strip.uuid)
+            var response = apiClient.deleteStrip(strip.uuid)
             response.status shouldBe HttpStatus.NO_CONTENT
             var stripOptional = stripRepository.findByUuid(strip.uuid)
             stripOptional.isPresent shouldBe false
@@ -179,8 +185,9 @@ class LedStripSetupControllerTest(
             // Deleting a strip which has a light effect - bad request
             strip = saveLedStrip(stripRepository, client, "Strip B", 144, PiClientPin.D21.pinName, 80)
             saveLightEffect(effectRepository, objectMapper, settingsRepository, strip)
-            response = apiClient.deleteStrip(UUID.randomUUID().toString())
-            response.status shouldBe HttpStatus.BAD_REQUEST
+            shouldThrow<ClientRequestException> {
+                apiClient.deleteStrip(strip.uuid)
+            }
 
             effectRepository.deleteAll()
 
@@ -193,7 +200,7 @@ class LedStripSetupControllerTest(
 
         "Limit one strip per Pi client using the create endpoint" {
             val client = createLedStripClientEntity(clientRepository, "Pi Client", "192.168.50.50", 50, 51)
-            
+
             val request1 = CreateLedStripRequest(
                 client.uuid,
                 "First Strip",
@@ -201,9 +208,9 @@ class LedStripSetupControllerTest(
                 240,
                 blendMode = BlendMode.Additive,
             )
-            var response = apiClient.createStrip(request1)
+            val response = apiClient.createStrip(request1)
             response.status shouldBe HttpStatus.CREATED
-            
+
             val request2 = CreateLedStripRequest(
                 client.uuid,
                 "Second Strip",
@@ -211,14 +218,15 @@ class LedStripSetupControllerTest(
                 240,
                 blendMode = BlendMode.Additive,
             )
-            response = apiClient.createStrip(request2)
-            response.status shouldBe HttpStatus.BAD_REQUEST
+            shouldThrow<ClientRequestException> {
+                apiClient.createStrip(request2)
+            }
         }
 
         "Limit one strip per Pi client using the update endpoint" {
             val piClient = createLedStripClientEntity(clientRepository, "Pi Client", "192.168.50.50", 50, 51)
             val nightDriverClient = createLedStripClientEntity(clientRepository, "NightDriver Client", "192.168.50.51", 52, 53)
-            
+
             val request1 = CreateLedStripRequest(
                 piClient.uuid,
                 "Pi Strip",
@@ -228,7 +236,7 @@ class LedStripSetupControllerTest(
             )
             var response = apiClient.createStrip(request1)
             response.status shouldBe HttpStatus.CREATED
-            
+
             val request2 = CreateLedStripRequest(
                 nightDriverClient.uuid,
                 "NightDriver Strip",
@@ -239,7 +247,7 @@ class LedStripSetupControllerTest(
             response = apiClient.createStrip(request2)
             val nightDriverStripUuid = response.body() as String
             response.status shouldBe HttpStatus.CREATED
-            
+
             val updateRequest = UpdateLedStripRequest(
                 clientUuid = piClient.uuid,
                 name = "Updated NightDriver Strip",
@@ -249,8 +257,9 @@ class LedStripSetupControllerTest(
                 blendMode = BlendMode.Average,
                 brightness = 85,
             )
-            
-            response = apiClient.updateStrip(nightDriverStripUuid, updateRequest)
-            response.status shouldBe HttpStatus.BAD_REQUEST
+
+            shouldThrow<ClientRequestException> {
+                apiClient.updateStrip(nightDriverStripUuid, updateRequest)
+            }
         }
     })

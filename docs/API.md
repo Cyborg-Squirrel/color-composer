@@ -6,11 +6,25 @@
 
 All endpoints return consistent error shapes:
 
-| Status                      | Condition                                 |
-|-----------------------------|-------------------------------------------|
-| `400 Bad Request`           | Business logic error (e.g. invalid state) |
-| `404 Not Found`             | Resource with given UUID does not exist   |
-| `500 Internal Server Error` | Uncaught exception                        |
+| Status                      | Condition                                                          |
+|-----------------------------|-------------------------------------------------------------------|
+| `400 Bad Request`           | Business logic error (invalid state, conflict, bad reference)     |
+| `404 Not Found`             | The resource addressed by a path UUID does not exist              |
+| `500 Internal Server Error` | Uncaught exception                                                 |
+
+A `400` or `404` response carries a JSON body:
+
+```json
+{
+  "status": 404,
+  "error": "Not Found",
+  "message": "Client with uuid <uuid> doesn't exist!"
+}
+```
+
+> Looking up, updating, or deleting a resource by its path UUID (e.g. `GET /client/{uuid}`)
+> returns `404` when that UUID does not exist. Referencing a non-existent resource in a request
+> body or query parameter (e.g. creating a strip for an unknown `clientUuid`) is a `400`.
 
 ---
 
@@ -751,7 +765,7 @@ Returns filters, optionally scoped to an effect.
 |--------------|--------|----------|-------------------------------------|
 | `effectUuid` | string | No       | Return only filters for this effect |
 
-> `GET /filter` with no params is not yet implemented.
+> `GET /filter` with no params returns all filters across every effect.
 
 **Response `200`**
 ```json
@@ -892,7 +906,7 @@ Deletes a palette.
 
 **Path params:** `uuid`
 
-**Response `200`**
+**Response `204 No Content`**
 
 ---
 

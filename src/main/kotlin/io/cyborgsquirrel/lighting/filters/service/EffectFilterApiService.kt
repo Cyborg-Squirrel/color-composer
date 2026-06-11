@@ -12,6 +12,7 @@ import io.cyborgsquirrel.lighting.filters.requests.UpdateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.responses.GetFilterResponse
 import io.cyborgsquirrel.lighting.filters.responses.GetFiltersResponse
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import jakarta.inject.Singleton
 import java.util.*
 
@@ -23,6 +24,22 @@ class EffectFilterApiService(
     private val effectRegistry: LightEffectRegistry,
     private val effectLightingHelper: CreateLightingService,
 ) {
+
+    fun getAllFilters(): GetFiltersResponse {
+        val filterEntities = filterRepository.queryAll()
+        val filterResponses = filterEntities.map { filter ->
+            val effectIds = filter.effectJunctions.map { it.effect!!.id }
+            val effectEntities = effectRepository.findByIdIn(effectIds)
+            GetFilterResponse(
+                filter.name,
+                filter.type,
+                filter.uuid,
+                effectEntities.map { it.uuid },
+                filter.settings
+            )
+        }
+        return GetFiltersResponse(filterResponses)
+    }
 
     fun getFiltersForEffect(effectUuid: String): GetFiltersResponse {
         val effectOptional = effectRepository.findByUuid(effectUuid)
@@ -59,7 +76,7 @@ class EffectFilterApiService(
                 filter.settings
             )
         } else {
-            throw ClientRequestException("Filter with uuid $uuid does not exist")
+            throw ResourceNotFoundException("Filter with uuid $uuid does not exist")
         }
     }
 
@@ -161,7 +178,7 @@ class EffectFilterApiService(
                 }
             }
         } else {
-            throw ClientRequestException("No filter found with uuid $uuid")
+            throw ResourceNotFoundException("No filter found with uuid $uuid")
         }
     }
 
@@ -184,7 +201,7 @@ class EffectFilterApiService(
 
             filterRepository.delete(filterEntity)
         } else {
-            throw ClientRequestException("No filter found with uuid $uuid")
+            throw ResourceNotFoundException("No filter found with uuid $uuid")
         }
     }
 }

@@ -14,6 +14,7 @@ import io.cyborgsquirrel.event_source.model.delta.ClientDelta
 import io.cyborgsquirrel.event_source.service.SseEventEmitter
 import io.cyborgsquirrel.jobs.streaming.StreamJobManager
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import jakarta.inject.Singleton
 import java.util.*
 
@@ -39,7 +40,7 @@ class LedClientApiService(
             val clientEntity = clientEntityOptional.get()
             return mapClientEntityToResponse(clientEntity)
         } else {
-            throw ClientRequestException("Client with uuid $uuid doesn't exist!")
+            throw ResourceNotFoundException("Client with uuid $uuid doesn't exist!")
         }
     }
 
@@ -111,7 +112,7 @@ class LedClientApiService(
             )
             sseEventEmitter.emit(delta)
         } else {
-            throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")
+            throw ResourceNotFoundException("Client with uuid $uuid does not exist! Please create it first before updating it.")
         }
     }
 
@@ -143,7 +144,7 @@ class LedClientApiService(
                 throw ClientRequestException("Could not delete client with uuid $uuid. Please delete its LED strips first.")
             }
         } else {
-            throw ClientRequestException("Could not delete client with uuid $uuid. It does not exist.")
+            throw ResourceNotFoundException("Could not delete client with uuid $uuid. It does not exist.")
         }
     }
 
