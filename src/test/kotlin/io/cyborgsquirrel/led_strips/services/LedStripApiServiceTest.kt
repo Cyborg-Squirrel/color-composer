@@ -16,6 +16,7 @@ import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrip
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
@@ -45,7 +46,7 @@ class LedStripApiServiceTest(
     }
 
     "getStrip should throw exception for non-existent strip" {
-        shouldThrow<ClientRequestException> {
+        shouldThrow<ResourceNotFoundException> {
             ledStripApiService.getStrip("non-existent-uuid")
         }
     }
@@ -338,7 +339,7 @@ class LedStripApiServiceTest(
     }
 
     "deleteStrip should fail for non-existent strip" {
-        shouldThrow<ClientRequestException> {
+        shouldThrow<ResourceNotFoundException> {
             ledStripApiService.onStripDeleted("non-existent-uuid")
         }
     }

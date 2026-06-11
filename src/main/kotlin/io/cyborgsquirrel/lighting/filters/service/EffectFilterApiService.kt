@@ -12,6 +12,7 @@ import io.cyborgsquirrel.lighting.filters.requests.UpdateEffectFilterRequest
 import io.cyborgsquirrel.lighting.filters.responses.GetFilterResponse
 import io.cyborgsquirrel.lighting.filters.responses.GetFiltersResponse
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import jakarta.inject.Singleton
 import java.util.*
 
@@ -23,6 +24,24 @@ class EffectFilterApiService(
     private val effectRegistry: LightEffectRegistry,
     private val effectLightingHelper: CreateLightingService,
 ) {
+
+    fun getAllFilters(): GetFiltersResponse {
+        val filterEntities = filterRepository.queryAll()
+        // Load every junction in a single fetch-joined query (effect is not populated when read
+        // through the filter's effectJunctions relation), then group effect uuids by filter.
+        val effectUuidsByFilterId = junctionRepository.queryAll()
+            .groupBy({ it.filter!!.id }, { it.effect!!.uuid })
+        val filterResponses = filterEntities.map { filter ->
+            GetFilterResponse(
+                filter.name,
+                filter.type,
+                filter.uuid,
+                effectUuidsByFilterId[filter.id] ?: emptyList(),
+                filter.settings
+            )
+        }
+        return GetFiltersResponse(filterResponses)
+    }
 
     fun getFiltersForEffect(effectUuid: String): GetFiltersResponse {
         val effectOptional = effectRepository.findByUuid(effectUuid)
@@ -49,17 +68,18 @@ class EffectFilterApiService(
         val filterOptional = filterRepository.findByUuid(uuid)
         if (filterOptional.isPresent) {
             val filter = filterOptional.get()
-            val effectIds = filter.effectJunctions.map { it.effect!!.id }
-            val effectEntities = effectRepository.findByIdIn(effectIds)
+            // effect is not populated when read through filter.effectJunctions; load the
+            // junctions directly so the fetch join resolves each effect.
+            val effectUuids = junctionRepository.findByFilter(filter).mapNotNull { it.effect?.uuid }
             return GetFilterResponse(
                 filter.name,
                 filter.type,
                 filter.uuid,
-                effectEntities.map { it.uuid },
+                effectUuids,
                 filter.settings
             )
         } else {
-            throw ClientRequestException("Filter with uuid $uuid does not exist")
+            throw ResourceNotFoundException("Filter with uuid $uuid does not exist")
         }
     }
 
@@ -161,7 +181,7 @@ class EffectFilterApiService(
                 }
             }
         } else {
-            throw ClientRequestException("No filter found with uuid $uuid")
+            throw ResourceNotFoundException("No filter found with uuid $uuid")
         }
     }
 
@@ -184,7 +204,7 @@ class EffectFilterApiService(
 
             filterRepository.delete(filterEntity)
         } else {
-            throw ClientRequestException("No filter found with uuid $uuid")
+            throw ResourceNotFoundException("No filter found with uuid $uuid")
         }
     }
 }

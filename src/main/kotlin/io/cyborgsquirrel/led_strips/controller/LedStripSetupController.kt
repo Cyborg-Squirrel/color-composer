@@ -4,7 +4,6 @@ import io.cyborgsquirrel.led_strips.api.LedStripSetupApi
 import io.cyborgsquirrel.led_strips.requests.CreateLedStripRequest
 import io.cyborgsquirrel.led_strips.requests.UpdateLedStripRequest
 import io.cyborgsquirrel.led_strips.services.LedStripApiService
-import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -16,57 +15,24 @@ class LedStripSetupController(
 ) : LedStripSetupApi {
 
     override fun getStrips(@QueryValue clientUuid: String?): HttpResponse<Any> {
-        return try {
-            val strips = stripSetupService.getStrips(clientUuid)
-            HttpResponse.ok(strips)
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.ok(stripSetupService.getStrips(clientUuid))
     }
 
     override fun getStrip(uuid: String): HttpResponse<Any> {
-        return try {
-            val strip = stripSetupService.getStrip(uuid)
-            HttpResponse.ok(strip)
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.ok(stripSetupService.getStrip(uuid))
     }
 
     override fun createStrip(@Body request: CreateLedStripRequest): HttpResponse<Any> {
-        return try {
-            val stripUuid = stripSetupService.createStrip(request)
-            return HttpResponse.created(stripUuid)
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.created(stripSetupService.createStrip(request))
     }
 
     override fun updateStrip(uuid: String, @Body updatedStrip: UpdateLedStripRequest): HttpResponse<Any> {
-        return try {
-            stripSetupService.updateStrip(uuid, updatedStrip)
-            HttpResponse.noContent()
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        stripSetupService.updateStrip(uuid, updatedStrip)
+        return HttpResponse.noContent()
     }
 
     override fun deleteStrip(uuid: String): HttpResponse<Any> {
-        return try {
-            stripSetupService.onStripDeleted(uuid)
-            HttpResponse.noContent()
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        stripSetupService.onStripDeleted(uuid)
+        return HttpResponse.noContent()
     }
 }

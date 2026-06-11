@@ -16,6 +16,9 @@ import io.cyborgsquirrel.led_strips.enums.PiClientPin
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.saveLedStrip
+import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.micronaut.http.HttpStatus
@@ -40,10 +43,11 @@ class LedClientSetupControllerTest(
         }
 
         "Requesting clients" {
-            var response = apiClient.getClient(UUID.randomUUID().toString())
-            response.status shouldBe HttpStatus.BAD_REQUEST
+            shouldThrow<ResourceNotFoundException> {
+                apiClient.getClient(UUID.randomUUID().toString())
+            }
 
-            response = apiClient.getAllClients()
+            var response = apiClient.getAllClients()
             response.status shouldBe HttpStatus.OK
             var clientListResponse = response.body() as GetClientsResponse
             clientListResponse.clients.isEmpty() shouldBe true
@@ -56,8 +60,9 @@ class LedClientSetupControllerTest(
                 mockClientStatusService.getStatusForClient(client)
             } returns Optional.of(ClientStatusInfo.inactive(mockedStatus))
 
-            response = apiClient.getClient(UUID.randomUUID().toString())
-            response.status shouldBe HttpStatus.BAD_REQUEST
+            shouldThrow<ResourceNotFoundException> {
+                apiClient.getClient(UUID.randomUUID().toString())
+            }
 
             response = apiClient.getClient(client.uuid)
             response.status shouldBe HttpStatus.OK
@@ -130,20 +135,32 @@ class LedClientSetupControllerTest(
             updatedClientEntity.powerLimit shouldBe updatedClientRequest.powerLimit
         }
 
+        "Updating a client which doesn't exist - not found" {
+            val updateRequest =
+                UpdateClientRequest("Living room lights", "192.168.1.113", ColorOrder.GRB, 115, 116, 333)
+            shouldThrow<ResourceNotFoundException> {
+                apiClient.update(UUID.randomUUID().toString(), updateRequest)
+            }
+        }
+
         "Delete clients" {
             val clientEntity = createLedStripClientEntity(clientRepository, "Window lights", "192.168.50.67", 80, 90)
             val strip = saveLedStrip(stripRepository, clientEntity, "Window light", 60, PiClientPin.D10.pinName, 100)
 
-            var deleteResponse = apiClient.deleteClient(clientEntity.uuid)
-            deleteResponse.status shouldBe HttpStatus.BAD_REQUEST
+            // Client still has a strip - deleting is a conflict (bad request)
+            shouldThrow<ClientRequestException> {
+                apiClient.deleteClient(clientEntity.uuid)
+            }
 
             stripRepository.delete(strip)
 
-            deleteResponse = apiClient.deleteClient(clientEntity.uuid)
+            val deleteResponse = apiClient.deleteClient(clientEntity.uuid)
             deleteResponse.status shouldBe HttpStatus.NO_CONTENT
 
-            deleteResponse = apiClient.deleteClient(clientEntity.uuid)
-            deleteResponse.status shouldBe HttpStatus.BAD_REQUEST
+            // Client is already gone - not found
+            shouldThrow<ResourceNotFoundException> {
+                apiClient.deleteClient(clientEntity.uuid)
+            }
         }
     }) {
     @MockBean(ClientStatusService::class)

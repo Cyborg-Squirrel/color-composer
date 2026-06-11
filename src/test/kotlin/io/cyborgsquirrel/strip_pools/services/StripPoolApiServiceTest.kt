@@ -17,6 +17,7 @@ import io.cyborgsquirrel.strip_pools.requests.StripPoolMemberRequestModel
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolMembersRequest
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -58,7 +59,7 @@ class StripPoolApiServiceTest(
     }
 
     "getStripPool should throw exception for non-existent pool" {
-        shouldThrow<ClientRequestException> {
+        shouldThrow<ResourceNotFoundException> {
             stripPoolApiService.getStripPool("non-existent-uuid")
         }
     }
@@ -150,7 +151,7 @@ class StripPoolApiServiceTest(
             blendMode = null
         )
 
-        shouldThrow<ClientRequestException> {
+        shouldThrow<ResourceNotFoundException> {
             stripPoolApiService.updateStripPool("non-existent", request)
         }
     }
@@ -201,7 +202,7 @@ class StripPoolApiServiceTest(
     "updatePoolMembers should throw exception for non-existent pool" {
         val request = UpdateStripPoolMembersRequest(members = emptyList())
 
-        shouldThrow<ClientRequestException> {
+        shouldThrow<ResourceNotFoundException> {
             stripPoolApiService.updatePoolMembers("non-existent-pool", request)
         }
     }

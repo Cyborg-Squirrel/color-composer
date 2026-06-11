@@ -10,6 +10,8 @@ import io.cyborgsquirrel.strip_pools.requests.CreateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.requests.UpdateStripPoolRequest
 import io.cyborgsquirrel.strip_pools.responses.GetStripPoolResponse
 import io.cyborgsquirrel.strip_pools.responses.GetStripPoolsResponse
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -61,9 +63,10 @@ class StripPoolControllerTest(
         body.pools[1].name shouldBe "Pool 2"
     }
 
-    "getPool should return bad request for non-existent pool" {
-        val response = apiClient.getPool("non-existent-uuid")
-        response.status shouldBe HttpStatus.BAD_REQUEST
+    "getPool should return not found for non-existent pool" {
+        shouldThrow<ResourceNotFoundException> {
+            apiClient.getPool("non-existent-uuid")
+        }
     }
 
     "getPool should return pool by uuid" {
@@ -130,15 +133,16 @@ class StripPoolControllerTest(
         updatedPool.get().blendMode shouldBe BlendMode.Average
     }
 
-    "updatePool should return bad request for non-existent pool" {
+    "updatePool should return not found for non-existent pool" {
         val updateRequest = UpdateStripPoolRequest(
             name = "Updated Name",
             poolType = null,
             blendMode = null
         )
 
-        val response = apiClient.updatePool("non-existent", updateRequest)
-        response.status shouldBe HttpStatus.BAD_REQUEST
+        shouldThrow<ResourceNotFoundException> {
+            apiClient.updatePool("non-existent", updateRequest)
+        }
     }
 
     "updatePool should handle partial updates" {

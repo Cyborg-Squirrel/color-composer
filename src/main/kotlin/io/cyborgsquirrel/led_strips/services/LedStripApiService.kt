@@ -19,6 +19,7 @@ import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import io.cyborgsquirrel.util.time.TimeHelper
 import jakarta.inject.Singleton
 import java.util.*
@@ -42,7 +43,7 @@ class LedStripApiService(
         return if (entityOptional.isPresent) {
             mapStripEntityToResponse(entityOptional.get())
         } else {
-            throw ClientRequestException("No LED strip exists with uuid $uuid!")
+            throw ResourceNotFoundException("No LED strip exists with uuid $uuid!")
         }
     }
 
@@ -190,7 +191,7 @@ class LedStripApiService(
                 sseEventEmitter.emit(LedStripEvent.LedStripUpdated(uuid, delta))
             }
         } else {
-            throw ClientRequestException("Client with uuid $uuid does not exist! Please create it first before updating it.")
+            throw ResourceNotFoundException("LED strip with uuid $uuid does not exist! Please create it first before updating it.")
         }
     }
 
@@ -209,7 +210,7 @@ class LedStripApiService(
                 throw ClientRequestException("Could not delete strip with uuid $uuid. Please delete or reassign its effects and pool member strips first.")
             }
         } else {
-            throw ClientRequestException("Could not delete strip with uuid $uuid. It does not exist.")
+            throw ResourceNotFoundException("Could not delete strip with uuid $uuid. It does not exist.")
         }
     }
 

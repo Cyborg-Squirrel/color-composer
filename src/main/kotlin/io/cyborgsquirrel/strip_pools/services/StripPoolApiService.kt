@@ -17,6 +17,7 @@ import io.cyborgsquirrel.strip_pools.responses.GetStripPoolResponse
 import io.cyborgsquirrel.strip_pools.responses.GetStripPoolsResponse
 import io.cyborgsquirrel.strip_pools.responses.StripPoolMemberResponseModel
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import jakarta.inject.Singleton
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
@@ -67,7 +68,7 @@ class StripPoolApiService(
     fun getStripPool(uuid: String): GetStripPoolResponse {
         val poolEntityOptional = poolRepository.findByUuid(uuid)
         if (poolEntityOptional.isEmpty) {
-            throw ClientRequestException("Could not find pool with uuid $uuid")
+            throw ResourceNotFoundException("Could not find pool with uuid $uuid")
         }
 
         val poolEntity = poolEntityOptional.get()
@@ -99,7 +100,7 @@ class StripPoolApiService(
     fun updateStripPool(uuid: String, request: UpdateStripPoolRequest) {
         val poolEntityOptional = poolRepository.findByUuid(uuid)
         if (poolEntityOptional.isEmpty) {
-            throw ClientRequestException("Could not find strip pool with uuid $uuid")
+            throw ResourceNotFoundException("Could not find strip pool with uuid $uuid")
         }
 
         val poolEntity = poolEntityOptional.get()
@@ -128,7 +129,7 @@ class StripPoolApiService(
     fun updatePoolMembers(uuid: String, request: UpdateStripPoolMembersRequest) {
         val poolEntityOptional = poolRepository.findByUuid(uuid)
         if (poolEntityOptional.isEmpty) {
-            throw ClientRequestException("Could not find strip pool with uuid $uuid")
+            throw ResourceNotFoundException("Could not find strip pool with uuid $uuid")
         }
 
         val poolEntity = poolEntityOptional.get()

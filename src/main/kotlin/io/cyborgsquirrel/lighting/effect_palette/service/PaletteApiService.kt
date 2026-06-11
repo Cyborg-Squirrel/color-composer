@@ -15,6 +15,7 @@ import io.cyborgsquirrel.lighting.effects.repository.LightEffectRepository
 import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.effects.service.CreateLightingService
 import io.cyborgsquirrel.util.exception.ClientRequestException
+import io.cyborgsquirrel.util.exception.ResourceNotFoundException
 import io.micronaut.json.tree.JsonNode
 import io.micronaut.serde.ObjectMapper
 import jakarta.inject.Singleton
@@ -41,7 +42,7 @@ class PaletteApiService(
                 paletteEntity.settings
             )
         } else {
-            throw ClientRequestException("Palette with uuid $uuid doesn't exist!")
+            throw ResourceNotFoundException("Palette with uuid $uuid doesn't exist!")
         }
     }
 
@@ -118,7 +119,7 @@ class PaletteApiService(
             )
             sseEventEmitter.emit(PaletteEvent.PaletteUpdated(uuid, delta))
         } else {
-            throw ClientRequestException("Palette with uuid $uuid doesn't exist!")
+            throw ResourceNotFoundException("Palette with uuid $uuid doesn't exist!")
         }
     }
 
@@ -135,7 +136,7 @@ class PaletteApiService(
             paletteRepository.delete(paletteEntity)
             sseEventEmitter.emit(PaletteEvent.PaletteDeleted(uuid))
         } else {
-            throw ClientRequestException("Palette with uuid $uuid doesn't exist!")
+            throw ResourceNotFoundException("Palette with uuid $uuid doesn't exist!")
         }
     }
 

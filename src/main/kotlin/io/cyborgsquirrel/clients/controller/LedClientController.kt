@@ -4,7 +4,6 @@ import io.cyborgsquirrel.clients.api.LedClientApi
 import io.cyborgsquirrel.clients.requests.CreateClientRequest
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
 import io.cyborgsquirrel.clients.services.LedClientApiService
-import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -13,57 +12,24 @@ import io.micronaut.http.annotation.Controller
 class LedClientController(private val service: LedClientApiService) : LedClientApi {
 
     override fun getClient(uuid: String): HttpResponse<Any> {
-        return try {
-            val client = service.getClientWithUuid(uuid)
-            HttpResponse.ok(client)
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.ok(service.getClientWithUuid(uuid))
     }
 
     override fun getAllClients(): HttpResponse<Any> {
-        return try {
-            val client = service.getAllClients()
-            HttpResponse.ok(client)
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.ok(service.getAllClients())
     }
 
     override fun create(@Body request: CreateClientRequest): HttpResponse<Any> {
-        return try {
-            val client = service.createClient(request)
-            HttpResponse.created(client)
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        return HttpResponse.created(service.createClient(request))
     }
 
     override fun update(uuid: String, @Body request: UpdateClientRequest): HttpResponse<Any> {
-        return try {
-            service.updateClient(uuid, request)
-            HttpResponse.noContent()
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        service.updateClient(uuid, request)
+        return HttpResponse.noContent()
     }
 
     override fun deleteClient(uuid: String): HttpResponse<Any> {
-        return try {
-            service.deleteClient(uuid)
-            HttpResponse.noContent()
-        } catch (cre: ClientRequestException) {
-            HttpResponse.badRequest(cre.message ?: "")
-        } catch (ex: Exception) {
-            HttpResponse.serverError(ex.message ?: "")
-        }
+        service.deleteClient(uuid)
+        return HttpResponse.noContent()
     }
 }
