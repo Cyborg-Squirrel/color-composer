@@ -7,7 +7,5 @@ import io.micronaut.serde.annotation.Serdeable
  */
 @Serdeable
 data class ApiErrorResponse(
-    val status: Int,
-    val error: String,
     val message: String,
 )

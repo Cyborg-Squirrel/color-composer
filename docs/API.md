@@ -16,11 +16,11 @@ A `400` or `404` response carries a JSON body:
 
 ```json
 {
-  "status": 404,
-  "error": "Not Found",
   "message": "Client with uuid <uuid> doesn't exist!"
 }
 ```
+
+> The HTTP status line conveys the status code; the body carries only the human-readable `message`.
 
 > Looking up, updating, or deleting a resource by its path UUID (e.g. `GET /client/{uuid}`)
 > returns `404` when that UUID does not exist. Referencing a non-existent resource in a request

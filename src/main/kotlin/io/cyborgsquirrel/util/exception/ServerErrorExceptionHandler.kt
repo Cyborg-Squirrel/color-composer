@@ -2,7 +2,6 @@ package io.cyborgsquirrel.util.exception
 
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
-import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Produces
 import io.micronaut.http.server.exceptions.ExceptionHandler
 import jakarta.inject.Singleton
@@ -19,9 +18,8 @@ class ServerErrorExceptionHandler :
         request: HttpRequest<*>,
         exception: ServerErrorException
     ): HttpResponse<ApiErrorResponse> {
-        val status = HttpStatus.INTERNAL_SERVER_ERROR
         return HttpResponse.serverError(
-            ApiErrorResponse(status.code, status.reason, exception.message ?: "")
+            ApiErrorResponse(exception.message ?: "")
         )
     }
 }
