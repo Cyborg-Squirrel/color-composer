@@ -8,6 +8,7 @@ import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectSettingsRequest
 import io.cyborgsquirrel.lighting.effects.requests.UpdateEffectStatusRequest
 import io.cyborgsquirrel.lighting.effects.service.EffectApiService
+import io.cyborgsquirrel.util.exception.ClientRequestException
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 
@@ -18,7 +19,7 @@ class EffectController(
 
     override fun getEffects(stripUuid: String?, poolUuid: String?): HttpResponse<Any> {
         return if (!stripUuid.isNullOrBlank() && !poolUuid.isNullOrBlank()) {
-            HttpResponse.badRequest("stripUuid and poolUuid provided, request must be one or the other.")
+            throw ClientRequestException("stripUuid and poolUuid provided, request must be one or the other.")
         } else if (!stripUuid.isNullOrBlank()) {
             HttpResponse.ok(effectApiService.getEffectsForStrip(stripUuid))
         } else if (!poolUuid.isNullOrBlank()) {

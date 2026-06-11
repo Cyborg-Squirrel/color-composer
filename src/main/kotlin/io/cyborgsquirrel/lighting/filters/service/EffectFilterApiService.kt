@@ -27,14 +27,16 @@ class EffectFilterApiService(
 
     fun getAllFilters(): GetFiltersResponse {
         val filterEntities = filterRepository.queryAll()
+        // Load every junction in a single fetch-joined query (effect is not populated when read
+        // through the filter's effectJunctions relation), then group effect uuids by filter.
+        val effectUuidsByFilterId = junctionRepository.queryAll()
+            .groupBy({ it.filter!!.id }, { it.effect!!.uuid })
         val filterResponses = filterEntities.map { filter ->
-            val effectIds = filter.effectJunctions.map { it.effect!!.id }
-            val effectEntities = effectRepository.findByIdIn(effectIds)
             GetFilterResponse(
                 filter.name,
                 filter.type,
                 filter.uuid,
-                effectEntities.map { it.uuid },
+                effectUuidsByFilterId[filter.id] ?: emptyList(),
                 filter.settings
             )
         }
@@ -66,13 +68,14 @@ class EffectFilterApiService(
         val filterOptional = filterRepository.findByUuid(uuid)
         if (filterOptional.isPresent) {
             val filter = filterOptional.get()
-            val effectIds = filter.effectJunctions.map { it.effect!!.id }
-            val effectEntities = effectRepository.findByIdIn(effectIds)
+            // effect is not populated when read through filter.effectJunctions; load the
+            // junctions directly so the fetch join resolves each effect.
+            val effectUuids = junctionRepository.findByFilter(filter).mapNotNull { it.effect?.uuid }
             return GetFilterResponse(
                 filter.name,
                 filter.type,
                 filter.uuid,
-                effectEntities.map { it.uuid },
+                effectUuids,
                 filter.settings
             )
         } else {

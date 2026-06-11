@@ -46,4 +46,31 @@ class ApiExceptionHandlerTest : StringSpec({
         response.body() shouldNotBe null
         response.body()!!.message shouldBe "Something went wrong"
     }
+
+    "ClientRequestExceptionHandler falls back to a default message when the message is blank" {
+        val handler = ClientRequestExceptionHandler()
+
+        val response = handler.handle(request, ClientRequestException("   "))
+
+        response.status shouldBe HttpStatus.BAD_REQUEST
+        response.body()!!.message shouldBe "The request was invalid"
+    }
+
+    "ResourceNotFoundExceptionHandler falls back to a default message when the message is blank" {
+        val handler = ResourceNotFoundExceptionHandler()
+
+        val response = handler.handle(request, ResourceNotFoundException(""))
+
+        response.status shouldBe HttpStatus.NOT_FOUND
+        response.body()!!.message shouldBe "The requested resource was not found"
+    }
+
+    "ServerErrorExceptionHandler falls back to a default message when the message is blank" {
+        val handler = ServerErrorExceptionHandler()
+
+        val response = handler.handle(request, ServerErrorException(""))
+
+        response.status shouldBe HttpStatus.INTERNAL_SERVER_ERROR
+        response.body()!!.message shouldBe "An unexpected error occurred"
+    }
 })

@@ -255,4 +255,10 @@ class EffectControllerTest(
             apiClient.createEffect(request)
         }
     }
+
+    "getEffects throws ClientRequestException when both stripUuid and poolUuid are provided" {
+        shouldThrow<ClientRequestException> {
+            apiClient.getEffects(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+        }
+    }
 })

@@ -19,7 +19,7 @@ class ServerErrorExceptionHandler :
         exception: ServerErrorException
     ): HttpResponse<ApiErrorResponse> {
         return HttpResponse.serverError(
-            ApiErrorResponse(exception.message ?: "")
+            ApiErrorResponse(exception.message?.takeIf { it.isNotBlank() } ?: "An unexpected error occurred")
         )
     }
 }

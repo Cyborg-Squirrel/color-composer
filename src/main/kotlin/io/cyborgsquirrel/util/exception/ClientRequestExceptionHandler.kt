@@ -19,7 +19,7 @@ class ClientRequestExceptionHandler :
         exception: ClientRequestException
     ): HttpResponse<ApiErrorResponse> {
         return HttpResponse.badRequest(
-            ApiErrorResponse(exception.message ?: "")
+            ApiErrorResponse(exception.message?.takeIf { it.isNotBlank() } ?: "The request was invalid")
         )
     }
 }

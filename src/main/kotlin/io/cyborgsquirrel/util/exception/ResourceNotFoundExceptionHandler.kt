@@ -19,7 +19,7 @@ class ResourceNotFoundExceptionHandler :
         exception: ResourceNotFoundException
     ): HttpResponse<ApiErrorResponse> {
         return HttpResponse.notFound(
-            ApiErrorResponse(exception.message ?: "")
+            ApiErrorResponse(exception.message?.takeIf { it.isNotBlank() } ?: "The requested resource was not found")
         )
     }
 }
