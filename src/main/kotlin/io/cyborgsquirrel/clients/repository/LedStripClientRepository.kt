@@ -10,8 +10,9 @@ interface LedStripClientRepository : CrudRepository<LedStripClientEntity, Long> 
     fun findByUuid(uuid: String): Optional<LedStripClientEntity>
 
     @Join(value = "strips", type = Join.Type.LEFT_FETCH)
-    fun findByAddress(name: String): Optional<LedStripClientEntity>
-
-    @Join(value = "strips", type = Join.Type.LEFT_FETCH)
     fun queryAll(): List<LedStripClientEntity>
+
+    fun getByUuid(uuid: String): Optional<LedStripClientEntity>
+
+    fun existsByAddress(address: String): Boolean
 }
