@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.home.services
 
 import io.cyborgsquirrel.clients.repository.LedStripClientRepository
-import io.cyborgsquirrel.clients.services.LedClientApiService
+import io.cyborgsquirrel.clients.shared.ClientResponseAssembler
 import io.cyborgsquirrel.home.responses.HomeResponse
 import io.cyborgsquirrel.led_strips.repository.LedStripRepository
 import io.cyborgsquirrel.led_strips.services.LedStripApiService
@@ -18,13 +18,13 @@ class HomeApiService(
     private val effectRepository: LightEffectRepository,
     private val paletteRepository: LightEffectPaletteRepository,
     private val effectApiService: EffectApiService,
-    private val clientApiService: LedClientApiService,
+    private val clientResponseAssembler: ClientResponseAssembler,
     private val stripsApiService: LedStripApiService,
 ) {
     fun getHome(): HomeResponse {
         val clientEntities = clientRepository.queryAll()
         val clientResponses = clientEntities.map {
-            clientApiService.mapClientEntityToResponse(it)
+            clientResponseAssembler.mapClientEntityToResponse(it)
         }
         val stripEntities = clientEntities.flatMap { it.strips }.distinctBy { it.uuid }
         val stripResponses = stripEntities.map {

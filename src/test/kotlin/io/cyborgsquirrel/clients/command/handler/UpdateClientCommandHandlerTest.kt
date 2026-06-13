@@ -1,5 +1,6 @@
-package io.cyborgsquirrel.clients.services
+package io.cyborgsquirrel.clients.command.handler
 
+import io.cyborgsquirrel.clients.command.UpdateClientCommand
 import io.cyborgsquirrel.clients.enums.ColorOrder
 import io.cyborgsquirrel.clients.repository.LedStripClientRepository
 import io.cyborgsquirrel.clients.requests.UpdateClientRequest
@@ -15,8 +16,8 @@ import io.mockk.mockk
 import io.mockk.verify
 
 @MicronautTest
-class LedClientApiServiceTest(
-    private val ledClientApiService: LedClientApiService,
+class UpdateClientCommandHandlerTest(
+    private val updateClientCommandHandler: UpdateClientCommandHandler,
     private val clientRepository: LedStripClientRepository,
     private val stripRepository: LedStripRepository,
     private val streamJobManager: StreamJobManager
@@ -52,7 +53,7 @@ class LedClientApiServiceTest(
             powerLimit = 100  // Changed
         )
 
-        ledClientApiService.updateClient(client.uuid, updateRequest)
+        updateClientCommandHandler.handle(UpdateClientCommand(client.uuid, updateRequest))
 
         verify(atLeast = 1) { mockStreamJobManager.stopWebsocketJob(any()) }
         verify(atLeast = 1) { mockStreamJobManager.startStreamingJob(any()) }
@@ -79,7 +80,7 @@ class LedClientApiServiceTest(
             powerLimit = null
         )
 
-        ledClientApiService.updateClient(client.uuid, updateRequest)
+        updateClientCommandHandler.handle(UpdateClientCommand(client.uuid, updateRequest))
 
         verify(atLeast = 1) { mockStreamJobManager.stopWebsocketJob(any()) }
         verify(atLeast = 1) { mockStreamJobManager.startStreamingJob(any()) }
@@ -106,7 +107,7 @@ class LedClientApiServiceTest(
             powerLimit = null
         )
 
-        ledClientApiService.updateClient(client.uuid, updateRequest)
+        updateClientCommandHandler.handle(UpdateClientCommand(client.uuid, updateRequest))
 
         verify(atLeast = 1) { mockStreamJobManager.stopWebsocketJob(any()) }
         verify(atLeast = 1) { mockStreamJobManager.startStreamingJob(any()) }
@@ -133,7 +134,7 @@ class LedClientApiServiceTest(
             powerLimit = null
         )
 
-        ledClientApiService.updateClient(client.uuid, updateRequest)
+        updateClientCommandHandler.handle(UpdateClientCommand(client.uuid, updateRequest))
 
         verify(atLeast = 1) { mockStreamJobManager.stopWebsocketJob(any()) }
         verify(atLeast = 1) { mockStreamJobManager.startStreamingJob(any()) }
@@ -162,7 +163,7 @@ class LedClientApiServiceTest(
             powerLimit = null
         )
 
-        ledClientApiService.updateClient(client.uuid, updateRequest)
+        updateClientCommandHandler.handle(UpdateClientCommand(client.uuid, updateRequest))
 
         verify(atLeast = 1) { mockStreamJobManager.stopWebsocketJob(any()) }
         verify(atLeast = 1) { mockStreamJobManager.startStreamingJob(any()) }
@@ -186,7 +187,7 @@ class LedClientApiServiceTest(
             powerLimit = null
         )
 
-        ledClientApiService.updateClient(client.uuid, updateRequest)
+        updateClientCommandHandler.handle(UpdateClientCommand(client.uuid, updateRequest))
 
         verify(exactly = 0) { mockStreamJobManager.stopWebsocketJob(any()) }
         verify(exactly = 0) { mockStreamJobManager.startStreamingJob(any()) }
