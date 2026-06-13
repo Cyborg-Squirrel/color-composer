@@ -52,7 +52,7 @@ class StripPoolApiService(
         val memberResponseModels = mutableListOf<StripPoolMemberResponseModel>()
         var atLeastOnePoolMemberInUse = false
         memberEntities.forEach { me ->
-            val clientEntity = stripsByUuid.getValue(me.strip!!.uuid).client
+            val clientEntity = me.strip?.let { stripsByUuid[it.uuid] }?.client
             val clientStatus = if (clientEntity == null) null else clientStatusService.getStatusForClient(clientEntity)
                 .getOrNull()?.status
             val inUse = clientStatus == ClientStatus.Active
