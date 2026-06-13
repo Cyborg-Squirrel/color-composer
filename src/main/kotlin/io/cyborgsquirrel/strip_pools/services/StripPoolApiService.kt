@@ -5,6 +5,7 @@ import io.cyborgsquirrel.clients.status.ClientStatusService
 import io.cyborgsquirrel.event_source.model.StripPoolEvent
 import io.cyborgsquirrel.event_source.model.delta.PoolDelta
 import io.cyborgsquirrel.event_source.service.SseEventEmitter
+import io.cyborgsquirrel.led_strips.entity.LedStripEntity
 import io.cyborgsquirrel.led_strips.entity.LedStripPoolEntity
 import io.cyborgsquirrel.led_strips.entity.PoolMemberLedStripEntity
 import io.cyborgsquirrel.led_strips.repository.LedStripPoolRepository
@@ -31,15 +32,27 @@ class StripPoolApiService(
     private val clientStatusService: ClientStatusService,
 ) {
 
+    /** One batched lookup of every member's strip (with its client) keyed by strip uuid. */
+    private fun fetchStripsByUuid(memberEntities: List<PoolMemberLedStripEntity>): Map<String, LedStripEntity> {
+        val stripUuids = memberEntities.mapNotNull { it.strip?.uuid }.distinct()
+        if (stripUuids.isEmpty()) return emptyMap()
+        return stripRepository.findByUuidIn(stripUuids).associateBy { it.uuid }
+    }
+
     private fun mapPoolEntityToModel(
         poolEntity: LedStripPoolEntity,
         memberEntities: List<PoolMemberLedStripEntity>
+    ): GetStripPoolResponse = mapPoolEntityToModel(poolEntity, memberEntities, fetchStripsByUuid(memberEntities))
+
+    private fun mapPoolEntityToModel(
+        poolEntity: LedStripPoolEntity,
+        memberEntities: List<PoolMemberLedStripEntity>,
+        stripsByUuid: Map<String, LedStripEntity>,
     ): GetStripPoolResponse {
-        val stripEntities = stripRepository.findByUuidIn(memberEntities.map { it.strip!!.uuid })
         val memberResponseModels = mutableListOf<StripPoolMemberResponseModel>()
         var atLeastOnePoolMemberInUse = false
         memberEntities.forEach { me ->
-            val clientEntity = stripEntities.first { se -> se.uuid == me.strip!!.uuid }.client
+            val clientEntity = stripsByUuid.getValue(me.strip!!.uuid).client
             val clientStatus = if (clientEntity == null) null else clientStatusService.getStatusForClient(clientEntity)
                 .getOrNull()?.status
             val inUse = clientStatus == ClientStatus.Active
@@ -79,7 +92,9 @@ class StripPoolApiService(
 
     fun getStripPools(): GetStripPoolsResponse {
         val poolEntities = poolRepository.queryAll()
-        val responseModels = poolEntities.map { mapPoolEntityToModel(it, it.members.toList()) }
+        // Batch every pool's member strips into a single lookup instead of one query per pool.
+        val stripsByUuid = fetchStripsByUuid(poolEntities.flatMap { it.members })
+        val responseModels = poolEntities.map { mapPoolEntityToModel(it, it.members.toList(), stripsByUuid) }
         return GetStripPoolsResponse(responseModels)
     }
 

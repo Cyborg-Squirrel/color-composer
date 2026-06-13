@@ -98,7 +98,7 @@ open class EffectApiService(
             stripUuid != null -> {
                 val stripEntity = stripRepository.findByUuid(stripUuid)
                     .orElseThrow { ClientRequestException("No strip found with uuid $stripUuid!") }
-                val count = effectRepository.findByStrip(stripEntity).size
+                val count = effectRepository.countByStrip(stripEntity).toInt()
                 val targetLayer = request.layer ?: count
                 validateLayerForInsert(targetLayer, count, "strip ${stripEntity.uuid}")
                 if (targetLayer < count) {
@@ -122,7 +122,7 @@ open class EffectApiService(
             poolUuid != null -> {
                 val poolEntity = poolRepository.findByUuid(poolUuid)
                     .orElseThrow { ClientRequestException("No pool found with uuid $poolUuid!") }
-                val count = effectRepository.findByPool(poolEntity).size
+                val count = effectRepository.countByPool(poolEntity).toInt()
                 val targetLayer = request.layer ?: count
                 validateLayerForInsert(targetLayer, count, "pool ${poolEntity.uuid}")
                 if (targetLayer < count) {
@@ -335,8 +335,8 @@ open class EffectApiService(
         val assigned = owningStrip != null || owningPool != null
         if (updateEffectRequest.layer != null && assigned) {
             val count = when {
-                owningStrip != null -> effectRepository.findByStrip(owningStrip).size
-                owningPool != null -> effectRepository.findByPool(owningPool).size
+                owningStrip != null -> effectRepository.countByStrip(owningStrip).toInt()
+                owningPool != null -> effectRepository.countByPool(owningPool).toInt()
                 else -> 0
             }
             val maxValid = count - 1
@@ -461,8 +461,8 @@ open class EffectApiService(
         val targetLayer = if (unassigned) {
             0
         } else when {
-            newStrip != null -> effectRepository.findByStrip(newStrip).size
-            newPool != null -> effectRepository.findByPool(newPool).size
+            newStrip != null -> effectRepository.countByStrip(newStrip).toInt()
+            newPool != null -> effectRepository.countByPool(newPool).toInt()
             else -> 0
         }
 

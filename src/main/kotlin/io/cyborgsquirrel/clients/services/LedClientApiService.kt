@@ -27,7 +27,7 @@ class LedClientApiService(
 ) {
 
     fun getAllClients(): GetClientsResponse {
-        val clientEntities = clientRepository.queryAll()
+        val clientEntities = clientRepository.findAll()
         val responseClients = clientEntities.map {
             mapClientEntityToResponse(it)
         }
@@ -35,7 +35,7 @@ class LedClientApiService(
     }
 
     fun getClientWithUuid(uuid: String): GetClientResponse {
-        val clientEntityOptional = clientRepository.findByUuid(uuid)
+        val clientEntityOptional = clientRepository.getByUuid(uuid)
         if (clientEntityOptional.isPresent) {
             val clientEntity = clientEntityOptional.get()
             return mapClientEntityToResponse(clientEntity)
@@ -45,9 +45,8 @@ class LedClientApiService(
     }
 
     fun createClient(request: CreateClientRequest): String {
-        val entityOptional = clientRepository.findByAddress(request.address)
-        return if (entityOptional.isPresent) {
-            entityOptional.get().uuid
+        return if (clientRepository.existsByAddress(request.address)) {
+            throw ClientRequestException("A client with address ${request.address} already exists!")
         } else {
             // Default to RGB if no color order is specified - it is not required for Pi clients
             val colorOrder = request.colorOrder ?: ColorOrder.RGB
