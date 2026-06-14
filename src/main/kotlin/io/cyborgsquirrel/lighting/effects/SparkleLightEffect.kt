@@ -4,6 +4,7 @@ import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.SparkleEffectSettings
 import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlin.random.Random
 
@@ -28,16 +29,17 @@ class SparkleLightEffect(
     )
 
     private val dots = mutableListOf<Dot>()
-    private var buffer = MutableList(numberOfLeds) { RgbColor.Blank }
+    private var buffer = Array(numberOfLeds) { RgbColorPresets.blank() }
     private var iterations = 0
     private val checker = EffectUpdateTickChecker(timeHelper)
 
-    override fun getNextStep(): List<RgbColor> {
+    override fun getNextStep(): Array<RgbColor> {
         val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
         if (!updateDue) return buffer
         val now = timeHelper.millisSinceEpoch()
 
         val iterator = dots.iterator()
+        val setBlankList = mutableListOf<Int>()
         while (iterator.hasNext()) {
             val dot = iterator.next()
             with(dot) {
@@ -45,6 +47,7 @@ class SparkleLightEffect(
                 if (elapsed > fadeInMillis) {
                     val fadeOutPercentDone = elapsed / (fadeInMillis + fadeOutMillis).toFloat()
                     if (fadeOutPercentDone >= 0.98) {
+                        setBlankList.add(dot.position)
                         iterator.remove()
                     } else {
                         intensity = 1 - fadeOutPercentDone
@@ -60,12 +63,15 @@ class SparkleLightEffect(
             val position = Random.nextInt(numberOfLeds)
             val fadeInMillis = Random.nextInt(settings.fadeInMillisMin, settings.fadeInMillisMax)
             val fadeOutMillis = Random.nextInt(settings.fadeOutMillisMin, settings.fadeOutMillisMax)
-            dots.add(Dot(position, 0f,now, fadeInMillis, fadeOutMillis))
+            dots.add(Dot(position, 0f, now, fadeInMillis, fadeOutMillis))
         }
 
-        buffer = MutableList(numberOfLeds) { RgbColor.Blank }
         dots.forEach { dot ->
             buffer[dot.position] = getColor(dot).scale(dot.intensity)
+        }
+
+        setBlankList.forEach { blankDot ->
+            buffer[blankDot].setBlank()
         }
 
         iterations++
@@ -73,7 +79,7 @@ class SparkleLightEffect(
         return buffer
     }
 
-    override fun getBuffer(): List<RgbColor> = buffer
+    override fun getBuffer(): Array<RgbColor> = buffer
 
     override fun getIterations(): Int = iterations
 
@@ -83,11 +89,11 @@ class SparkleLightEffect(
 
     private fun getColor(dot: Dot): RgbColor {
         return if (dot.startTime % 3 == 0L) {
-            palette?.getSecondaryColor(dot.position) ?: RgbColor.Purple
+            palette?.getSecondaryColor(dot.position) ?: RgbColorPresets.purple()
         } else if (dot.startTime % 4 == 0L) {
-            palette?.getTertiaryColor(dot.position) ?: RgbColor.Cyan
+            palette?.getTertiaryColor(dot.position) ?: RgbColorPresets.cyan()
         } else {
-            palette?.getPrimaryColor(dot.position) ?: RgbColor.Green
+            palette?.getPrimaryColor(dot.position) ?: RgbColorPresets.green()
         }
     }
 }

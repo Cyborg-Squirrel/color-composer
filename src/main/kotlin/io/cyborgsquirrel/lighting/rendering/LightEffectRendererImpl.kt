@@ -153,11 +153,12 @@ class LightEffectRendererImpl(
         activeEffects: List<ActiveLightEffect>,
     ): RenderedFrameModel {
         val stripLength = strip.length()
-        val allEffectsRgbData = ArrayList<List<RgbColor>>(activeEffects.size)
+        val allEffectsRgbData = ArrayList<Array<RgbColor>>(activeEffects.size)
         for (activeEffect in activeEffects) {
             logger.debug("Rendering effect {}", activeEffect)
             val playing = activeEffect.status == LightEffectStatus.Playing
-            var rgbData = if (playing) activeEffect.effect.getNextStep() else activeEffect.effect.getBuffer()
+            // Effects produce a reused Array buffer; expose it as a zero-copy List view for the filter/blend pipeline.
+            var rgbData = (if (playing) activeEffect.effect.getNextStep() else activeEffect.effect.getBuffer()).copyOf()
 
             for (filter in activeEffect.filters) {
                 logger.debug("Applying filter {}", filter.uuid)
@@ -183,7 +184,7 @@ class LightEffectRendererImpl(
                     "Effect {} output {} LEDs, truncating to strip length {}",
                     activeEffect.effectUuid, rgbData.size, stripLength
                 )
-                rgbData = rgbData.take(stripLength)
+                rgbData = rgbData.slice(0 until stripLength).toTypedArray()
             }
 
             allEffectsRgbData.add(rgbData)

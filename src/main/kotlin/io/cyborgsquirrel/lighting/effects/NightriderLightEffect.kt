@@ -7,6 +7,7 @@ import io.cyborgsquirrel.lighting.effects.settings.NightriderEffectSettings
 import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.util.time.TimeHelper
 import org.slf4j.LoggerFactory
 import kotlin.math.abs
@@ -15,8 +16,9 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Light effect where a light travels from one end of the strip to the other
- * changing the color behind it to the next color.
+ * Light effect where a light dot travels from one end of the strip to the other.
+ * The LEDs where the dot previously traveled change color to match the dot, dimmed by [settings.brightnessScaling].
+ * The dot reflects down the strip once it reaches the beginning or end of the strip.
  */
 class NightriderLightEffect(
     private val numberOfLeds: Int,
@@ -30,15 +32,16 @@ class NightriderLightEffect(
     private var previousLocation = 0
     private var location = 0
     private var iterations = 0
-    private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private var buffer = Array(numberOfLeds) { RgbColorPresets.blank() }
     private val checker = EffectUpdateTickChecker(timeHelper)
+    private var defaultColorsCache: List<RgbColor>? = null
 
-    override fun getNextStep(): List<RgbColor> {
+    override fun getNextStep(): Array<RgbColor> {
         val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
         if (!updateDue) return buffer
         onNextStep()
 
-        buffer = when (settings) {
+        when (settings) {
             is NightriderColorFillEffectSettings -> renderNightriderColorFill()
             is NightriderCometEffectSettings -> renderNightriderComet()
         }
@@ -49,88 +52,83 @@ class NightriderLightEffect(
         return buffer
     }
 
-    override fun getBuffer(): List<RgbColor> = buffer
+    override fun getBuffer(): Array<RgbColor> = buffer
 
-    private fun renderNightriderComet(): List<RgbColor> {
-        return if (settings is NightriderCometEffectSettings) {
-            val rgbList = ArrayList<RgbColor>(numberOfLeds)
-
-            if (location > 0) {
-                // Before comet
-                for (i in 0..<previousLocation) {
-                    rgbList.add(RgbColor.Blank)
-                }
-            }
-
-            // The comet + trail behind it
-            val dotScaleFactor = 1.5f
-            val dotColor = getColor(location, iterations).scale(dotScaleFactor)
-
-            val cometBuffer = ArrayList<RgbColor>(settings.trailLength + 2)
-            // Brightest spot is at the beginning for the reflect scenario
-            if (reflect) {
-                cometBuffer.add(dotColor)
-            }
-
-            for (i in 0..<settings.trailLength) {
-                val color = getColor(i + cometBuffer.size + location, iterations).scale(dotScaleFactor)
-                val interpolationFactor = when (settings.trailFadeCurve) {
-                    FadeCurve.Linear -> min((i + 1).toFloat() / settings.trailLength, 1f)
-                    FadeCurve.Logarithmic -> max(log(i + 1f, settings.trailLength.toFloat()), 0.05f)
-                }
-                val interpolatedColor = if (reflect) color.interpolate(
-                    RgbColor.Blank, interpolationFactor
-                ) else RgbColor.Blank.interpolate(color, interpolationFactor)
-                cometBuffer.add(interpolatedColor)
-            }
-
-            // Brightest spot is the end for the non-reflect scenario
-            if (!reflect) {
-                cometBuffer.add(dotColor)
-            }
-
-            // Add the comet, clamped so its trailing portion can't extend past the end of the strip.
-            val cometSource = if (location < 0) cometBuffer.subList(abs(location), cometBuffer.size) else cometBuffer
-            val remaining = buffer.size - rgbList.size
-            if (remaining > 0) {
-                rgbList.addAll(if (cometSource.size > remaining) cometSource.subList(0, remaining) else cometSource)
-            }
-
-            for (i in rgbList.size..<buffer.size) {
-                rgbList.add(RgbColor.Blank)
-            }
-
-            rgbList
-        } else {
+    private fun renderNightriderComet() {
+        if (settings !is NightriderCometEffectSettings) {
             logger.warn("Config mismatch! Expected NightriderCometEffectSettings.")
             renderNightriderColorFill()
+            return
+        }
+
+        // Blank everything before the comet.
+        val start = if (location > 0) previousLocation else 0
+        for (i in 0..<start) {
+            buffer[i].setBlank()
+        }
+
+        // The comet + trail behind it
+        val dotScaleFactor = 1.5f
+        val dotColor = getColor(location, iterations).scale(dotScaleFactor)
+
+        val cometBuffer = ArrayList<RgbColor>(settings.trailLength + 2)
+        // Brightest spot is at the beginning for the reflect scenario
+        if (reflect) {
+            cometBuffer.add(dotColor)
+        }
+
+        for (i in 0..<settings.trailLength) {
+            val color = getColor(i + cometBuffer.size + location, iterations).scale(dotScaleFactor)
+            val interpolationFactor = when (settings.trailFadeCurve) {
+                FadeCurve.Linear -> min((i + 1).toFloat() / settings.trailLength, 1f)
+                FadeCurve.Logarithmic -> max(log(i + 1f, settings.trailLength.toFloat()), 0.05f)
+            }
+            val interpolatedColor = if (reflect) color.interpolate(
+                RgbColorPresets.blank(), interpolationFactor
+            ) else RgbColorPresets.blank().interpolate(color, interpolationFactor)
+            cometBuffer.add(interpolatedColor)
+        }
+
+        // Brightest spot is the end for the non-reflect scenario
+        if (!reflect) {
+            cometBuffer.add(dotColor)
+        }
+
+        // Place the comet, clamped so its trailing portion can't extend past the end of the strip.
+        val cometSource = if (location < 0) cometBuffer.subList(abs(location), cometBuffer.size) else cometBuffer
+        var index = start
+        for (color in cometSource) {
+            if (index >= buffer.size) break
+            buffer[index].copyFrom(color)
+            index++
+        }
+
+        // Blank the remainder of the strip.
+        for (i in index..<buffer.size) {
+            buffer[i].setBlank()
         }
     }
 
-    private fun renderNightriderColorFill(): List<RgbColor> {
-        val rgbList = ArrayList<RgbColor>(numberOfLeds)
+    private fun renderNightriderColorFill() {
         val brightnessScaling = if (settings is NightriderColorFillEffectSettings) settings.brightnessScaling else 1f
         for (i in 0..<previousLocation) {
-            if (reflect) {
-                rgbList.add(buffer[i])
-            } else {
-                rgbList.add(getColor(i, iterations).scale(brightnessScaling))
+            if (!reflect) {
+                buffer[i].copyFrom(getColor(i, iterations).copy().scale(brightnessScaling))
             }
         }
 
         // The scrolling dot (2px wide), clamped so it can't extend past the end of the strip.
-        if (rgbList.size < buffer.size) rgbList.add(getColor(location, iterations))
-        if (rgbList.size < buffer.size) rgbList.add(getColor(location + 1, iterations))
+        var index = previousLocation
+        if (index < buffer.size) buffer[index].copyFrom(getColor(location, iterations))
+        index++
+        if (index < buffer.size) buffer[index].copyFrom(getColor(location + 1, iterations))
+        index++
 
-        for (i in rgbList.size..<buffer.size) {
+        for (i in index..<buffer.size) {
             if (reflect) {
-                rgbList.add(getColor(i, iterations).scale(brightnessScaling))
-            } else {
-                rgbList.add(buffer[i])
+                buffer[i].copyFrom(getColor(i, iterations).copy().scale(brightnessScaling))
             }
         }
-
-        return rgbList
     }
 
     override fun getIterations() = iterations
@@ -152,7 +150,11 @@ class NightriderLightEffect(
 
             return allColors[iteration % allColors.size]
         } else {
-            return RgbColor.Rainbow[iteration % RgbColor.Rainbow.size]
+            if (defaultColorsCache == null) {
+                defaultColorsCache = RgbColorPresets.rainbow()
+            }
+
+            return defaultColorsCache!![iteration % RgbColorPresets.rainbow().size]
         }
     }
 

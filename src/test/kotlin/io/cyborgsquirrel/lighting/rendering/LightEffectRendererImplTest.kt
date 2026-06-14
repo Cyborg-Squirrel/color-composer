@@ -6,6 +6,7 @@ import io.cyborgsquirrel.lighting.effects.service.LightEffectRegistry
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -47,34 +48,34 @@ class LightEffectRendererImplTest : StringSpec({
     "never advances a paused effect or asks whether it is due" {
         val strip = singleStrip("strip-2", 3)
         val effect = mockk<LightEffect>()
-        val currentBuf = listOf(RgbColor(5u, 5u, 5u), RgbColor.Blank, RgbColor.Blank)
+        val currentBuf = arrayOf(RgbColor(5u, 5u, 5u), RgbColorPresets.blank(), RgbColorPresets.blank())
         every { effect.getBuffer() } returns currentBuf
         val registry = registryWith(listOf(activeEffect("a", effect, strip, LightEffectStatus.Paused)))
 
         val renderer = LightEffectRendererImpl(registry)
         val result = renderer.renderFrames(listOf(strip), "client-1")
 
-        result[0].frameData shouldBe currentBuf
+        result[0].frameData shouldBe currentBuf.asList()
         verify(exactly = 0) { effect.getNextStep() }
     }
 
     "Renderer truncates effect output longer than the strip" {
         val strip = singleStrip("strip-trunc-eq", 3)
         val effect = mockk<LightEffect>()
-        val exact = listOf(RgbColor(1u, 0u, 0u), RgbColor(2u, 0u, 0u), RgbColor(3u, 0u, 0u))
+        val exact = arrayOf(RgbColor(1u, 0u, 0u), RgbColor(2u, 0u, 0u), RgbColor(3u, 0u, 0u))
         every { effect.getNextStep() } returns exact
         val registry = registryWith(listOf(activeEffect("a", effect, strip)))
 
         val renderer = LightEffectRendererImpl(registry)
         val result = renderer.renderFrames(listOf(strip), "client-1")
 
-        result[0].frameData shouldBe exact
+        result[0].frameData shouldBe exact.asList()
     }
 
     "refreshes its cache when the registry publishes an effect update" {
         val strip = singleStrip("strip-push", 3)
         val effect = mockk<LightEffect>()
-        val buf = listOf(RgbColor.Red, RgbColor.Green, RgbColor.Blue)
+        val buf = arrayOf(RgbColorPresets.red(), RgbColorPresets.green(), RgbColorPresets.blue())
         every { effect.getNextStep() } returns buf
 
         val sink = Sinks.many().multicast().onBackpressureBuffer<List<ActiveLightEffect>>()
@@ -91,6 +92,6 @@ class LightEffectRendererImplTest : StringSpec({
 
         val result = renderer.renderFrames(listOf(strip), "client-1")
         result.size shouldBe 1
-        result[0].frameData shouldBe buf
+        result[0].frameData shouldBe buf.asList()
     }
 })

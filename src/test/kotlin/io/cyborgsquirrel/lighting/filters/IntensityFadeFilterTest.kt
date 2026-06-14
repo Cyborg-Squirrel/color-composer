@@ -1,106 +1,92 @@
 package io.cyborgsquirrel.lighting.filters
 
 import io.cyborgsquirrel.lighting.filters.settings.IntensityFadeFilterSettings
-import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import java.sql.Timestamp
 import java.time.Duration
-import java.time.Instant
 
 class IntensityFadeFilterTest : StringSpec({
 
-    fun setupTimeHelper(millisSinceEpoch: Long): TimeHelper {
-        val mockTimeHelper = mockk<TimeHelper>()
-        every { mockTimeHelper.millisSinceEpoch() } returns millisSinceEpoch
-        coEvery { mockTimeHelper.millisSinceEpoch() } returnsMany listOf(
-            millisSinceEpoch,
-            millisSinceEpoch + 1000,
-            millisSinceEpoch + 2000
-        )
-        return mockTimeHelper
-    }
+    val baseMillis = 1_000_000L
 
+    // The filter calls millisSinceEpoch() once per apply(); supplying the sequence of timestamps lets us
+    // drive it deterministically frame by frame.
     fun createFilter(
         startingIntensity: Float,
         endingIntensity: Float,
         fadeDuration: Duration,
-        uuid: String = "test-uuid"
+        timestamps: List<Long>,
     ): IntensityFadeFilter {
-        val millisSinceEpoch = Timestamp.from(Instant.now()).time
-        val mockTimeHelper = setupTimeHelper(millisSinceEpoch)
+        val mockTimeHelper = mockk<TimeHelper>()
+        every { mockTimeHelper.millisSinceEpoch() } returnsMany timestamps
         val settings = IntensityFadeFilterSettings(
             startingIntensity = startingIntensity,
             endingIntensity = endingIntensity,
-            fadeDuration = fadeDuration
+            fadeDuration = fadeDuration,
         )
-        return IntensityFadeFilter(settings, mockTimeHelper, uuid)
+        return IntensityFadeFilter(settings, mockTimeHelper, "test-uuid")
     }
 
-    fun createColorBuffer(): List<RgbColor> {
-        return listOf(
-            RgbColor(255u, 0u, 0u),
-            RgbColor(0u, 255u, 0u),
-            RgbColor(0u, 0u, 255u)
+    // Fresh instances each call so an in-place apply() never compounds across frames.
+    fun colorBuffer() = arrayOf(RgbColorPresets.red(), RgbColorPresets.green(), RgbColorPresets.blue())
+
+    fun scaledBuffer(scaleFactor: Float) = listOf(
+        RgbColorPresets.red().scale(scaleFactor),
+        RgbColorPresets.green().scale(scaleFactor),
+        RgbColorPresets.blue().scale(scaleFactor),
+    )
+
+    "fades in from the starting intensity to the ending intensity across the fade duration" {
+        val filter = createFilter(
+            startingIntensity = 0.5f,
+            endingIntensity = 1.0f,
+            fadeDuration = Duration.ofSeconds(2),
+            timestamps = listOf(baseMillis, baseMillis + 1000, baseMillis + 2000),
         )
+
+        filter.apply(colorBuffer()).toList() shouldBe scaledBuffer(0.5f)
+        filter.apply(colorBuffer()).toList() shouldBe scaledBuffer(0.75f)
+        filter.apply(colorBuffer()).toList() shouldBe scaledBuffer(1.0f)
     }
 
-    "IntensityFadeFilter fade in" {
-        val filter = createFilter(0.5f, 1.0f, Duration.ofSeconds(2))
-        val colorBuffer = createColorBuffer()
+    "fades out from the starting intensity to the ending intensity across the fade duration" {
+        val filter = createFilter(
+            startingIntensity = 1.0f,
+            endingIntensity = 0f,
+            fadeDuration = Duration.ofSeconds(2),
+            timestamps = listOf(baseMillis, baseMillis + 1000, baseMillis + 2000),
+        )
 
-        var filteredBuffer = filter.apply(colorBuffer)
-        filteredBuffer[0] shouldBe colorBuffer[0].scale(0.5f)
-        filteredBuffer[1] shouldBe colorBuffer[1].scale(0.5f)
-        filteredBuffer[2] shouldBe colorBuffer[2].scale(0.5f)
-
-        filteredBuffer = filter.apply(colorBuffer)
-        filteredBuffer[0] shouldBe colorBuffer[0].scale(0.75f)
-        filteredBuffer[1] shouldBe colorBuffer[1].scale(0.75f)
-        filteredBuffer[2] shouldBe colorBuffer[2].scale(0.75f)
-
-        filteredBuffer = filter.apply(colorBuffer)
-        filteredBuffer[0] shouldBe colorBuffer[0].scale(1.0f)
-        filteredBuffer[1] shouldBe colorBuffer[1].scale(1.0f)
-        filteredBuffer[2] shouldBe colorBuffer[2].scale(1.0f)
+        filter.apply(colorBuffer()).toList() shouldBe scaledBuffer(1.0f)
+        filter.apply(colorBuffer()).toList() shouldBe scaledBuffer(0.5f)
+        filter.apply(colorBuffer()).toList() shouldBe scaledBuffer(0f)
     }
 
-    "IntensityFadeFilter fade out" {
-        val filter = createFilter(1.0f, 0f, Duration.ofSeconds(2))
-        val colorBuffer = createColorBuffer()
+    "with a zero fade duration immediately uses the ending intensity" {
+        val filter = createFilter(
+            startingIntensity = 0.5f,
+            endingIntensity = 1.0f,
+            fadeDuration = Duration.ZERO,
+            timestamps = listOf(baseMillis, baseMillis + 1000),
+        )
 
-        var filteredBuffer = filter.apply(colorBuffer)
-        filteredBuffer[0] shouldBe colorBuffer[0]
-        filteredBuffer[1] shouldBe colorBuffer[1]
-        filteredBuffer[2] shouldBe colorBuffer[2]
-
-        filteredBuffer = filter.apply(colorBuffer)
-        filteredBuffer[0] shouldBe colorBuffer[0].scale(0.5f)
-        filteredBuffer[1] shouldBe colorBuffer[1].scale(0.5f)
-        filteredBuffer[2] shouldBe colorBuffer[2].scale(0.5f)
-
-        filteredBuffer = filter.apply(colorBuffer)
-        filteredBuffer[0] shouldBe colorBuffer[0].scale(0f)
-        filteredBuffer[1] shouldBe colorBuffer[1].scale(0f)
-        filteredBuffer[2] shouldBe colorBuffer[2].scale(0f)
+        filter.apply(colorBuffer()).toList() shouldBe scaledBuffer(1.0f)
+        filter.apply(colorBuffer()).toList() shouldBe scaledBuffer(1.0f)
     }
 
-    "IntensityFadeFilter with zero duration" {
-        val filter = createFilter(0.5f, 1.0f, Duration.ofSeconds(0))
-        val colorBuffer = createColorBuffer()
+    "holds the ending intensity once the fade duration has elapsed" {
+        val filter = createFilter(
+            startingIntensity = 0f,
+            endingIntensity = 1.0f,
+            fadeDuration = Duration.ofSeconds(2),
+            timestamps = listOf(baseMillis, baseMillis + 5000),
+        )
 
-        var filteredBuffer = filter.apply(colorBuffer)
-        filteredBuffer[0] shouldBe colorBuffer[0].scale(1.0f)
-        filteredBuffer[1] shouldBe colorBuffer[1].scale(1.0f)
-        filteredBuffer[2] shouldBe colorBuffer[2].scale(1.0f)
-
-        filteredBuffer = filter.apply(colorBuffer)
-        filteredBuffer[0] shouldBe colorBuffer[0].scale(1.0f)
-        filteredBuffer[1] shouldBe colorBuffer[1].scale(1.0f)
-        filteredBuffer[2] shouldBe colorBuffer[2].scale(1.0f)
+        filter.apply(colorBuffer()).toList() shouldBe scaledBuffer(0f)
+        filter.apply(colorBuffer()).toList() shouldBe scaledBuffer(1.0f)
     }
 })

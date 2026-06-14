@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.rendering.post_processing
 import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 
 class EffectsBlender {
 
@@ -10,14 +11,14 @@ class EffectsBlender {
      * Blends the RGB data from multiple effects into a single [RgbColor] buffer matching the length of the [strip]
      * [effectsRgbData] is must be sorted by priority highest to lowest for [BlendMode.Layer] to function correctly.
      */
-    fun blendEffects(strip: LedStripModel, effectsRgbData: List<List<RgbColor>>): List<RgbColor> {
+    fun blendEffects(strip: LedStripModel, effectsRgbData: List<Array<RgbColor>>): Array<RgbColor> {
         // With a single effect every blend mode resolves to that effect's own buffer, so skip the per-pixel work.
         if (effectsRgbData.size == 1) {
             return effectsRgbData[0]
         }
 
         val length = strip.length()
-        val renderedRgbData = ArrayList<RgbColor>(length)
+        val renderedRgbData = Array(length) { RgbColorPresets.blank() }
         // Resolve the blend mode once rather than branching on every pixel.
         when (strip.blendMode) {
             BlendMode.Additive -> {
@@ -29,7 +30,7 @@ class EffectsBlender {
                             blended = if (blended == null) rgbColor else blended + rgbColor
                         }
                     }
-                    renderedRgbData.add(blended ?: RgbColor.Blank)
+                    renderedRgbData[i] = blended ?: RgbColorPresets.blank()
                 }
             }
 
@@ -45,13 +46,9 @@ class EffectsBlender {
                         blue += rgbColor.blue.toInt()
                     }
 
-                    renderedRgbData.add(
-                        RgbColor(
-                            (red / effectsRgbData.size).toUByte(),
-                            (green / effectsRgbData.size).toUByte(),
-                            (blue / effectsRgbData.size).toUByte()
-                        )
-                    )
+                    renderedRgbData[i].red = (red / effectsRgbData.size).toUByte()
+                    renderedRgbData[i].green = (green / effectsRgbData.size).toUByte()
+                    renderedRgbData[i].blue = (blue / effectsRgbData.size).toUByte()
                 }
             }
 
@@ -67,7 +64,9 @@ class EffectsBlender {
                         if (rgbColor.blue != 0.toUByte()) blue = rgbColor.blue
                     }
 
-                    renderedRgbData.add(RgbColor(red, green, blue))
+                    renderedRgbData[i].red = red
+                    renderedRgbData[i].green = green
+                    renderedRgbData[i].blue = blue
                 }
             }
 
@@ -83,7 +82,9 @@ class EffectsBlender {
                         if (rgbColor.blue > blue) blue = rgbColor.blue
                     }
 
-                    renderedRgbData.add(RgbColor(red, green, blue))
+                    renderedRgbData[i].red = red
+                    renderedRgbData[i].green = green
+                    renderedRgbData[i].blue = blue
                 }
             }
         }

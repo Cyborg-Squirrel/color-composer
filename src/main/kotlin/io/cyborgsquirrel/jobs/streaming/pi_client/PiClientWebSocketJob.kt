@@ -114,6 +114,7 @@ class PiClientWebSocketJob(
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
                             strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid).map { it.strip }
+                                .distinctBy { it.uuid }
                             timestampMillis =
                                 timeHelper.millisSinceEpoch() + (1000 / fps) + clientTimeSync.mostRecentClientTimeOffset
                             stateTransition(StreamingJobStatus.WaitingForConnection)
@@ -134,11 +135,13 @@ class PiClientWebSocketJob(
 
                 StreamingJobStatus.ConnectedIdle -> {
                     exponentialReconnectionBackoffValue = 1
-                    stateTransition(when {
-                        settingsSyncRequired -> StreamingJobStatus.SettingsSync
-                        clientTimeSync.mostRecentTimeSyncPerformedAt == 0L -> StreamingJobStatus.TimeSyncRequired
-                        else -> StreamingJobStatus.RenderingEffect
-                    })
+                    stateTransition(
+                        when {
+                            settingsSyncRequired -> StreamingJobStatus.SettingsSync
+                            clientTimeSync.mostRecentTimeSyncPerformedAt == 0L -> StreamingJobStatus.TimeSyncRequired
+                            else -> StreamingJobStatus.RenderingEffect
+                        }
+                    )
                 }
 
                 StreamingJobStatus.Offline -> {
@@ -245,6 +248,7 @@ class PiClientWebSocketJob(
                     current == StreamingJobStatus.ConnectedIdle ||
                             current == StreamingJobStatus.BufferFullWaiting ||
                             current == StreamingJobStatus.TimeSyncRequired
+
                 StreamingJobStatus.Offline -> current != StreamingJobStatus.SetupIncomplete
                 else -> true
             }
@@ -355,7 +359,7 @@ class PiClientWebSocketJob(
 
     private suspend fun sendClearFrame() {
         val strip = getStrip() ?: return
-        val rgbData = List(strip.length) { RgbColor.Blank }
+        val rgbData = Array(strip.length) { RgbColorPresets.blank() }
         val optionsBuilder = RgbFrameOptionsBuilder()
         optionsBuilder.setClearBuffer()
         val frame = serializer.encode(RgbFrameData(0, rgbData), strip.pin, optionsBuilder.build())

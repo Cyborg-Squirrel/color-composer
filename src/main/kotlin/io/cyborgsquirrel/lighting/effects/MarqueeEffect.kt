@@ -4,6 +4,7 @@ import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.settings.MarqueeEffectSettings
 import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.util.shift
 import io.cyborgsquirrel.util.time.TimeHelper
 
@@ -17,16 +18,34 @@ class MarqueeEffect(
     private var frame = 0
     private var iterations = 0
     private var shiftAmount = 0
-    private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private var buffer = Array(numberOfLeds) { RgbColorPresets.blank() }
+    private val dotList = mutableListOf<Boolean>()
     private val checker = EffectUpdateTickChecker(timeHelper)
 
-    override fun getNextStep(): List<RgbColor> {
+    override fun getNextStep(): Array<RgbColor> {
         val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
         if (!updateDue) return buffer
-        shiftAmount = (shiftAmount + 1) % numberOfLeds
+        if (frame == 0) {
+            initDotList()
+        } else {
+            shiftAmount = (shiftAmount + 1) % numberOfLeds
+        }
+        val shiftedDotList = dotList.shift(shiftAmount)
 
-        val dotList = mutableListOf<Boolean>()
-        val rgbList = ArrayList<RgbColor>(numberOfLeds)
+        for ((j, element) in buffer.withIndex()) {
+            if (shiftedDotList[j]) {
+                buffer[j].copyFrom(getColor(j))
+            } else {
+                element.setBlank()
+            }
+        }
+
+        frame++
+        checker.onUpdate(timeHelper.millisSinceEpoch())
+        return buffer
+    }
+
+    private fun initDotList() {
         var drawingDot = true
         var dotStart = 0
         var spaceStart = 0
@@ -54,24 +73,9 @@ class MarqueeEffect(
 
             i++
         }
-
-        val shiftedDotList = dotList.shift(shiftAmount)
-
-        for (indx in 0..<numberOfLeds) {
-            if (shiftedDotList[indx]) {
-                rgbList.add(getColor(indx))
-            } else {
-                rgbList.add(RgbColor.Blank)
-            }
-        }
-
-        frame++
-        buffer = rgbList
-        checker.onUpdate(timeHelper.millisSinceEpoch())
-        return rgbList
     }
 
-    override fun getBuffer(): List<RgbColor> = buffer
+    override fun getBuffer(): Array<RgbColor> = buffer
 
     override fun getIterations() = iterations
 
@@ -83,7 +87,7 @@ class MarqueeEffect(
         return if (palette != null) {
             palette!!.getPrimaryColor(index)
         } else {
-            RgbColor.Cyan
+            RgbColorPresets.amber()
         }
     }
 }

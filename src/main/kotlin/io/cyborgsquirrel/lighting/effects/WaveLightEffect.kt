@@ -7,6 +7,7 @@ import io.cyborgsquirrel.lighting.effects.shared.Comet
 import io.cyborgsquirrel.lighting.enums.Direction
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlin.math.abs
 import kotlin.math.max
@@ -28,10 +29,10 @@ class WaveLightEffect(
     private lateinit var waveB: Comet
     private val waveLength = settings.waveLength
     private val startPoint = (settings.startPointPercentage / 100.0 * numberOfLeds).toInt()
-    private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private var buffer = Array(numberOfLeds) { RgbColorPresets.blank() }
     private val checker = EffectUpdateTickChecker(timeHelper)
 
-    override fun getNextStep(): List<RgbColor> {
+    override fun getNextStep(): Array<RgbColor> {
         val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
         if (!updateDue) return buffer
         val rgbData = ArrayList<RgbColor>(numberOfLeds)
@@ -42,8 +43,8 @@ class WaveLightEffect(
         } else if (frame == 0) {
             waveALocation = startPoint - 1
             waveBLocation = startPoint
-            waveA = Comet(RgbColor.Red, waveLength, FadeCurve.Logarithmic, Direction.HighToLow)
-            waveB = Comet(RgbColor.Blue, waveLength, FadeCurve.Logarithmic, Direction.LowToHigh)
+            waveA = Comet(RgbColorPresets.red(), waveLength, FadeCurve.Logarithmic, Direction.HighToLow)
+            waveB = Comet(RgbColorPresets.blue(), waveLength, FadeCurve.Logarithmic, Direction.LowToHigh)
         } else {
             if (waveALocation > -waveLength) waveALocation--
             if (waveBLocation < numberOfLeds + waveLength) waveBLocation++
@@ -57,28 +58,28 @@ class WaveLightEffect(
         )
 
         for (i in 0..<waveALocation) {
-            rgbData.add(RgbColor.Blank)
+            rgbData.add(RgbColorPresets.blank())
         }
 
         rgbData.addAll(waveARgbData)
 
         for (i in 0..<waveBLocation - rgbData.size - waveBRgbData.size) {
-            rgbData.add(RgbColor.Blank)
+            rgbData.add(RgbColorPresets.blank())
         }
 
         rgbData.addAll(waveBRgbData)
 
         for (i in 0..<numberOfLeds - rgbData.size) {
-            rgbData.add(RgbColor.Blank)
+            rgbData.add(RgbColorPresets.blank())
         }
 
         frame++
-        buffer = rgbData
+        buffer = rgbData.toTypedArray()
         checker.onUpdate(timeHelper.millisSinceEpoch())
-        return rgbData
+        return buffer
     }
 
-    override fun getBuffer(): List<RgbColor> = buffer
+    override fun getBuffer(): Array<RgbColor> = buffer
 
     override fun getIterations() = iterations
 

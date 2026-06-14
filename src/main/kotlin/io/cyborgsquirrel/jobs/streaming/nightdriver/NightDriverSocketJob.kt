@@ -112,6 +112,7 @@ class NightDriverSocketJob(
                         clientEntity = clientOptional.get()
                         if (clientEntity.strips.isNotEmpty()) {
                             strips = activeLightEffectService.getEffectsForClient(clientEntity.uuid).map { it.strip }
+                                .distinctBy { it.uuid }
                             status = StreamingJobStatus.Offline
                         } else {
                             delay(5000.milliseconds)
@@ -171,8 +172,7 @@ class NightDriverSocketJob(
                         // Assemble RGB data
                         val encodedFrames = mutableListOf<ByteArray>()
                         for (frame in frameList) {
-                            val rgbData = frame.frameData
-                            val frameData = RgbFrameData(timestampMillis, rgbData)
+                            val frameData = RgbFrameData(timestampMillis, frame.frameData)
 
                             // Serialize and send frame - options are not supported for NightDriver
                             val encodedFrame = serializer.encode(frameData, frame.strip.pin.toInt())

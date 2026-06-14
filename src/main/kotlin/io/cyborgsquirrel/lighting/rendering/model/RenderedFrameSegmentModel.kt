@@ -6,5 +6,5 @@ import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 class RenderedFrameSegmentModel(
     val strip: SingleLedStripModel,
     val sequenceNumber: Short,
-    override val frameData: List<RgbColor>,
+    override val frameData: Array<RgbColor>,
 ): FrameModel(frameData)

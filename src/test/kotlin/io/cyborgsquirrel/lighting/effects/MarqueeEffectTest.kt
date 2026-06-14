@@ -2,6 +2,7 @@ package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effects.settings.MarqueeEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -70,7 +71,7 @@ class MarqueeEffectTest : StringSpec({
         val effect = MarqueeEffect(numberOfLeds, MarqueeEffectSettings(), null, advancingTimeHelper())
 
         effect.getBuffer().size shouldBe numberOfLeds
-        effect.getBuffer().all { it == RgbColor.Blank } shouldBe true
+        effect.getBuffer().all { it == RgbColorPresets.blank() } shouldBe true
     }
 
     "getBuffer matches the last rendered frame" {
@@ -89,14 +90,14 @@ class MarqueeEffectTest : StringSpec({
         val numberOfLeds = 6
         val effect = MarqueeEffect(numberOfLeds, MarqueeEffectSettings(), null, advancingTimeHelper())
 
-        val c = RgbColor.Cyan
-        val b = RgbColor.Blank
+        val c = RgbColorPresets.cyan()
+        val b = RgbColorPresets.blank()
 
         var frame = effect.getNextStep()
-        frame shouldBe listOf(c, b, b, c, c, b)
+        frame shouldBe arrayOf(c, b, b, c, c, b)
 
         frame = effect.getNextStep()
-        frame shouldBe listOf(b, b, c, c, b, b)
+        frame shouldBe arrayOf(b, b, c, c, b, b)
     }
 
     "Returns cached buffer when an update is not yet due" {

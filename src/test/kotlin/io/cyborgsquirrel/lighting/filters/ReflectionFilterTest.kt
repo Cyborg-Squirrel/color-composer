@@ -2,42 +2,119 @@ package io.cyborgsquirrel.lighting.filters
 
 import io.cyborgsquirrel.lighting.enums.ReflectionType
 import io.cyborgsquirrel.lighting.filters.settings.ReflectionFilterSettings
-import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import java.util.*
 
 class ReflectionFilterTest : BehaviorSpec({
 
-    given("A reflection filter configured with reflection low to high") {
+    given("A reflection filter configured low to high") {
         val filter = ReflectionFilter(ReflectionFilterSettings(ReflectionType.LowToHigh), UUID.randomUUID().toString())
-        and("A list of RgbColors") {
-            val rgbList = listOf(RgbColor.Green, RgbColor.Blue, RgbColor.Purple, RgbColor.Blank, RgbColor.Blank)
-            `when`("The filter is applied to a list of RgbColors") {
-                val reflectedList = filter.apply(rgbList)
-                then("The filter shall return an identical length list with the lowest half reflected over the upper half") {
-                    val expectedReflectedList =
-                        listOf(RgbColor.Green, RgbColor.Blue, RgbColor.Purple, RgbColor.Blue, RgbColor.Green)
-                    reflectedList.size shouldBe rgbList.size
-                    for (i in rgbList.indices) {
-                        reflectedList[i] shouldBe expectedReflectedList[i]
+        and("An array of RgbColors") {
+            `when`("The filter is applied") {
+                val buffer = arrayOf(
+                    RgbColorPresets.green(),
+                    RgbColorPresets.blue(),
+                    RgbColorPresets.purple(),
+                    RgbColorPresets.blank(),
+                    RgbColorPresets.blank(),
+                )
+                val result = filter.apply(buffer)
+                then("The lower half is mirrored over the upper half about the center") {
+                    val expected = arrayOf(
+                        RgbColorPresets.green(),
+                        RgbColorPresets.blue(),
+                        RgbColorPresets.purple(),
+                        RgbColorPresets.blue(),
+                        RgbColorPresets.green(),
+                    )
+                    result.size shouldBe expected.size
+                    for (i in expected.indices) {
+                        result[i] shouldBe expected[i]
                     }
                 }
             }
         }
     }
 
-    given("A reflection filter configured with reflection high to low") {
+    given("A reflection filter configured high to low") {
         val filter = ReflectionFilter(ReflectionFilterSettings(ReflectionType.HighToLow), UUID.randomUUID().toString())
-        and("A list of RgbColors") {
-            val rgbList = listOf(RgbColor.Blank, RgbColor.Blue, RgbColor.Red, RgbColor.Orange)
-            `when`("The filter is applied to a list of RgbColors") {
-                val reflectedList = filter.apply(rgbList)
-                then("The filter shall return an identical length list with the upper half reflected over the lower half") {
-                    val expectedReflectedList = listOf(RgbColor.Orange, RgbColor.Red, RgbColor.Red, RgbColor.Orange)
-                    reflectedList.size shouldBe rgbList.size
-                    for (i in rgbList.indices) {
-                        reflectedList[i] shouldBe expectedReflectedList[i]
+        and("An array of RgbColors") {
+            `when`("The filter is applied") {
+                val buffer = arrayOf(
+                    RgbColorPresets.blank(),
+                    RgbColorPresets.blue(),
+                    RgbColorPresets.red(),
+                    RgbColorPresets.orange(),
+                )
+                val result = filter.apply(buffer)
+                then("The upper half is mirrored over the lower half") {
+                    val expected = arrayOf(
+                        RgbColorPresets.orange(),
+                        RgbColorPresets.red(),
+                        RgbColorPresets.red(),
+                        RgbColorPresets.orange(),
+                    )
+                    result.size shouldBe expected.size
+                    for (i in expected.indices) {
+                        result[i] shouldBe expected[i]
+                    }
+                }
+            }
+        }
+    }
+
+    given("A reflection filter configured to copy over center") {
+        val filter =
+            ReflectionFilter(ReflectionFilterSettings(ReflectionType.CopyOverCenter), UUID.randomUUID().toString())
+        and("An array whose upper half is blank") {
+            `when`("The filter is applied") {
+                val buffer = arrayOf(
+                    RgbColorPresets.green(),
+                    RgbColorPresets.blue(),
+                    RgbColorPresets.purple(),
+                    RgbColorPresets.blank(),
+                    RgbColorPresets.blank(),
+                )
+                val result = filter.apply(buffer)
+                then("Blank slots are filled with the mirror of their counterpart") {
+                    val expected = arrayOf(
+                        RgbColorPresets.green(),
+                        RgbColorPresets.blue(),
+                        RgbColorPresets.purple(),
+                        RgbColorPresets.blue(),
+                        RgbColorPresets.green(),
+                    )
+                    result.size shouldBe expected.size
+                    for (i in expected.indices) {
+                        result[i] shouldBe expected[i]
+                    }
+                }
+            }
+        }
+
+        and("An array with no blank slots") {
+            `when`("The filter is applied") {
+                val buffer = arrayOf(
+                    RgbColorPresets.green(),
+                    RgbColorPresets.blue(),
+                    RgbColorPresets.purple(),
+                    RgbColorPresets.red(),
+                    RgbColorPresets.white(),
+                )
+                val result = filter.apply(buffer)
+                then("Non-blank destinations are left untouched") {
+                    val expected = arrayOf(
+                        RgbColorPresets.green(),
+                        RgbColorPresets.blue(),
+                        RgbColorPresets.purple(),
+                        RgbColorPresets.red(),
+                        RgbColorPresets.white(),
+                    )
+                    result.size shouldBe expected.size
+                    for (i in expected.indices) {
+                        result[i] shouldBe expected[i]
                     }
                 }
             }
