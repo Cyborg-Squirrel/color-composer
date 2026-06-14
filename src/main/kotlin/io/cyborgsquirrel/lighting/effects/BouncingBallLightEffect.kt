@@ -44,9 +44,9 @@ class BouncingBallLightEffect(
         pointer = ballLocation
 
         // Ball length of 2 looks better than 1
-        buffer[pointer] = getColor(pointer)
+        buffer[pointer] = getColor(pointer).copy()
         pointer++
-        buffer[pointer] = getColor(pointer)
+        buffer[pointer] = getColor(pointer).copy()
         pointer++
 
         for (i in pointer..<buffer.size) {
