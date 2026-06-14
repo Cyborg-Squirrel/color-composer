@@ -252,6 +252,8 @@ Creates a new LED client.
 
 **Response `201`** — created client entity
 
+**Response `400`** — if a client with the same `address` already exists
+
 ---
 
 ### `PATCH /client/{uuid}`
