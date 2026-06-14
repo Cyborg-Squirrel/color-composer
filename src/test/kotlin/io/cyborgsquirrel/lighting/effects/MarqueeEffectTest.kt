@@ -90,14 +90,14 @@ class MarqueeEffectTest : StringSpec({
         val numberOfLeds = 6
         val effect = MarqueeEffect(numberOfLeds, MarqueeEffectSettings(), null, advancingTimeHelper())
 
-        val c = RgbColorPresets.cyan()
+        val a = RgbColorPresets.amber()
         val b = RgbColorPresets.blank()
 
         var frame = effect.getNextStep()
-        frame shouldBe arrayOf(c, b, b, c, c, b)
+        frame shouldBe arrayOf(a, a, b, b, a, a)
 
         frame = effect.getNextStep()
-        frame shouldBe arrayOf(b, b, c, c, b, b)
+        frame shouldBe arrayOf(a, b, b, a, a, b)
     }
 
     "Returns cached buffer when an update is not yet due" {
