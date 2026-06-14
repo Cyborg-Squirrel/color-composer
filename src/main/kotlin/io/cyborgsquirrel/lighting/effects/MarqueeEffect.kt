@@ -46,6 +46,7 @@ class MarqueeEffect(
     }
 
     private fun initDotList() {
+        dotList.clear()
         var drawingDot = true
         var dotStart = 0
         var spaceStart = 0

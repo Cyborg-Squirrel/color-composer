@@ -45,7 +45,14 @@ class LightEffectRendererImpl(
     // same-or-newer registry state). The rebuild is guarded so a thrown exception can't terminate the subscription
     // and leave the cache permanently stale.
     private val updatesSubscription: Disposable = effectRepository.updates.subscribe(
-        { snapshot -> runCatching { rebuildCache(snapshot) }.onFailure { logger.error("Failed to rebuild effect cache", it) } },
+        { snapshot ->
+            runCatching { rebuildCache(snapshot) }.onFailure {
+                logger.error(
+                    "Failed to rebuild effect cache",
+                    it
+                )
+            }
+        },
         { logger.error("Effect updates stream terminated; effect cache will no longer refresh", it) },
     )
 
@@ -157,8 +164,10 @@ class LightEffectRendererImpl(
         for (activeEffect in activeEffects) {
             logger.debug("Rendering effect {}", activeEffect)
             val playing = activeEffect.status == LightEffectStatus.Playing
-            // Effects produce a reused Array buffer; expose it as a zero-copy List view for the filter/blend pipeline.
-            var rgbData = (if (playing) activeEffect.effect.getNextStep() else activeEffect.effect.getBuffer()).copyOf()
+            // Deep-copy so in-place filter mutations don't corrupt the effect's own buffer.
+            var rgbData =
+                (if (playing) activeEffect.effect.getNextStep() else activeEffect.effect.getBuffer()).map { it.copy() }
+                    .toTypedArray()
 
             for (filter in activeEffect.filters) {
                 logger.debug("Applying filter {}", filter.uuid)
@@ -184,7 +193,7 @@ class LightEffectRendererImpl(
                     "Effect {} output {} LEDs, truncating to strip length {}",
                     activeEffect.effectUuid, rgbData.size, stripLength
                 )
-                rgbData = rgbData.slice(0 until stripLength).toTypedArray()
+                rgbData = rgbData.copyOfRange(0, stripLength)
             }
 
             allEffectsRgbData.add(rgbData)

@@ -37,16 +37,15 @@ class BouncingBallLightEffect(
         val updateDue = checker.isUpdateDue(60)
         if (!updateDue) return buffer
         val ballLocation = getBallPosition()
-        var pointer = 0
+        var pointer = ballLocation
         for (i in 0..<ballLocation) {
             buffer[i].setBlank()
         }
-        pointer = ballLocation
 
         // Ball length of 2 looks better than 1
-        buffer[pointer] = getColor(pointer).copy()
+        if (pointer < buffer.size) buffer[pointer] = getColor(pointer).copy()
         pointer++
-        buffer[pointer] = getColor(pointer).copy()
+        if (pointer < buffer.size) buffer[pointer] = getColor(pointer).copy()
         pointer++
 
         for (i in pointer..<buffer.size) {

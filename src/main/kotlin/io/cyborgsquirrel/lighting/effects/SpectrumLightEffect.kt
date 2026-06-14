@@ -9,7 +9,7 @@ import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlin.math.ceil
 
-open class SpectrumLightEffect(
+class SpectrumLightEffect(
     private val numberOfLeds: Int,
     override val settings: SpectrumEffectSettings,
     override var palette: ColorPalette?,

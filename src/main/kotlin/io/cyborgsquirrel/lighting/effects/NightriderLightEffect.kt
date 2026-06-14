@@ -69,7 +69,7 @@ class NightriderLightEffect(
 
         // The comet + trail behind it
         val dotScaleFactor = 1.5f
-        val dotColor = getColor(location, iterations).scale(dotScaleFactor)
+        val dotColor = getColor(location, iterations).copy().scale(dotScaleFactor)
 
         val cometBuffer = ArrayList<RgbColor>(settings.trailLength + 2)
         // Brightest spot is at the beginning for the reflect scenario
@@ -78,7 +78,7 @@ class NightriderLightEffect(
         }
 
         for (i in 0..<settings.trailLength) {
-            val color = getColor(i + cometBuffer.size + location, iterations).scale(dotScaleFactor)
+            val color = getColor(i + cometBuffer.size + location, iterations).copy().scale(dotScaleFactor)
             val interpolationFactor = when (settings.trailFadeCurve) {
                 FadeCurve.Linear -> min((i + 1).toFloat() / settings.trailLength, 1f)
                 FadeCurve.Logarithmic -> max(log(i + 1f, settings.trailLength.toFloat()), 0.05f)
@@ -154,7 +154,7 @@ class NightriderLightEffect(
                 defaultColorsCache = RgbColorPresets.rainbow()
             }
 
-            return defaultColorsCache!![iteration % RgbColorPresets.rainbow().size]
+            return defaultColorsCache!![iteration % defaultColorsCache!!.size]
         }
     }
 

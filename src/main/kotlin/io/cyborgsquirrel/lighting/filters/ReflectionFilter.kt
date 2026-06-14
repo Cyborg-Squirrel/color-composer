@@ -21,7 +21,7 @@ class ReflectionFilter(val settings: ReflectionFilterSettings, uuid: String) : L
             val isLowToHigh = reflectionType == ReflectionType.LowToHigh
             for (i in buffer.indices) {
                 if (i < buffer.size / 2 && !isLowToHigh) buffer[i] = buffer[buffer.size - 1 - i]
-                if (i > buffer.size / 2 && isLowToHigh) buffer[i] = buffer[buffer.size - 1 - i]
+                if (i >= buffer.size / 2 && isLowToHigh) buffer[i] = buffer[buffer.size - 1 - i]
             }
         }
 
