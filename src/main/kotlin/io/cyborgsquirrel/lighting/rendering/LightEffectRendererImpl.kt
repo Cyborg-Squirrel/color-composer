@@ -9,6 +9,7 @@ import io.cyborgsquirrel.lighting.model.LedStripPoolModel
 import io.cyborgsquirrel.lighting.model.RgbColor
 import io.cyborgsquirrel.lighting.model.SingleLedStripModel
 import io.cyborgsquirrel.lighting.rendering.cache.ClientSequenceTracker
+import io.cyborgsquirrel.lighting.rendering.cache.StripFrameCache
 import io.cyborgsquirrel.lighting.rendering.cache.StripPoolFrameCache
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameModel
 import io.cyborgsquirrel.lighting.rendering.model.RenderedFrameSegmentModel
@@ -30,7 +31,12 @@ class LightEffectRendererImpl(
 
     // Per-pool locks so independent pools render concurrently; only jobs sharing a pool serialize against each other.
     private val poolLocks = ConcurrentHashMap<String, ReentrantLock>()
-    private val cache = StripPoolFrameCache()
+    private val poolCache = StripPoolFrameCache()
+    private val stripCacheLocks = ConcurrentHashMap<String, ReentrantLock>()
+    // Reused per-strip buffers so post-processing never allocates per frame: scratch holds a copy of the current
+    // effect's output (filters mutate it, never the effect's own buffer), blend holds the running blended result.
+    private val scratchCache = StripFrameCache()
+    private val blendCache = StripFrameCache()
     private val tracker = ClientSequenceTracker()
     private val segmentationHelper = FrameSegmentationHelper()
     private val blender = EffectsBlender()
@@ -84,8 +90,16 @@ class LightEffectRendererImpl(
                         } else {
                             val renderedFrame = renderFrame(strip)
                             if (renderedFrame != null) {
-                                renderedFrame.sequenceNumber = cache.getSequenceNumber(strip.uuid)
-                                cache.addFrameToCache(renderedFrame)
+                                renderedFrame.sequenceNumber = poolCache.getSequenceNumber(strip.uuid)
+                                // renderFrame returns the reused per-strip blend buffer; the pool cache retains frames
+                                // for other clients to fetch later, so store an independent copy it can keep.
+                                poolCache.addFrameToCache(
+                                    RenderedFrameModel(
+                                        strip,
+                                        renderedFrame.frameData.map { it.copy() }.toTypedArray(),
+                                        renderedFrame.sequenceNumber
+                                    )
+                                )
                             }
 
                             renderedFrame
@@ -118,7 +132,7 @@ class LightEffectRendererImpl(
 
     private fun checkCache(strip: LedStripModel, sequenceNumber: Short): RenderedFrameModel? {
         if (strip is LedStripPoolModel) {
-            val frame = cache.getFrameFromCache(strip.uuid, sequenceNumber)
+            val frame = poolCache.getFrameFromCache(strip.uuid, sequenceNumber)
             // Only return frame if we get a cache hit
             if (frame != null) {
                 return frame
@@ -160,48 +174,66 @@ class LightEffectRendererImpl(
         activeEffects: List<ActiveLightEffect>,
     ): RenderedFrameModel {
         val stripLength = strip.length()
-        val allEffectsRgbData = ArrayList<Array<RgbColor>>(activeEffects.size)
-        for (activeEffect in activeEffects) {
-            logger.debug("Rendering effect {}", activeEffect)
-            val playing = activeEffect.status == LightEffectStatus.Playing
-            // Deep-copy so in-place filter mutations don't corrupt the effect's own buffer.
-            var rgbData =
-                (if (playing) activeEffect.effect.getNextStep() else activeEffect.effect.getBuffer()).map { it.copy() }
-                    .toTypedArray()
+        val stripLock = stripCacheLocks.getOrPut(strip.uuid) { ReentrantLock() }
+        return stripLock.withLock {
+            // Reused per-strip buffers: filters mutate `scratch` (a copy of the effect output, never the effect's own
+            // buffer), and each effect is folded into `accumulator` one at a time instead of collecting N buffers.
+            val scratch = scratchCache.getOrCreate(strip.uuid, stripLength)
+            val accumulator = blendCache.getOrCreate(strip.uuid, stripLength)
+            blender.reset(accumulator)
 
-            for (filter in activeEffect.filters) {
-                logger.debug("Applying filter {}", filter.uuid)
-                rgbData = filter.apply(rgbData)
-            }
+            for ((index, activeEffect) in activeEffects.withIndex()) {
+                logger.debug("Rendering effect {}", activeEffect)
+                val playing = activeEffect.status == LightEffectStatus.Playing
+                val src = if (playing) activeEffect.effect.render() else activeEffect.effect.getBuffer()
+                copyIntoScratch(src, scratch, stripLength, activeEffect)
+                applyFilters(activeEffect, scratch)
 
-            if (activeEffect.skipFramesIfBlank && playing) {
-                var skipped = 0
-                while (skipped < MAX_BLANK_FRAME_SKIPS && rgbData.all { it.isBlank() }) {
-                    logger.debug(
-                        "All frames are blank and effect {} is set to skip blank frames", activeEffect.effectUuid
-                    )
-                    rgbData = activeEffect.effect.getNextStep()
-                    for (filter in activeEffect.filters) {
-                        rgbData = filter.apply(rgbData)
+                if (activeEffect.skipFramesIfBlank && playing) {
+                    var skipped = 0
+                    while (skipped < MAX_BLANK_FRAME_SKIPS && scratch.all { it.isBlank() }) {
+                        logger.debug(
+                            "All frames are blank and effect {} is set to skip blank frames", activeEffect.effectUuid
+                        )
+                        copyIntoScratch(activeEffect.effect.render(), scratch, stripLength, activeEffect)
+                        applyFilters(activeEffect, scratch)
+                        skipped++
                     }
-                    skipped++
                 }
+
+                blender.fold(strip.blendMode, accumulator, scratch, index)
             }
 
-            if (rgbData.size > stripLength) {
-                logger.warn(
-                    "Effect {} output {} LEDs, truncating to strip length {}",
-                    activeEffect.effectUuid, rgbData.size, stripLength
-                )
-                rgbData = rgbData.copyOfRange(0, stripLength)
-            }
-
-            allEffectsRgbData.add(rgbData)
+            RenderedFrameModel(strip, accumulator)
         }
+    }
 
-        // If there are multiple effects, layer the RGB output on top of each other.
-        val renderedRgbData = blender.blendEffects(strip, allEffectsRgbData)
-        return RenderedFrameModel(strip, renderedRgbData)
+    /**
+     * Copies [src] into the reused [scratch] buffer (mutating values in place so the effect's own buffer is untouched).
+     * Indices past [src] are blanked, and output longer than [stripLength] is truncated.
+     */
+    private fun copyIntoScratch(
+        src: Array<RgbColor>,
+        scratch: Array<RgbColor>,
+        stripLength: Int,
+        activeEffect: ActiveLightEffect,
+    ) {
+        if (src.size > stripLength) {
+            logger.warn(
+                "Effect {} output {} LEDs, truncating to strip length {}",
+                activeEffect.effectUuid, src.size, stripLength
+            )
+        }
+        for (i in 0 until stripLength) {
+            if (i < src.size) scratch[i].copyFrom(src[i]) else scratch[i].setBlank()
+        }
+    }
+
+    private fun applyFilters(activeEffect: ActiveLightEffect, scratch: Array<RgbColor>) {
+        for (filter in activeEffect.filters) {
+            logger.debug("Applying filter {}", filter.uuid)
+            filter.apply(scratch)
+        }
     }
 
     companion object {

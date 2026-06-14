@@ -33,7 +33,7 @@ class SparkleLightEffect(
     private var iterations = 0
     private val checker = EffectUpdateTickChecker(timeHelper)
 
-    override fun getNextStep(): Array<RgbColor> {
+    override fun render(): Array<RgbColor> {
         val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
         if (!updateDue) return buffer
         val now = timeHelper.millisSinceEpoch()

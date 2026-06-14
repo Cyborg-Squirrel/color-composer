@@ -48,7 +48,7 @@ class SpectrumLightEffectTest : StringSpec({
         val numberOfLeds = 12
         val effect = SpectrumLightEffect(numberOfLeds, SpectrumEffectSettings(colorBandPercentage = 10), null, advancingTimeHelper())
 
-        val frame = effect.getNextStep()
+        val frame = effect.render()
         val rainbow = RgbColorPresets.rainbow()
         frame.size shouldBe numberOfLeds
         for (i in 0..<numberOfLeds) {
@@ -62,7 +62,7 @@ class SpectrumLightEffectTest : StringSpec({
         val numberOfLeds = 12
         val effect = SpectrumLightEffect(numberOfLeds, SpectrumEffectSettings(colorBandPercentage = 25), null, advancingTimeHelper())
 
-        val frame = effect.getNextStep()
+        val frame = effect.render()
         val rainbow = RgbColorPresets.rainbow()
 
         frame.size shouldBe numberOfLeds
@@ -81,11 +81,11 @@ class SpectrumLightEffectTest : StringSpec({
         val numberOfLeds = 6
         val effect = SpectrumLightEffect(numberOfLeds, SpectrumEffectSettings(), null, fixedTimeHelper(10_000))
 
-        val firstFrame = effect.getNextStep()
+        val firstFrame = effect.render()
         firstFrame.size shouldBe numberOfLeds
 
         // Time has not advanced past the per-update interval, so the same buffer comes back unchanged.
-        val secondFrame = effect.getNextStep()
+        val secondFrame = effect.render()
         secondFrame shouldBe firstFrame
         effect.getBuffer() shouldBe firstFrame
     }
@@ -103,12 +103,12 @@ class SpectrumLightEffectTest : StringSpec({
         val rainbow = RgbColorPresets.rainbow()
 
         // First frame is the un-shifted reference.
-        var frame = effect.getNextStep()
+        var frame = effect.render()
         for (i in 0..<numberOfLeds) frame[i] shouldBe rainbow[i % rainbow.size]
 
         // Each subsequent frame rotates the pattern left by one (buffer[i] = reference[(i + shift) % n]).
         for (shift in 1..<numberOfLeds) {
-            frame = effect.getNextStep()
+            frame = effect.render()
             for (i in 0..<numberOfLeds) {
                 frame[i] shouldBe rainbow[(i + shift) % rainbow.size]
             }
@@ -116,7 +116,7 @@ class SpectrumLightEffectTest : StringSpec({
 
         // After a full cycle the pattern wraps back to the reference and an iteration is recorded.
         effect.getIterations() shouldBe 0
-        frame = effect.getNextStep()
+        frame = effect.render()
         for (i in 0..<numberOfLeds) frame[i] shouldBe rainbow[i % rainbow.size]
         effect.getIterations() shouldBe 1
     }
@@ -130,9 +130,9 @@ class SpectrumLightEffectTest : StringSpec({
             advancingTimeHelper(),
         )
 
-        val firstFrame = effect.getNextStep().copyOf()
+        val firstFrame = effect.render().copyOf()
         repeat(5) {
-            val frame = effect.getNextStep()
+            val frame = effect.render()
             for (i in 0..<numberOfLeds) frame[i] shouldBe firstFrame[i]
         }
     }
@@ -147,7 +147,7 @@ class SpectrumLightEffectTest : StringSpec({
         )
 
         repeat(5) {
-            val frame = effect.getNextStep()
+            val frame = effect.render()
             effect.getBuffer() shouldBe frame
         }
     }

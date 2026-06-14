@@ -23,7 +23,7 @@ class SpectrumLightEffect(
     private var buffer = Array(numberOfLeds) { RgbColorPresets.blank() }
     private val checker = EffectUpdateTickChecker(timeHelper)
 
-    override fun getNextStep(): Array<RgbColor> {
+    override fun render(): Array<RgbColor> {
         val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
         if (!updateDue) return buffer
         // getNextStep always advances now (the renderer gates on isUpdateDue), and it has several exit paths, so

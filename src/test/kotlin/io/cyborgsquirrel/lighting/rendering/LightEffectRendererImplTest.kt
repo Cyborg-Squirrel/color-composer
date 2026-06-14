@@ -56,14 +56,14 @@ class LightEffectRendererImplTest : StringSpec({
         val result = renderer.renderFrames(listOf(strip), "client-1")
 
         result[0].frameData shouldBe currentBuf.asList()
-        verify(exactly = 0) { effect.getNextStep() }
+        verify(exactly = 0) { effect.render() }
     }
 
     "Renderer truncates effect output longer than the strip" {
         val strip = singleStrip("strip-trunc-eq", 3)
         val effect = mockk<LightEffect>()
         val exact = arrayOf(RgbColor(1u, 0u, 0u), RgbColor(2u, 0u, 0u), RgbColor(3u, 0u, 0u))
-        every { effect.getNextStep() } returns exact
+        every { effect.render() } returns exact
         val registry = registryWith(listOf(activeEffect("a", effect, strip)))
 
         val renderer = LightEffectRendererImpl(registry)
@@ -76,7 +76,7 @@ class LightEffectRendererImplTest : StringSpec({
         val strip = singleStrip("strip-push", 3)
         val effect = mockk<LightEffect>()
         val buf = arrayOf(RgbColorPresets.red(), RgbColorPresets.green(), RgbColorPresets.blue())
-        every { effect.getNextStep() } returns buf
+        every { effect.render() } returns buf
 
         val sink = Sinks.many().multicast().onBackpressureBuffer<List<ActiveLightEffect>>()
         val registry = mockk<LightEffectRegistry>()

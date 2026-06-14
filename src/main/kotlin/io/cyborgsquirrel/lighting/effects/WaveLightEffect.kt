@@ -32,7 +32,7 @@ class WaveLightEffect(
     private var buffer = Array(numberOfLeds) { RgbColorPresets.blank() }
     private val checker = EffectUpdateTickChecker(timeHelper)
 
-    override fun getNextStep(): Array<RgbColor> {
+    override fun render(): Array<RgbColor> {
         val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
         if (!updateDue) return buffer
         val rgbData = ArrayList<RgbColor>(numberOfLeds)

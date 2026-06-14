@@ -22,7 +22,7 @@ class MarqueeEffect(
     private val dotList = mutableListOf<Boolean>()
     private val checker = EffectUpdateTickChecker(timeHelper)
 
-    override fun getNextStep(): Array<RgbColor> {
+    override fun render(): Array<RgbColor> {
         val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
         if (!updateDue) return buffer
         if (frame == 0) {

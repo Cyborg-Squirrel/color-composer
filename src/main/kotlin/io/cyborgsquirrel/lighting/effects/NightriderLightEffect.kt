@@ -36,7 +36,7 @@ class NightriderLightEffect(
     private val checker = EffectUpdateTickChecker(timeHelper)
     private var defaultColorsCache: List<RgbColor>? = null
 
-    override fun getNextStep(): Array<RgbColor> {
+    override fun render(): Array<RgbColor> {
         val updateDue = checker.isUpdateDue(settings.updatesPerSecond)
         if (!updateDue) return buffer
         onNextStep()

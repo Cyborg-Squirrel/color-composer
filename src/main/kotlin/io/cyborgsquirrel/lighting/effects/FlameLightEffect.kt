@@ -28,7 +28,7 @@ class FlameLightEffect(
     private var buffer = Array(numberOfLeds) { RgbColorPresets.blank() }
     private val checker = EffectUpdateTickChecker(timeHelper)
 
-    override fun getNextStep(): Array<RgbColor> {
+    override fun render(): Array<RgbColor> {
         // To save on CPU cycles don't update the bouncing ball sim more than 60 times per second
         val updateDue = checker.isUpdateDue(60)
         if (!updateDue) return buffer
