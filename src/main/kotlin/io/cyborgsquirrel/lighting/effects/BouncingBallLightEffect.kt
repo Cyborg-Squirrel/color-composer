@@ -4,6 +4,7 @@ import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.effects.settings.BouncingBallEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -28,33 +29,34 @@ class BouncingBallLightEffect(
     private val dampening = 0.90
     private var iterations = 0
     private lateinit var backupColor: RgbColor
-    private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private var buffer = Array(numberOfLeds) { RgbColorPresets.blank() }
     private val checker = EffectUpdateTickChecker(timeHelper)
 
-    override fun getNextStep(): List<RgbColor> {
+    override fun render(): Array<RgbColor> {
         // To save on CPU cycles don't update the bouncing ball sim more than 60 times per second
         val updateDue = checker.isUpdateDue(60)
         if (!updateDue) return buffer
         val ballLocation = getBallPosition()
-        val rgbList = ArrayList<RgbColor>(numberOfLeds)
+        var pointer = ballLocation
         for (i in 0..<ballLocation) {
-            rgbList.add(RgbColor.Blank)
+            buffer[i].setBlank()
         }
 
         // Ball length of 2 looks better than 1
-        rgbList.add(getColor(ballLocation))
-        rgbList.add(getColor(ballLocation + 1))
+        if (pointer < buffer.size) buffer[pointer] = getColor(pointer).copy()
+        pointer++
+        if (pointer < buffer.size) buffer[pointer] = getColor(pointer).copy()
+        pointer++
 
-        for (i in rgbList.size..<numberOfLeds) {
-            rgbList.add(RgbColor.Blank)
+        for (i in pointer..<buffer.size) {
+            buffer[i].setBlank()
         }
 
         checker.onUpdate(timeHelper.millisSinceEpoch())
-        buffer = rgbList
-        return rgbList
+        return buffer
     }
 
-    override fun getBuffer(): List<RgbColor> = buffer
+    override fun getBuffer(): Array<RgbColor> = buffer
 
     override fun getIterations() = iterations
 
@@ -99,9 +101,9 @@ class BouncingBallLightEffect(
             } else {
                 val backupColorSeed = settings.startingHeightPercent % 3
                 when (backupColorSeed) {
-                    2 -> RgbColor.Red
-                    1 -> RgbColor.Green
-                    else -> RgbColor.Blue
+                    2 -> RgbColorPresets.red()
+                    1 -> RgbColorPresets.green()
+                    else -> RgbColorPresets.blue()
                 }
             }
         }

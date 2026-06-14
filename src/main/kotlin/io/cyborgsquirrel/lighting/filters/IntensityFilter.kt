@@ -17,9 +17,10 @@ open class IntensityFilter(val settings: IntensityFilterSettings, uuid: String) 
      * A [intensity] of 0.0f will set them to blank, [intensity] over 0 and less than 1 will reduce the intensity,
      * greater than 1 will increase the intensity.
      */
-    override fun apply(rgbList: List<RgbColor>): List<RgbColor> {
-        return rgbList.map {
-            it.scale(intensity)
+    override fun apply(buffer: Array<RgbColor>): Array<RgbColor> {
+        for (i in buffer.indices) {
+            buffer[i].scale(intensity)
         }
+        return buffer
     }
 }

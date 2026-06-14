@@ -11,9 +11,9 @@ sealed class LightEffect(
     protected val timeHelper: TimeHelper,
 ) {
 
-    abstract fun getNextStep(): List<RgbColor>
+    abstract fun render(): Array<RgbColor>
 
-    abstract fun getBuffer(): List<RgbColor>
+    abstract fun getBuffer(): Array<RgbColor>
 
     abstract fun getIterations(): Int
 

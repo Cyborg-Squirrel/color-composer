@@ -11,7 +11,7 @@ class NightDriverFrameDataSerializerTest : StringSpec({
 
     val timestamp = 1727921898452
     val rgbData =
-        listOf(
+        arrayOf(
             RgbColor(0u, 0u, 255u),
             RgbColor(0u, 255u, 0u),
             RgbColor(255u, 0u, 0u),

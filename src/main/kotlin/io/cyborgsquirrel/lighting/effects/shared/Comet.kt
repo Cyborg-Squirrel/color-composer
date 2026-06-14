@@ -3,6 +3,7 @@ package io.cyborgsquirrel.lighting.effects.shared
 import io.cyborgsquirrel.lighting.enums.Direction
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import kotlin.math.log
 import kotlin.math.max
 
@@ -25,9 +26,9 @@ class Comet(val color: RgbColor, val length: Int, fadeCurve: FadeCurve, directio
                 )
             }
             val interpolatedColor = if (direction == Direction.HighToLow) color.interpolate(
-                RgbColor.Blank,
+                RgbColorPresets.blank(),
                 interpolationFactor
-            ) else RgbColor.Blank.interpolate(color, interpolationFactor)
+            ) else RgbColorPresets.blank().interpolate(color, interpolationFactor)
             cometBuffer.add(interpolatedColor)
         }
     }

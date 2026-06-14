@@ -40,6 +40,7 @@ import io.cyborgsquirrel.lighting.enums.BlendMode
 import io.cyborgsquirrel.lighting.enums.FadeCurve
 import io.cyborgsquirrel.lighting.enums.LightEffectStatus
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.test_helpers.createLedStripClientEntity
 import io.cyborgsquirrel.test_helpers.normalizeNumberTypes
 import io.cyborgsquirrel.test_helpers.objectToMap
@@ -118,7 +119,7 @@ class EffectApiServiceTest(
         val paletteSettings = objectToMap(
             objectMapper,
             StaticPaletteSettings(
-                SettingsPalette(primaryColor = RgbColor.Red, secondaryColor = RgbColor.Red, tertiaryColor = null, otherColors = listOf())
+                SettingsPalette(primaryColor = RgbColorPresets.red(), secondaryColor = RgbColorPresets.red(), tertiaryColor = null, otherColors = listOf())
             )
         )
         return paletteRepository.save(
@@ -366,7 +367,7 @@ class EffectApiServiceTest(
         val paletteSettings = objectToMap(
             objectMapper,
             StaticPaletteSettings(
-                SettingsPalette(primaryColor = RgbColor.Green, secondaryColor = RgbColor.Cyan, tertiaryColor = null, otherColors = listOf())
+                SettingsPalette(primaryColor = RgbColorPresets.green(), secondaryColor = RgbColorPresets.cyan(), tertiaryColor = null, otherColors = listOf())
             )
         )
         val palette = paletteRepository.save(
@@ -570,7 +571,7 @@ class EffectApiServiceTest(
         val paletteSettings = objectToMap(
             objectMapper,
             StaticPaletteSettings(
-                SettingsPalette(primaryColor = RgbColor.Purple, secondaryColor = RgbColor.Purple, tertiaryColor = null, otherColors = listOf())
+                SettingsPalette(primaryColor = RgbColorPresets.purple(), secondaryColor = RgbColorPresets.purple(), tertiaryColor = null, otherColors = listOf())
             )
         )
         val palette = paletteRepository.save(

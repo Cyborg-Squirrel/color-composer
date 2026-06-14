@@ -4,15 +4,16 @@ import io.cyborgsquirrel.lighting.model.RgbColor
 import io.micronaut.serde.annotation.Serdeable
 
 /**
- * Reverses a list of [RgbColor]
+ * Reverses a buffer of [RgbColor] values
  */
 @Serdeable
 class ReverseFilter(uuid: String) : LightEffectFilter(uuid) {
 
     /**
-     * Returns a reversed instance of the [rgbList]
+     * Returns a reversed instance of the [buffer]
      */
-    override fun apply(rgbList: List<RgbColor>): List<RgbColor> {
-        return rgbList.reversed()
+    override fun apply(buffer: Array<RgbColor>): Array<RgbColor> {
+        buffer.reverse()
+        return buffer
     }
 }

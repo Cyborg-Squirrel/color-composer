@@ -39,12 +39,13 @@ class FrameSegmentationHelper {
                 for (fs in frameStrip.strips) {
                     for (cs in clientSingleStrips) {
                         if (cs == fs) {
-                            val segmentData = frame.frameData.subList(startIndex, startIndex + cs.length)
+                            val segmentData = Array(cs.length) { frame.frameData[it + startIndex] }
+                            if (cs.inverted) segmentData.reverse()
                             frameList.add(
                                 RenderedFrameSegmentModel(
                                     cs,
                                     frame.sequenceNumber,
-                                    if (cs.inverted) segmentData.reversed() else segmentData
+                                    segmentData
                                 )
                             )
                             break

@@ -151,7 +151,7 @@ class ChangingColorPalette(
             // Blend between current and next palette
             val fractionComplete =
                 (now - transitionStart).toFloat() / settings.paletteTransitionTime().toMillis()
-            currentColor.interpolate(nextColor, fractionComplete)
+            currentColor.copy().interpolate(nextColor, fractionComplete)
         }
     }
 }

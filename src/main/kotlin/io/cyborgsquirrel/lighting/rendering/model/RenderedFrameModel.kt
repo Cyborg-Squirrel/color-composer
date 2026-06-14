@@ -6,10 +6,10 @@ import io.cyborgsquirrel.lighting.rendering.cache.MIN_SEQUENCE_NUMBER
 
 class RenderedFrameModel(
     val strip: LedStripModel,
-    override val frameData: List<RgbColor>
+    override val frameData: Array<RgbColor>
 ): FrameModel(frameData) {
 
-    constructor(strip: LedStripModel, frameData: List<RgbColor>, sequenceNumber: Short) : this(strip, frameData) {
+    constructor(strip: LedStripModel, frameData: Array<RgbColor>, sequenceNumber: Short) : this(strip, frameData) {
         this.sequenceNumber = sequenceNumber
     }
 

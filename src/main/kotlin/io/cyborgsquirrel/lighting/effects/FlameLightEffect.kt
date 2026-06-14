@@ -4,6 +4,7 @@ import io.cyborgsquirrel.lighting.effect_palette.palette.ColorPalette
 import io.cyborgsquirrel.lighting.effects.helpers.EffectUpdateTickChecker
 import io.cyborgsquirrel.lighting.effects.settings.FlameEffectSettings
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.util.time.TimeHelper
 import kotlin.math.max
 import kotlin.math.min
@@ -24,19 +25,19 @@ class FlameLightEffect(
     // TODO how do we count iterations? Do we count iterations for this effect?
     private var iterations = 0
     private val heat = IntArray(numberOfLeds)
-    private var buffer = List(numberOfLeds) { RgbColor.Blank }
+    private var buffer = Array(numberOfLeds) { RgbColorPresets.blank() }
     private val checker = EffectUpdateTickChecker(timeHelper)
 
-    override fun getNextStep(): List<RgbColor> {
+    override fun render(): Array<RgbColor> {
         // To save on CPU cycles don't update the bouncing ball sim more than 60 times per second
         val updateDue = checker.isUpdateDue(60)
         if (!updateDue) return buffer
-        buffer = drawFire()
+        drawFire()
         checker.onUpdate(timeHelper.millisSinceEpoch())
         return buffer
     }
 
-    override fun getBuffer(): List<RgbColor> = buffer
+    override fun getBuffer(): Array<RgbColor> = buffer
 
     override fun getIterations() = iterations
 
@@ -44,7 +45,7 @@ class FlameLightEffect(
         this.palette = palette
     }
 
-    private fun drawFire(): List<RgbColor> {
+    private fun drawFire() {
         // Cool each cell
         for (i in heat.indices) {
             heat[i] = max(0, heat[i] - Random.nextInt(0, ((settings.cooling * 10) / heat.size) + 2))
@@ -67,13 +68,10 @@ class FlameLightEffect(
         }
 
         // Convert heat to color
-        val rgbList = ArrayList<RgbColor>(heat.size)
-        for (i in heat.indices) {
+        for (i in buffer.indices) {
             val color = getColor(heat[heat.size - 1 - i], i)
-            rgbList.add(color)
+            buffer[i] = color
         }
-
-        return rgbList
     }
 
     private fun getColor(heat: Int, index: Int): RgbColor {
@@ -85,13 +83,16 @@ class FlameLightEffect(
 
             return if (heatVal > 170) {
                 // Hottest
-                secondary.interpolate(RgbColor.White, (heatVal / (255 - 170)).toFloat())
+                secondary.interpolate(RgbColorPresets.white(), (heatVal / (255 - 170)).toFloat())
+                secondary
             } else if (heatVal > 85) {
                 // Medium heat
                 primary.interpolate(secondary, (heatVal / (170 - 85)).toFloat())
+                primary
             } else {
                 // Coolest
-                primary.interpolate(RgbColor.Blank, (heatVal / 85).toFloat())
+                primary.interpolate(RgbColorPresets.blank(), (heatVal / 85).toFloat())
+                primary
             }
         } else {
             return flameColorFromInt(heat)

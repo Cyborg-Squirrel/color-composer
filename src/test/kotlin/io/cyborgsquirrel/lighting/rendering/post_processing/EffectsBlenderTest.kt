@@ -1,41 +1,43 @@
 package io.cyborgsquirrel.lighting.rendering.post_processing
 
 import io.cyborgsquirrel.lighting.enums.BlendMode
-import io.cyborgsquirrel.lighting.model.LedStripModel
 import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
 
 class EffectsBlenderTest : StringSpec({
 
     val blender = EffectsBlender()
 
-    "additive blend mode" {
-        val strip = mockk<LedStripModel>()
-        every { strip.length() } returns 3
-        every { strip.blendMode } returns BlendMode.Additive
+    // Drives the incremental fold API the renderer uses: reset a reusable accumulator, then fold each effect in order.
+    fun blend(blendMode: BlendMode, length: Int, effects: List<Array<RgbColor>>): Array<RgbColor> {
+        val accumulator = Array(length) { RgbColorPresets.blank() }
+        blender.reset(accumulator)
+        effects.forEachIndexed { index, effect -> blender.fold(blendMode, accumulator, effect, index) }
+        return accumulator
+    }
 
-        val effect1 = listOf(
+    "additive blend mode" {
+        val effect1 = arrayOf(
             RgbColor(255u, 0u, 0u),
             RgbColor(0u, 255u, 0u),
             RgbColor(0u, 0u, 255u)
         )
 
-        val effect2 = listOf(
+        val effect2 = arrayOf(
             RgbColor(0u, 0u, 0u),
             RgbColor(255u, 0u, 0u),
             RgbColor(0u, 255u, 0u)
         )
 
-        val effect3 = listOf(
+        val effect3 = arrayOf(
             RgbColor(0u, 0u, 0u),
             RgbColor(0u, 0u, 0u),
             RgbColor(255u, 255u, 255u)
         )
 
-        val result = blender.blendEffects(strip, listOf(effect1, effect2, effect3))
+        val result = blend(BlendMode.Additive, 3, listOf(effect1, effect2, effect3))
 
         result.size shouldBe 3
         result[0] shouldBe RgbColor(255u, 0u, 0u)
@@ -44,29 +46,25 @@ class EffectsBlenderTest : StringSpec({
     }
 
     "average blend mode" {
-        val strip = mockk<LedStripModel>()
-        every { strip.length() } returns 3
-        every { strip.blendMode } returns BlendMode.Average
-
-        val effect1 = listOf(
+        val effect1 = arrayOf(
             RgbColor(255u, 0u, 0u),
             RgbColor(0u, 255u, 0u),
             RgbColor(0u, 0u, 255u)
         )
 
-        val effect2 = listOf(
+        val effect2 = arrayOf(
             RgbColor(255u, 0u, 0u),
             RgbColor(0u, 255u, 0u),
             RgbColor(0u, 0u, 255u)
         )
 
-        val effect3 = listOf(
+        val effect3 = arrayOf(
             RgbColor(255u, 0u, 0u),
             RgbColor(0u, 255u, 0u),
             RgbColor(0u, 0u, 255u)
         )
 
-        val result = blender.blendEffects(strip, listOf(effect1, effect2, effect3))
+        val result = blend(BlendMode.Average, 3, listOf(effect1, effect2, effect3))
 
         result.size shouldBe 3
         result[0] shouldBe RgbColor(255u, 0u, 0u)
@@ -74,30 +72,36 @@ class EffectsBlenderTest : StringSpec({
         result[2] shouldBe RgbColor(0u, 0u, 255u)
     }
 
-    "layer blend mode" {
-        val strip = mockk<LedStripModel>()
-        every { strip.length() } returns 3
-        every { strip.blendMode } returns BlendMode.Layer
+    "average blend mode computes the running-count mean" {
+        val effect1 = arrayOf(RgbColor(200u, 0u, 90u))
+        val effect2 = arrayOf(RgbColor(100u, 0u, 30u))
 
-        val effect1 = listOf(
+        val result = blend(BlendMode.Average, 1, listOf(effect1, effect2))
+
+        // (200 + 100) / 2 = 150, (90 + 30) / 2 = 60
+        result[0] shouldBe RgbColor(150u, 0u, 60u)
+    }
+
+    "layer blend mode" {
+        val effect1 = arrayOf(
             RgbColor(255u, 0u, 0u),
             RgbColor(0u, 255u, 0u),
             RgbColor(0u, 0u, 255u)
         )
 
-        val effect2 = listOf(
+        val effect2 = arrayOf(
             RgbColor(0u, 0u, 0u),
             RgbColor(255u, 0u, 0u),
             RgbColor(0u, 255u, 0u)
         )
 
-        val effect3 = listOf(
+        val effect3 = arrayOf(
             RgbColor(0u, 0u, 0u),
             RgbColor(0u, 0u, 0u),
             RgbColor(255u, 255u, 255u)
         )
 
-        val result = blender.blendEffects(strip, listOf(effect1, effect2, effect3))
+        val result = blend(BlendMode.Layer, 3, listOf(effect1, effect2, effect3))
 
         result.size shouldBe 3
         result[0] shouldBe RgbColor(255u, 0u, 0u)
@@ -106,23 +110,19 @@ class EffectsBlenderTest : StringSpec({
     }
 
     "blend mode with blank colors" {
-        val strip = mockk<LedStripModel>()
-        every { strip.length() } returns 3
-        every { strip.blendMode } returns BlendMode.Additive
-
-        val effect1 = listOf(
-            RgbColor.Blank,
+        val effect1 = arrayOf(
+            RgbColorPresets.blank(),
             RgbColor(0u, 255u, 0u),
-            RgbColor.Blank
+            RgbColorPresets.blank()
         )
 
-        val effect2 = listOf(
+        val effect2 = arrayOf(
             RgbColor(255u, 0u, 0u),
-            RgbColor.Blank,
+            RgbColorPresets.blank(),
             RgbColor(0u, 0u, 255u)
         )
 
-        val result = blender.blendEffects(strip, listOf(effect1, effect2))
+        val result = blend(BlendMode.Additive, 3, listOf(effect1, effect2))
 
         result.size shouldBe 3
         result[0] shouldBe RgbColor(255u, 0u, 0u)
@@ -131,46 +131,38 @@ class EffectsBlenderTest : StringSpec({
     }
 
     "use highest value" {
-        val strip = mockk<LedStripModel>()
-        every { strip.length() } returns 3
-        every { strip.blendMode } returns BlendMode.UseHighest
-
-        val effect1 = listOf(
-            RgbColor.Blank,
+        val effect1 = arrayOf(
+            RgbColorPresets.blank(),
             RgbColor(100u, 255u, 100u),
-            RgbColor.Blank
+            RgbColorPresets.blank()
         )
 
-        val effect2 = listOf(
-            RgbColor.Blank,
+        val effect2 = arrayOf(
+            RgbColorPresets.blank(),
             RgbColor(255u, 0u, 0u),
             RgbColor(0u, 0u, 255u)
         )
 
-        val result = blender.blendEffects(strip, listOf(effect1, effect2))
+        val result = blend(BlendMode.UseHighest, 3, listOf(effect1, effect2))
 
         result.size shouldBe 3
-        result[0] shouldBe RgbColor.Blank
+        result[0] shouldBe RgbColorPresets.blank()
         result[1] shouldBe RgbColor(255u, 255u, 100u)
         result[2] shouldBe RgbColor(0u, 0u, 255u)
     }
 
     "single effect is passed through unchanged" {
-        val strip = mockk<LedStripModel>()
-        every { strip.length() } returns 3
-        every { strip.blendMode } returns BlendMode.Layer
-
-        val effect = listOf(
+        val effect = arrayOf(
             RgbColor(255u, 0u, 0u),
-            RgbColor.Blank,
+            RgbColorPresets.blank(),
             RgbColor(0u, 0u, 255u)
         )
 
-        val result = blender.blendEffects(strip, listOf(effect))
+        val result = blend(BlendMode.Layer, 3, listOf(effect))
 
         result.size shouldBe 3
         result[0] shouldBe RgbColor(255u, 0u, 0u)
-        result[1] shouldBe RgbColor.Blank
+        result[1] shouldBe RgbColorPresets.blank()
         result[2] shouldBe RgbColor(0u, 0u, 255u)
     }
 })

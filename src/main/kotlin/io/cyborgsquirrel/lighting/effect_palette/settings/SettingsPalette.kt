@@ -11,14 +11,14 @@ data class SettingsPalette(
     val otherColors: List<RgbColor>
 ) {
     fun interpolate(other: SettingsPalette, interpolation: Float): SettingsPalette {
-        val primary = primaryColor.interpolate(other.primaryColor, interpolation)
-        val secondary = secondaryColor.interpolate(other.secondaryColor, interpolation)
-        val tertiary = if (tertiaryColor != null && other.tertiaryColor != null) tertiaryColor.interpolate(
+        val primary = primaryColor.copy().interpolate(other.primaryColor, interpolation)
+        val secondary = secondaryColor.copy().interpolate(other.secondaryColor, interpolation)
+        val tertiary = if (tertiaryColor != null && other.tertiaryColor != null) tertiaryColor.copy().interpolate(
             other.tertiaryColor,
             interpolation
         ) else null
         val otherCs = otherColors.zip(other.otherColors).map {
-            it.first.interpolate(it.second, interpolation)
+            it.first.copy().interpolate(it.second, interpolation)
         }
         return SettingsPalette(primary, secondary, tertiary, otherCs)
     }

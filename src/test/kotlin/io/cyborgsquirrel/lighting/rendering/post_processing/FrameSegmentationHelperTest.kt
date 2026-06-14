@@ -18,7 +18,7 @@ class FrameSegmentationHelperTest : StringSpec({
     fun generateFrame(pool: LedStripPoolModel): RenderedFrameModel {
         return RenderedFrameModel(
             strip = pool,
-            frameData = listOf(
+            frameData = arrayOf(
                 RgbColor(255u, 0u, 0u),
                 RgbColor(0u, 255u, 0u),
                 RgbColor(0u, 0u, 255u),
@@ -42,7 +42,7 @@ class FrameSegmentationHelperTest : StringSpec({
 
         val frame = RenderedFrameModel(
             strip = clientStrip,
-            frameData = listOf(
+            frameData = arrayOf(
                 RgbColor(255u, 0u, 0u),
                 RgbColor(0u, 255u, 0u),
                 RgbColor(0u, 0u, 255u)
@@ -85,18 +85,18 @@ class FrameSegmentationHelperTest : StringSpec({
         val result = helper.segmentFrame(listOf(stripPool), clientUuid, frame)
 
         result.size shouldBe 3
-        result[0].frameData shouldBe frame.frameData.subList(0, clientStrip1.length)
+        result[0].frameData shouldBe frame.frameData.slice(0..<clientStrip1.length)
         result[0].strip shouldBe clientStrip1
         result[0].sequenceNumber shouldBe frame.sequenceNumber
-        result[1].frameData shouldBe frame.frameData.subList(
-            clientStrip1.length,
-            clientStrip1.length + clientStrip2.length
+        result[1].frameData shouldBe frame.frameData.slice(
+            clientStrip1.length..<
+                    clientStrip1.length + clientStrip2.length
         )
         result[1].strip shouldBe clientStrip2
         result[1].sequenceNumber shouldBe frame.sequenceNumber
-        result[2].frameData shouldBe frame.frameData.subList(
-            clientStrip1.length + clientStrip2.length,
-            frame.frameData.size
+        result[2].frameData shouldBe frame.frameData.slice(
+            clientStrip1.length + clientStrip2.length..<
+                    frame.frameData.size
         )
         result[2].strip shouldBe clientStrip3
         result[2].sequenceNumber shouldBe frame.sequenceNumber
@@ -129,12 +129,12 @@ class FrameSegmentationHelperTest : StringSpec({
         val result = helper.segmentFrame(listOf(poolStrip), clientUuid, frame)
 
         result.size shouldBe 2
-        result[0].frameData shouldBe frame.frameData.subList(0, clientStrip1.length)
+        result[0].frameData shouldBe frame.frameData.slice(0..<clientStrip1.length)
         result[0].strip shouldBe clientStrip1
         result[0].sequenceNumber shouldBe frame.sequenceNumber
-        result[1].frameData shouldBe frame.frameData.subList(
-            clientStrip1.length,
-            clientStrip1.length + clientStrip2.length
+        result[1].frameData shouldBe frame.frameData.slice(
+            clientStrip1.length..<
+                    clientStrip1.length + clientStrip2.length
         )
         result[1].strip shouldBe clientStrip2
         result[1].sequenceNumber shouldBe frame.sequenceNumber
@@ -168,12 +168,12 @@ class FrameSegmentationHelperTest : StringSpec({
         val result = helper.segmentFrame(listOf(poolStrip), clientUuid, frame)
 
         result.size shouldBe 2
-        result[0].frameData shouldBe frame.frameData.subList(0, clientStrip1.length)
+        result[0].frameData shouldBe frame.frameData.slice(0..<clientStrip1.length)
         result[0].strip shouldBe clientStrip1
         result[0].sequenceNumber shouldBe frame.sequenceNumber
-        result[1].frameData shouldBe frame.frameData.subList(
-            clientStrip1.length + poolStrip2.length,
-            frame.frameData.size
+        result[1].frameData shouldBe frame.frameData.slice(
+            clientStrip1.length + poolStrip2.length..<
+                    frame.frameData.size
         )
         result[1].strip shouldBe clientStrip2
         result[1].sequenceNumber shouldBe frame.sequenceNumber
@@ -200,12 +200,12 @@ class FrameSegmentationHelperTest : StringSpec({
         val result = helper.segmentFrame(listOf(poolStrip), clientUuid, frame)
 
         result.size shouldBe 2
-        result[0].frameData shouldBe frame.frameData.subList(0, clientStrip1.length)
+        result[0].frameData shouldBe frame.frameData.slice(0..<clientStrip1.length)
         result[0].strip shouldBe clientStrip1
         result[0].sequenceNumber shouldBe frame.sequenceNumber
 
         val expectedInvertedData =
-            frame.frameData.subList(clientStrip1.length, clientStrip1.length + clientStrip2.length).reversed()
+            frame.frameData.slice(clientStrip1.length..<clientStrip1.length + clientStrip2.length).reversed()
         result[1].frameData shouldBe expectedInvertedData
         result[1].strip shouldBe clientStrip2
         result[1].sequenceNumber shouldBe frame.sequenceNumber

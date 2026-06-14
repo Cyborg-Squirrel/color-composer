@@ -14,11 +14,11 @@ class CustomLightEffect(
     timeHelper: TimeHelper,
 ) : LightEffect(settings, palette, timeHelper) {
 
-    override fun getNextStep(): List<RgbColor> {
+    override fun render(): Array<RgbColor> {
         TODO("Not yet implemented")
     }
 
-    override fun getBuffer(): List<RgbColor> {
+    override fun getBuffer(): Array<RgbColor> {
         TODO("Not yet implemented")
     }
 

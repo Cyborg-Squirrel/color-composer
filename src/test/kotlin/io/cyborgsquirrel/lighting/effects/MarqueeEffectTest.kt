@@ -1,7 +1,7 @@
 package io.cyborgsquirrel.lighting.effects
 
 import io.cyborgsquirrel.lighting.effects.settings.MarqueeEffectSettings
-import io.cyborgsquirrel.lighting.model.RgbColor
+import io.cyborgsquirrel.lighting.model.RgbColorPresets
 import io.cyborgsquirrel.util.time.TimeHelper
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -57,7 +57,7 @@ class MarqueeEffectTest : StringSpec({
                 // Advance through more than a full scroll cycle (shiftAmount wraps every
                 // numberOfLeds frames) to exercise the wrap-around at the end of the strip.
                 repeat(numberOfLeds * 2 + 3) {
-                    val frame = effect.getNextStep()
+                    val frame = effect.render()
                     frame.size shouldBe numberOfLeds
                     effect.getBuffer().size shouldBe numberOfLeds
                 }
@@ -70,7 +70,7 @@ class MarqueeEffectTest : StringSpec({
         val effect = MarqueeEffect(numberOfLeds, MarqueeEffectSettings(), null, advancingTimeHelper())
 
         effect.getBuffer().size shouldBe numberOfLeds
-        effect.getBuffer().all { it == RgbColor.Blank } shouldBe true
+        effect.getBuffer().all { it == RgbColorPresets.blank() } shouldBe true
     }
 
     "getBuffer matches the last rendered frame" {
@@ -78,7 +78,7 @@ class MarqueeEffectTest : StringSpec({
         val effect = MarqueeEffect(numberOfLeds, MarqueeEffectSettings(), null, advancingTimeHelper())
 
         repeat(5) {
-            val frame = effect.getNextStep()
+            val frame = effect.render()
             effect.getBuffer() shouldBe frame
         }
     }
@@ -89,14 +89,14 @@ class MarqueeEffectTest : StringSpec({
         val numberOfLeds = 6
         val effect = MarqueeEffect(numberOfLeds, MarqueeEffectSettings(), null, advancingTimeHelper())
 
-        val c = RgbColor.Cyan
-        val b = RgbColor.Blank
+        val a = RgbColorPresets.amber()
+        val b = RgbColorPresets.blank()
 
-        var frame = effect.getNextStep()
-        frame shouldBe listOf(c, b, b, c, c, b)
+        var frame = effect.render()
+        frame shouldBe arrayOf(a, a, b, b, a, a)
 
-        frame = effect.getNextStep()
-        frame shouldBe listOf(b, b, c, c, b, b)
+        frame = effect.render()
+        frame shouldBe arrayOf(a, b, b, a, a, b)
     }
 
     "Returns cached buffer when an update is not yet due" {
@@ -104,12 +104,12 @@ class MarqueeEffectTest : StringSpec({
         val effect = MarqueeEffect(numberOfLeds, MarqueeEffectSettings(), null, fixedTimeHelper(10_000))
 
         // First call is due and renders a frame.
-        val firstFrame = effect.getNextStep()
+        val firstFrame = effect.render()
         firstFrame.size shouldBe numberOfLeds
 
         // Time has not advanced past the per-update interval, so the same buffer comes back
         // unchanged (the pattern does not scroll).
-        val secondFrame = effect.getNextStep()
+        val secondFrame = effect.render()
         secondFrame shouldBe firstFrame
         secondFrame.size shouldBe numberOfLeds
         effect.getBuffer() shouldBe firstFrame
